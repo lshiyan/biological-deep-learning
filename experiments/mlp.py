@@ -5,12 +5,13 @@ import os
 from torch.utils.data import Dataset, DataLoader
 from data.data_loader import MNIST_set
 from models.hebbian_network import HebbianNetwork
+from layers.hebbian_layer import HebbianLayer
 
 
 class MLPExperiment():
     
     def __init__(self, args, input_dimension, hidden_layer_dimension, output_dimension):
-        self.model=nn.Linear(input_dimension, output_dimension)
+        self.model=nn.Linear(input_dimension, output_dimension)#TODO: For some reason my hebbian network is not processing batches together.
         self.args=args
     
     #Returns ADAM optimize for gradient descent.
