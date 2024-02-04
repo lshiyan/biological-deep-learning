@@ -33,6 +33,7 @@ class HebbianLayer (nn.Module):
                 
     #Feed forward.
     def forward(self, x):
+        print(x.size())
         input=x
         x=self.fc(x)
         x=self.inhibition(x)

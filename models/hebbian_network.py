@@ -1,10 +1,11 @@
-from ..layers.hebbian_layer import HebbianLayer
+from layers.hebbian_layer import HebbianLayer
 import torch
 import torch.nn as nn 
 
-class HebbianNetwork():
+class HebbianNetwork(nn.Module):
     
     def __init__(self, input_dimension, hidden_layer_dimension, output_dimension):
+        super(HebbianNetwork, self).__init__()
         self.input_dimension=input_dimension
         self.output_dimension=output_dimension
         self.hidden_layer_dimension=hidden_layer_dimension
