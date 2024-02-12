@@ -19,21 +19,19 @@ class HebbianLayer (nn.Module):
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
     def inhibition(self, x):
         normalization_factor=0
-        for ele in x:
-            normalization_factor+= ele**self.lamb
-        inhibited_x=[(ele**self.lamb)/normalization_factor for ele in x]
-        return inhibited_x
+        for ele in x: 
+            normalization_factor+= torch.sum(ele ** 2)
+            ele/=normalization_factor
+        return x
     
     #Employs hebbian learning rule, Wij->alpha*y_i*x_j. Calculates outer product of input and output and adds it to matrix.
     def updateWeightsHebbian(self, input, output):
         weight=self.fc.weight
         outer_prod=torch.tensor(outer(output, input))
         weight=torch.add(weight, outer_prod)
-        
                 
     #Feed forward.
     def forward(self, x):
-        print(x.size())
         input=x
         x=self.fc(x)
         x=self.inhibition(x)

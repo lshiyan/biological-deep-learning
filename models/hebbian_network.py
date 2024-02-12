@@ -4,12 +4,12 @@ import torch.nn as nn
 
 class HebbianNetwork(nn.Module):
     
-    def __init__(self, input_dimension, hidden_layer_dimension, output_dimension):
+    def __init__(self, input_dimension, hidden_layer_dimension, output_dimension, lamb=1):
         super(HebbianNetwork, self).__init__()
         self.input_dimension=input_dimension
         self.output_dimension=output_dimension
         self.hidden_layer_dimension=hidden_layer_dimension
-        self.hebbian_layer=HebbianLayer(self.input_dimension, self.hidden_layer_dimension)
+        self.hebbian_layer=HebbianLayer(self.input_dimension, self.hidden_layer_dimension, lamb)
         self.classifier_layer=nn.Linear(self.hidden_layer_dimension, self.output_dimension)
         
     def forward(self,x):
