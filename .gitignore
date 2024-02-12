@@ -1,2 +1,6 @@
 #Large dataset files.
 *.csv
+
+#Compiled bytecode files.
+__pycache__/
+*.pyc

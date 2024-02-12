@@ -13,15 +13,17 @@ from layers.hebbian_layer import HebbianLayer
 
 class MLPExperiment():
     
-    def __init__(self, args, input_dimension, hidden_layer_dimension, output_dimension, lamb=1, lr=0.001, num_epochs=3):
-        self.model=HebbianNetwork(input_dimension, hidden_layer_dimension, output_dimension, 2)#TODO: For some reason my hebbian network is not processing batches together.
+    def __init__(self, args, input_dimension, hidden_layer_dimension, output_dimension, 
+                 lamb=1, heb_lr=1, grad_lr=0.001, num_epochs=3):
+        self.model=HebbianNetwork(input_dimension, hidden_layer_dimension, 
+                                  output_dimension, heb_lr=heb_lr, lamb=lamb)#TODO: For some reason my hebbian network is not processing batches together.
         self.args=args
         self.num_epochs=num_epochs
-        self.lr=lr
+        self.grad_lr=grad_lr
     
     #Returns ADAM optimize for gradient descent.
     def optimizer(self):
-        optimizer = optim.Adam(self.model.parameters(), self.lr)
+        optimizer = optim.Adam(self.model.parameters(), self.grad_lr)
         return optimizer
 
     #Returns cross entropy loss function.
@@ -43,15 +45,17 @@ class MLPExperiment():
         for epoch in range(self.num_epochs):
             for i, data in enumerate(data_loader):
                 inputs, labels=data
-                optimizer.zero_grad()
+                print(inputs)
                 outputs = self.model(inputs)
+                break
                 loss=loss_function(outputs, labels)
                 loss.backward()
+                optimizer.zero_grad()
                 optimizer.step()
         
         
-    def visualizeWeights():
-        return
+    def visualizeWeights(self, num_choices):
+        self.model.visualizeWeights(num_choices)
     
     def test(self):
         data_set=MNIST_set(self.args, 0)
@@ -67,9 +71,11 @@ class MLPExperiment():
         print("Accuracy:", cor/tot)
     
 if __name__=="__main__":
-    experiment=MLPExperiment(None, 784, 256, 10)
+    experiment=MLPExperiment(None, 784, 256, 10, lamb=2, num_epochs=1)
     experiment.train()
-    experiment.test()
+    #experiment.visualizeWeights(5)
+    #experiment.test()
+    
             
             
         
