@@ -4,7 +4,6 @@ import math
 import matplotlib.pyplot as plt
 from numpy import outer
 
-
 #Hebbian learning layer that implements lateral inhibition in output. Not trained through supervision.
 class HebbianLayer (nn.Module):
     def __init__(self, input_dimension, output_dimension, lamb=1, heb_lr=1):
@@ -12,8 +11,7 @@ class HebbianLayer (nn.Module):
         self.input_dimension=input_dimension
         self.output_dimension=output_dimension
         self.lamb=lamb
-        self.lr=heb_lr
-        
+        self.K=self.output_dimension/(0.001*self.input_dimension)
         self.fc=nn.Linear(self.input_dimension, self.output_dimension)
   
         for param in self.fc.parameters():
@@ -24,25 +22,25 @@ class HebbianLayer (nn.Module):
     def inhibition(self, x):
         normalization_factor=0
         normalization_factor+= torch.sum(x ** self.lamb)
-        print("Factor is:", normalization_factor)
-        x/=normalization_factor
-        print(x)
+        x/=(normalization_factor*self.K/self.input_dimension)
         return x
     
-    #Employs hebbian learning rule, Wij->alpha*y_i*x_j. Calculates outer product of input and output and adds it to matrix.
+    #Employs hebbian learning rule, Wij->alpha*y_i*x_j. 
+    #Calculates outer product of input and output and adds it to matrix.
     def updateWeightsHebbian(self, input, output):
         weight=self.fc.weight
         outer_prod=torch.tensor(outer(output, input))
         weight=torch.add(weight, outer_prod)
                 
     #Feed forward.
-    def forward(self, x):
+    def forward(self, x, clamped_output=None):
         input=x
         x=self.fc(x)
-        print("After FC Layer")
-        print(x)
-        x=self.inhibition(x)
-        self.updateWeightsHebbian(input, x)    
+        x=self.inhibition(x) 
+        if clamped_output: #If we're clamping the output, i.e. a one hot of the label, update accordingly.
+            self.updateWeightsHebbian(input, clamped_output)  
+        else: #If not, do hebbian update with usual output.
+            self.updateWeightsHebbian(input, x)  
 
         return x
     

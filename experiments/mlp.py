@@ -45,15 +45,22 @@ class MLPExperiment():
         for epoch in range(self.num_epochs):
             for i, data in enumerate(data_loader):
                 inputs, labels=data
-                print(inputs)
-                outputs = self.model(inputs)
+                outputs = self.model(inputs, labels)
                 break
-                loss=loss_function(outputs, labels)
+                """loss=loss_function(outputs, labels)
                 loss.backward()
                 optimizer.zero_grad()
-                optimizer.step()
+                optimizer.step()"""
         
+    #Given a tensor of labels, returns a one hot encoded tensor for each label.
+    def oneHotEncode(self, labels):
+        num_classes=labels.max()+1 
+        one_hot_encoded = torch.zeros(len(labels), num_classes)
+        one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
+    
+        return one_hot_encoded
         
+    #Visualizes the weights associated with the first feature detector layer.
     def visualizeWeights(self, num_choices):
         self.model.visualizeWeights(num_choices)
     
@@ -64,7 +71,7 @@ class MLPExperiment():
         tot=0
         for i, data in enumerate(data_loader):
             inputs, labels=data
-            outputs = torch.argmax(torch.softmax(self.model(inputs), dim=1), dim=1)
+            outputs = torch.argmax(torch.softmax(self.model(inputs, labels), dim=1), dim=1)
             if outputs.item()==labels.item():
                 cor+=1
             tot+=1
@@ -74,7 +81,7 @@ if __name__=="__main__":
     experiment=MLPExperiment(None, 784, 256, 10, lamb=2, num_epochs=1)
     experiment.train()
     #experiment.visualizeWeights(5)
-    #experiment.test()
+    experiment.test()
     
             
             

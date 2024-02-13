@@ -10,9 +10,9 @@ class HebbianNetwork(nn.Module):
         self.output_dimension=output_dimension
         self.hidden_layer_dimension=hidden_layer_dimension
         self.hebbian_layer=HebbianLayer(self.input_dimension, self.hidden_layer_dimension, lamb=lamb, heb_lr=heb_lr)
-        self.classifier_layer=nn.Linear(self.hidden_layer_dimension, self.output_dimension)
+        self.classifier_layer=HebbianLayer(self.hidden_layer_dimension, self.output_dimension, lamb=lamb, heb_lr=heb_lr)
         
-    def forward(self,x):
+    def forward(self,x, clamped_output):
         x=self.hebbian_layer(x)
         x=self.classifier_layer(x)
         return x
