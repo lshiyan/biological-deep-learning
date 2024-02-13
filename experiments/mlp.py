@@ -45,8 +45,7 @@ class MLPExperiment():
         for epoch in range(self.num_epochs):
             for i, data in enumerate(data_loader):
                 inputs, labels=data
-                outputs = self.model(inputs, labels)
-                break
+                outputs = self.model(inputs, self.oneHotEncode(labels))
                 """loss=loss_function(outputs, labels)
                 loss.backward()
                 optimizer.zero_grad()
