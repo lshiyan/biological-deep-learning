@@ -31,7 +31,7 @@ class HebbianLayer (nn.Module):
     def updateWeightsHebbian(self, input, output):
         weight=self.fc.weight
         outer_prod=torch.tensor(outer(output, input))
-        weight=torch.add(weight, self.alpha * outer_prod)
+        self.fc.weight=torch.add(weight, self.alpha * outer_prod)
                 
     #Feed forward.
     def forward(self, x, clamped_output=None):
