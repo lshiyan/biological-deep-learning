@@ -22,7 +22,7 @@ class HebbianLayer (nn.Module):
     def inhibition(self, x):
         normalization_factor=0
         normalization_factor+= torch.mean(x ** self.lamb)
-        x**self.lambda/=(normalization_factor*self.K)
+        x ** self.lamb/=(normalization_factor*self.K)
         return x
     
     #Employs hebbian learning rule, Wij->alpha*y_i*x_j. 
