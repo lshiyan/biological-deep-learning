@@ -6,12 +6,12 @@ from numpy import outer
 
 #Hebbian learning layer that implements lateral inhibition in output. Not trained through supervision.
 class HebbianLayer (nn.Module):
-    def __init__(self, input_dimension, output_dimension, lamb=1, heb_lr=1, alpha=0.1):
+    def __init__(self, input_dimension, output_dimension, lamb=2, heb_lr=0.1):
         super (HebbianLayer, self).__init__()
         self.input_dimension=input_dimension
         self.output_dimension=output_dimension
         self.lamb=lamb
-        self.alpha = alpha
+        self.alpha = heb_lr
         self.K=self.output_dimension/(0.001*self.input_dimension)
         self.fc=nn.Linear(self.input_dimension, self.output_dimension)
   
