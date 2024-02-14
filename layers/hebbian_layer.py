@@ -21,8 +21,8 @@ class HebbianLayer (nn.Module):
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
     def inhibition(self, x):
         normalization_factor=0
-        normalization_factor+= torch.sum(x ** self.lamb)
-        x/=(normalization_factor*self.K/self.input_dimension)
+        normalization_factor+= torch.mean(x ** self.lamb)
+        x/=(normalization_factor*self.K)
         return x
     
     #Employs hebbian learning rule, Wij->alpha*y_i*x_j. 
