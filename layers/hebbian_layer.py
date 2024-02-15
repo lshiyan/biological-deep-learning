@@ -23,7 +23,8 @@ class HebbianLayer (nn.Module):
     def inhibition(self, x):
         normalization_factor=0
         normalization_factor+= torch.mean(x ** self.lamb)
-        x ** self.lamb/=(normalization_factor*self.K)
+        x=x**self.lamb
+        x=(normalization_factor*self.K)
         return x
     
     #Employs hebbian learning rule, Wij->alpha*y_i*x_j. 
@@ -31,18 +32,19 @@ class HebbianLayer (nn.Module):
     def updateWeightsHebbian(self, input, output):
         weight=self.fc.weight
         outer_prod=torch.tensor(outer(output, input))
-        self.fc.weight=torch.add(weight, self.alpha * outer_prod)
+        self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha * outer_prod)) 
                 
     #Feed forward.
     def forward(self, x, clamped_output=None):
         input=x
         x=self.fc(x)
         x=self.inhibition(x) 
+        print(self.fc.weight)
         if clamped_output: #If we're clamping the output, i.e. a one hot of the label, update accordingly.
             self.updateWeightsHebbian(input, clamped_output)  
         else: #If not, do hebbian update with usual output.
             self.updateWeightsHebbian(input, x)  
-
+        print(self.fc.weight)
         return x
     
     #Creates heatmap of randomly chosen feature selectors.
@@ -62,3 +64,4 @@ class HebbianLayer (nn.Module):
 if __name__=="__main__":
     test_layer=HebbianLayer(3,3,1)
     test_layer(torch.tensor([1,2,3], dtype=torch.float))
+    
