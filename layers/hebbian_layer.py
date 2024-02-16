@@ -16,35 +16,34 @@ class HebbianLayer (nn.Module):
         self.fc=nn.Linear(self.input_dimension, self.output_dimension)
   
         for param in self.fc.parameters():
-            torch.nn.init.uniform_(param, a=0.0, b=1.0)
+            param=torch.nn.init.uniform_(param, a=0.0, b=0.5)
             param.requires_grad_(False)
     
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
     def inhibition(self, x):
         normalization_factor=0
         normalization_factor+= torch.mean(x ** self.lamb)
-        x= pow(x,self.lamb)
+        x=torch.pow(x,self.lamb)
         x/=(normalization_factor*self.K)
         return x
     
     #Employs hebbian learning rule, Wij->alpha*y_i*x_j. 
     #Calculates outer product of input and output and adds it to matrix.
     def updateWeightsHebbian(self, input, output):
-        weight=self.fc.weight
-        outer_prod=torch.tensor(outer(output, input))
-        self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha * outer_prod)) 
+        x=torch.tensor(input, requires_grad=False, dtype=torch.float)
+        y=torch.tensor(output, requires_grad=False, dtype=torch.float)
+        outer_prod=torch.tensor(outer(y, x))
+        self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha * outer_prod), requires_grad=False) 
                 
     #Feed forward.
     def forward(self, x, clamped_output=None):
         input=x
-        x=self.fc(x)
-        x=self.inhibition(x) 
-        print(self.fc.weight)
-        if clamped_output: #If we're clamping the output, i.e. a one hot of the label, update accordingly.
+        if clamped_output is not None: #If we're clamping the output, i.e. a one hot of the label, update accordingly.
             self.updateWeightsHebbian(input, clamped_output)  
         else: #If not, do hebbian update with usual output.
+            x=self.fc(x)
+            x=self.inhibition(x) 
             self.updateWeightsHebbian(input, x)  
-        print(self.fc.weight)
         return x
     
     #Creates heatmap of randomly chosen feature selectors.
