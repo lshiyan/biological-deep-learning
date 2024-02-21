@@ -67,9 +67,11 @@ class MLPExperiment():
         data_loader=DataLoader(data_set, batch_size=1)
         cor=0
         tot=0
+        print(self.model.classifier_layer.fc.weight)
         for i, data in enumerate(data_loader):
             inputs, labels=data
             outputs = torch.argmax(torch.softmax(self.model(inputs, labels), dim=1, dtype=torch.float), dim=1)
+            #print(outputs.data)
             if outputs.item()==labels.item():
                 cor+=1
             tot+=1

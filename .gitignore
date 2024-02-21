@@ -4,3 +4,9 @@
 #Compiled bytecode files.
 __pycache__/
 *.pyc
+.idea/biological-deep-learning.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/inspectionProfiles/Project_Default.xml
