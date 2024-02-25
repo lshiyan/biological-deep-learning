@@ -14,16 +14,16 @@ from layers.hebbian_layer import HebbianLayer
 class MLPExperiment():
     
     def __init__(self, args, input_dimension, hidden_layer_dimension, output_dimension, 
-                 lamb=1, heb_lr=1, grad_lr=0.001, num_epochs=3):
+                 lamb=1, heb_lr=1, grad_lr=0.001, num_epochs=3, K=10):
         self.model=HebbianNetwork(input_dimension, hidden_layer_dimension, 
-                                  output_dimension, heb_lr=heb_lr, lamb=lamb)#TODO: For some reason my hebbian network is not processing batches together.
+                                  output_dimension, heb_lr=heb_lr, lamb=lamb, K=K)#TODO: For some reason my hebbian network is not processing batches together.
         self.args=args
         self.num_epochs=num_epochs
         self.grad_lr=grad_lr
     
     #Returns ADAM optimize for gradient descent.
     def optimizer(self):
-        optimizer = optim.Adam(self.model.parameters(), self.grad_lr)
+        optimizer = optim.Adam(self.model.parameters(), self.grad_lr, weight_decay=1)
         return optimizer
 
     #Returns cross entropy loss function.
@@ -31,25 +31,22 @@ class MLPExperiment():
         loss_function = nn.CrossEntropyLoss()
         return loss_function
     
-    #Trains the experiment 
-    def train(self):
-        losses=[]
-        
+    #Trains the experiment.
+    def train(self):  
         data_set=MNIST_set(self.args)
-        data_loader=DataLoader(data_set, batch_size=1)
-        
-        optimizer = self.optimizer()
-        loss_function = self.loss_function()
+        data_loader=DataLoader(data_set, batch_size=1, shuffle=True)
         
         self.model.train()
-        for epoch in range(self.num_epochs):
+        
+        optimizer=self.optimizer()
+        for _ in range(self.num_epochs):
             for i, data in enumerate(data_loader):
                 inputs, labels=data
-                outputs = self.model(inputs, self.oneHotEncode(labels,10))
-                """loss=loss_function(outputs, labels)
-                loss.backward()
-                optimizer.zero_grad()
-                optimizer.step()"""
+                self.model(inputs, clamped_output=self.oneHotEncode(labels,10))
+                optimizer.step()
+                print(i)
+                if i==5:
+                    break
         
     #Given a tensor of labels, returns a one hot encoded tensor for each label.
     def oneHotEncode(self, labels, num_classes):
@@ -59,27 +56,27 @@ class MLPExperiment():
         return one_hot_encoded
         
     #Visualizes the weights associated with the first feature detector layer.
-    def visualizeWeights(self, num_choices):
-        self.model.visualizeWeights(num_choices)
+    def visualizeWeights(self, num_choices, classifier=0):
+        self.model.visualizeWeights(num_choices, classifier)
     
     def test(self):
         data_set=MNIST_set(self.args, 0)
-        data_loader=DataLoader(data_set, batch_size=1)
+        data_loader=DataLoader(data_set, batch_size=1, shuffle=True)
         cor=0
         tot=0
-        for i, data in enumerate(data_loader):
+        for _, data in enumerate(data_loader):
             inputs, labels=data
-            outputs = torch.argmax(torch.softmax(self.model(inputs, labels), dim=1, dtype=torch.float), dim=1)
+            outputs = torch.argmax(torch.softmax(self.model(inputs, None, train=0), dim=1))
             if outputs.item()==labels.item():
                 cor+=1
             tot+=1
         print("Accuracy:", cor/tot)
     
 if __name__=="__main__":
-    experiment=MLPExperiment(None, 784, 256, 10, lamb=1, num_epochs=3)
+    experiment=MLPExperiment(None, 784, 256 , 10, lamb=1.5, num_epochs=1, K=1000, heb_lr=0.1)
     experiment.train()
-    experiment.visualizeWeights(5)
-    experiment.test()
+    experiment.visualizeWeights(5, classifier=0)
+    #experiment.test()
     
             
             

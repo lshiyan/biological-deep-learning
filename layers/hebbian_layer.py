@@ -3,17 +3,20 @@ import torch.nn as nn
 import math
 import matplotlib.pyplot as plt
 from numpy import outer
+import warnings
+
+warnings.filterwarnings("ignore")
 
 #Hebbian learning layer that implements lateral inhibition in output. Not trained through supervision.
 class HebbianLayer (nn.Module):
-    def __init__(self, input_dimension, output_dimension, lamb=2, heb_lr=0.1, K=10):
+    def __init__(self, input_dimension, output_dimension, lamb=2, heb_lr=0.001, K=10):
         super (HebbianLayer, self).__init__()
         self.input_dimension=input_dimension
         self.output_dimension=output_dimension
         self.lamb=lamb
         self.alpha = heb_lr
         self.K=K
-        self.fc=nn.Linear(self.input_dimension, self.output_dimension)
+        self.fc=nn.Linear(self.input_dimension, self.output_dimension, bias=False)
   
         for param in self.fc.parameters():
             param=torch.nn.init.uniform_(param, a=0.0, b=0.5)
@@ -21,30 +24,42 @@ class HebbianLayer (nn.Module):
     
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
     def inhibition(self, x):
-        normalization_factor=0
-        normalization_factor+= torch.mean(x ** self.lamb)
+        """normalization_factor= torch.mean(x ** self.lamb)
         x=torch.pow(x,self.lamb)
-        x/=(normalization_factor*self.K)
+        x/=(normalization_factor*self.K )"""
+        max_ele=torch.max(x, dim=1).values.item()
+        x=torch.pow(x,self.lamb)
+        x/=max_ele**self.lamb
         return x
     
-    #Employs hebbian learning rule, Wij->alpha*y_i*x_j. 
+    #Employs Sanger's Rule, deltaW_(ij)=alpha*x_j*y_i-alpha*y_i*sum(k=1 to i) (w_(kj)*y_k)
     #Calculates outer product of input and output and adds it to matrix.
-    def updateWeightsHebbian(self, input, output):
-        x=torch.tensor(input, requires_grad=False, dtype=torch.float)
-        y=torch.tensor(output, requires_grad=False, dtype=torch.float)
-        outer_prod=torch.tensor(outer(y, x))
-        self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha * outer_prod), requires_grad=False) 
-                
-    #Feed forward.
-    def forward(self, x, clamped_output=None):
-        input=x
+    def updateWeightsHebbian(self, input, output, train):
+        if train:
+            x=torch.tensor(input.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
+            y=torch.tensor(output.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
+            outer_prod=torch.tensor(outer(y, x))
+            initial_weight=self.fc.weight.clone().detach()
+            self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha*outer_prod), requires_grad=False)
+            A = torch.zeros(self.output_dimension, self.input_dimension) 
+            for i in range(self.output_dimension):
+                for j in range(self.input_dimension):
+                    A[i, j] = torch.sum(initial_weight[:i, j] * y[:i])
+            for i in range(self.output_dimension):
+                for j in range(self.input_dimension):
+                    self.fc.weight[i,j]-=self.alpha*y[i]*A[i,j]
+            
+    #Feed forward
+    def forward(self, x, clamped_output=None, train=1):
+        input=x.clone()
         if clamped_output is not None: #If we're clamping the output, i.e. a one hot of the label, update accordingly.
-            self.updateWeightsHebbian(input, clamped_output)  
+            self.updateWeightsHebbian(input, clamped_output, train)
+            return clamped_output  
         else: #If not, do hebbian update with usual output.
             x=self.fc(x)
             x=self.inhibition(x) 
-            self.updateWeightsHebbian(input, x)  
-        return x
+            self.updateWeightsHebbian(input, x, train)  
+            return x
     
     #Creates heatmap of randomly chosen feature selectors.
     def visualizeWeights(self, num_choices):
@@ -53,7 +68,10 @@ class HebbianLayer (nn.Module):
         for ele in random_indices:#Scalar tensor
             idx=ele.item()
             random_feature_selector=weight[idx]
-            heatmap=random_feature_selector.view(28,28)
+            print(idx) 
+            print(random_feature_selector)
+            heatmap=random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))), 
+                                                 int(math.sqrt(self.fc.weight.size(1))))
             plt.imshow(heatmap, cmap='hot', interpolation='nearest')
             plt.title("HeatMap of feature selector {} with lambda {}".format(idx, self.lamb))
             plt.colorbar()
@@ -61,6 +79,6 @@ class HebbianLayer (nn.Module):
         return
     
 if __name__=="__main__":
-    test_layer=HebbianLayer(3,3,1)
-    test_layer(torch.tensor([1,2,3], dtype=torch.float))
+    test_layer=(torch.tensor([[1,2,3],[1,2,3],[1,2,3]], dtype=torch.float))
+    print(torch.mul(test_layer, test_layer))
     
