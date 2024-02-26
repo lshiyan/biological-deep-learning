@@ -14,7 +14,7 @@ from layers.hebbian_layer import HebbianLayer
 class MLPExperiment():
     
     def __init__(self, args, input_dimension, hidden_layer_dimension, output_dimension, 
-                 lamb=1, heb_lr=1, grad_lr=0.001, num_epochs=3):
+                 lamb=1.5, heb_lr=0.01, grad_lr=0.001, num_epochs=3):
         self.model=HebbianNetwork(input_dimension, hidden_layer_dimension, 
                                   output_dimension, heb_lr=heb_lr, lamb=lamb)#TODO: For some reason my hebbian network is not processing batches together.
         self.args=args
@@ -42,15 +42,22 @@ class MLPExperiment():
         loss_function = self.loss_function()
         
         self.model.train()
+        oud_O = None
+
         for epoch in range(self.num_epochs):
             for i, data in enumerate(data_loader):
                 inputs, labels=data
                 outputs = self.model(inputs, self.oneHotEncode(labels,10))
-                """loss=loss_function(outputs, labels)
-                loss.backward()
-                optimizer.zero_grad()
-                optimizer.step()"""
-        
+                #print((torch.softmax(outputs, dim=1, dtype=torch.float)))
+                oud_O = outputs
+                #break
+                # if i == 1000 :
+                #     break
+                # """loss=loss_function(outputs, labels)
+                # loss.backward()
+                # optimizer.zero_grad()
+                # optimizer.step()"""
+                #
     #Given a tensor of labels, returns a one hot encoded tensor for each label.
     def oneHotEncode(self, labels, num_classes):
         one_hot_encoded = torch.zeros(len(labels), num_classes)
@@ -67,18 +74,25 @@ class MLPExperiment():
         data_loader=DataLoader(data_set, batch_size=1)
         cor=0
         tot=0
-        print(self.model.classifier_layer.fc.weight)
+        #print(self.model.classifier_layer.fc.weight)
         for i, data in enumerate(data_loader):
+            if i == 1000:
+                break
             inputs, labels=data
-            outputs = torch.argmax(torch.softmax(self.model(inputs, labels), dim=1, dtype=torch.float), dim=1)
-            #print(outputs.data)
-            if outputs.item()==labels.item():
+            #print((self.model(inputs, labels)))
+            outputs = (torch.softmax(self.model.use_forward(inputs), dim=1, dtype=torch.float))
+            predict = torch.argmax(outputs,dim=1)
+            #print(predict.item() > 4)
+            if labels.item() == 0:
+                print(outputs)
+                print(labels)
+            if predict.item()==labels.item():
                 cor+=1
             tot+=1
         print("Accuracy:", cor/tot)
     
 if __name__=="__main__":
-    experiment=MLPExperiment(None, 784, 256, 10, lamb=1, num_epochs=3)
+    experiment=MLPExperiment(None, 784, 2560, 10, lamb=3, num_epochs=3)
     experiment.train()
     experiment.visualizeWeights(5)
     experiment.test()

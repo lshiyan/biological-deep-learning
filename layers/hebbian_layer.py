@@ -22,7 +22,8 @@ class HebbianLayer (nn.Module):
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
     def inhibition(self, x):
         normalization_factor=0
-        normalization_factor+= torch.max(x ** self.lamb)
+        normalization_factor += torch.max(x ** self.lamb)
+        #print(torch.max(x ** self.lamb))
         x=torch.pow(x,self.lamb)
         x/=(normalization_factor*self.K)
         return x
@@ -32,20 +33,26 @@ class HebbianLayer (nn.Module):
     def updateWeightsHebbian(self, input, output):
         x=torch.tensor(input, requires_grad=False, dtype=torch.float)
         y=torch.tensor(output, requires_grad=False, dtype=torch.float)
-        outer_prod=torch.tensor(outer(y, x))
-        self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha * (outer_prod -0.01*self.fc.weight) ), requires_grad=False)
-                
-    #Feed forward.
-    def forward(self, x, clamped_output=None):
-        input=x
-        if clamped_output is not None: #If we're clamping the output, i.e. a one hot of the label, update accordingly.
-            x=self.inhibition(x)
 
+
+        outer_prod=torch.tensor(outer(y, x))
+        torch.nn.functional.normalize(self.fc.weight,p=2, dim=1)
+        self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha * (outer_prod -1*self.fc.weight) ), requires_grad=False)
+        torch.nn.functional.normalize(self.fc.weight,p=2, dim=1)
+
+    #Feed forward.
+    def forward(self, x, clamped_output=None,train = True):
+        input=x
+        if not train:
+            return self.fc(x)
+        x = self.fc(x)
+        x = self.inhibition(x)
+        #0x = x/torch.sum(x)
+        if clamped_output is not None: #If we're clamping the output, i.e. a one hot of the label, update accordingly.
             self.updateWeightsHebbian(input, clamped_output)
         else: #If not, do hebbian update with usual output.
-            x=self.fc(x)
-            x=self.inhibition(x) 
-            self.updateWeightsHebbian(input, x)  
+            #x=self.fc(x)
+            self.updateWeightsHebbian(input, x)
         return x
     
     #Creates heatmap of randomly chosen feature selectors.

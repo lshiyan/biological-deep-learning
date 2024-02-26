@@ -15,8 +15,14 @@ class HebbianNetwork(nn.Module):
     def forward(self,x, clamped_output):
         x=self.hebbian_layer(x)
         x=self.classifier_layer(x, clamped_output)
+        #x=self.classifier_layer(x)
+
         return x
-    
+
+    def use_forward(self,x):
+        x = self.hebbian_layer.forward(x=x,train=False)
+        x = self.classifier_layer.forward(x=x,train=False)
+        return x
     def visualizeWeights(self, num_choices):
         self.hebbian_layer.visualizeWeights(num_choices=num_choices)
     
