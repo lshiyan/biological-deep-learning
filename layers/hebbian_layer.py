@@ -21,6 +21,17 @@ class HebbianLayer (nn.Module):
         for param in self.fc.parameters():
             param=torch.nn.init.uniform_(param, a=0.0, b=0.5)
             param.requires_grad_(False)
+            
+        self.itensors=self.createITensors()
+        
+    def createITensors(self):
+        itensors=torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension)
+        for i in range(0, self.output_dimension):
+            identity = torch.eye(i+1)
+            padded_identity = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, 
+                                                                 self.output_dimension - i-1))
+            itensors[i]=padded_identity
+        return itensors
     
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
     def inhibition(self, x):
@@ -39,15 +50,9 @@ class HebbianLayer (nn.Module):
             x=torch.tensor(input.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
             y=torch.tensor(output.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
             outer_prod=torch.tensor(outer(y, x))
-            initial_weight=self.fc.weight.clone().detach()
+            initial_weight=self.fc.weight.clone().detach().transpose(0,1)
             self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha*outer_prod), requires_grad=False)
-            A = torch.zeros(self.output_dimension, self.input_dimension) 
-            for i in range(self.output_dimension):
-                for j in range(self.input_dimension):
-                    A[i, j] = torch.sum(initial_weight[:i, j] * y[:i])
-            for i in range(self.output_dimension):
-                for j in range(self.input_dimension):
-                    self.fc.weight[i,j]-=self.alpha*y[i]*A[i,j]
+            A=torch.einsum('jk, lkm, m -> jl', initial_weight, self.itensors, y)
             
     #Feed forward
     def forward(self, x, clamped_output=None, train=1):

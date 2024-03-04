@@ -44,9 +44,6 @@ class MLPExperiment():
                 inputs, labels=data
                 self.model(inputs, clamped_output=self.oneHotEncode(labels,10))
                 optimizer.step()
-                print(i)
-                if i==5:
-                    break
         
     #Given a tensor of labels, returns a one hot encoded tensor for each label.
     def oneHotEncode(self, labels, num_classes):
