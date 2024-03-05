@@ -16,31 +16,34 @@ class HebbianLayer (nn.Module):
         self.fc=nn.Linear(self.input_dimension, self.output_dimension)
   
         for param in self.fc.parameters():
-            param=torch.nn.init.uniform_(param, a=0.0, b=0.5)
+            param=torch.nn.init.uniform_(param, a=-1, b=1)
             param.requires_grad_(False)
     
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
     def inhibition(self, x):        
         #print(torch.max(x ** self.lamb))
-        x=torch.pow(x,self.lamb)
+        x = torch.relu_(x)
+        x = torch.pow(x,self.lamb)
+
         if len(x.shape)==1:
-            normalization_factor = torch.max(x)
+            normalization_factor = torch.max(x, dim=0, keepdim=True)
         else:       
             normalization_factor = torch.max(x, dim=1, keepdim=True)
-        x/=(normalization_factor)
+        x = x/(normalization_factor.values + 1e-16)
         return x
     
     #Employs hebbian learning rule, Wij->alpha*y_i*x_j. 
     #Calculates outer product of input and output and adds it to matrix.
     def updateWeightsHebbian(self, input, output):
-        x=torch.tensor(input, requires_grad=False, dtype=torch.float)
-        y=torch.tensor(output, requires_grad=False, dtype=torch.float)
+        x=input
+        y=output
 
+        outer_prod=torch.tensor(outer(y, x), dtype=torch.float)
+        current_weights = self.fc.weight
+        hebbian_update = torch.add(current_weights, self.alpha * outer_prod)
+        normalized_weights = torch.nn.functional.normalize(hebbian_update,p=2, dim=1)
+        self.fc.weight=nn.Parameter(normalized_weights, requires_grad=False)
 
-        outer_prod=torch.tensor(outer(y, x))
-        torch.nn.functional.normalize(self.fc.weight,p=2, dim=1)
-        self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha * (outer_prod -1*self.fc.weight) ), requires_grad=False)
-        torch.nn.functional.normalize(self.fc.weight,p=2, dim=1)
 
     #Feed forward.
     def forward(self, x, clamped_output=None,train = True):
