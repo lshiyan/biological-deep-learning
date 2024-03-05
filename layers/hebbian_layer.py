@@ -24,6 +24,7 @@ class HebbianLayer (nn.Module):
             
         self.itensors=self.createITensors()
         
+    #Creates identity tensors for Sanger's rule computation.
     def createITensors(self):
         itensors=torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension)
         for i in range(0, self.output_dimension):
@@ -33,14 +34,11 @@ class HebbianLayer (nn.Module):
             itensors[i]=padded_identity
         return itensors
     
-    #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
+    #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ max on i (h_mu_i)^(lambda)
     def inhibition(self, x):
-        """normalization_factor= torch.mean(x ** self.lamb)
-        x=torch.pow(x,self.lamb)
-        x/=(normalization_factor*self.K )"""
         max_ele=torch.max(x, dim=1).values.item()
-        x=torch.pow(x,self.lamb)
-        x/=max_ele**self.lamb
+        x=torch.pow(x,self.lamb) #Make sure that lamb is an integer power.
+        x/=abs(max_ele)**self.lamb
         return x
     
     #Employs Sanger's Rule, deltaW_(ij)=alpha*x_j*y_i-alpha*y_i*sum(k=1 to i) (w_(kj)*y_k)
@@ -52,7 +50,9 @@ class HebbianLayer (nn.Module):
             outer_prod=torch.tensor(outer(y, x))
             initial_weight=self.fc.weight.clone().detach().transpose(0,1)
             self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha*outer_prod), requires_grad=False)
-            A=torch.einsum('jk, lkm, m -> jl', initial_weight, self.itensors, y)
+            A=torch.einsum('jk, lkm, m -> lj', initial_weight, self.itensors, y)
+            A=A*(y.unsqueeze(1))
+            self.fc.weight=nn.Parameter(torch.sub(self.fc.weight, self.alpha*A), requires_grad=False)
             
     #Feed forward
     def forward(self, x, clamped_output=None, train=1):
@@ -73,8 +73,6 @@ class HebbianLayer (nn.Module):
         for ele in random_indices:#Scalar tensor
             idx=ele.item()
             random_feature_selector=weight[idx]
-            print(idx) 
-            print(random_feature_selector)
             heatmap=random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))), 
                                                  int(math.sqrt(self.fc.weight.size(1))))
             plt.imshow(heatmap, cmap='hot', interpolation='nearest')
@@ -84,6 +82,10 @@ class HebbianLayer (nn.Module):
         return
     
 if __name__=="__main__":
-    test_layer=(torch.tensor([[1,2,3],[1,2,3],[1,2,3]], dtype=torch.float))
-    print(torch.mul(test_layer, test_layer))
+    length_3_tensor = torch.tensor([2, 3, 4])
+    tensor_3x3 = torch.tensor([[1, 2, 3],
+                            [4, 5, 6],
+                            [7, 8, 9]])
+    expanded_length_3_tensor = length_3_tensor.unsqueeze(1)
+    print(tensor_3x3*expanded_length_3_tensor)
     

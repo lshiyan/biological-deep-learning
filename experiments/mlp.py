@@ -42,9 +42,10 @@ class MLPExperiment():
         for _ in range(self.num_epochs):
             for i, data in enumerate(data_loader):
                 inputs, labels=data
-                self.model(inputs, clamped_output=self.oneHotEncode(labels,10))
+                self.model(inputs, clamped_output=None)
                 optimizer.step()
-        
+
+            
     #Given a tensor of labels, returns a one hot encoded tensor for each label.
     def oneHotEncode(self, labels, num_classes):
         one_hot_encoded = torch.zeros(len(labels), num_classes)
@@ -70,9 +71,9 @@ class MLPExperiment():
         print("Accuracy:", cor/tot)
     
 if __name__=="__main__":
-    experiment=MLPExperiment(None, 784, 256 , 10, lamb=1.5, num_epochs=1, K=1000, heb_lr=0.1)
+    experiment=MLPExperiment(None, 784, 256 , 10, lamb=3, num_epochs=1, K=1000, heb_lr=0.1)
     experiment.train()
-    experiment.visualizeWeights(5, classifier=0)
+    experiment.visualizeWeights(10, classifier=0)
     #experiment.test()
     
             
