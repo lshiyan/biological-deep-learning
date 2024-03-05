@@ -93,7 +93,7 @@ class MLPExperiment():
         print("Accuracy:", cor/tot)
     
 if __name__=="__main__":
-    experiment=MLPExperiment(None, 784, 256, 10, lamb=10, num_epochs=1)
+    experiment=MLPExperiment(None, 784, 256, 10, lamb=30, num_epochs=1)
     experiment.train()
     experiment.visualizeWeights(10)
     experiment.test()

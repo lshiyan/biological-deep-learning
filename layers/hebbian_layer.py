@@ -16,7 +16,10 @@ class HebbianLayer (nn.Module):
         self.fc=nn.Linear(self.input_dimension, self.output_dimension)
   
         for param in self.fc.parameters():
-            param=torch.nn.init.uniform_(param, a=-1, b=1)
+            if len(param.shape) == 2:
+                param = torch.nn.init.xavier_normal_(param)
+            else:
+                param=torch.nn.init.uniform_(param, a=-1, b=1)
             param.requires_grad_(False)
     
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
@@ -41,7 +44,7 @@ class HebbianLayer (nn.Module):
         outer_prod = torch.tensor(outer(z, x), dtype=torch.float)
         current_weights = self.fc.weight
         decay_strength = torch.tensor(y).unsqueeze(-1)
-        max_decay = 0.1
+        max_decay = 0.7
         if len(decay_strength.shape) == 3:
             decay_strength = decay_strength.mean(0)
         max_strength = torch.max(decay_strength)
