@@ -6,7 +6,7 @@ from numpy import outer
 
 #Hebbian learning layer that implements lateral inhibition in output. Not trained through supervision.
 class HebbianLayer (nn.Module):
-    def __init__(self, input_dimension, output_dimension, lamb=1.0, heb_lr=0.1, K=10):
+    def __init__(self, input_dimension, output_dimension, lamb=1.0, heb_lr=0.1, K=1):
         super (HebbianLayer, self).__init__()
         self.input_dimension=input_dimension
         self.output_dimension=output_dimension
@@ -20,14 +20,12 @@ class HebbianLayer (nn.Module):
             param.requires_grad_(False)
     
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ sum on i (h_mu_i)^(lambda)
-    def inhibition(self, x):        
+    def inhibition(self, x):
+        normalization_factor=0
+        normalization_factor += torch.max(x ** self.lamb)
         #print(torch.max(x ** self.lamb))
         x=torch.pow(x,self.lamb)
-        if len(x.shape)==1:
-            normalization_factor = torch.max(x)
-        else:       
-            normalization_factor = torch.max(x, dim=1, keepdim=True)
-        x/=(normalization_factor)
+        x/=(normalization_factor*self.K)
         return x
     
     #Employs hebbian learning rule, Wij->alpha*y_i*x_j. 
@@ -38,9 +36,18 @@ class HebbianLayer (nn.Module):
 
 
         outer_prod=torch.tensor(outer(y, x))
-        torch.nn.functional.normalize(self.fc.weight,p=2, dim=1)
+        #torch.nn.functional.normalize(self.fc.weight,p=2, dim=1)
+        #self.fc.weight=nn.Parameter(torch.div(self.fc.weight, 10 * (torch.sum(self.fc.weight) )), requires_grad=False)
+
+
         self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha * (outer_prod -1*self.fc.weight) ), requires_grad=False)
-        torch.nn.functional.normalize(self.fc.weight,p=2, dim=1)
+
+
+        #torch.nn.functional.normalize(self.fc.weight,p=2, dim=1)
+        #torch.nn.functional.normalize(self.fc.weight,p=2, dim=0)
+
+        #torch.nn.functional.normalize(self.fc.weight,p=1, dim=1)
+        #self.fc.weight=nn.Parameter(torch.div(self.fc.weight, 0.1 * (torch.sum(self.fc.weight) )), requires_grad=False)
 
     #Feed forward.
     def forward(self, x, clamped_output=None,train = True):
