@@ -45,6 +45,7 @@ class MLPExperiment():
         oud_O = None
 
         for epoch in range(self.num_epochs):
+            print(f"Training epoch {epoch}...")
             for i, data in enumerate(data_loader):
                 inputs, labels=data
                 outputs = self.model(inputs, self.oneHotEncode(labels,10))
@@ -92,9 +93,9 @@ class MLPExperiment():
         print("Accuracy:", cor/tot)
     
 if __name__=="__main__":
-    experiment=MLPExperiment(None, 784, 2560, 10, lamb=3, num_epochs=3)
+    experiment=MLPExperiment(None, 784, 256, 10, lamb=10, num_epochs=1)
     experiment.train()
-    experiment.visualizeWeights(5)
+    experiment.visualizeWeights(10)
     experiment.test()
     
             
