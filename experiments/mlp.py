@@ -23,7 +23,7 @@ class MLPExperiment():
     
     #Returns ADAM optimize for gradient descent.
     def optimizer(self):
-        optimizer = optim.Adam(self.model.parameters(), self.grad_lr, weight_decay=1)
+        optimizer = optim.Adam(self.model.parameters(), self.grad_lr, weight_decay=0.001)
         return optimizer
 
     #Returns cross entropy loss function.
@@ -71,7 +71,7 @@ class MLPExperiment():
         print("Accuracy:", cor/tot)
     
 if __name__=="__main__":
-    experiment=MLPExperiment(None, 784, 256 , 10, lamb=3, num_epochs=1, K=1000, heb_lr=0.1)
+    experiment=MLPExperiment(None, 784, 256 , 10, lamb=1, num_epochs=1, K=1000, heb_lr=0.1)
     experiment.train()
     experiment.visualizeWeights(10, classifier=0)
     #experiment.test()

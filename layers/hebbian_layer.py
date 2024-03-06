@@ -15,9 +15,9 @@ class HebbianLayer (nn.Module):
         self.output_dimension=output_dimension
         self.lamb=lamb
         self.alpha = heb_lr
-        self.K=K
         self.fc=nn.Linear(self.input_dimension, self.output_dimension, bias=False)
-  
+        self.relu=nn.ReLU()
+        
         for param in self.fc.parameters():
             param=torch.nn.init.uniform_(param, a=0.0, b=0.5)
             param.requires_grad_(False)
@@ -26,7 +26,7 @@ class HebbianLayer (nn.Module):
         
     #Creates identity tensors for Sanger's rule computation.
     def createITensors(self):
-        itensors=torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension)
+        itensors=torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
         for i in range(0, self.output_dimension):
             identity = torch.eye(i+1)
             padded_identity = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, 
@@ -36,6 +36,7 @@ class HebbianLayer (nn.Module):
     
     #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ max on i (h_mu_i)^(lambda)
     def inhibition(self, x):
+        x=self.relu(x)
         max_ele=torch.max(x, dim=1).values.item()
         x=torch.pow(x,self.lamb) #Make sure that lamb is an integer power.
         x/=abs(max_ele)**self.lamb
@@ -50,7 +51,7 @@ class HebbianLayer (nn.Module):
             outer_prod=torch.tensor(outer(y, x))
             initial_weight=self.fc.weight.clone().detach().transpose(0,1)
             self.fc.weight=nn.Parameter(torch.add(self.fc.weight, self.alpha*outer_prod), requires_grad=False)
-            A=torch.einsum('jk, lkm, m -> lj', initial_weight, self.itensors, y)
+            A=torch.einsum('jk, lkm, m -> jl', initial_weight, self.itensors, y).transpose(0,1)
             A=A*(y.unsqueeze(1))
             self.fc.weight=nn.Parameter(torch.sub(self.fc.weight, self.alpha*A), requires_grad=False)
             
@@ -62,7 +63,8 @@ class HebbianLayer (nn.Module):
             return clamped_output  
         else: #If not, do hebbian update with usual output.
             x=self.fc(x)
-            x=self.inhibition(x) 
+            x=torch.nn.functional.normalize(x)
+            #x=self.inhibition(x)
             self.updateWeightsHebbian(input, x, train)  
             return x
     
@@ -70,9 +72,9 @@ class HebbianLayer (nn.Module):
     def visualizeWeights(self, num_choices):
         weight=self.fc.weight
         random_indices = torch.randperm(self.fc.weight.size(0))[:num_choices]
-        for ele in random_indices:#Scalar tensor
-            idx=ele.item()
-            random_feature_selector=weight[idx]
+        for ele in range(20):#Scalar tensor
+            idx=ele
+            random_feature_selector=weight[ele]
             heatmap=random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))), 
                                                  int(math.sqrt(self.fc.weight.size(1))))
             plt.imshow(heatmap, cmap='hot', interpolation='nearest')
@@ -82,10 +84,12 @@ class HebbianLayer (nn.Module):
         return
     
 if __name__=="__main__":
-    length_3_tensor = torch.tensor([2, 3, 4])
+    length_3_tensor = torch.tensor([1,1,1], dtype=torch.float)
+    test=torch.tensor([1,2,3], dtype=float)
     tensor_3x3 = torch.tensor([[1, 2, 3],
                             [4, 5, 6],
-                            [7, 8, 9]])
+                            [7, 8, 9]], dtype=torch.float)
     expanded_length_3_tensor = length_3_tensor.unsqueeze(1)
-    print(tensor_3x3*expanded_length_3_tensor)
-    
+    model=HebbianLayer(3,3,1)
+    print(torch.einsum('jk, lkm, m -> jl', tensor_3x3, model.createITensors(), length_3_tensor)*
+          test.unsqueeze(1))
