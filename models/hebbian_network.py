@@ -1,5 +1,4 @@
 from layers.hebbian_layer import HebbianLayer
-import torch
 import torch.nn as nn 
 
 class HebbianNetwork(nn.Module):

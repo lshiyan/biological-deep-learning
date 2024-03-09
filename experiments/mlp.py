@@ -1,14 +1,10 @@
 import torch
 import torch.nn as nn 
 import torch.optim as optim
-import os
-import matplotlib.pyplot as plt 
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from data.data_loader import MNIST_set
 from models.hebbian_network import HebbianNetwork
-from layers.hebbian_layer import HebbianLayer
-
 
 
 class MLPExperiment():
@@ -65,6 +61,7 @@ class MLPExperiment():
         for _, data in enumerate(data_loader):
             inputs, labels=data
             outputs = torch.argmax(torch.softmax(self.model(inputs, None, train=0), dim=1))
+            print(outputs)
             if outputs.item()==labels.item():
                 cor+=1
             tot+=1
@@ -74,6 +71,7 @@ if __name__=="__main__":
     experiment=MLPExperiment(None, 784, 256 , 10, lamb=1, num_epochs=1, K=1000, heb_lr=0.1)
     experiment.train()
     experiment.visualizeWeights(10, classifier=0)
+    experiment.visualizeWeights(10, classifier=1)
     #experiment.test()
     
             
