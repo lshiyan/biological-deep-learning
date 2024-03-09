@@ -38,7 +38,7 @@ class HebbianLayer (nn.Module):
     def inhibition(self, x):
         x=self.relu(x)
         max_ele=torch.max(x, dim=1).values.item()
-        x=torch.pow(x,self.lamb) #Make sure that lamb is an integer power.
+        x=torch.pow(x,self.lamb) 
         x/=abs(max_ele)**self.lamb
         return x
     
@@ -64,8 +64,8 @@ class HebbianLayer (nn.Module):
             return clamped_output  
         else: #If not, do hebbian update with usual output.
             x=self.fc(x)
-            x=torch.nn.functional.normalize(x)
-            #x=self.inhibition(x)
+            #x=torch.nn.functional.normalize(x)
+            x=self.inhibition(x)
             self.updateWeightsHebbian(input, x, train)  
             return x
     
@@ -73,8 +73,8 @@ class HebbianLayer (nn.Module):
     def visualizeWeights(self, num_choices):
         weight=self.fc.weight
         random_indices = torch.randperm(self.fc.weight.size(0))[:num_choices]
-        for ele in random_indices:#Scalar tensor
-            idx=ele.item()
+        for ele in range(20):#Scalar tensor
+            idx=ele
             random_feature_selector=weight[ele]
             heatmap=random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))), 
                                                  int(math.sqrt(self.fc.weight.size(1))))

@@ -19,13 +19,13 @@ class MNIST_set(Dataset):
         #self.dataframe=pd.read_csv(self.root_path+self.filename)
         
         if train:
-            self.dataframe=pd.read_csv('/mnist/mnist_train.csv', header=None)
+            self.dataframe=pd.read_csv('data/mnist/mnist_train.csv', header=None)
             self.labels=torch.tensor(self.dataframe[0].values)
             self.dataframe=torch.tensor(self.dataframe.drop(self.dataframe.columns[0], axis=1).values, dtype=torch.float)
             self.dataframe/=255
         
         else:
-            self.dataframe=pd.read_csv('/mnist/mnist_test.csv', header=None)
+            self.dataframe=pd.read_csv('data/mnist/mnist_test.csv', header=None)
             self.labels=torch.tensor(self.dataframe[0].values)
             self.dataframe=torch.tensor(self.dataframe.drop(self.dataframe.columns[0], axis=1).values, dtype=torch.float)
             self.dataframe/=255
