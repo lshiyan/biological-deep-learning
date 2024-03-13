@@ -10,19 +10,19 @@ class HebbianNetwork(nn.Module):
         self.output_dimension=output_dimension
         self.hidden_layer_dimension=hidden_layer_dimension
         self.hebbian_layer=HebbianLayer(self.input_dimension, self.hidden_layer_dimension, lamb=lamb, heb_lr=heb_lr)
-        self.classifier_layer=HebbianLayer(self.hidden_layer_dimension, self.output_dimension, lamb=lamb, heb_lr=heb_lr)
+        self.classifier_layer=HebbianLayer(self.hidden_layer_dimension, self.output_dimension, lamb=1, heb_lr=heb_lr)
         
     def forward(self,x, clamped_output):
-        x=self.hebbian_layer(x)
-        x=self.classifier_layer(x, clamped_output)
+        h=self.hebbian_layer(x)
+        y=self.classifier_layer(h, clamped_output)
         #x=self.classifier_layer(x)
 
-        return x
+        return y
 
     def use_forward(self,x):
-        x = self.hebbian_layer.forward(x=x,train=False)
-        x = self.classifier_layer.forward(x=x,train=False)
-        return x
+        h = self.hebbian_layer.forward(x=x,train=False)
+        y = self.classifier_layer.forward(x=h,train=False)
+        return y
     def visualizeWeights(self, num_choices):
         self.hebbian_layer.visualizeWeights(num_choices=num_choices)
     
