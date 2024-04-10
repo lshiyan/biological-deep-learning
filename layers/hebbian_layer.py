@@ -15,7 +15,7 @@ class HebbianLayer (nn.Module):
         self.output_dimension=output_dimension
         self.lamb=lamb
         self.alpha = heb_lr
-        self.fc=nn.Linear(self.input_dimension, self.output_dimension, bias=False)
+        self.fc=nn.Linear(self.input_dimension, self.output_dimension, bias=True)
         self.relu=nn.ReLU()
         self.sigmoid=nn.Sigmoid()
         self.softplus=nn.Softplus()
@@ -33,7 +33,8 @@ class HebbianLayer (nn.Module):
         for param in self.fc.parameters():
             param=torch.nn.init.uniform_(param, a=0.0, b=1.0)
             param.requires_grad_(False)
-            
+        
+        
     def setScheduler(self, scheduler):
         self.scheduler=scheduler
         
@@ -55,18 +56,22 @@ class HebbianLayer (nn.Module):
         x/=abs(max_ele)**self.lamb
         return x
     
-    def updateWeightsHebbianClassifier(self, input, output, clamped_output=None):
-        y=output.clone().detach().squeeze()
-        x=input.clone().detach().squeeze()
-        outer_prod=None
-        if clamped_output != None:
-            outer_prod=torch.outer(clamped_output-y,x)
-        else:
-            outer_prod=torch.outer(y,x)
-        A=self.fc.weight+self.alpha*outer_prod
-        weight_maxes=torch.max(A, dim=1).values
-        self.fc.weight=nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
-        self.fc.weight[:, 0] = 0
+    def updateWeightsHebbianClassifier(self, input, output, clamped_output=None, train=1):
+        if train:
+            u=output.clone().detach().squeeze()
+            x=input.clone().detach().squeeze()
+            y=torch.softmax(u, dim=0)
+            A=None
+            if clamped_output != None:
+                outer_prod=torch.outer(clamped_output-y,x)
+                u_times_y=torch.mul(u,y)
+                A=outer_prod-self.fc.weight*(u_times_y.unsqueeze(1))
+            else:
+                A=torch.outer(y,x)
+            A=self.fc.weight+self.alpha*A
+            weight_maxes=torch.max(A, dim=1).values
+            self.fc.weight=nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
+            self.fc.weight[:, 0] = 0
         
     #Employs Sanger's Rule, deltaW_(ij)=alpha*x_j*y_i-alpha*y_i*sum(k=1 to i) (w_(kj)*y_k)
     #Calculates outer product of input and output and adds it to matrix.
@@ -81,31 +86,27 @@ class HebbianLayer (nn.Module):
             delta_weight=self.alpha*(outer_prod-A)
             self.fc.weight=nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
             self.exponential_average=torch.add(self.gamma*self.exponential_average,(1-self.gamma)*y)
-            
+        
+    def updateBias(self, output, train=1):
+        if train:
+            y=output.clone().detach().squeeze()
+            exponential_bias=torch.exp(-1*self.fc.bias)
+            A=torch.mul(exponential_bias, y)-1
+            A=self.fc.bias+self.alpha*A
+            bias_maxes=torch.max(A, dim=0).values
+            self.fc.bias=nn.Parameter(A/bias_maxes.item(), requires_grad=False)
+
     #Decays the overused weights and increases the underused weights using tanh functions.
     def weightDecay(self):
         average=torch.mean(self.exponential_average).item()
         A=self.exponential_average/average
         growth_factor_positive=self.eps*self.tanh(-self.eps*(A-1))+1
         growth_factor_negative=torch.reciprocal(growth_factor_positive)
-        """above_average=torch.where(A>1, 1, 0.0)
-        below_average=torch.where(A<1, A, 0.0)
-        above_average_mask= above_average != 0
-        below_average_mask= below_average != 0
-        #above_average=torch.where(above_average_mask, self.tanh(-1*(above_average-1))+1, 0.0)
-        below_average=torch.where(below_average_mask, 0.0001*self.tanh(10000*below_average)+1, 0.0)
-        growth_factors=torch.add(above_average, below_average)"""
         positive_weights=torch.where(self.fc.weight>0, self.fc.weight, 0.0)
         negative_weights=torch.where(self.fc.weight<0, self.fc.weight, 0.0)
         positive_weights=positive_weights*growth_factor_positive.unsqueeze(1)
         negative_weights=negative_weights*growth_factor_negative.unsqueeze(1)
-        #print(weight_sign_tensor)
-        #print(weight_abs_tensor)
-        #print("factors:", growth_factors)
         self.fc.weight=nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
-        #self.fc.weight=nn.Parameter(self.fc.weight*(growth_factors.unsqueeze(1)), requires_grad=False)
-        """feature_maxes=torch.max(torch.abs(self.fc.weight), dim=1).values
-        self.fc.weight=nn.Parameter(self.fc.weight/feature_maxes.unsqueeze(1), requires_grad=False)"""
         if (self.fc.weight.isnan().any()):
             print("NAN WEIGHT")
     
@@ -114,16 +115,23 @@ class HebbianLayer (nn.Module):
         input=x.clone()
         if self.isClassifier:
             x=self.fc(x)
+            self.updateWeightsHebbianClassifier(input, x, clamped_output=clamped_output, train=train)
+            #self.updateBias(x, train=train)
             x=self.softmax(x)
-            self.updateWeightsHebbianClassifier(input, x, clamped_output=clamped_output)
             return x
-        x=self.fc(x)
-        x=self.inhibition(x)
-        self.updateWeightsHebbian(input, x, train)
-        self.weightDecay() 
-        if self.scheduler is not None:
-            self.alpha=self.scheduler.step()
-        return x
+        else:
+            x=self.fc(x)
+            x=self.inhibition(x)
+            self.updateWeightsHebbian(input, x, train)
+            #self.updateBias(x, train=train)
+            self.weightDecay() 
+            return x
+    
+    #Counts the number of active feature selectors (above a certain cutoff beta).
+    def activeClassifierWeights(self, beta):
+        weights=self.fc.weight
+        active=torch.where(weights>beta, weights, 0.0)
+        return active.nonzero().size(0)
     
     #Creates heatmap of randomly chosen feature selectors.
     def visualizeWeights(self, classifier=0):

@@ -4,7 +4,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 
 from torch.utils.data import DataLoader
-from data.data_loader import MNIST_set
+from data.data_loader import MNIST_set, fashion_MNIST_set
 from models.hebbian_network import HebbianNetwork
 from layers.scheduler import Scheduler
 
@@ -65,19 +65,19 @@ class MLPExperiment():
         self.model.visualizeWeights()
     
     def test(self):
-        data_set=MNIST_set(self.args, 0)
+        data_set=fashion_MNIST_set(self.args, 0)
         data_loader=DataLoader(data_set, batch_size=1, shuffle=True)
         cor=0
         tot=0
         for _, data in enumerate(data_loader):
             inputs, labels=data
-            outputs = torch.argmax(torch.softmax(self.model(inputs, None, train=0), dim=1))
+            outputs = torch.argmax(self.model(inputs, None, train=0))
             if outputs.item()==labels.item():
                 cor+=1
             tot+=1
         return cor/tot
     
-    def print_exponential_averages():
+    def printExponentialAverages(self):
         A=torch.log(experiment.model.hebbian_layer.exponential_average).tolist()
         plt.scatter(range(len(A)), A)
         for i, (x, y) in enumerate(zip(range(len(A)), A)):
@@ -86,6 +86,8 @@ class MLPExperiment():
         plt.ylabel("Log (Exponential Average)")
         plt.title("Logged Exponential Averages of Each Feature Selector")
         
+    def activeClassifierWeights(self, beta):
+        return self.model.classifier_layer.activeClassifierWeights(beta)
 if __name__=="__main__":
     experiment=MLPExperiment(None, 784, 256 , 10, lamb=1, num_epochs=1, heb_lr=0.1)
     experiment.train()
