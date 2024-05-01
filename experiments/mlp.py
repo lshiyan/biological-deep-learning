@@ -38,7 +38,7 @@ class MLPExperiment():
     
     #Trains the experiment.
     def train(self):  
-        data_set=MNIST_set(self.args)
+        data_set=fashion_MNIST_set(self.args)
         data_loader=DataLoader(data_set, batch_size=1, shuffle=True)
         
         self.model.train()
