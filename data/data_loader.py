@@ -88,3 +88,4 @@ class fashion_MNIST_set(Dataset):
     
 if __name__=="__main__":
     mnist=MNIST_set(None)
+    fashion_MNIST_set(None)
