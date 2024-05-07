@@ -1,10 +1,15 @@
 import os
 
 def convert(imgf, labelf, outf, n):
+    project_root = os.getcwd() 
+    imgf = os.path.join(project_root, imgf)
+    labelf = os.path.join(project_root, labelf)
+    outf = os.path.join(project_root, outf)
+
     f = open(imgf, "rb")
     o = open(outf, "w")
     l = open(labelf, "rb")
-
+    
     f.read(16)
     l.read(8)
     images = []
@@ -21,8 +26,7 @@ def convert(imgf, labelf, outf, n):
     o.close()
     l.close()
 
-print(os.getcwd())
-convert("mnist/train-images-idx3-ubyte", "mnist/train-labels-idx1-ubyte",
-        "mnist_train.csv", 60000)
-convert("mnist/t10k-images-idx3-ubyte", "mnist/t10k-labels-idx1-ubyte",
-        "mnist_test.csv", 10000)
+convert("data/mnist/train-images.idx3-ubyte", "data/mnist/train-labels.idx1-ubyte",
+        "data/mnist/mnist_train.csv", 60000)
+convert("data/mnist/t10k-images.idx3-ubyte", "data/mnist/t10k-labels.idx1-ubyte",
+        "data/mnist/mnist_test.csv", 10000)
