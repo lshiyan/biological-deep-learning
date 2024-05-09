@@ -1,0 +1,541 @@
+
+
+
+------------------------------------------------------------------------------------------------------------
+=============================================== Hebbian Layer ==============================================
+------------------------------------------------------------------------------------------------------------
+
+
+
+Hebbian Layer Class in General:
+HebbianLayer class which is a module for neural network layers that use Hebbian learning. 
+
+
+
+
+############################################
+########### FUNCTION OVERVIEW ###########
+############################################
+
+
+__init__: 
+    - Initializes the layer with given input and output dimensions,
+    - along with various parameters like:
+        - learning rate (heb_lr)
+        - lambda (lamb)
+        - gamma (gamma).
+    - It also:
+        - sets up various activation functions and initializes weights uniformly.
+
+
+
+setScheduler: Allows setting a scheduler for adjusting parameters like learning rate.
+
+
+
+
+createITensors: Generates identity tensors used in Sanger's rule, which is a method for decorrelation in neural network training.
+    - decorrelation means the undoing or relaxing of a mutual relationship
+
+
+
+forward: 
+    Defines the forward pass for the layer. 
+
+    It:
+        1. calculates outputs using the specified activation functions, 
+        2. applies lateral inhibition based on the layer's weights and input, and 
+        3. updates weights using a Hebbian learning rules
+
+
+
+visualizeWeights: 
+    Visualizes the weights of the neural network as heatmaps. 
+    This helps in understanding the feature selection by the layer.
+
+
+
+
+
+
+############################################
+########### FUNCTION DEEPER DIVE ###########
+############################################
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+~~~~~~~~ __init__: ~~~~~~~~~~
+
+class HebbianLayer (nn.Module):
+    def __init__(self, input_dimension, output_dimension, classifier, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
+        super (HebbianLayer, self).__init__()
+        self.input_dimension=input_dimension
+        self.output_dimension=output_dimension
+        self.lamb=lamb
+        self.alpha = heb_lr
+        self.fc=nn.Linear(self.input_dimension, self.output_dimension, bias=True)
+        self.relu=nn.ReLU()
+        self.sigmoid=nn.Sigmoid()
+        self.softplus=nn.Softplus()
+        self.tanh=nn.Tanh()
+        self.softmax=nn.Softmax()
+        self.isClassifier=classifier
+        self.scheduler=None
+        self.eps=eps
+        
+        self.exponential_average=torch.zeros(self.output_dimension)
+        self.gamma=gamma
+        
+        self.itensors=self.createITensors()
+        
+        for param in self.fc.parameters():
+            param=torch.nn.init.uniform_(param, a=0.0, b=1.0)
+            param.requires_grad_(False)
+        
+------------------------------------------------------------------------------------------------------------------------------------------
+
+What is it?
+The __init__ function sets up the initial state and configuration of the HebbianLayer instance. 
+
+Now, breaking down what each component of this function does:
+1. **Parameter Initialization**:
+    - **`input_dimension`**: Sets the number of input features for the layer.
+    - **`output_dimension`**: Sets the number of output features (neurons) for the layer.
+    - **`classifier`**: A boolean that indicates whether this layer will act as a classifier.
+    - **`lamb`**: A parameter that controls the strength of lateral inhibition.
+    - **`heb_lr`** (Hebbian Learning Rate): Sets the learning rate for the Hebbian learning updates.
+    - **`gamma`**: Used for the exponential moving average, likely influencing the learning updates.
+    - **`eps`**: A small epsilon value to prevent division by zero or stabilize computations.
+2. **Neural Network Component:**
+    - **`fc`**: A fully connected (linear) layer created using PyTorch's **`nn.Linear`**, mapping **`input_dimension`** to **`output_dimension`**. This layer includes biases by default.
+    - Activation Functions:
+        - **`relu`**: A rectified linear unit for non-linear transformation.
+        - **`sigmoid`**: A sigmoid activation function for binary-like outputs.
+        - **`softplus`**: A smooth approximation of the ReLU function.
+        - **`tanh`**: A hyperbolic tangent function providing outputs between -1 and 1.
+        - **`softmax`**: A softmax function for converting logits to probabilities, useful especially if classifier is True.
+3. **Weight Initialization:**
+    - Initializes the weights of the **`fc`** linear layer uniformly between 0.0 and 1.0, 
+    and sets **`requires_grad`** to **`False`**, indicating these weights will not be updated 
+    through backpropagation but rather through a separate Hebbian learning mechanism
+4. **Additional Properties**:
+    - **`exponential_average`**: Initialized to a zero tensor of shape **`[output_dimension]`**, used to track moving averages
+    - **`itensors`**: Calls the **`createITensors`** method to create identity tensors used for implementing Sanger's rule, which is typically used in Hebbian learning to ensure orthogonal feature learning.
+5. Scheduler
+    - **`scheduler`**: Placeholder for a learning rate scheduler, initially set to **`None`**. 
+    It can be set externally to modify the learning parameters dynamically.
+
+OVERALL:
+This setup prepares the **`HebbianLayer`** to perform unsupervised learning with an emphasis on learning feature representations 
+through interactions defined by the Hebbian learning rules and lateral inhibition.
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+~~~~~~~~ createITensors: ~~~~~~~~~~
+
+    #Creates identity tensors for Sanger's rule computation.
+    def createITensors(self):
+        itensors=torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
+        for i in range(0, self.output_dimension):
+            identity = torch.eye(i+1)
+            padded_identity = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, 
+                                                                 self.output_dimension - i-1))
+            itensors[i]=padded_identity
+        return itensors
+------------------------------------------------------------------------------------------------------------------------------------------
+
+What is it?
+
+The **`itensors`** in the **`HebbianLayer`** class are specifically designed for implementing a part of Hebbian learning known as Sanger's rule. 
+Sanger's rule is a method used in neural networks to ensure that the features learned by different neurons are orthogonal to each other.
+    - This orthogonality helps prevent redundancy among the neurons, meaning each neuron learns to capture a unique aspect of the input data
+
+
+Nothing really needed to be said about this function soooo moving on.
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+~~~~~~~~ inhibition: ~~~~~~~~~~
+
+    #Calculates lateral inhibition h_mu -> (h_mu)^(lambda)/ max on i (h_mu_i)^(lambda)
+    def inhibition(self, x):
+        x=self.relu(x) 
+        max_ele=torch.max(x).item()
+        x=torch.pow(x, self.lamb)
+        x/=abs(max_ele)**self.lamb
+        return x
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+What is it?
+
+Lateral inhibition is a key component that shapes how the neurons in the layer interact with each other to produce a response.
+
+Lateral inhibition is a neural mechanism that helps to enhance the contrast in the signal being processed, making the output of the network more distinctive and sparse. 
+
+This mechanism is typically used in neural processing to suppress less significant responses, emphasizing the most dominant features.
+
+
+
+1. **Purpose of Lateral Inhibition**:
+    - In the context of a neural network, lateral inhibition can help 
+    in achieving competitive learning where neurons effectively compete for activation, leading to specialization among them. 
+    - This process helps the network to become more sensitive to varied features of the input data.
+
+2. **Implementation Details**:
+    - The implementation specifics of lateral inhibition in the **`HebbianLayer`** would involve adjusting the outputs of the neurons 
+    based on the activity of their neighbouring neurons. 
+    Neurons that are less strongly activated may have their outputs suppressed by the more strongly activated neurons, which prevents 
+    them from adapting significantly to those input patterns.
+
+3. **Effect on Learning**:
+    - By enforcing that only a few neurons strongly respond to a given input pattern, 
+    lateral inhibition helps in learning **more distinct** and **sparse representations**. 
+    This sparsity and distinctiveness are highly beneficial in many neural processing tasks, 
+    like feature detection and pattern recognition, as it reduces noise and focuses learning on the most salient features of the input.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+~~~~~~~~ updateWeightsHebbianClassifier: ~~~~~~~~~~
+
+    def updateWeightsHebbianClassifier(self, input, output, clamped_output=None, train=1):
+        if train:
+            u=output.clone().detach().squeeze()
+            x=input.clone().detach().squeeze()
+            y=torch.softmax(u, dim=0)
+            A=None
+            if clamped_output != None:
+                outer_prod=torch.outer(clamped_output-y,x)
+                u_times_y=torch.mul(u,y)
+                A=outer_prod-self.fc.weight*(u_times_y.unsqueeze(1))
+            else:
+                A=torch.outer(y,x)
+            A=self.fc.weight+self.alpha*A
+            weight_maxes=torch.max(A, dim=1).values
+            self.fc.weight=nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
+            self.fc.weight[:, 0] = 0
+------------------------------------------------------------------------------------------------------------------------------------------
+
+What is it?
+This performs weight updates for a Hebbian learning-based classifier, incorporating elements of both supervised and unsupervised learning depending on the provided parameters.
+
+
+### **Parameters and Preliminaries:**
+    - **input:** The input feature vector to the layer.
+    - **output:** The raw output logits from the layer before applying activation.
+    - **clamped_output:** An optional target output vector
+    - **train:** A flag indicating whether the network is in training mode. If not in training, no weights are updated.
+
+
+### **Processing:**
+
+1. **Cloning and Detaching Tensors:**
+    - **`u = output.clone().detach().squeeze()`**: This line clones and detaches the output tensor from the graph (to avoid backpropagation effects), 
+        and **`squeeze()`** is used to remove any singleton dimensions, simplifying the tensor for operations.
+
+    - **`x = input.clone().detach().squeeze()`**: Similarly, the input tensor is cloned, detached, and squeezed.
+
+2. **Softmax Activation:**
+    - **`y = torch.softmax(u, dim=0)`**: Computes the softmax of the logits **`u`** to transform them into a probability distribution over the output classes. 
+    This step is essential for calculating the probability-based updates.
+
+
+### **Weight Update Mechanism:**
+
+1. **Conditional Weight Update:**
+    - If **`clamped_output`** is provided (**indicating a supervised learning scenario**):
+        
+        - **`outer_prod = torch.outer(clamped_output - y, x)`**: Calculates the outer product of the error (difference between target output and actual output probabilities) and the input vector. 
+        This product indicates how much and in which direction the weights should be adjusted based on the error.
+
+        - **`u_times_y = torch.mul(u, y)`**: Element-wise multiplication of the logits and their corresponding probabilities, possibly used to scale the updates.
+
+        - **`A = outer_prod - self.fc.weight * (u_times_y.unsqueeze(1))`**: Adjusts the computed outer product by subtracting a scaled version of the current weights. 
+        This adjustment could be intended to regulate the updates, ensuring that they don't grow too large and contribute to overfitting or instability.
+
+    - Else, if **`clamped_output`** is not provided (**unsupervised scenario**):
+        - **`A = torch.outer(y, x)`**: Computes the outer product of the output probabilities and the input vector, which is a typical Hebbian update rule suggesting that weights should increase for co-occurring input-output pairs.
+
+
+2. **Applying the Update:**
+
+    - **`A = self.fc.weight + self.alpha * A`**: Updates the weights by adding the computed adjustments scaled by the learning rate (**`self.alpha`**). 
+    This step integrates the learning rule's influence into the existing weight structure.
+
+    - **`weight_maxes = torch.max(A, dim=1).values`**: Finds the maximum value in each row of the adjusted weight matrix.
+
+    - **`self.fc.weight = nn.Parameter(A / weight_maxes.unsqueeze(1), requires_grad=False)`**: Normalizes each row of the weight matrix by its maximum value to prevent runaway growth and ensures that the largest weight in each row is 1. 
+    This normalization can help maintain numerical stability and ensure a consistent scale across different neurons.
+
+
+3. **Regularization/Constraint Application:**
+    - **`self.fc.weight[:, 0] = 0`**: This sets the first element of each weight vector to zero. THIS IS SO THAT THE REST OF THE NEURONS START LEARNING
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+~~~~~~~~ updateWeightsHebbian: ~~~~~~~~~~
+
+    #Employs Sanger's Rule, deltaW_(ij)=alpha*x_j*y_i-alpha*y_i*sum(k=1 to i) (w_(kj)*y_k)
+    #Calculates outer product of input and output and adds it to matrix.
+
+    def updateWeightsHebbian(self, input, output, clamped_output=None, train=1):
+        if train:
+            x=torch.tensor(input.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
+            y=torch.tensor(output.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
+            outer_prod=torch.tensor(outer(y, x))
+            initial_weight=torch.transpose(self.fc.weight.clone().detach(), 0,1)
+            A=torch.einsum('jk, lkm, m -> lj', initial_weight, self.itensors, y)
+            A=A*(y.unsqueeze(1))
+            delta_weight=self.alpha*(outer_prod-A)
+            self.fc.weight=nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
+            self.exponential_average=torch.add(self.gamma*self.exponential_average,(1-self.gamma)*y)
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+OVERALL:
+
+The **`updateWeightsHebbian`** method implements a variant of Hebbian learning that is enhanced by Sanger's rule for orthogonal feature extraction. 
+
+This method ensures that as new features are learned, they do not replicate the information captured by previously adjusted weights, leading to a more diverse and representative set of learned features. 
+
+The method also includes an element of adaptivity through the use of an exponential moving average. 
+
+This method is integral to unsupervised learning paradigms where the model learns to represent input data without explicit target outputs.
+
+
+### **Parameters:**
+
+- **input:** The input tensor to the layer.
+- **output:** The output tensor from the layer, which would typically be the activation after processing the input through the layer's weights.
+- **clamped_output:** This is unused in this function
+- **train:** A boolean indicating whether the layer is in training mode.
+
+### **Process:**
+
+1. **Clone and Detach Tensors:**
+    - **`x`** and **`y`** are cloned and detached versions of the input and output tensors, 
+    ensuring that operations on these tensors do not affect the computational graph for gradient calculations.
+
+2. **Outer Product Calculation:**
+    - **`outer_prod = torch.tensor(outer(y, x))`**: Computes the outer product of the output activations (**`y`**) and the input features (**`x`**).
+    - **This matrix represents the product of post-activation outputs and input features**, which is the core of the Hebbian learning update (**associative learning**).
+
+3. **Sanger's Rule Implementation:**
+    - **`initial_weight = torch.transpose(self.fc.weight.clone().detach(), 0, 1)`**:
+        - Clones, detaches, and transposes the weight matrix. This manipulation prepares the weights for the tensor operations that follow.
+
+    - **`A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.itensors, y)`**: 
+        This complex operation involves:
+            - **`torch.einsum`**: A versatile function for performing operations on tensors using Einstein summation notation. 
+                                    It's used here to apply a transformation that includes the weights, identity tensors (from **`itensors`**), and outputs.
+            - The operation is designed to adjust weights based on their contributions to earlier outputs, effectively implementing Sanger's rule which ensures that features learned by earlier neurons are orthogonal to those learned by subsequent neurons.
+
+    - **`A = A * (y.unsqueeze(1))`**:
+        - Modifies the adjustment matrix by scaling it with the output activations, aligning the updates with the level of neuron activation.
+
+4. **Weight Update:**
+    - **`delta_weight = self.alpha * (outer_prod - A)`**:
+        - Calculates the weight delta by scaling the difference between the outer product and the Sanger's rule adjustments by the learning rate (**`alpha`**).
+
+    - **`self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)`**:
+        - Applies the weight update, ensuring that the updated weights do not participate in automatic gradient computation by setting **`requires_grad=False`**.
+
+5. **Exponential Moving Average Update:**
+    - **`self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)`**:
+        - Updates an exponential moving average of the outputs, which may be used for other operations like weight decay or normalization, not explicitly shown in this method.
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+~~~~~~~~ updateWeightsHebbian: ~~~~~~~~~~ vs ~~~~~~~~ updateWeightsHebbianClassifier: ~~~~~~~~~~
+
+
+### **Purpose and Context:**
+
+- **updateWeightsHebbian:** This method is designed for general Hebbian learning, possibly in an unsupervised setting. 
+    It incorporates aspects of Sanger's rule to ensure the orthogonality of the features learned by different neurons, making it suitable for 
+    tasks where feature extraction without redundancy is crucial.
+
+- **updateWeightsHebbianClassifier:** 
+    This method is tailored for scenarios **where the layer acts more like a classifier**. 
+    It can handle both supervised and unsupervised learning scenarios, adjusting weights based on both the actual and desired outputs 
+    (if **`clamped_output`** is provided).
+
+
+### **Use in the Network:**
+
+- Depending on whether the layer is configured as a classifier (**`isClassifier`** flag), the **`forward`** method of **`HebbianLayer`** decides
+    which weight update method to use. 
+    If it’s a classifier, **`updateWeightsHebbianClassifier`** is used, 
+    otherwise, **`updateWeightsHebbian`** is employed. 
+    This flexibility allows the same layer structure to adapt to different learning environments and objectives.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+~~~~~~~~ weightDecay: ~~~~~~~~~~
+
+    #Decays the overused weights and increases the underused weights using tanh functions.
+    def weightDecay(self):
+        average=torch.mean(self.exponential_average).item()
+        A=self.exponential_average/average
+        growth_factor_positive=self.eps*self.tanh(-self.eps*(A-1))+1
+        growth_factor_negative=torch.reciprocal(growth_factor_positive)
+        positive_weights=torch.where(self.fc.weight>0, self.fc.weight, 0.0)
+        negative_weights=torch.where(self.fc.weight<0, self.fc.weight, 0.0)
+        positive_weights=positive_weights*growth_factor_positive.unsqueeze(1)
+        negative_weights=negative_weights*growth_factor_negative.unsqueeze(1)
+        self.fc.weight=nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
+        if (self.fc.weight.isnan().any()):
+            print("NAN WEIGHT")
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+What is it? What does this method do?
+The weightDecay function in HebbianLayer class is designed to manage the weights of the network through a form of adaptive regularization.
+
+This method aims to:
+    1. decay overused weights and 
+    2. boost underused ones based on their activity, measured by the exponential moving average of the outputs.
+This approach helps in maintaining a balanced network, preventing any single neuron from dominating the learning process excessively.
+
+
+1. **Exponential Moving Average Utilization:**
+    - **`average = torch.mean(self.exponential_average).item()`**: 
+        Computes the average of the exponential moving averages stored in **`self.exponential_average`**. 
+        This average provides a baseline to compare individual neuron activities against.
+
+    - **`A = self.exponential_average / average`**: 
+        This line creates a ratio of each neuron's activity relative to the average activity. 
+        Values greater than 1 indicate neurons that are more active than average, while values less than 1 indicate less active neurons.
+
+
+2. **Calculation of Growth Factors:**
+    - **`growth_factor_positive = self.eps * self.tanh(-self.eps * (A - 1)) + 1`**: 
+        Calculates a growth factor for more active neurons. 
+        The **`tanh`** function is used to create a smooth, bounded adjustment factor. 
+        This factor scales down as the activity (**`A`**) increases beyond the average, effectively applying a decay to overactive neurons.
+
+    - **`growth_factor_negative = torch.reciprocal(growth_factor_positive)`**: 
+        For underused neurons, this factor is the reciprocal of the positive growth factor, 
+        meaning it will scale up weights that are less active than average.
+
+
+3. **Application of Growth Factors to Weights:**
+    - **`positive_weights = torch.where(self.fc.weight > 0, self.fc.weight, 0.0)`**: Isolates the positive weights for separate adjustment.
+    - **`negative_weights = torch.where(self.fc.weight < 0, self.fc.weight, 0.0)`**: Similarly, isolates the negative weights.
+
+    - The growth factors are then applied:
+        - **`positive_weights = positive_weights * growth_factor_positive.unsqueeze(1)`**: Scales the positive weights by the positive growth factor.
+        - **`negative_weights = negative_weights * growth_factor_negative.unsqueeze(1)`**: Scales the negative weights by the negative growth factor.
+
+
+4. **Updating Weights:**
+    - **`self.fc.weight = nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)`**: 
+        The adjusted positive and negative weights are combined and set as the new weights of the layer. 
+        The **`requires_grad=False`** ensures these weights do not participate in the automatic differentiation process during backpropagation.
+
+
+5. **Handling Potential Numerical Issues:**
+    - **`if (self.fc.weight.isnan().any()):`**: 
+        Checks if any weight has become NaN, which can occur due to numerical instability or extreme values.
+    - **`print("NAN WEIGHT")`**:
+        Prints a debug message if NaN values are detected.
+
+
+### **Summary:**
+
+The **`weightDecay`** function is essentially a regularization mechanism tailored to the dynamics of the network's neurons based on their relative activities. 
+    By decaying weights that are too influential (overactive) and enhancing those that are less influential (underactive), 
+    the function promotes a form of balance in the network, encouraging all neurons to participate more evenly in the learning process. 
+
+This helps prevent the network from relying too heavily on any particular neuron or set of neurons, potentially enhancing the network's generalization capabilities and stability.
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+~~~~~~~~ forward: ~~~~~~~~~~
+    #Feed forward
+    def forward(self, x, clamped_output=None, train=1):
+        input=x.clone()
+        if self.isClassifier:
+            x=self.fc(x)
+            self.updateWeightsHebbianClassifier(input, x, clamped_output=clamped_output, train=train)
+            #self.updateBias(x, train=train)
+            x=self.softmax(x)
+            return x
+        else:
+            x=self.fc(x)
+            x=self.inhibition(x)
+            self.updateWeightsHebbian(input, x, train)
+            #self.updateBias(x, train=train)
+            self.weightDecay() 
+            return x
+------------------------------------------------------------------------------------------------------------------------------------------
+
+What is it?
+
+The **`forward`** function in the **`HebbianLayer`** class is the core of the layer's operations, defining
+    1. how input data is processed through the layer and 
+    2. how various other functions—such as weight updates and activations—are integrated during the forward pass
+
+
+
+### **Function Parameter:**
+
+    - **x:** The input tensor to the layer.
+    - **clamped_output:** An optional tensor that can be used to provide target outputs for supervised learning scenarios.
+    - **train:** A boolean flag indicating whether the layer is in training mode.
+
+
+### **Function Execution Flow:**
+
+1. **Input Cloning:**
+    - **`input = x.clone()`**: 
+        Clones the input tensor to preserve the original inputs for later operations, particularly useful if the inputs are modified during the processing.
+
+
+
+2. **Conditional Processing Based on Classifier Flag:**
+    - **If the Layer is a Classifier:**
+        - **`x = self.fc(x)`**:
+            - Applies the linear transformation defined by the layer's weights and biases to the input tensor. This is the primary computation step where the input features are transformed into a new space.
+        - **`self.updateWeightsHebbianClassifier(input, x, clamped_output=clamped_output, train=train)`**:
+            - Calls the weight update function designed for classifier settings. This function adjusts the weights based on the output and the optional clamped output, which is useful for supervised learning tasks.
+        - **`x = self.softmax(x)`**:
+            - Applies the softmax activation function to the linear outputs to convert them into probabilities, which is typical for classification tasks where the outputs represent categorical probabilities.
+        - **Returns** the softmax-transformed outputs.
+
+    - **If the Layer is Not a Classifier:**
+        - **`x = self.fc(x)`**: As in the classifier case, applies the linear transformation.
+        - **`x = self.inhibition(x)`**: Applies an inhibition function to the transformed outputs. This function modulates the activations to implement lateral inhibition, enhancing feature contrast and reducing redundancy.
+        - **`self.updateWeightsHebbian(input, x, train)`**: Performs the weight update using a general Hebbian learning rule, which might include aspects of Sanger's rule for feature decorrelation.
+        - **`self.weightDecay()`**: Optionally, applies a weight decay function that adjusts the weights based on their usage, promoting balance and preventing overfitting by decaying overused weights and boosting underused ones.
+        - **Returns** the inhibited and possibly decayed output.
+
+
+
+
+
+
+
+
+
