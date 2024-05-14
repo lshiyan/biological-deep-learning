@@ -52,6 +52,6 @@ convert("data/mnist/t10k-images.idx3-ubyte", "data/mnist/t10k-labels.idx1-ubyte"
         "data/mnist/mnist_test.csv", 10000)
 
 convert("data/fashion_mnist/train-images.idx3-ubyte", "data/fashion_mnist/train-labels.idx1-ubyte",
-        "data/fashion_mnist/fashion-mnist_train.csv", 60000)
+        "data/fashion_mnist/fashion_mnist_train.csv", 60000)
 convert("data/fashion_mnist/t10k-images.idx3-ubyte", "data/fashion_mnist/t10k-labels.idx1-ubyte",
-        "data/fashion_mnist/fashion-mnist_test.csv", 10000)
+        "data/fashion_mnist/fashion_mnist_test.csv", 10000)
