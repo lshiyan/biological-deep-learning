@@ -12,12 +12,12 @@ class Scheduler():
         flag (str) = a string indicating wether the data is used for training or testing
         data_frame (list-like object) = dataset for training/testing
         labels (torch.Tensor) = labels of dataset
+        epoch (int) = epoch counter
     """
     def __init__(self, heb_lr, step_size, gamma=0.99):
         self.lr = heb_lr
         self.step_size = step_size
         self.gamma = gamma
-        # epoch counter
         self.epoch = 0
 
     """

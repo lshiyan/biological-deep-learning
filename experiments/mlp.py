@@ -63,7 +63,7 @@ class MLPExperiment():
         
     #Visualizes the weights associated with the first feature detector layer.
     def visualizeWeights(self):
-        self.model.visualizeWeights()
+        self.model.visualize_weights()
     
     def test(self):
         data_set=fashion_MNIST_set(self.args, 0)
@@ -89,6 +89,7 @@ class MLPExperiment():
         
     def activeClassifierWeights(self, beta):
         return self.model.classifier_layer.activeClassifierWeights(beta)
+
 if __name__=="__main__":
     experiment=MLPExperiment(None, 784, 256 , 10, lamb=1, num_epochs=1, heb_lr=0.1)
     experiment.train()
