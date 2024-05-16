@@ -4,6 +4,7 @@ from data.mnist_factory import convert
 from data.data_loader import Image_Data_Set
 from experiments.mlp import MLPExperiment  
 
+#Test
 
 def run_experiment(args):
     # Initialize the experiment
