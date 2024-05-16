@@ -50,6 +50,7 @@ class ClassifierLayer(NetworkLayer):
         x = input.clone().detach().squeeze()
         y = torch.softmax(u, dim=0)
         A = None
+        # FIXME: clamped_output whats the use? do we need it? and if we do have to write it into layer.py file & change hebbian_layer.py
         """
         if clamped_output != None:
             outer_prod = torch.outer(clamped_output-y,x)
