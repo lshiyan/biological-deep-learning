@@ -7,7 +7,9 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-#Hebbian learning layer that implements lateral inhibition in output. Not trained through supervision.
+"""
+Class defining the functionality of the hebbian layer
+"""
 class HebbianLayer (NetworkLayer):
     """
     Constructor method NetworkLayer
