@@ -24,15 +24,15 @@ class HebbianNetwork(nn.Module):
         self.input_dimension = input_dimension
         self.output_dimension = output_dimension
         self.hidden_layer_dimension = hidden_layer_dimension
-        self.hebbian_layer = HebbianLayer(self.input_dimension, self.hidden_layer_dimension, False, lamb=lamb, heb_lr=heb_lr, eps=eps)
-        self.classifier_layer = ClassifierLayer(self.hidden_layer_dimension, self.output_dimension, True, lamb=lamb, heb_lr=heb_lr)
+        self.hebbian_layer = HebbianLayer(self.input_dimension, self.hidden_layer_dimension, lamb=lamb, heb_lr=heb_lr, eps=eps)
+        self.classifier_layer = ClassifierLayer(self.hidden_layer_dimension, self.output_dimension, lamb=lamb, heb_lr=heb_lr, esp=esp)
     
     """
     Method to set scheduler to either the hebbian layer
     @param
         scheduler (layers.Scheduler) = a scheduler
     """
-    def set_scheduler_hebbian_layer(self, scheduler, classifier):
+    def set_scheduler_hebbian_layer(self, scheduler):
         self.hebbian_layer.set_scheduler(scheduler)
     
     """
@@ -50,15 +50,15 @@ class HebbianNetwork(nn.Module):
         clamped_out (???) = parameter to clamp the output #WTV this means
         train (bool) = true if in training
     """   
-    def forward(self, x, clamped_output=None, train=True):
-        x=self.hebbian_layer(x, clamped_output=None, train=train)
-        x=self.classifier_layer(x, clamped_output=clamped_output, train=train)
+    def forward(self, x):
+        x = self.hebbian_layer(x)
+        x = self.classifier_layer(x)
         return x
     
     
     """
     Method to visualize the weights/features learned by each neuron during training
     """
-    def visualizeWeights(self):
+    def visualize_weights(self):
         self.hebbian_layer.visualize_weights(8, 8)
         self.classifier_layer.visualize_weights(2, 5)

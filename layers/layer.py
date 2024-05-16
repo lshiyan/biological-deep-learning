@@ -65,8 +65,7 @@ class NetworkLayer (nn.Module, ABC):
         id_tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
         for i in range(0, self.output_dimension):
             identity = torch.eye(i+1)
-            padded_identity = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, 
-                                                                 self.output_dimension - i-1))
+            padded_identity = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, self.output_dimension - i-1))
             id_tensor[i] = padded_identity
         return id_tensor
     

@@ -8,7 +8,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 #Hebbian learning layer that implements lateral inhibition in output. Not trained through supervision.
-class ClassifierLayer (NetworkLayer):
+class ClassifierLayer(NetworkLayer):
     """
     Constructor method NetworkLayer
     @param
@@ -48,12 +48,14 @@ class ClassifierLayer (NetworkLayer):
         x = input.clone().detach().squeeze()
         y = torch.softmax(u, dim=0)
         A = None
+        """
         if clamped_output != None:
             outer_prod = torch.outer(clamped_output-y,x)
             u_times_y  =torch.mul(u,y)
             A = outer_prod  -self.fc.weight * (u_times_y.unsqueeze(1))
         else:
-            A = torch.outer(y,x)
+        """
+        A = torch.outer(y,x)
         A = self.fc.weight + self.alpha * A
         weight_maxes = torch.max(A, dim=1).values
         self.fc.weight = nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
@@ -84,7 +86,7 @@ class ClassifierLayer (NetworkLayer):
         x = self.fc(x)
         self.update_weights(input_copy, x)
         #self.updateBias(x, train=train)
-        x=self.softmax(x)
+        x = self.softmax(x)
         return x
     
     """

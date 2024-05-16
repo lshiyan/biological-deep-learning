@@ -117,11 +117,11 @@ class HebbianLayer (NetworkLayer):
     @param
         train (bool) = model in trainning or not
     """
-    def forward(self, x, train=True):
+    def forward(self, x):
         input_copy = x.clone()
         x=self.fc(x)
         x=self.inhibition(x)
-        self.update_weights(input_copy, x, train)
-        #self.updateBias(x, train=train)
+        self.update_weights(input_copy, x)
+        #self.updateBias(x)
         self.weightDecay() 
         return x

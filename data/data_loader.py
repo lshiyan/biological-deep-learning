@@ -6,7 +6,7 @@ import pandas as pd
 """
 Class to setup datasets (seperating images and labels) for both training and testing purposes
 """
-class Image_Data_Set(Dataset):
+class ImageDataSet(Dataset):
     """
     Contructor method
     @param

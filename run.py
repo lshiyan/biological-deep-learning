@@ -15,7 +15,7 @@ def run_experiment(args):
     experiment.train()
 
     # Visualization and testing
-    experiment.visualizeWeights()
+    experiment.visualize_weights()
     accuracy = experiment.test()
     print(f"Test Accuracy: {accuracy}")
 
@@ -28,8 +28,8 @@ def main(args):
         convert(args.test_data, args.test_labels, args.test_data_filename, 10000, 28)
     
     # Load datasets
-    train_data = Image_Data_Set(True, args.data_name)
-    test_data = Image_Data_Set(False, args.data_name)
+    train_data = ImageDataSet(True, args.data_name)
+    test_data = ImageDataSet(False, args.data_name)
     train_data.setup_data(args.train_data_filename)
     test_data.setup_data(args.test_data_filename)
     
