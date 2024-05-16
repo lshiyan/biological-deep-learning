@@ -4,3 +4,6 @@
 #Compiled bytecode files.
 __pycache__/
 *.pyc
+
+#Virtual env
+fundamental_virtual_env/
