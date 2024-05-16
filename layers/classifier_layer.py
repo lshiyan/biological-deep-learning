@@ -40,15 +40,19 @@ class ClassifierLayer(NetworkLayer):
     """
     Defines the way the weights will be updated at each iteration of the training
     @param
-        input (???) = ???
-        output (???) = ???
+        input (torch.Tensor): The input tensor to the layer before any transformation.
+        output (torch.Tensor): The output tensor of the layer before applying softmax.
+
+    The method computes the outer product of the softmax probabilities of the outputs and the inputs. 
+    This product is scaled by the learning rate and used to adjust the weights. 
+    The weights are then normalized to ensure stability.
     """
-    # TODO: write out explicitly what each step of this method does
-    # TODO: finish documentation when understand
     def update_weights(self, input, output):
-        u = output.clone().detach().squeeze()
-        x = input.clone().detach().squeeze()
-        y = torch.softmax(u, dim=0)
+
+        # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
+        u = output.clone().detach().squeeze() # Output tensor after layer but before activation
+        x = input.clone().detach().squeeze() # Input tensor to layer
+        y = torch.softmax(u, dim=0) # Apply softmax to output tensor to get probabilities
         A = None
         # FIXME: clamped_output whats the use? do we need it? and if we do have to write it into layer.py file & change hebbian_layer.py
         """
@@ -58,11 +62,20 @@ class ClassifierLayer(NetworkLayer):
             A = outer_prod  -self.fc.weight * (u_times_y.unsqueeze(1))
         else:
         """
-        A = torch.outer(y,x)
+
+        # Compute the outer product of the softmax output and input.
+        A = torch.outer(y,x) # Hebbian learning rule component
+
+        # Adjust weights by learning rate and add contribution from Hebbian update.
         A = self.fc.weight + self.alpha * A
+
+        # Normalize weights by the maximum value in each row to stabilize the learning.
         weight_maxes = torch.max(A, dim=1).values
         self.fc.weight = nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
+
+        # Zero out the first column of weights -> this is to prevent the first weight from learning everything
         self.fc.weight[:, 0] = 0
+        
 
     """
     Defines the way the biases will be updated at each iteration of the training
