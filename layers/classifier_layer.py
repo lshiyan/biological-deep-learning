@@ -79,16 +79,24 @@ class ClassifierLayer(NetworkLayer):
 
     """
     Defines the way the biases will be updated at each iteration of the training
+    It updates the biases of the classifier layer using a decay mechanism adjusted by the output probabilities.
+
     @param
-        output (???) = ???
+        output (torch.Tensor): The output tensor of the layer before applying softmax.
+
+    The method applies an exponential decay to the biases, which is modulated by the output probabilities,
+    and scales the update by the learning rate. 
+    The biases are normalized after the update.
     """
-    # TODO: write out explicitly what each step of this method does
-    # TODO: finish documentation when understand    
     def update_bias(self, output):
-        y = output.clone().detach().squeeze()
-        exponential_bias = torch.exp(-1*self.fc.bias)
+        y = output.clone().detach().squeeze() # Output tensor probabilities after softmax
+        exponential_bias = torch.exp(-1*self.fc.bias) # Apply exponential decay to biases
+
+        # Compute bias update scaled by output probabilities.
         A = torch.mul(exponential_bias, y)-1
         A = self.fc.bias + self.alpha * A
+
+        # Normalize biases to maintain stability.
         bias_maxes = torch.max(A, dim=0).values
         self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
     
