@@ -29,10 +29,10 @@ class ImageDataSet(Dataset):
         data_set (str) = string defining path to .csv file of data set
     """
     def setup_data(self, data_set):
-        self.data_frame=pd.read_csv(data_set, header=None)
-        self.labels=torch.tensor(self.dataframe[0].values)
-        self.data_frame=torch.tensor(self.data_frame.drop(self.data_frame.columns[0], axis=1).values, dtype=torch.float)
-        self.data_frame/=255
+        self.data_frame = pd.read_csv(data_set, header=None)
+        self.labels = torch.tensor(self.dataframe[0].values)
+        self.data_frame = torch.tensor(self.data_frame.drop(self.data_frame.columns[0], axis=1).values, dtype=torch.float)
+        self.data_frame /= 255
     
     # Normalize number(s) assuming max value = 255
     def normalize(self, row, max_num):

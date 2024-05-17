@@ -4,13 +4,14 @@ import math
 import matplotlib.pyplot as plt
 from numpy import outer
 import warnings
+from layers.layer import NetworkLayer
 
 warnings.filterwarnings("ignore")
 
 """
 Class defining the functionality of the hebbian layer
 """
-class HebbianLayer (NetworkLayer):
+class HebbianLayer(NetworkLayer):
     """
     Constructor method NetworkLayer
     @param
@@ -21,26 +22,25 @@ class HebbianLayer (NetworkLayer):
         gamma (float) = decay factor -> factor to decay learning rate
         eps (float) = to avoid division by 0
     @attr.
-    PARENT ATTR.
-        input_dimension (int) = number of inputs into the layer
-        output_dimension (int) = number of outputs from layer
-        lamb (float) = lambda hyperparameter for latteral inhibition
-        alpha (float) = how fast model learns at each iteration
-        fc (fct) = function to apply linear transformation to incoming data
-        scheduler (layers.Scheduler) = scheduler for current layer
-        eps (float) = to avoid division by 0
-        exponential_average (torch.Tensor) = 0 tensor to keep track of exponential averages
-        gamma (float) = decay factor -> factor to decay learning rate
-        id_tensor (torch.Tensor) = id tensor of layer
-    OWN ATTR.
-        relu (fct) = ReLU function
-        sigmoid (fct) = Sigmoid function
-        softplus (fct) = Softplus function
-        tanh (fct) = Tanh function
-        softmax (fct) = Softmax function
-
+        PARENT ATTR.
+            input_dimension (int) = number of inputs into the layer
+            output_dimension (int) = number of outputs from layer
+            lamb (float) = lambda hyperparameter for latteral inhibition
+            alpha (float) = how fast model learns at each iteration
+            fc (fct) = function to apply linear transformation to incoming data
+            scheduler (layers.Scheduler) = scheduler for current layer
+            eps (float) = to avoid division by 0
+            exponential_average (torch.Tensor) = 0 tensor to keep track of exponential averages
+            gamma (float) = decay factor -> factor to decay learning rate
+            id_tensor (torch.Tensor) = id tensor of layer
+        OWN ATTR.
+            relu (fct) = ReLU function
+            sigmoid (fct) = Sigmoid function
+            softplus (fct) = Softplus function
+            tanh (fct) = Tanh function
+            softmax (fct) = Softmax function
     """
-    def __init__(self, input_dimension, output_dimension, classifier, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
+    def __init__(self, input_dimension, output_dimension, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
         super ().__init__(input_dimension, output_dimension, lamb, heb_lr, gamma, eps)
         self.relu = nn.ReLU()
         self.sigmoid=nn.Sigmoid()

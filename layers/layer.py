@@ -31,7 +31,7 @@ class NetworkLayer (nn.Module, ABC):
         id_tensor (torch.Tensor) = id tensor of layer
     """
     def __init__(self, input_dimension, output_dimension, lamb=2, learning_rate=0.001, gamma=0.99, eps=10e-5):
-        super (NetworkLayer, self).__init__()
+        super ().__init__()
         self.input_dimension  = input_dimension
         self.output_dimension = output_dimension
         self.lamb = lamb
@@ -60,7 +60,6 @@ class NetworkLayer (nn.Module, ABC):
     """
     Creates identity tensor
     """
-    @abstractmethod
     def create_id_tensors(self):
         id_tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
         for i in range(0, self.output_dimension):

@@ -1,5 +1,6 @@
 from layers.hebbian_layer import HebbianLayer
 from layers.classifier_layer import ClassifierLayer
+from layers.layer import NetworkLayer
 import torch.nn as nn 
 
 class HebbianNetwork(nn.Module):
@@ -54,7 +55,6 @@ class HebbianNetwork(nn.Module):
         x = self.hebbian_layer(x)
         x = self.classifier_layer(x)
         return x
-    
     
     """
     Method to visualize the weights/features learned by each neuron during training
