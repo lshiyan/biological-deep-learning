@@ -11,12 +11,12 @@ from layers.scheduler import Scheduler
 
 class MLPExperiment():
     
-    def __init__(self, args, input_dimension, hidden_layer_dimension, output_dimension, 
+    def __init__(self, input_dimension, hidden_layer_dimension, output_dimension, 
                  lamb=1, heb_lr=1, grad_lr=0.001, num_epochs=3, gamma=0, eps=10e-5):
         self.model=HebbianNetwork(input_dimension, hidden_layer_dimension, 
                                   output_dimension, heb_lr=heb_lr, lamb=lamb, eps=eps)#TODO: For some reason my hebbian network is not processing batches together.
-        self.args=args
         self.num_epochs=num_epochs
+        self.args=None
         self.grad_lr=grad_lr 
         self.heb_lr=heb_lr
         self.gamma=gamma
@@ -38,6 +38,7 @@ class MLPExperiment():
     
     #Trains the experiment.
     def train(self):  
+        print("TRAININGTEST")
         data_set=fashion_MNIST_set(self.args)
         # data_set=MNIST_set(self.args)
         data_loader=DataLoader(data_set, batch_size=1, shuffle=True)
@@ -66,7 +67,7 @@ class MLPExperiment():
         self.model.visualizeWeights()
     
     def test(self):
-        data_set=fashion_MNIST_set(self.args, 0)
+        data_set=MNIST_set(self.args)
         data_loader=DataLoader(data_set, batch_size=1, shuffle=True)
         cor=0
         tot=0
