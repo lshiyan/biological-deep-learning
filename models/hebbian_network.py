@@ -1,18 +1,45 @@
 from layers.hebbian_layer import HebbianLayer
 from layers.classifier_layer import ClassifierLayer
-from layers.layer import NetworkLayer
 import torch.nn as nn 
 
 class HebbianNetwork(nn.Module):
     """
+    Hyperparameters that remain constant within the network
+    @const
+        INPUT_DIMENSION (int) = number of inputs to network
+        HEBBIAN_LAYER_DIMENSION (int) = number of neurons in hebbian layer
+        OUTPUT_DIMENSION (int) = number of output neurons from network
+
+        HEBBIAN_LR (float) = learning rate of hebbian layer
+        HEBBIAN_LAMBDA (float) = hyperparameter for lateral neuron inhibition
+        HEBBIAN_GAMMA (float) = factor to decay learning rate of hebbian layer
+
+        CLASSIFICATION_LR (float) = learning rate of classification layer
+        CLASSIFICATION_LAMBDA (float) = hyperparameter for lateral neuron inhibition
+        CLASSIFICATION_GAMMA (float) = factor to decay learning rate of classification layer
+        
+        EPS (float) = small value to avoid 0 division
+    """
+    # Number of 
+    INPUT_DIMENSION = 728
+    HEBBIAN_LAYER_DIMENSION = 64
+    OUTPUT_DIMENSION = 10
+
+    # Hebbian layer hyperparameters
+    HEBBIAN_LR = 0.001
+    HEBBIAN_LAMBDA = 2
+    HEBBIAN_GAMMA = 0.99
+
+    # Classification layer hyperparameters
+    CLASSIFICATION_LR = 0.001
+    CLASSIFICATION_LAMBDA = 1
+    CLASSIFICATION_GAMMA = 0.99
+    
+    # Shared hyperparameter across layers
+    EPS = 10e-5
+
+    """
     Constructor method
-    @param
-        input_dimension (int) = number of inputs
-        hidden_layer_dimension (int) = number of neurons in hidden layer
-        output_dimension (int) = number of output neurons
-        heb_lr (float) = learning rate of NN
-        lamb (float) = hyperparameter for lateral neuron inhibition
-        eps (float) = small value to avoid 0 division
     @attr.
         input_dimension (int) = number of inputs
         output_dimension (int) = number of output neurons
@@ -20,13 +47,10 @@ class HebbianNetwork(nn.Module):
         hebbian_layer (layers.HebbianLayer) = hidden NN layer based off hebbian learning
         classifier_layer (layer.HebbianLayer) = output layer used for classification
     """
-    def __init__(self, input_dimension, hidden_layer_dimension, output_dimension, heb_lr=1, lamb=1, eps=10e-5):
+    def __init__(self):
         super(HebbianNetwork, self).__init__()
-        self.input_dimension = input_dimension
-        self.output_dimension = output_dimension
-        self.hidden_layer_dimension = hidden_layer_dimension
-        self.hebbian_layer = HebbianLayer(self.input_dimension, self.hidden_layer_dimension, lamb=lamb, heb_lr=heb_lr, eps=eps)
-        self.classifier_layer = ClassifierLayer(self.hidden_layer_dimension, self.output_dimension, lamb=lamb, heb_lr=heb_lr, eps=eps)
+        self.hebbian_layer = HebbianLayer(HebbianNetwork.INPUT_DIMENSION, HebbianNetwork.HEBBIAN_LAYER_DIMENSION, HebbianNetwork.HEBBIAN_LAMBDA, HebbianNetwork.HEBBIAN_LR, HebbianNetwork.HEBBIAN_GAMMA, HebbianNetwork.EPS)
+        self.classifier_layer = ClassifierLayer(HebbianNetwork.HEBBIAN_LAYER_DIMENSION, HebbianNetwork.OUTPUT_DIMENSION, HebbianNetwork.CLASSIFICATION_LAMBDA, HebbianNetwork.CLASSIFICATION_LR, HebbianNetwork.CLASSIFICATION_GAMMA, HebbianNetwork.EPS)
     
     """
     Method to set scheduler to either the hebbian layer
@@ -48,8 +72,7 @@ class HebbianNetwork(nn.Module):
     Method that defines how an input data flows throw the network
     @param
         x (torch.Tensor) = input data as a tensor
-        clamped_out (???) = parameter to clamp the output #WTV this means
-        train (bool) = true if in training
+        clamped_out (???) = parameter to clamp the output   # WTV this means
     """   
     def forward(self, x):
         x = self.hebbian_layer(x)

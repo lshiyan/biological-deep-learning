@@ -5,7 +5,7 @@ class Scheduler():
     """
     Contructor method
     @param
-        heb_lr (float) = learing rate
+        lr (float) = learing rate
         step_size (int) = step size -> how often the learning rate should be updated
         gamma (float) = decay factor -> factor to decay learning rate
     @attr.
@@ -14,8 +14,8 @@ class Scheduler():
         labels (torch.Tensor) = labels of dataset
         epoch (int) = epoch counter
     """
-    def __init__(self, heb_lr, step_size, gamma=0.99):
-        self.lr = heb_lr
+    def __init__(self, lr, step_size, gamma=0.99):
+        self.lr = lr
         self.step_size = step_size
         self.gamma = gamma
         self.epoch = 0

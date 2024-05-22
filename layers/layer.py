@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import math
 import matplotlib.pyplot as plt
@@ -29,13 +30,18 @@ class NetworkLayer (nn.Module, ABC):
         exponential_average (torch.Tensor) = 0 tensor to keep track of exponential averages
         gamma (float) = decay factor -> factor to decay learning rate
         id_tensor (torch.Tensor) = id tensor of layer
+        relu (fct) = ReLU function
+        sigmoid (fct) = Sigmoid function
+        softplus (fct) = Softplus function
+        tanh (fct) = Tanh function
+        softmax (fct) = Softmax function
     """
     def __init__(self, input_dimension, output_dimension, lamb=2, learning_rate=0.001, gamma=0.99, eps=10e-5):
         super ().__init__()
         self.input_dimension  = input_dimension
         self.output_dimension = output_dimension
         self.lamb = lamb
-        self.alpha = heb_lr
+        self.alpha = learning_rate
         self.fc = nn.Linear(self.input_dimension, self.output_dimension, bias=True)
         self.scheduler = None
         self.eps = eps
@@ -48,6 +54,12 @@ class NetworkLayer (nn.Module, ABC):
         for param in self.fc.parameters():
             param = torch.nn.init.uniform_(param, a=0.0, b=1.0)
             param.requires_grad_(False)
+
+        self.relu = nn.ReLU()
+        self.sigmoid=nn.Sigmoid()
+        self.softplus=nn.Softplus()
+        self.tanh=nn.Tanh()
+        self.softmax=nn.Softmax()
 
     """
     Sets scheduler current for layer
@@ -67,6 +79,26 @@ class NetworkLayer (nn.Module, ABC):
             padded_identity = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, self.output_dimension - i-1))
             id_tensor[i] = padded_identity
         return id_tensor
+    
+    """
+    Visualizes the weight/features learnt by neurons in this layer using their heatmap
+    @param
+        row (int) = number of rows in display
+        col (int) = number of columns in display
+    """
+    def visualize_weights(self, row, col):
+        weight = self.fc.weight
+        fig, axes = plt.subplots(row, col, figsize=(16, 8)) # FIXME: 16 and 8 are for classifying layer only -> what do these mean and put into parameters 
+        for ele in range(self.num_neurons):  
+            random_feature_selector = weight[ele]
+            heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
+                                                    int(math.sqrt(self.fc.weight.size(1))))
+            ax = axes[ele // col, ele % col]
+            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+            fig.colorbar(im, ax=ax)
+            ax.set_title(f'Weight {ele}')
+        plt.tight_layout()
+        plt.show()
     
     """
     Defines the way the weights will be updated at each iteration of the training
@@ -95,23 +127,3 @@ class NetworkLayer (nn.Module, ABC):
     @abstractmethod
     def forward(self, x):
         pass
-    
-    """
-    Visualizes the weight/features learnt by neurons in this layer using their heatmap
-    @param
-        row (int) = number of rows in display
-        col (int) = number of columns in display
-    """
-    def visualize_weights(self, row, col):
-        weight = self.fc.weight
-        fig, axes = plt.subplots(row, col, figsize=(16, 8)) # FIXME: 16 and 8 are for classifying layer only -> what do these mean and put into parameters 
-        for ele in range(slef.num_neurons):  
-            random_feature_selector = weight[ele]
-            heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
-                                                    int(math.sqrt(self.fc.weight.size(1))))
-            ax = axes[ele // col, ele % col]
-            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
-            fig.colorbar(im, ax=ax)
-            ax.set_title(f'Weight {ele}')
-        plt.tight_layout()
-        plt.show()

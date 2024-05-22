@@ -8,6 +8,7 @@ from data.data_loader import ImageDataSet
 from models.hebbian_network import HebbianNetwork
 from layers.scheduler import Scheduler
 
+
 """
 Class to implement and run an experiment depending on the data and model chosen
 """
@@ -16,45 +17,32 @@ class MLPExperiment():
     Constructor method to create an experiment
     @param
         args (argparse.ArgumentParser) = argument parser that has all the argumentd passed to run.py
-        input_dimension (int) = number of inputs into model
-        hidden_layer_dimension (int) = number of neurons in hidden layer
-        output_dimension (int) = number of neurons in output layer
-        lamb (float) = hyperparameter for latteral inhibition
-        heb_lr (float) = learning rate for hebbian layer
-        grad_lr (float) = learning rate for gradient descent for classification
         num_epochs (int) = number of iterations
-        gamma (float) = decay factor -> factor to decay learning rate
         eps (float) = number to avoid division by 0
     @attr.
         model (nn.Module) = the model that will be used in the experiment
         args (argparse.ArgumentParser) = arguments passed to run.py
         num_epochs (int) = number of iterations
-        grad_lr (float) = learning rate for gradient descend for classification
-        heb_lr (float) = learning rate for hebbian layer
-        gamma (float) = decay factor -> factor to decay learning rate
     """
-    def __init__(self, args, input_dimension, hidden_layer_dimension, output_dimension, lamb=1, heb_lr=1, grad_lr=0.001, num_epochs=3, gamma=0, eps=10e-5):
-        self.model = HebbianNetwork(input_dimension, hidden_layer_dimension, output_dimension, heb_lr=heb_lr, lamb=lamb, eps=eps) # TODO: For some reason my hebbian network is not processing batches together.
+    def __init__(self, args, num_epochs=3):
+        self.model = HebbianNetwork() # TODO: For some reason my hebbian network is not processing batches together.
         self.args = args
-        self.num_epochs = num_epochs
-        self.grad_lr = grad_lr 
-        self.heb_lr = heb_lr
-        self.gamma = gamma
+        self.num_epochs = num_epochs 
 
     """
     Returns ADAM optimizer for gradiant descent
     """    
     def optimizer(self):
-        optimizer = optim.Adam(self.model.parameters(), self.grad_lr)
+        optimizer = optim.Adam(self.model.parameters(), HebbianNetwork.CLASSIFICATION_LR)
         return optimizer
     
     """
     Sets the scheduler for the feature detector layer of the network
     """
     # NOTE: create scheduler within funciton? or pass scheduler as a paramter?
-    def set_hebbian_scheduler(self):
-        scheduler = Scheduler(self.heb_lr, 1000, self.gamma)
-        self.model.set_scheduler_hebbian_layer(scheduler)
+    def set_hebbian_scheduler(self, scheduler=None):
+        hebbian_scheduler = scheduler if scheduler else Scheduler(HebbianNetwork.HEBBIAN_LR, 1000, HebbianNetwork.HEBBIAN_GAMMA)
+        self.model.set_scheduler_hebbian_layer(hebbian_scheduler)
     
     """
     Returns cross entropy loss function
@@ -69,7 +57,7 @@ class MLPExperiment():
     """
     def train(self):  
         data_set = ImageDataSet(name=self.args.data_name)
-        data_zet.setup_data(self.args.train_data_filename)
+        data_set.setup_data(self.args.train_data_filename)
         data_loader = DataLoader(data_set, batch_size=1, shuffle=True)
         
         self.model.train()
@@ -117,7 +105,7 @@ class MLPExperiment():
     Plots visually the exponential averages
     """
     def print_exponential_averages(self):
-        A = torch.log(experiment.model.hebbian_layer.exponential_average).tolist()
+        A = torch.log(self.model.hebbian_layer.exponential_average).tolist()
         plt.scatter(range(len(A)), A)
         for i, (x, y) in enumerate(zip(range(len(A)), A)):
             plt.text(x, y, f'{i}', ha='center', va='bottom')

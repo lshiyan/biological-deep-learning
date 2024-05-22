@@ -1,12 +1,7 @@
 import torch
 import torch.nn as nn
-import math
-import matplotlib.pyplot as plt
-from numpy import outer
-import warnings
 from layers.layer import NetworkLayer
 
-warnings.filterwarnings("ignore")
 
 """
 Class defining the functionality of the classification layer
@@ -18,7 +13,7 @@ class ClassifierLayer(NetworkLayer):
         input_dimension (int) = number of inputs into the layer
         output_dimension (int) = number of outputs from layer
         lamb (float) = lambda hyperparameter for latteral inhibition
-        learning_rate (float) = how fast model learns at each iteration
+        class_lr (float) = how fast model learns at each iteration
         gamma (float) = decay factor -> factor to decay learning rate
         eps (float) = to avoid division by 0
     @attr.
@@ -35,11 +30,11 @@ class ClassifierLayer(NetworkLayer):
             id_tensor (torch.Tensor) = id tensor of layer
         OWN ATTR.
     """
-    def __init__(self, input_dimension, output_dimension, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
-        super ().__init__(input_dimension, output_dimension, lamb, heb_lr, gamma, eps)     
+    def __init__(self, input_dimension, output_dimension, lamb=2, class_lr=0.001, gamma=0.99, eps=10e-5):
+        super ().__init__(input_dimension, output_dimension, lamb, class_lr, gamma, eps)     
     
     """
-    Defines the way the weights will be updated at each iteration of the training
+    Defines the way the weights will be updated at each iteration of the training.
     @param
         input (torch.Tensor): The input tensor to the layer before any transformation.
         output (torch.Tensor): The output tensor of the layer before applying softmax.
@@ -110,7 +105,7 @@ class ClassifierLayer(NetworkLayer):
         input_copy = x.clone()
         x = self.fc(x)
         self.update_weights(input_copy, x)
-        #self.updateBias(x, train=train)
+        # self.update_bias(x)
         x = self.softmax(x)
         return x
     
