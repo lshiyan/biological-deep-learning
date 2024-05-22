@@ -26,7 +26,7 @@ class HebbianNetwork(nn.Module):
         self.output_dimension = output_dimension
         self.hidden_layer_dimension = hidden_layer_dimension
         self.hebbian_layer = HebbianLayer(self.input_dimension, self.hidden_layer_dimension, lamb=lamb, heb_lr=heb_lr, eps=eps)
-        self.classifier_layer = ClassifierLayer(self.hidden_layer_dimension, self.output_dimension, lamb=lamb, heb_lr=heb_lr, esp=esp)
+        self.classifier_layer = ClassifierLayer(self.hidden_layer_dimension, self.output_dimension, lamb=lamb, heb_lr=heb_lr, eps=eps)
     
     """
     Method to set scheduler to either the hebbian layer
