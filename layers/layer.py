@@ -49,7 +49,7 @@ class NetworkLayer (nn.Module, ABC):
         self.exponential_average = torch.zeros(self.output_dimension)
         self.gamma = gamma
         
-        self.id_tensor = self.create_id_tensors(self)
+        self.id_tensor = self.create_id_tensors()
         
         for param in self.fc.parameters():
             param = torch.nn.init.uniform_(param, a=0.0, b=1.0)
