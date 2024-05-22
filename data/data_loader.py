@@ -42,7 +42,7 @@ class ImageDataSet(Dataset):
     def __len__(self):
         return len(self.dataframe)
     
-    # Attritube getter functions
+    # Attritute getter functions
     def get_flag(self):
         return self.__flag
     
