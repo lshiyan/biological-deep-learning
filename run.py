@@ -1,16 +1,14 @@
 import argparse
 import os
 from data.mnist_factory import convert
-from data.data_loader import Image_Data_Set
+from data.data_loader import ImageDataSet
 from experiments.mlp import MLPExperiment  
 
 #Test
 
 def run_experiment(args):
     # Initialize the experiment
-    experiment = MLPExperiment(args, args.input_dimension, args.hidden_layer_dimension, args.output_dimension,
-                                lamb=args.lamb, heb_lr=args.heb_lr, grad_lr=args.grad_lr, num_epochs=args.num_epochs,
-                                gamma=args.gamma, eps=args.eps)
+    experiment = MLPExperiment(args)
     
     # Run training
     experiment.train()
@@ -23,19 +21,19 @@ def run_experiment(args):
 # Main function of the module
 def main(args):
     # Create .csv file from the ubyte data files
-    if not os.path.exists(args.train_data_filename) or not os.path.exists(args.test_data_filename):
+    if not os.path.exists(args.train_filename) or not os.path.exists(args.test_filename):
         print(f"Converting {args.data_name} data")
-        convert(args.train_data, args.train_labels, args.train_data_filename, 60000, 28)
-        convert(args.test_data, args.test_labels, args.test_data_filename, 10000, 28)
+        convert(args.train_data, args.train_labels, args.train_filename, 60000, 28)
+        convert(args.test_data, args.test_labels, args.test_filename, 10000, 28)
     
     # Load datasets
     train_data = ImageDataSet(True, args.data_name)
     test_data = ImageDataSet(False, args.data_name)
-    train_data.setup_data(args.train_data_filename)
-    test_data.setup_data(args.test_data_filename)
+    train_data.setup_data(args.train_filename)
+    test_data.setup_data(args.test_filename)
     
     # Run experiment
-    run_experiment(args)
+    #run_experiment(args)
 
 # Run an experiment with the arguments passed
 if __name__ == "__main__":
@@ -52,19 +50,8 @@ if __name__ == "__main__":
     parser.add_argument('--test_labels', type=str, default="data/mnist/t10k-labels.idx1-ubyte")
 
     # CSV files generated
-    parser.add_argument('--train_data_filename', type=str, default="data/mnist/mnist_train.csv")
-    parser.add_argument('--test_data_filename', type=str, default="data/mnist/mnist_test.csv")
-
-    # Experiment specific configurations
-    parser.add_argument('--input_dimension', type=int, default=784)
-    parser.add_argument('--hidden_layer_dimension', type=int, default=64)
-    parser.add_argument('--output_dimension', type=int, default=10)
-    parser.add_argument('--lamb', type=float, default=5)
-    parser.add_argument('--heb_lr', type=float, default=0.005)
-    parser.add_argument('--grad_lr', type=float, default=0.001)
-    parser.add_argument('--num_epochs', type=int, default=3)
-    parser.add_argument('--gamma', type=float, default=0)
-    parser.add_argument('--eps', type=float, default=1e-5)
+    parser.add_argument('--train_filename', type=str, default="data/mnist/mnist_train.csv")
+    parser.add_argument('--test_filename', type=str, default="data/mnist/mnist_test.csv")
     
     # Parse arguments
     args = parser.parse_args()

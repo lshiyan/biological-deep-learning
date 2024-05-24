@@ -27,7 +27,7 @@ class HebbianNetwork(nn.Module):
 
     # Hebbian layer hyperparameters
     HEBBIAN_LR = 0.001
-    HEBBIAN_LAMBDA = 2
+    HEBBIAN_LAMBDA = 15
     HEBBIAN_GAMMA = 0.99
 
     # Classification layer hyperparameters
@@ -72,10 +72,10 @@ class HebbianNetwork(nn.Module):
     Method that defines how an input data flows throw the network
     @param
         x (torch.Tensor) = input data as a tensor
-        clamped_out (???) = parameter to clamp the output   # WTV this means
+        clamped_output (???) = parameter to clamp the output   # WTV this means
     """   
-    def forward(self, x):
-        x = self.hebbian_layer(x)
+    def forward(self, x, clamped_output=None):
+        x = self.hebbian_layer(x, clamped_output)
         x = self.classifier_layer(x)
         return x
     

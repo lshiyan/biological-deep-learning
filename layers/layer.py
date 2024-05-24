@@ -61,6 +61,7 @@ class NetworkLayer (nn.Module, ABC):
         self.tanh=nn.Tanh()
         self.softmax=nn.Softmax()
 
+
     """
     Sets scheduler current for layer
     @param
@@ -68,7 +69,8 @@ class NetworkLayer (nn.Module, ABC):
     """
     def set_scheduler(self, scheduler):
         self.scheduler = scheduler
-        
+
+
     """
     Creates identity tensor
     """
@@ -79,27 +81,19 @@ class NetworkLayer (nn.Module, ABC):
             padded_identity = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, self.output_dimension - i-1))
             id_tensor[i] = padded_identity
         return id_tensor
-    
+
+
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
     @param
         row (int) = number of rows in display
         col (int) = number of columns in display
     """
+    @abstractmethod
     def visualize_weights(self, row, col):
-        weight = self.fc.weight
-        fig, axes = plt.subplots(row, col, figsize=(16, 8)) # FIXME: 16 and 8 are for classifying layer only -> what do these mean and put into parameters 
-        for ele in range(self.num_neurons):  
-            random_feature_selector = weight[ele]
-            heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
-                                                    int(math.sqrt(self.fc.weight.size(1))))
-            ax = axes[ele // col, ele % col]
-            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
-            fig.colorbar(im, ax=ax)
-            ax.set_title(f'Weight {ele}')
-        plt.tight_layout()
-        plt.show()
+        pass
     
+
     """
     Defines the way the weights will be updated at each iteration of the training
     @param
@@ -108,8 +102,9 @@ class NetworkLayer (nn.Module, ABC):
     """
     # TODO: finish documentation when understand
     @abstractmethod
-    def update_weights(self, input, output):
+    def update_weights(self, input, output, clamped_output):
         pass
+
 
     """
     Defines the way the bias will be updated at each iteration of the training
@@ -121,9 +116,10 @@ class NetworkLayer (nn.Module, ABC):
     def update_bias(self, output):
         pass
     
+
     """
     Feed forward
     """
     @abstractmethod
-    def forward(self, x):
+    def forward(self, x, clamped_output):
         pass

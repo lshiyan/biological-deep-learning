@@ -56,12 +56,12 @@ class HebbianLayer(NetworkLayer):
     """
     # TODO: write out explicitly what each step of this method does
     # TODO: finish documentation when understand
-    def update_weights(self, input, output):
+    def update_weights(self, input, output, clamped_output=None):
         x = torch.tensor(input.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
         y = torch.tensor(output.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
         outer_prod = torch.tensor(outer(y, x))
         initial_weight = torch.transpose(self.fc.weight.clone().detach(), 0,1)
-        A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.itensors, y)
+        A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
         A = A * (y.unsqueeze(1))
         delta_weight = self.alpha * (outer_prod - A)
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
@@ -103,11 +103,32 @@ class HebbianLayer(NetworkLayer):
     """
     Feed forward
     """
-    def forward(self, x):
+    def forward(self, x, clamped_output=None):
         input_copy = x.clone()
         x = self.fc(x)
         x = self.inhibition(x)
-        self.update_weights(input_copy, x)
+        self.update_weights(input_copy, x, clamped_output)
         #self.update_bias(x)
         self.weight_decay() 
         return x
+
+    
+    """
+    Visualizes the weight/features learnt by neurons in this layer using their heatmap
+    @param
+        row (int) = number of rows in display
+        col (int) = number of columns in display
+    """
+    def visualize_weights(self, row, col):
+        weight = self.fc.weight
+        fig, axes = plt.subplots(row, col, figsize=(16, 16))
+        for ele in range(row*col):  
+            random_feature_selector = weight[ele]
+            heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
+                                                    int(math.sqrt(self.fc.weight.size(1))))
+            ax = axes[ele // col, ele % col]
+            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+            fig.colorbar(im, ax=ax)
+            ax.set_title(f'Weight {ele}')
+        plt.tight_layout()
+        plt.show()

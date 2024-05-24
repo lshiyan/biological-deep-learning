@@ -43,24 +43,21 @@ class ClassifierLayer(NetworkLayer):
     This product is scaled by the learning rate and used to adjust the weights. 
     The weights are then normalized to ensure stability.
     """
-    def update_weights(self, input, output):
+    def update_weights(self, input, output, clamped_output=None):
 
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
         u = output.clone().detach().squeeze() # Output tensor after layer but before activation
         x = input.clone().detach().squeeze() # Input tensor to layer
         y = torch.softmax(u, dim=0) # Apply softmax to output tensor to get probabilities
         A = None
-        # FIXME: clamped_output whats the use? do we need it? and if we do have to write it into layer.py file & change hebbian_layer.py
-        """
+
         if clamped_output != None:
             outer_prod = torch.outer(clamped_output-y,x)
             u_times_y  =torch.mul(u,y)
             A = outer_prod  -self.fc.weight * (u_times_y.unsqueeze(1))
         else:
-        """
-
-        # Compute the outer product of the softmax output and input.
-        A = torch.outer(y,x) # Hebbian learning rule component
+            # Compute the outer product of the softmax output and input.
+            A = torch.outer(y,x) # Hebbian learning rule component
 
         # Adjust weights by learning rate and add contribution from Hebbian update.
         A = self.fc.weight + self.alpha * A
@@ -101,10 +98,10 @@ class ClassifierLayer(NetworkLayer):
     @param
         train (bool) = model in trainning or not
     """
-    def forward(self, x):
+    def forward(self, x, clamped_output=None):
         input_copy = x.clone()
         x = self.fc(x)
-        self.update_weights(input_copy, x)
+        self.update_weights(input_copy, x, clamped_output)
         # self.update_bias(x)
         x = self.softmax(x)
         return x
@@ -118,3 +115,24 @@ class ClassifierLayer(NetworkLayer):
         weights = self.fc.weight
         active = torch.where(weights > beta, weights, 0.0)
         return active.nonzero().size(0)
+
+
+    """
+    Visualizes the weight/features learnt by neurons in this layer using their heatmap
+    @param
+        row (int) = number of rows in display
+        col (int) = number of columns in display
+    """
+    def visualize_weights(self, row, col):
+        weight = self.fc.weight
+        fig, axes = plt.subplots(row, col, figsize=(16, 8)) # FIXME: 16 and 8 are for classifying layer only -> what do these mean and put into parameters 
+        for ele in range(row*col):  
+            random_feature_selector = weight[ele]
+            heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
+                                                    int(math.sqrt(self.fc.weight.size(1))))
+            ax = axes[ele // col, ele % col]
+            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+            fig.colorbar(im, ax=ax)
+            ax.set_title(f'Weight {ele}')
+        plt.tight_layout()
+        plt.show()

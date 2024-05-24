@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn 
 import torch.optim as optim
 import matplotlib.pyplot as plt
+import argparse
 
 from torch.utils.data import DataLoader
 from data.data_loader import ImageDataSet
@@ -18,16 +19,26 @@ class MLPExperiment():
     @param
         args (argparse.ArgumentParser) = argument parser that has all the argumentd passed to run.py
         num_epochs (int) = number of iterations
-        eps (float) = number to avoid division by 0
     @attr.
         model (nn.Module) = the model that will be used in the experiment
-        args (argparse.ArgumentParser) = arguments passed to run.py
         num_epochs (int) = number of iterations
+        data_name (str) = name of the dataset
+        train_filename (str) = name of the train dataset
+        test_filename (str) = name of the test dataset
     """
     def __init__(self, args, num_epochs=3):
         self.model = HebbianNetwork() # TODO: For some reason my hebbian network is not processing batches together.
-        self.args = args
-        self.num_epochs = num_epochs 
+        self.num_epochs = num_epochs
+        
+        if args == None:
+            self.data_name = "MNIST"
+            self.train_filename = "data/mnist/mnist_train.csv"
+            self.test_filename = "data/mnist/mnist_test.csv"
+        else:
+            self.data_name = args.data_name
+            self.train_filename = args.train_filename
+            self.test_filename = args.test_filename
+
 
     """
     Returns ADAM optimizer for gradiant descent
@@ -36,6 +47,7 @@ class MLPExperiment():
         optimizer = optim.Adam(self.model.parameters(), HebbianNetwork.CLASSIFICATION_LR)
         return optimizer
     
+
     """
     Sets the scheduler for the feature detector layer of the network
     """
@@ -44,6 +56,7 @@ class MLPExperiment():
         hebbian_scheduler = scheduler if scheduler else Scheduler(HebbianNetwork.HEBBIAN_LR, 1000, HebbianNetwork.HEBBIAN_GAMMA)
         self.model.set_scheduler_hebbian_layer(hebbian_scheduler)
     
+
     """
     Returns cross entropy loss function
     """
@@ -52,26 +65,33 @@ class MLPExperiment():
         loss_function = nn.CrossEntropyLoss()
         return loss_function
     
+
     """
     Trains the experiment
     """
     def train(self):  
-        data_set = ImageDataSet(name=self.args.data_name)
-        data_set.setup_data(self.args.train_data_filename)
+        data_set = ImageDataSet(name=self.data_name)
+        data_set.setup_data(self.train_filename)
         data_loader = DataLoader(data_set, batch_size=1, shuffle=True)
         
         self.model.train()
         
         optimizer = self.optimizer()
-        if self.gamma !=0 : self.set_hebbian_scheduler()
+        if HebbianNetwork.HEBBIAN_GAMMA !=0 : self.set_hebbian_scheduler()
         
         for _ in range(self.num_epochs):
             for i, data in enumerate(data_loader):
                 inputs, labels = data
                 self.model(inputs, clamped_output=self.one_hot_encode(labels, 10)) # FIXME: need to add clamped_output in HebbianNetwork
                 optimizer.step()
-        
-    # Given a tensor of labels, returns a one hot encoded tensor for each label.
+
+
+    """
+    Given a tensor of labels, returns a one hot encoded tensor for each label.
+    @params
+        labels (???) = set of labels
+        num_classes (int) = number of classes
+    """
     def one_hot_encode(self, labels, num_classes):
         one_hot_encoded = torch.zeros(len(labels), num_classes)
         one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
@@ -84,23 +104,25 @@ class MLPExperiment():
     def visualize_weights(self):
         self.model.visualize_weights()
     
+
     """
     Test the model with the testing data
     """
     def test(self):
-        data_set = ImageDataSet(name=self.args.data_name)
-        data_set.setup_data(self.args.test_data_filename)
+        data_set = ImageDataSet(name=self.data_name)
+        data_set.setup_data(self.test_filename)
         data_loader = DataLoader(data_set, batch_size=1, shuffle=True)
         correct = 0
         total = 0
         for _, data in enumerate(data_loader):
             inputs, labels = data
-            outputs = torch.argmax(self.model(inputs, None, train=0))
+            outputs = torch.argmax(self.model(inputs, None))
             if outputs.item() == labels.item():
                 correct += 1
             total += 1
         return correct / total
     
+
     """
     Plots visually the exponential averages
     """
@@ -112,6 +134,7 @@ class MLPExperiment():
         plt.xlabel("Feature Selector")
         plt.ylabel("Log (Exponential Average)")
         plt.title("Logged Exponential Averages of Each Feature Selector")
+
 
     """
     Returns the number of weights that are active according to a certain threshold

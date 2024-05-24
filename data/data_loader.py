@@ -30,7 +30,7 @@ class ImageDataSet(Dataset):
     """
     def setup_data(self, data_set):
         self.data_frame = pd.read_csv(data_set, header=None)
-        self.labels = torch.tensor(self.dataframe[0].values)
+        self.labels = torch.tensor(self.data_frame[0].values)
         self.data_frame = torch.tensor(self.data_frame.drop(self.data_frame.columns[0], axis=1).values, dtype=torch.float)
         self.data_frame /= 255
     
@@ -40,7 +40,7 @@ class ImageDataSet(Dataset):
     
     # Get length of data frame    
     def __len__(self):
-        return len(self.dataframe)
+        return len(self.data_frame)
     
     # Attritute getter functions
     def get_flag(self):
@@ -53,6 +53,6 @@ class ImageDataSet(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
         label = self.labels[idx]
-        features = self.dataframe[idx]
+        features = self.data_frame[idx]
         
         return features, label
