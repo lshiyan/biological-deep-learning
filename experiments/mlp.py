@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn 
 import torch.optim as optim
 import matplotlib.pyplot as plt
-import argparse
 
 from torch.utils.data import DataLoader
 from data.data_loader import ImageDataSet
@@ -49,21 +48,21 @@ class MLPExperiment():
     
 
     """
-    Sets the scheduler for the feature detector layer of the network
-    """
-    # NOTE: create scheduler within funciton? or pass scheduler as a paramter?
-    def set_hebbian_scheduler(self, scheduler=None):
-        hebbian_scheduler = scheduler if scheduler else Scheduler(HebbianNetwork.HEBBIAN_LR, 1000, HebbianNetwork.HEBBIAN_GAMMA)
-        self.model.set_scheduler_hebbian_layer(hebbian_scheduler)
-    
-
-    """
     Returns cross entropy loss function
     """
     # NOTE: what is the use of this function within our code???
     def loss_function(self):
         loss_function = nn.CrossEntropyLoss()
         return loss_function
+    
+
+    """
+    Sets the scheduler for the feature detector layer of the network
+    """
+    # NOTE: create scheduler within funciton? or pass scheduler as a paramter?
+    def set_hebbian_scheduler(self, scheduler=None):
+        hebbian_scheduler = scheduler if scheduler else Scheduler(HebbianNetwork.HEBBIAN_LR, 1000, HebbianNetwork.HEBBIAN_GAMMA)
+        self.model.set_scheduler_hebbian_layer(hebbian_scheduler)
     
 
     """

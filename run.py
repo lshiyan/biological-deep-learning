@@ -1,11 +1,13 @@
 import argparse
 import os
-from data.mnist_factory import convert
 from data.data_loader import ImageDataSet
 from experiments.mlp import MLPExperiment  
 
-#Test
+#  File to be able to run an experiment through command prompt and giving appropriate arguments
 
+"""
+Trains the model and test the trained model giving us the features learned visually and the accuracy of the model
+"""
 def run_experiment(args):
     # Initialize the experiment
     experiment = MLPExperiment(args)
@@ -18,24 +20,23 @@ def run_experiment(args):
     accuracy = experiment.test()
     print(f"Test Accuracy: {accuracy}")
 
-# Main function of the module
+"""
+Main function of the module -> preps data and runs experiment with given arguments
+"""
 def main(args):
     # Create .csv file from the ubyte data files
     if not os.path.exists(args.train_filename) or not os.path.exists(args.test_filename):
         print(f"Converting {args.data_name} data")
-        convert(args.train_data, args.train_labels, args.train_filename, 60000, 28)
-        convert(args.test_data, args.test_labels, args.test_filename, 10000, 28)
-    
-    # Load datasets
-    train_data = ImageDataSet(True, args.data_name)
-    test_data = ImageDataSet(False, args.data_name)
-    train_data.setup_data(args.train_filename)
-    test_data.setup_data(args.test_filename)
+        ImageDataSet.convert(args.train_data, args.train_labels, args.train_filename, 60000, 28)
+        ImageDataSet.convert(args.test_data, args.test_labels, args.test_filename, 10000, 28)
     
     # Run experiment
-    #run_experiment(args)
+    run_experiment(args)
 
-# Run an experiment with the arguments passed
+
+"""
+Gets arguments passed through command prompt and calls main() function with given arguments
+"""
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Biological deep learning')
     

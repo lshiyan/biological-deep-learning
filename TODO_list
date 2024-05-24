@@ -1,0 +1,6 @@
+- More seperation of concerns (hidden, input, output -> layers + nlp should work with any type of model)
+- Debug model performance
+- Finish documentation of entire code
+- Determine where to get the hyperparameters and code it accordingly
+- Makes sure all functionality are useful and actually do smt
+- 

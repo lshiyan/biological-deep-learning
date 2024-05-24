@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import math
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 
