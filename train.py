@@ -35,7 +35,7 @@ timer.report("Completed imports")
 from models.hebbian_network import HebbianNetwork
 from layers.scheduler import Scheduler
 from data.data_loader import MNIST_set, fashion_MNIST_set
-
+from experiments.mlp import MLPExperiment
 
 ##############################################################################
 
