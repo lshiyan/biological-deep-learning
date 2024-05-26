@@ -165,6 +165,9 @@ def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, 
                 args.checkpoint_path,
             )
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
+    
+    model.visualizeWeights()
+    
 
 def test_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, writer, args):
     epoch = test_dataloader.sampler.epoch
@@ -296,7 +299,7 @@ def main(args, timer):
     # timer.report("Prepared model for distributed training")
 
     input_dimension = 784
-    hidden_layer_dimension = 256
+    hidden_layer_dimension = 64
     output_dimension = 10
     heb_lr = 1
     lamb = 1

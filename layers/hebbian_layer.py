@@ -135,7 +135,7 @@ class HebbianLayer (nn.Module):
     
     #Creates heatmap of randomly chosen feature selectors.
     def visualizeWeights(self, classifier=0):
-        weight = self.fc.weight
+        weight = self.fc.weight.cpu()
         if classifier:
             fig, axes = plt.subplots(2, 5, figsize=(16, 8))
             for ele in range(10):  
