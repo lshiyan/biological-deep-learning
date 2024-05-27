@@ -20,7 +20,7 @@ class HebbianNetwork(nn.Module):
         
         EPS (float) = small value to avoid 0 division
     """
-    # Number of 
+    # Number of dim per layer
     INPUT_DIMENSION = 784
     HEBBIAN_LAYER_DIMENSION = 64
     OUTPUT_DIMENSION = 10

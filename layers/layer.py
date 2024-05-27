@@ -37,7 +37,7 @@ class NetworkLayer (nn.Module, ABC):
     """
     def __init__(self, input_dimension, output_dimension, lamb=2, learning_rate=0.001, gamma=0.99, eps=10e-5):
         super ().__init__()
-        self.input_dimension  = input_dimension
+        self.input_dimension = input_dimension
         self.output_dimension = output_dimension
         self.lamb = lamb
         self.alpha = learning_rate
