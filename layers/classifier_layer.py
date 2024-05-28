@@ -1,3 +1,5 @@
+import math
+from matplotlib import pyplot as plt
 import torch
 import torch.nn as nn
 from layers.layer import NetworkLayer
@@ -111,7 +113,7 @@ class ClassifierLayer(NetworkLayer):
     @param
         beta (float) = cutoff value determining which neuron is active and which is not
     """
-    def active_classifier_weights(self, beta):
+    def active_weights(self, beta):
         weights = self.fc.weight
         active = torch.where(weights > beta, weights, 0.0)
         return active.nonzero().size(0)
@@ -119,20 +121,25 @@ class ClassifierLayer(NetworkLayer):
 
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
-    @param
-        row (int) = number of rows in display
-        col (int) = number of columns in display
     """
-    def visualize_weights(self, row, col):
+    def visualize_weights(self):
         weight = self.fc.weight
-        fig, axes = plt.subplots(row, col, figsize=(16, 8)) # FIXME: 16 and 8 are for classifying layer only -> what do these mean and put into parameters 
-        for ele in range(row*col):  
+        fig, axes = plt.subplots(2, 5, figsize=(16, 8))
+        for ele in range(2*5):  
             random_feature_selector = weight[ele]
             heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
                                                     int(math.sqrt(self.fc.weight.size(1))))
-            ax = axes[ele // col, ele % col]
+            ax = axes[ele // 5, ele % 5]
             im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
             fig.colorbar(im, ax=ax)
             ax.set_title(f'Weight {ele}')
         plt.tight_layout()
         plt.show()
+
+
+    """
+
+    """
+    # TODO: define this function
+    def set_scheduler(self):
+        pass

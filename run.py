@@ -6,9 +6,9 @@ from experiments.mlp import MLPExperiment
 #  File to be able to run an experiment through command prompt and giving appropriate arguments
 
 """
-Trains the model and test the trained model giving us the features learned visually and the accuracy of the model
+Main function of the module -> preps data and runs experiment with given arguments
 """
-def run_experiment(args):
+def main(args):
     # Initialize the experiment
     experiment = MLPExperiment(args)
     
@@ -19,19 +19,6 @@ def run_experiment(args):
     experiment.visualize_weights()
     accuracy = experiment.test()
     print(f"Test Accuracy: {accuracy}")
-
-"""
-Main function of the module -> preps data and runs experiment with given arguments
-"""
-def main(args):
-    # Create .csv file from the ubyte data files
-    if not os.path.exists(args.train_filename) or not os.path.exists(args.test_filename):
-        print(f"Converting {args.data_name} data")
-        ImageDataSet.convert(args.train_data, args.train_labels, args.train_filename, 60000, 28)
-        ImageDataSet.convert(args.test_data, args.test_labels, args.test_filename, 10000, 28)
-    
-    # Run experiment
-    run_experiment(args)
 
 
 """
@@ -46,13 +33,31 @@ if __name__ == "__main__":
     
     # Data Factory
     parser.add_argument('--train_data', type=str, default="data/mnist/train-images.idx3-ubyte")
-    parser.add_argument('--train_labels', type=str, default="data/mnist/train-labels.idx1-ubyte")
+    parser.add_argument('--train_label', type=str, default="data/mnist/train-labels.idx1-ubyte")
     parser.add_argument('--test_data', type=str, default="data/mnist/t10k-images.idx3-ubyte")
-    parser.add_argument('--test_labels', type=str, default="data/mnist/t10k-labels.idx1-ubyte")
+    parser.add_argument('--test_label', type=str, default="data/mnist/t10k-labels.idx1-ubyte")
 
     # CSV files generated
     parser.add_argument('--train_filename', type=str, default="data/mnist/mnist_train.csv")
     parser.add_argument('--test_filename', type=str, default="data/mnist/mnist_test.csv")
+
+    # Dimension of each layer
+    parser.add_argument('--input_dim', type=int, default=784)
+    parser.add_argument('--heb_dim', type=int, default=64)
+    parser.add_argument('--output_dim', type=int, default=10)
+
+    # Hebbian layer hyperparameters
+    parser.add_argument('--heb_lr', type=float, default=0.001)
+    parser.add_argument('--heb_lamb', type=float, default=15)
+    parser.add_argument('--heb_gam', type=float, default=0.99)
+
+    # Classification layer hyperparameters
+    parser.add_argument('--cla_lr', type=float, default=0.001)
+    parser.add_argument('--cla_lamb', type=float, default=1)
+    parser.add_argument('--cla_gam', type=float, default=0.99)
+
+    # Shared hyperparameters
+    parser.add_argument('--eps', type=float, default=10e-5)
     
     # Parse arguments
     args = parser.parse_args()

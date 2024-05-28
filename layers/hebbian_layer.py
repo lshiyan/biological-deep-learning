@@ -1,3 +1,5 @@
+import math
+from matplotlib import pyplot as plt
 import torch
 import torch.nn as nn
 from numpy import outer
@@ -87,7 +89,7 @@ class HebbianLayer(NetworkLayer):
     Decays the overused weights and increases the underused weights using tanh functions.
     """
     # TODO: write out explicitly what each step of this method does
-    def weight_decay(self):
+    def __weight_decay(self):
         average = torch.mean(self.exponential_average).item()
         A = self.exponential_average / average
         growth_factor_positive = self.eps * self.tanh(-self.eps * (A - 1)) + 1
@@ -115,20 +117,33 @@ class HebbianLayer(NetworkLayer):
     
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
-    @param
-        row (int) = number of rows in display
-        col (int) = number of columns in display
     """
-    def visualize_weights(self, row, col):
+    def visualize_weights(self):
         weight = self.fc.weight
-        fig, axes = plt.subplots(row, col, figsize=(16, 16))
-        for ele in range(row*col):  
+        fig, axes = plt.subplots(8, 8, figsize=(16, 16))
+        for ele in range(8*8):  
             random_feature_selector = weight[ele]
             heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
                                                     int(math.sqrt(self.fc.weight.size(1))))
-            ax = axes[ele // col, ele % col]
+            ax = axes[ele // 8, ele % 8]
             im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
             fig.colorbar(im, ax=ax)
             ax.set_title(f'Weight {ele}')
         plt.tight_layout()
         plt.show()
+
+
+    """
+    Counts the number of active feature selectors (above a certain cutoff beta).
+    @param
+        beta (float) = cutoff value determining which neuron is active and which is not
+    """
+    def active_weights(self, beta):
+        print("IDK")
+
+    """
+
+    """
+    # TODO: define this function
+    def set_scheduler(self):
+        pass

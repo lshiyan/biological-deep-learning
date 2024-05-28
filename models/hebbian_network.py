@@ -1,87 +1,76 @@
+import torch.nn as nn
+from layers.input_layer import InputLayer
 from layers.hebbian_layer import HebbianLayer
 from layers.classifier_layer import ClassifierLayer
-import torch.nn as nn 
+from models.network import Network 
 
-class HebbianNetwork(nn.Module):
-    """
-    Hyperparameters that remain constant within the network
-    @const
-        INPUT_DIMENSION (int) = number of inputs to network
-        HEBBIAN_LAYER_DIMENSION (int) = number of neurons in hebbian layer
-        OUTPUT_DIMENSION (int) = number of output neurons from network
-
-        HEBBIAN_LR (float) = learning rate of hebbian layer
-        HEBBIAN_LAMBDA (float) = hyperparameter for lateral neuron inhibition
-        HEBBIAN_GAMMA (float) = factor to decay learning rate of hebbian layer
-
-        CLASSIFICATION_LR (float) = learning rate of classification layer
-        CLASSIFICATION_LAMBDA (float) = hyperparameter for lateral neuron inhibition
-        CLASSIFICATION_GAMMA (float) = factor to decay learning rate of classification layer
-        
-        EPS (float) = small value to avoid 0 division
-    """
-    # Number of dim per layer
-    INPUT_DIMENSION = 784
-    HEBBIAN_LAYER_DIMENSION = 64
-    OUTPUT_DIMENSION = 10
-
-    # Hebbian layer hyperparameters
-    HEBBIAN_LR = 0.001
-    HEBBIAN_LAMBDA = 15
-    HEBBIAN_GAMMA = 0.99
-
-    # Classification layer hyperparameters
-    CLASSIFICATION_LR = 0.001
-    CLASSIFICATION_LAMBDA = 1
-    CLASSIFICATION_GAMMA = 0.99
-    
-    # Shared hyperparameter across layers
-    EPS = 10e-5
-
+class HebbianNetwork(Network):
     """
     Constructor method
     @attr.
-        input_dimension (int) = number of inputs
-        output_dimension (int) = number of output neurons
-        hidden_layer_dimension (int) = number of neurons in hidden layer
-        hebbian_layer (layers.HebbianLayer) = hidden NN layer based off hebbian learning
-        classifier_layer (layer.HebbianLayer) = output layer used for classification
+        PARENT ATTR.
+            __layers (dict {str:layers.NetworkLayer}) = list of layers of the network
+                input_layer (layers.InputLayer) = layer that will take care of input processing
+                hebbian_layer (layers.HebbianLayer) = layer for hebbian learning
+                output_layer (layers.ClassifierLayer) = layer for classification task
+        OWN ATTR.
+            input_dim (int) = number of inputs
+            heb_dim (int) = number of neurons in hebbina layer
+            output_dimension (int) = number of output neurons
+            heb_param (dict {str:float}) = dictionary with all the hyperparameters for the hebbian layer
+                lr (float) = learning rate of hebbian layer
+                lamb (float) = hyperparameter for lateral neuron inhibition
+                gam (float) = factor to decay learning rate of hebbian layer
+            cla_param (dict {str:float}) = dictionary with all the hyperparameters for the classification layer
+                lr (float) = learning rate of classification layer
+                lamb (float) = hyperparameter for lateral neuron inhibition
+                gam (float) = factor to decay learning rate of classification layer
+            eps (float) = small value to avoid 0 division
+    @pram
+        args (argparse.ArgumentParser) = arguments passed from command line
     """
-    def __init__(self):
-        super(HebbianNetwork, self).__init__()
-        self.hebbian_layer = HebbianLayer(HebbianNetwork.INPUT_DIMENSION, HebbianNetwork.HEBBIAN_LAYER_DIMENSION, HebbianNetwork.HEBBIAN_LAMBDA, HebbianNetwork.HEBBIAN_LR, HebbianNetwork.HEBBIAN_GAMMA, HebbianNetwork.EPS)
-        self.classifier_layer = ClassifierLayer(HebbianNetwork.HEBBIAN_LAYER_DIMENSION, HebbianNetwork.OUTPUT_DIMENSION, HebbianNetwork.CLASSIFICATION_LAMBDA, HebbianNetwork.CLASSIFICATION_LR, HebbianNetwork.CLASSIFICATION_GAMMA, HebbianNetwork.EPS)
-    
-    """
-    Method to set scheduler to either the hebbian layer
-    @param
-        scheduler (layers.Scheduler) = a scheduler
-    """
-    def set_scheduler_hebbian_layer(self, scheduler):
-        self.hebbian_layer.set_scheduler(scheduler)
-    
-    """
-    Method to set scheduler to either the classification layer
-    @param
-        scheduler (layers.Scheduler) = a scheduler
-    """
-    def set_scheduler_classifier(self, scheduler):
-        self.classifier_layer.set_scheduler(scheduler)
+    def __init__(self, args):
+        super().__init__()
+
+        # Dimension of each layer
+        self.input_dim = args.input_dim
+        self.heb_dim = args.heb_dim
+        self.output_dim = args.output_dim
+
+        # Hebbian layer hyperparameters
+        self.heb_param = {}
+        self.heb_param["lr"] = args.heb_lr
+        self.heb_param["lamb"] = args.heb_lamb
+        self.heb_param["gam"] = args.heb_gam
+
+        # Classification layer hyperparameters
+        self.cla_param = {}
+        self.cla_param["lr"] = args.cla_lr
+        self.cla_param["lamb"] = args.cla_lamb
+        self.cla_param["gam"] = args.cla_gam
+
+        # Shared hyperparameters
+        self.eps = args.eps
+
+        # Setting up layers of the network
+        input_layer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
+        hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.heb_param["lamb"], self.heb_param["lr"], self.heb_param["gam"], self.eps)
+        classification_layer = ClassifierLayer(self.heb_dim, self.output_dim, self.cla_param["lamb"], self.cla_param["lr"], self.cla_param["gam"], self.eps)
+        self.add_layer("Input Layer", input_layer)
+        self.add_layer("Hebbian layer", hebbian_layer)
+        self.add_layer("Classification Layer", classification_layer)
+
 
     """
     Method that defines how an input data flows throw the network
     @param
-        x (torch.Tensor) = input data as a tensor
+        data_input (torch.Tensor) = input data into the network
         clamped_output (???) = parameter to clamp the output   # WTV this means
     """   
-    def forward(self, x, clamped_output=None):
-        x = self.hebbian_layer(x, clamped_output)
-        x = self.classifier_layer(x)
-        return x
-    
-    """
-    Method to visualize the weights/features learned by each neuron during training
-    """
-    def visualize_weights(self):
-        self.hebbian_layer.visualize_weights(8, 8)
-        self.classifier_layer.visualize_weights(2, 5)
+    def forward(self, data_input, clamped_output=None):
+        for name, module in self.named_children():
+            if name == 'Hebbian Layer':
+                data_input = module(data_input, clamped_output)
+            elif name == 'Classification Lyaer':
+                data_input = module(data_input)
+        return data_input

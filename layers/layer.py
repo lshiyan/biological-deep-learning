@@ -29,11 +29,6 @@ class NetworkLayer (nn.Module, ABC):
         exponential_average (torch.Tensor) = 0 tensor to keep track of exponential averages
         gamma (float) = decay factor -> factor to decay learning rate
         id_tensor (torch.Tensor) = id tensor of layer
-        relu (fct) = ReLU function
-        sigmoid (fct) = Sigmoid function
-        softplus (fct) = Softplus function
-        tanh (fct) = Tanh function
-        softmax (fct) = Softmax function
     """
     def __init__(self, input_dimension, output_dimension, lamb=2, learning_rate=0.001, gamma=0.99, eps=10e-5):
         super ().__init__()
@@ -54,21 +49,6 @@ class NetworkLayer (nn.Module, ABC):
             param = torch.nn.init.uniform_(param, a=0.0, b=1.0)
             param.requires_grad_(False)
 
-        self.relu = nn.ReLU()
-        self.sigmoid=nn.Sigmoid()
-        self.softplus=nn.Softplus()
-        self.tanh=nn.Tanh()
-        self.softmax=nn.Softmax()
-
-
-    """
-    Sets scheduler current for layer
-    @param
-        scheduler (layers.Scheduler) = set the scheduler for current layer
-    """
-    def set_scheduler(self, scheduler):
-        self.scheduler = scheduler
-
 
     """
     Creates identity tensor
@@ -81,15 +61,19 @@ class NetworkLayer (nn.Module, ABC):
             id_tensor[i] = padded_identity
         return id_tensor
 
+    """
+    Sets scheduler current for layer
+    """
+    @abstractmethod
+    def set_scheduler(self):
+        pass
+
 
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
-    @param
-        row (int) = number of rows in display
-        col (int) = number of columns in display
     """
     @abstractmethod
-    def visualize_weights(self, row, col):
+    def visualize_weights(self):
         pass
     
 
@@ -98,6 +82,7 @@ class NetworkLayer (nn.Module, ABC):
     @param
         input (???) = ???
         output (???) = ???
+        clamped_output (???) = ???
     """
     # TODO: finish documentation when understand
     @abstractmethod
@@ -118,7 +103,20 @@ class NetworkLayer (nn.Module, ABC):
 
     """
     Feed forward
+    @param
+        x (???) = inputs into the layer
+        clamped_output (???) = ???
     """
+    # TODO: finish documentation when understand
     @abstractmethod
     def forward(self, x, clamped_output):
+        pass
+
+    """
+    Counts the number of active feature selectors (above a certain cutoff beta).
+    @param
+        beta (float) = cutoff value determining which neuron is active and which is not
+    """
+    @abstractmethod
+    def active_weights(self, beta):
         pass

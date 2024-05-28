@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 
+import argparse
+
 from torch.utils.data import DataLoader
 from data.data_loader import ImageDataSet
 from models.hebbian_network import HebbianNetwork
@@ -16,39 +18,81 @@ class MLPExperiment():
     """
     Constructor method to create an experiment
     @param
-        args (argparse.ArgumentParser) = argument parser that has all the argumentd passed to run.py
+        args (argparse.ArgumentParser) = argument parser that has all the arguments passed to run.py
         num_epochs (int) = number of iterations
     @attr.
         model (nn.Module) = the model that will be used in the experiment
         num_epochs (int) = number of iterations
+        args (argparse.ArgumentParser) = argument parser that has all the arguments
         data_name (str) = name of the dataset
         train_filename (str) = name of the train dataset
         test_filename (str) = name of the test dataset
+    @return
+        ___ (experiments.MLPExperiments) = new instance of MLPExperiment 
     """
-    def __init__(self, args, num_epochs=3):
-        self.model = HebbianNetwork() # TODO: For some reason my hebbian network is not processing batches together.
-        self.num_epochs = num_epochs
-        
+    def __init__(self, args=None, num_epochs=3):
+        # For testing when not ran in command line with run.py
         if args == None:
-            self.data_name = "MNIST"
-            self.train_filename = "data/mnist/mnist_train.csv"
-            self.test_filename = "data/mnist/mnist_test.csv"
-        else:
-            self.data_name = args.data_name
-            self.train_filename = args.train_filename
-            self.test_filename = args.test_filename
+            parser = argparse.ArgumentParser(description='Biological deep learning')
+
+            # Basic configurations.
+            parser.add_argument('--is_training', type=bool, default=True, help='status')
+            parser.add_argument('--data_name', type=str, default="MNIST")
+            
+            # Data Factory
+            parser.add_argument('--train_data', type=str, default="data/mnist/train-images.idx3-ubyte")
+            parser.add_argument('--train_label', type=str, default="data/mnist/train-labels.idx1-ubyte")
+            parser.add_argument('--test_data', type=str, default="data/mnist/t10k-images.idx3-ubyte")
+            parser.add_argument('--test_label', type=str, default="data/mnist/t10k-labels.idx1-ubyte")
+
+            # CSV files generated
+            parser.add_argument('--train_filename', type=str, default="data/mnist/mnist_train.csv")
+            parser.add_argument('--test_filename', type=str, default="data/mnist/mnist_test.csv")
+
+            # Dimension of each layer
+            parser.add_argument('--input_dim', type=int, default=784)
+            parser.add_argument('--heb_dim', type=int, default=64)
+            parser.add_argument('--output_dim', type=int, default=10)
+
+            # Hebbian layer hyperparameters
+            parser.add_argument('--heb_lr', type=float, default=0.001)
+            parser.add_argument('--heb_lamb', type=float, default=15)
+            parser.add_argument('--heb_gam', type=float, default=0.99)
+
+            # Classification layer hyperparameters
+            parser.add_argument('--cla_lr', type=float, default=0.001)
+            parser.add_argument('--cla_lamb', type=float, default=1)
+            parser.add_argument('--cla_gam', type=float, default=0.99)
+
+            # Shared hyperparameters
+            parser.add_argument('--eps', type=float, default=10e-5)
+            # Parse arguments
+            args, _ = parser.parse_known_args()
+
+        self.model = HebbianNetwork(args)
+        self.num_epochs = num_epochs
+        self.args = args
+        self.data_name = args.data_name
+        self.train_filename = args.train_filename
+        self.test_filename = args.test_filename
 
 
     """
-    Returns ADAM optimizer for gradiant descent
+    Returns defined optimizer for gradiant descent
+    @param
+    @return
+        optimizer (optim.Adam) = ADAM optimizer
     """    
     def optimizer(self):
-        optimizer = optim.Adam(self.model.parameters(), HebbianNetwork.CLASSIFICATION_LR)
+        optimizer = optim.Adam(self.model.get_layer("Hebbian layer").parameters(), self.args.cla_lr)
         return optimizer
     
 
     """
     Returns cross entropy loss function
+    @param
+    @return
+        loss_function (nn.CrossEntropy) = cross entropy loss function
     """
     # NOTE: what is the use of this function within our code???
     def loss_function(self):
@@ -58,30 +102,33 @@ class MLPExperiment():
 
     """
     Sets the scheduler for the feature detector layer of the network
+    @param
+    @return
+        ___ (void) = no returns
     """
-    # NOTE: create scheduler within funciton? or pass scheduler as a paramter?
-    def set_hebbian_scheduler(self, scheduler=None):
-        hebbian_scheduler = scheduler if scheduler else Scheduler(HebbianNetwork.HEBBIAN_LR, 1000, HebbianNetwork.HEBBIAN_GAMMA)
-        self.model.set_scheduler_hebbian_layer(hebbian_scheduler)
+    def set_scheduler(self):
+        self.model.set_scheduler()
     
 
     """
     Trains the experiment
+    @param
+    @return
+        ___ (void) = no returns
     """
     def train(self):  
-        data_set = ImageDataSet(name=self.data_name)
-        data_set.setup_data(self.train_filename)
+        data_set = self.model.get_layer("Input Layer").setup_train_data()
         data_loader = DataLoader(data_set, batch_size=1, shuffle=True)
         
         self.model.train()
         
         optimizer = self.optimizer()
-        if HebbianNetwork.HEBBIAN_GAMMA !=0 : self.set_hebbian_scheduler()
+        if self.args.heb_gam !=0 : self.set_scheduler()
         
         for _ in range(self.num_epochs):
-            for i, data in enumerate(data_loader):
+            for _, data in enumerate(data_loader):
                 inputs, labels = data
-                self.model(inputs, clamped_output=self.one_hot_encode(labels, 10)) # FIXME: need to add clamped_output in HebbianNetwork
+                self.model(inputs, clamped_output=self.one_hot_encode(labels, 10))
                 optimizer.step()
 
 
@@ -90,15 +137,21 @@ class MLPExperiment():
     @params
         labels (???) = set of labels
         num_classes (int) = number of classes
+    @return
+        one_hot_encoded.squeeze() (???) = ???
     """
     def one_hot_encode(self, labels, num_classes):
         one_hot_encoded = torch.zeros(len(labels), num_classes)
         one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
     
         return one_hot_encoded.squeeze()
-        
+
+
     """
     Visualizes the weights/features learned during training.
+    @param
+    @return
+        ___ (void) = no returns
     """
     def visualize_weights(self):
         self.model.visualize_weights()
@@ -106,10 +159,12 @@ class MLPExperiment():
 
     """
     Test the model with the testing data
+    @param
+    @return
+        correct / total (float) = accuracy of model on testing data
     """
     def test(self):
-        data_set = ImageDataSet(name=self.data_name)
-        data_set.setup_data(self.test_filename)
+        data_set = self.model.get_layer("Input Layer").setup_test_data()
         data_loader = DataLoader(data_set, batch_size=1, shuffle=True)
         correct = 0
         total = 0
@@ -124,9 +179,12 @@ class MLPExperiment():
 
     """
     Plots visually the exponential averages
+    @param
+    @return
+        ___ (void) = no returns
     """
     def print_exponential_averages(self):
-        A = torch.log(self.model.hebbian_layer.exponential_average).tolist()
+        A = torch.log(self.model.get_exponential_averages()).tolist()
         plt.scatter(range(len(A)), A)
         for i, (x, y) in enumerate(zip(range(len(A)), A)):
             plt.text(x, y, f'{i}', ha='center', va='bottom')
@@ -139,6 +197,8 @@ class MLPExperiment():
     Returns the number of weights that are active according to a certain threshold
     @param
         beta (float) = threshold to determine if a certain neuro is active or not
+    @return
+        self.model.active_weights (int) = number of active weights
     """    
-    def active_classifier_weights(self, beta):
-        return self.model.classifier_layer.active_classifier_weights(beta)     
+    def active_weights(self, beta):
+        return self.model.active_weights(beta)     
