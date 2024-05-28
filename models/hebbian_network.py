@@ -28,6 +28,8 @@ class HebbianNetwork(Network):
             eps (float) = small value to avoid 0 division
     @pram
         args (argparse.ArgumentParser) = arguments passed from command line
+    @return
+        ___ (models.HebianNetwork) = new instance of a HebbianNetwork
     """
     def __init__(self, args):
         super().__init__()
@@ -64,11 +66,15 @@ class HebbianNetwork(Network):
     """
     Method that defines how an input data flows throw the network
     @param
-        data_input (torch.Tensor) = input data into the network
-        clamped_output (???) = parameter to clamp the output   # WTV this means
-    """   
-    def forward(self, data_input, clamped_output=None):
-        for name, module in self.named_children():
+        x (torch.Tensor) = input data into the network
+        clamped_output (???) = parameter to clamp the output
+    @return
+        data_input (torch.Tensor) = returns the data after pssing it throw the network
+    """
+    # TODO: check documentation
+    def forward(self, x, clamped_output=None):
+        data_input = x
+        for name, module in self.named_layers():
             if name == 'Hebbian Layer':
                 data_input = module(data_input, clamped_output)
             elif name == 'Classification Lyaer':

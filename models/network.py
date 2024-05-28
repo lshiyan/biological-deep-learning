@@ -4,17 +4,17 @@ import torch.nn as nn
 """
 Interface for all networks to be created
 """
-class Network(nn.Module, ABC):
+class Network(nn.Module):
     """
     Constructor method
     @attr.
         __layers (dict {str:nn.Module}) = list of layers of the network
     @pram
-        layers (dict) = dictionary where {key(str):value(nn.Module)}
+        layers (list of tuples) = list of (key(str), value(nn.Module))
     """
     def __init__(self):
         super().__init__()
-        self.__layers = {}
+        self.__layers = []
 
 
     """
@@ -24,10 +24,7 @@ class Network(nn.Module, ABC):
         layer (layers.NetworkLayer) = layer that is being added
     """
     def add_layer(self, name, layer):
-        if name not in self.__layers.keys():
-            self.__layers[name] = layer
-        else:
-            print("Layer already exists.")
+        self.__layers.append((name, layer))
 
 
     """
@@ -36,21 +33,27 @@ class Network(nn.Module, ABC):
         name (str) = name of layer to get
     """
     def get_layer(self, name):
-        return self.__layers[name]
+        for layer_name, layer in self.__layers:
+            if name == layer_name:
+                return layer
+        return None
 
 
     """
-    Returns an iterator for only the layers within the network
-    """
-    def layers(self):
-        return self.__layers.values()
-
-
-    """
-    Returns an iterator for name, layer for all layers within the network
+    Returns list of all layers and their names in network
     """
     def named_layers(self):
-        return self.__layers.items()
+        return self.__layers
+    
+    
+    """
+    Retruns list of all layers in network
+    """
+    def layers(self):
+        layers = []
+        for _, layer in self.__layers:
+            layers.append(layer)
+        return layers
     
 
     """
@@ -85,6 +88,5 @@ class Network(nn.Module, ABC):
         x (torch.Tensor) = input data as a tensor
         clamped_output (???) = parameter to clamp the output   # WTV this means
     """   
-    @abstractmethod
     def forward(self, x, clamped_output=None):
         pass

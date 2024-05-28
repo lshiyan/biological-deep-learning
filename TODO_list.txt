@@ -1,4 +1,3 @@
 - Debug model performance
-- Finish documentation of entire code
-- Makes sure all functionality are useful and actually do smt
-- Write set_scheduler() in the layers
+- Write out what can be improved in the code
+- Write out how the code works and how to add new things into it (README.txt)

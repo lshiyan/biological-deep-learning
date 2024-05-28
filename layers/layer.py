@@ -1,14 +1,12 @@
 import torch
 import torch.nn as nn
-import matplotlib.pyplot as plt
-from abc import ABC, abstractmethod
 
 
 """
 Abstract class for a single layer of the ANN -> Every layer of the interface must implement interface
 This will help with the support of multiple hidden layers inside the network
 """
-class NetworkLayer (nn.Module, ABC):
+class NetworkLayer (nn.Module):
     """
     Constructor method NetworkLayer
     @param
@@ -64,7 +62,6 @@ class NetworkLayer (nn.Module, ABC):
     """
     Sets scheduler current for layer
     """
-    @abstractmethod
     def set_scheduler(self):
         pass
 
@@ -72,7 +69,6 @@ class NetworkLayer (nn.Module, ABC):
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
     """
-    @abstractmethod
     def visualize_weights(self):
         pass
     
@@ -85,7 +81,6 @@ class NetworkLayer (nn.Module, ABC):
         clamped_output (???) = ???
     """
     # TODO: finish documentation when understand
-    @abstractmethod
     def update_weights(self, input, output, clamped_output):
         pass
 
@@ -95,8 +90,7 @@ class NetworkLayer (nn.Module, ABC):
     @param
         output (???) = ???
     """
-    # TODO: finish documentation when understand
-    @abstractmethod    
+    # TODO: finish documentation when understand   
     def update_bias(self, output):
         pass
     
@@ -108,7 +102,6 @@ class NetworkLayer (nn.Module, ABC):
         clamped_output (???) = ???
     """
     # TODO: finish documentation when understand
-    @abstractmethod
     def forward(self, x, clamped_output):
         pass
 
@@ -117,6 +110,5 @@ class NetworkLayer (nn.Module, ABC):
     @param
         beta (float) = cutoff value determining which neuron is active and which is not
     """
-    @abstractmethod
     def active_weights(self, beta):
         pass

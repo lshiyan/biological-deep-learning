@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from numpy import outer
 from layers.layer import NetworkLayer
+from layers.scheduler import Scheduler
 
 
 """
@@ -141,9 +142,13 @@ class HebbianLayer(NetworkLayer):
     def active_weights(self, beta):
         print("IDK")
 
-    """
 
     """
-    # TODO: define this function
+    Sets the scheduler for this layer
+    @param
+    @return
+        ___ (void) = no returns
+    """
     def set_scheduler(self):
-        pass
+        scheduler = Scheduler(self.alpha, 1000, self.gamma)
+        self.scheduler = scheduler

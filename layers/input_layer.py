@@ -1,7 +1,5 @@
 import torch
-import torch.nn as nn
 from torch.utils.data import TensorDataset
-import matplotlib.pyplot as plt
 import os
 import pandas as pd
 from layers.layer import NetworkLayer
@@ -44,6 +42,7 @@ class InputLayer (NetworkLayer):
     """
     def setup_train_data(self):
         InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
+        
         data_frame = pd.read_csv(self.train_filename, header=None)
         labels = torch.tensor(data_frame[0].values)
         data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
@@ -105,59 +104,3 @@ class InputLayer (NetworkLayer):
         imgs.close()
         out.close()
         labels.close()
-    
-
-    # NetworkLayer functions that I do not know how to implement for this layer / useless for this layer
-    """
-    Sets scheduler current for layer
-    """
-    def set_scheduler(self):
-        pass
-
-
-    """
-    Visualizes the weight/features learnt by neurons in this layer using their heatmap
-    """
-    def visualize_weights(self):
-        pass
-    
-
-    """
-    Defines the way the weights will be updated at each iteration of the training
-    @param
-        input (???) = ???
-        output (???) = ???
-        clamped_output (???) = ???
-    """
-    # TODO: finish documentation when understand
-    def update_weights(self, input, output, clamped_output):
-        pass
-
-
-    """
-    Defines the way the bias will be updated at each iteration of the training
-    @param
-        output (???) = ???
-    """
-    # TODO: finish documentation when understand   
-    def update_bias(self, output):
-        pass
-    
-
-    """
-    Feed forward
-    @param
-        x (???) = inputs into the layer
-        clamped_output (???) = ???
-    """
-    # TODO: finish documentation when understand
-    def forward(self, x, clamped_output):
-        pass
-
-    """
-    Counts the number of active feature selectors (above a certain cutoff beta).
-    @param
-        beta (float) = cutoff value determining which neuron is active and which is not
-    """
-    def active_weights(self, beta):
-        pass

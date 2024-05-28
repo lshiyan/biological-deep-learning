@@ -1,6 +1,4 @@
 import argparse
-import os
-from data.data_loader import ImageDataSet
 from experiments.mlp import MLPExperiment  
 
 #  File to be able to run an experiment through command prompt and giving appropriate arguments
@@ -60,7 +58,7 @@ if __name__ == "__main__":
     parser.add_argument('--eps', type=float, default=10e-5)
     
     # Parse arguments
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
     
     # Run the main function for the experiment
     main(args)
