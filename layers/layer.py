@@ -46,6 +46,12 @@ class NetworkLayer (nn.Module):
         for param in self.fc.parameters():
             param = torch.nn.init.uniform_(param, a=0.0, b=1.0)
             param.requires_grad_(False)
+        
+        self.relu=nn.ReLU()
+        self.sigmoid=nn.Sigmoid()
+        self.softplus=nn.Softplus()
+        self.tanh=nn.Tanh()
+        self.softmax=nn.Softmax()
 
 
     """

@@ -59,11 +59,18 @@ class HebbianLayer(NetworkLayer):
     """
     # TODO: write out explicitly what each step of this method does
     # TODO: finish documentation when understand
-    def update_weights(self, input, output, clamped_output=None):
-        x = torch.tensor(input.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
-        y = torch.tensor(output.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
+    def update_weights(self, input_data, output_data, clamped_output=None):
+        x = input_data.clone().detach().float().squeeze()
+        x.requires_grad_(False)
+        y = output_data.clone().detach().float().squeeze()
+        y.requires_grad_(False)
+        # x = torch.tensor(input_data.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
+        # y = torch.tensor(output_data.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
         outer_prod = torch.tensor(outer(y, x))
         initial_weight = torch.transpose(self.fc.weight.clone().detach(), 0,1)
+        #print(initial_weight.shape)
+        #print(self.id_tensor.shape)
+        #print(y.shape)
         A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
         A = A * (y.unsqueeze(1))
         delta_weight = self.alpha * (outer_prod - A)
@@ -90,7 +97,7 @@ class HebbianLayer(NetworkLayer):
     Decays the overused weights and increases the underused weights using tanh functions.
     """
     # TODO: write out explicitly what each step of this method does
-    def __weight_decay(self):
+    def weight_decay(self):
         average = torch.mean(self.exponential_average).item()
         A = self.exponential_average / average
         growth_factor_positive = self.eps * self.tanh(-self.eps * (A - 1)) + 1

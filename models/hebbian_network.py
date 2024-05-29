@@ -58,8 +58,9 @@ class HebbianNetwork(Network):
         input_layer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
         hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.heb_param["lamb"], self.heb_param["lr"], self.heb_param["gam"], self.eps)
         classification_layer = ClassifierLayer(self.heb_dim, self.output_dim, self.cla_param["lamb"], self.cla_param["lr"], self.cla_param["gam"], self.eps)
+        
         self.add_layer("Input Layer", input_layer)
-        self.add_layer("Hebbian layer", hebbian_layer)
+        self.add_layer("Hebbian Layer", hebbian_layer)
         self.add_layer("Classification Layer", classification_layer)
 
 
@@ -73,10 +74,11 @@ class HebbianNetwork(Network):
     """
     # TODO: check documentation
     def forward(self, x, clamped_output=None):
+        hebbian_layer = self.get_layer("Hebbian Layer")
+        classification_layer = self.get_layer("Classification Layer")
+
         data_input = x
-        for name, module in self.named_layers():
-            if name == 'Hebbian Layer':
-                data_input = module(data_input, clamped_output)
-            elif name == 'Classification Lyaer':
-                data_input = module(data_input)
+        data_input = hebbian_layer(data_input, clamped_output)
+        data_input = classification_layer(data_input)
+
         return data_input

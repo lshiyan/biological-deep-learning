@@ -42,7 +42,7 @@ class BaseHebbianExperiment(Experiment):
         optimizer (optim.Adam) = ADAM optimizer
     """    
     def optimizer(self):
-        optimizer = optim.Adam(self.model.get_layer("Hebbian layer").parameters(), self.args.cla_lr)
+        optimizer = optim.Adam(self.model.get_layer("Hebbian Layer").parameters(), self.args.cla_lr)
         return optimizer
     
 

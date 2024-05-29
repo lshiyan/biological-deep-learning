@@ -1,3 +1,4 @@
 - Debug model performance
+- Finish documentation of the code
 - Write out what can be improved in the code
 - Write out how the code works and how to add new things into it (README.txt)

@@ -65,6 +65,10 @@ class InputLayer (NetworkLayer):
         return TensorDataset(data_frame, labels)
 
 
+    def __str__(self):
+        return "The input processing layer of the network."
+
+
     """
     Class method to convert .ubyte files into a .csv file for ease of use
     """
