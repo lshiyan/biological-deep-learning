@@ -72,13 +72,12 @@ class HebbianNetwork(Network):
     @return
         data_input (torch.Tensor) = returns the data after pssing it throw the network
     """
-    # TODO: check documentation
     def forward(self, x, clamped_output=None):
         hebbian_layer = self.get_layer("Hebbian Layer")
         classification_layer = self.get_layer("Classification Layer")
 
         data_input = x
-        data_input = hebbian_layer(data_input, clamped_output)
-        data_input = classification_layer(data_input)
+        data_input = hebbian_layer(data_input, None)
+        data_input = classification_layer(data_input, clamped_output)
 
         return data_input
