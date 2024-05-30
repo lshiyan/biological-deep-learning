@@ -26,9 +26,9 @@ class BaseHebbianExperiment(Experiment):
     @return
         ___ (experiments.MLPExperiments) = new instance of MLPExperiment 
     """
-    def __init__(self, args=None, num_epochs=3):
+    def __init__(self, args=None):
         self.model = HebbianNetwork(args)
-        self.num_epochs = num_epochs
+        self.num_epochs = args.num_epochs
         self.args = args
         self.data_name = args.data_name
         self.train_filename = args.train_filename
@@ -63,19 +63,22 @@ class BaseHebbianExperiment(Experiment):
     @return
         ___ (void) = no returns
     """
-    def train(self):  
+    def train(self):
+        # Setup training data 
         data_set = self.model.get_layer("Input Layer").setup_train_data()
         data_loader = DataLoader(data_set, batch_size=1, shuffle=True)
         
+        # Sets the model in training mode
         self.model.train()
         
+        # Setup the trianing environment and starts the training process
         optimizer = self.optimizer()
-        if self.args.heb_gam !=0 : self.set_scheduler()
+        if self.args.heb_gam !=0 : self.set_scheduler() # NOTE: since by default our gamma is 0, what is the point of a scheduler?
         
         for _ in range(self.num_epochs):
             for _, data in enumerate(data_loader):
                 inputs, labels = data
-                self.model(inputs, clamped_output=self.one_hot_encode(labels, 10))
+                self.model(inputs, clamped_output=Experiment.one_hot_encode(labels, 10))
                 optimizer.step()
 
 
@@ -86,8 +89,11 @@ class BaseHebbianExperiment(Experiment):
         correct / total (float) = accuracy of model on testing data
     """
     def test(self):
+        # Setup testing data
         data_set = self.model.get_layer("Input Layer").setup_test_data()
         data_loader = DataLoader(data_set, batch_size=1, shuffle=True)
+
+        # Put the testing data through the trained model and compare the outputs with the labels
         correct = 0
         total = 0
         for _, data in enumerate(data_loader):
@@ -105,6 +111,7 @@ class BaseHebbianExperiment(Experiment):
     @return
         ___ (void) = no returns
     """
+    # TODO: write out how exactly this works and what the exponential averages are for
     def print_exponential_averages(self):
         A = torch.log(self.model.get_exponential_averages()).tolist()
         plt.scatter(range(len(A)), A)

@@ -56,6 +56,9 @@ if __name__ == "__main__":
 
     # Shared hyperparameters
     parser.add_argument('--eps', type=float, default=10e-5)
+
+    # Experiment parameters
+    parser.add_argument('--num_epochs', type=int, default=3)
     
     # Parse arguments
     args, _ = parser.parse_known_args()

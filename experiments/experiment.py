@@ -10,12 +10,11 @@ class Experiment(ABC):
     Constructor method to create an experiment
     @param
         args (argparse.ArgumentParser) = argument parser that has all the arguments passed to run.py
-        num_epochs (int) = number of iterations
     @attr.
     @return
         ___ (experiments.MLPExperiments) = new instance of MLPExperiment 
     """
-    def __init__(self, args=None, num_epochs=3):
+    def __init__(self, args=None):
         pass
 
 
@@ -95,21 +94,6 @@ class Experiment(ABC):
 
 
     """
-    Given a tensor of labels, returns a one hot encoded tensor for each label.
-    @params
-        labels (???) = set of labels
-        num_classes (int) = number of classes
-    @return
-        one_hot_encoded.squeeze() (???) = ???
-    """
-    def one_hot_encode(self, labels, num_classes):
-        one_hot_encoded = torch.zeros(len(labels), num_classes)
-        one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
-    
-        return one_hot_encoded.squeeze()
-
-
-    """
     Visualizes the weights/features learned during training.
     @param
     @return
@@ -117,3 +101,20 @@ class Experiment(ABC):
     """
     def visualize_weights(self):
         self.model.visualize_weights()  
+
+
+    """
+    Given a tensor of labels, returns a one hot encoded tensor for each label.
+    @params
+        labels (???) = set of labels
+        num_classes (int) = number of classes
+    @return
+        one_hot_encoded.squeeze() (???) = ???
+    """
+    # NOTE: Is there a reason we ceated our own one_hot funciton instead of using PyTorch's one?
+    @classmethod
+    def one_hot_encode(cls, labels, num_classes):
+        one_hot_encoded = torch.zeros(len(labels), num_classes)
+        one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
+    
+        return one_hot_encoded.squeeze()
