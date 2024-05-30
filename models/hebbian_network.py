@@ -10,21 +10,21 @@ class HebbianNetwork(Network):
     @attr.
         PARENT ATTR.
             __layers (dict {str:layers.NetworkLayer}) = list of layers of the network
-                input_layer (layers.InputLayer) = layer that will take care of input processing
-                hebbian_layer (layers.HebbianLayer) = layer for hebbian learning
-                output_layer (layers.ClassifierLayer) = layer for classification task
+                - input_layer (layers.InputLayer) = layer that will take care of input processing
+                - hebbian_layer (layers.HebbianLayer) = layer for hebbian learning
+                - output_layer (layers.ClassifierLayer) = layer for classification task
         OWN ATTR.
             input_dim (int) = number of inputs
             heb_dim (int) = number of neurons in hebbina layer
             output_dimension (int) = number of output neurons
             heb_param (dict {str:float}) = dictionary with all the hyperparameters for the hebbian layer
-                lr (float) = learning rate of hebbian layer
-                lamb (float) = hyperparameter for lateral neuron inhibition
-                gam (float) = factor to decay learning rate of hebbian layer
+                - lr (float) = learning rate of hebbian layer
+                - lamb (float) = hyperparameter for lateral neuron inhibition
+                - gam (float) = factor to decay learning rate of hebbian layer
             cla_param (dict {str:float}) = dictionary with all the hyperparameters for the classification layer
-                lr (float) = learning rate of classification layer
-                lamb (float) = hyperparameter for lateral neuron inhibition
-                gam (float) = factor to decay learning rate of classification layer
+                - lr (float) = learning rate of classification layer
+                - lamb (float) = hyperparameter for lateral neuron inhibition
+                - gam (float) = factor to decay learning rate of classification layer
             eps (float) = small value to avoid 0 division
     @pram
         args (argparse.ArgumentParser) = arguments passed from command line
@@ -72,10 +72,12 @@ class HebbianNetwork(Network):
     @return
         data_input (torch.Tensor) = returns the data after pssing it throw the network
     """
+    # TODO: make it so that we can also include the input processing layer here and will not need to pass the inputs to this function
     def forward(self, x, clamped_output=None):
         hebbian_layer = self.get_layer("Hebbian Layer")
         classification_layer = self.get_layer("Classification Layer")
 
+        # Inut data -> Hebbian Layer -> Classification Layer -> Output data
         data_input = x
         data_input = hebbian_layer(data_input, None)
         data_input = classification_layer(data_input, clamped_output)

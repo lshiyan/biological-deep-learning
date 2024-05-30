@@ -4,7 +4,7 @@ import torch.nn as nn
 """
 Interface for all networks to be created
 """
-class Network(nn.Module):
+class Network(nn.Module, ABC):
     """
     Constructor method
     @attr.
@@ -59,6 +59,7 @@ class Network(nn.Module):
     """
     Method to set scheduler to all layers
     """
+    # NOTE: What use is this???
     def set_scheduler(self):
         for module in self.layers():
             module.set_scheduler()
@@ -86,7 +87,9 @@ class Network(nn.Module):
     Method that defines how an input data flows throw the network
     @param
         x (torch.Tensor) = input data as a tensor
-        clamped_output (???) = parameter to clamp the output   # WTV this means
-    """   
+        clamped_output (???) = parameter to clamp the output   # TODO: Figure out what clamped_output is used for
+    """ 
+    # TODO: find a way to remove x and simply define an input processing layer that will create the necessary data to put into the network
+    @abstractmethod  
     def forward(self, x, clamped_output=None):
         pass

@@ -5,15 +5,24 @@ Structure Explanation
     experiments: folder containing all the code to make custom experiments
     layers:folder containing all the code for the layers used within the models
     models: folder containing all the diferent models created
-    results: folder ssh keys
-    ssh
+    results: folder containing the results of the experiments???
+    ssh: folder ssh keys
 
 Code Explanation (BaseHebbianExperiment)
     Running an experiment
         - experiment = BaseHebbianExperiment(args) -> experiemnt.train() -> experiment.test()
         - Create an instance of an experiment, passing it the parameters as needed, then train and test it using the data
         - Our experiment uses the ADAM optimizer and the cross entropy loss function
+    
+    
     How Model Works
+        - Our model has 3 layers 
+            => Input layer that process the input into a .csv file that is easier to use
+            => Hebbian Layer/ Hidden Layer that uses hebbian learning to learn features
+            => Classification layer that determines which label should be associated with the input
+        - Data is first proceesed through the input layer, then it is given to the hebbian layer where multiple neurons wil learn features associated with the input data, and lastly, the classification will classify the learned features
+        - The moddel has a list of (name, layer) for each of its layers and all the parameters for each layer as attributes
+
 
     Hebbian Layer Functionality
 
@@ -36,13 +45,31 @@ Code Implementation
             - active_weights(beta): returns number of weights above a certain level
             - visualize_weights(): vizualizes the features learned
             - *Class method* one_hot_encode(labels, num_classes): encodes the labels into a tensor
+    
+    
     Create New Network
+        - Extend models.Network
+        - Override forward(x, clamped_output)
+        - Methods:
+            - Constructor: creates a new instance of the class
+            - add_layer(name, layer):
+            - get_layer(name): get the layer with name
+            - named_layer(): get all (name, layer) tuples
+            - layers(): get a list of all layers
+            - set_scheduler(): set the scheduler for each layer **CURRENTLY NOT IN USE**
+            - visualize_weights(): vizualizes the features learned for each layer
+            - active_weights(beta): returns number of weights above a certain level for each layer
+            - forward(): defines how data moves within the network
+
 
     Create New layer
 
 
 
 
+#################### WHAT NEEDSIMPROVEMENT ####################
+- Check the TODOs and NOTEs within the code
+- For all functions, need to have error catching
 
 
 
