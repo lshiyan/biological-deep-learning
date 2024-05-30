@@ -274,8 +274,8 @@ def main(args, timer):
     # InterruptibleDistributedSampler from cycling_utils by Strong Compute does this while also tracking progress of the
     # sampler through the dataset.
 
-    training_data = MNIST_set(None)
-    test_data = MNIST_set(None, 0)
+    training_data = MNIST_set()
+    test_data = MNIST_set(0)
 
     train_sampler = InterruptableDistributedSampler(training_data)
     test_sampler = InterruptableDistributedSampler(test_data)
