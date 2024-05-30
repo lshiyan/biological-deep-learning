@@ -1,5 +1,5 @@
 import argparse
-from experiments.mlp import MLPExperiment  
+from experiments.baseheb import BaseHebbianExperiment 
 
 #  File to be able to run an experiment through command prompt and giving appropriate arguments
 
@@ -8,7 +8,7 @@ Main function of the module -> preps data and runs experiment with given argumen
 """
 def main(args):
     # Initialize the experiment
-    experiment = MLPExperiment(args)
+    experiment = BaseHebbianExperiment(args)
     
     # Run training
     experiment.train()
