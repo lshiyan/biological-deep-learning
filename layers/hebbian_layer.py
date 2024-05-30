@@ -147,6 +147,7 @@ class HebbianLayer (nn.Module):
                 fig.colorbar(im, ax=ax)
                 ax.set_title(f'Weight {ele}')
             plt.tight_layout()
+            plt.savefig('classifierlayerweights.png')
             plt.show()
         else:
             fig, axes = plt.subplots(8, 8, figsize=(16, 16))
@@ -159,4 +160,5 @@ class HebbianLayer (nn.Module):
                 fig.colorbar(im, ax=ax)
                 ax.set_title(f'Weight {ele}')
             plt.tight_layout()
+            plt.savefig('hebbianlayerweights.png')
             plt.show()
