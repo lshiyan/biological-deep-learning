@@ -73,6 +73,7 @@ class HebbianNetwork(Network):
         data_input (torch.Tensor) = returns the data after pssing it throw the network
     """
     # TODO: make it so that we can also include the input processing layer here and will not need to pass the inputs to this function
+    # NOTE: what is the use of clamped_output
     def forward(self, x, clamped_output=None):
         hebbian_layer = self.get_layer("Hebbian Layer")
         classification_layer = self.get_layer("Classification Layer")

@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import torch
 import torch.nn as nn
 
@@ -6,7 +7,7 @@ import torch.nn as nn
 Abstract class for a single layer of the ANN -> Every layer of the interface must implement interface
 This will help with the support of multiple hidden layers inside the network
 """
-class NetworkLayer (nn.Module):
+class NetworkLayer (nn.Module, ABC):
     """
     Constructor method NetworkLayer
     @param
@@ -27,6 +28,8 @@ class NetworkLayer (nn.Module):
         exponential_average (torch.Tensor) = 0 tensor to keep track of exponential averages
         gamma (float) = decay factor -> factor to decay learning rate
         id_tensor (torch.Tensor) = id tensor of layer
+    @return
+        * Can't return *
     """
     def __init__(self, input_dimension, output_dimension, lamb=2, learning_rate=0.001, gamma=0.99, eps=10e-5):
         super ().__init__()
@@ -68,6 +71,7 @@ class NetworkLayer (nn.Module):
     """
     Sets scheduler current for layer
     """
+    @abstractmethod
     def set_scheduler(self):
         pass
 
@@ -75,6 +79,8 @@ class NetworkLayer (nn.Module):
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
     """
+    # TODO: find a way to automatically choose size of the plots, and how the plots will be arranged without needing to hard code it
+    @abstractmethod
     def visualize_weights(self):
         pass
     
@@ -82,11 +88,13 @@ class NetworkLayer (nn.Module):
     """
     Defines the way the weights will be updated at each iteration of the training
     @param
-        input (???) = ???
-        output (???) = ???
+        input_data (???) = ???
+        output_data (???) = ???
         clamped_output (???) = ???
     """
     # TODO: finish documentation when understand
+    # NOTE: what is clamped_output
+    @abstractmethod
     def update_weights(self, input, output, clamped_output):
         pass
 
@@ -96,7 +104,8 @@ class NetworkLayer (nn.Module):
     @param
         output (???) = ???
     """
-    # TODO: finish documentation when understand   
+    # TODO: finish documentation when understand  
+    @abstractmethod 
     def update_bias(self, output):
         pass
     
@@ -104,10 +113,12 @@ class NetworkLayer (nn.Module):
     """
     Feed forward
     @param
-        x (???) = inputs into the layer
+        x (torch.Tensor) = inputs into the layer
         clamped_output (???) = ???
     """
     # TODO: finish documentation when understand
+    # NOTE: what is clamped_output?
+    @abstractmethod
     def forward(self, x, clamped_output):
         pass
 
@@ -116,5 +127,6 @@ class NetworkLayer (nn.Module):
     @param
         beta (float) = cutoff value determining which neuron is active and which is not
     """
+    @abstractmethod
     def active_weights(self, beta):
         pass

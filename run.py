@@ -45,17 +45,17 @@ if __name__ == "__main__":
     parser.add_argument('--output_dim', type=int, default=10)
 
     # Hebbian layer hyperparameters
-    parser.add_argument('--heb_lr', type=float, default=0.001)
+    parser.add_argument('--heb_lr', type=float, default=0.005)
     parser.add_argument('--heb_lamb', type=float, default=15)
-    parser.add_argument('--heb_gam', type=float, default=0.99)
+    parser.add_argument('--heb_gam', type=float, default=0)
 
     # Classification layer hyperparameters
     parser.add_argument('--cla_lr', type=float, default=0.001)
     parser.add_argument('--cla_lamb', type=float, default=1)
-    parser.add_argument('--cla_gam', type=float, default=0.99)
+    parser.add_argument('--cla_gam', type=float, default=0)
 
     # Shared hyperparameters
-    parser.add_argument('--eps', type=float, default=10e-5)
+    parser.add_argument('--eps', type=float, default=0.01)
 
     # Experiment parameters
     parser.add_argument('--num_epochs', type=int, default=3)

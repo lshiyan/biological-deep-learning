@@ -31,19 +31,22 @@ class ClassifierLayer(NetworkLayer):
             gamma (float) = decay factor -> factor to decay learning rate
             id_tensor (torch.Tensor) = id tensor of layer
         OWN ATTR.
+    @return
+        ___ (layers.ClassifierLayer) = returns instance of ClassifierLayer
     """
     def __init__(self, input_dimension, output_dimension, lamb=2, class_lr=0.001, gamma=0.99, eps=10e-5):
         super ().__init__(input_dimension, output_dimension, lamb, class_lr, gamma, eps)     
     
     """
     Defines the way the weights will be updated at each iteration of the training.
-    @param
-        input (torch.Tensor): The input tensor to the layer before any transformation.
-        output (torch.Tensor): The output tensor of the layer before applying softmax.
-
     The method computes the outer product of the softmax probabilities of the outputs and the inputs. 
     This product is scaled by the learning rate and used to adjust the weights. 
     The weights are then normalized to ensure stability.
+    @param
+        input (torch.Tensor): The input tensor to the layer before any transformation.
+        output (torch.Tensor): The output tensor of the layer before applying softmax.
+    @return
+        ___ (void) = no returns
     """
     def update_weights(self, input, output, clamped_output=None):
 
@@ -75,13 +78,13 @@ class ClassifierLayer(NetworkLayer):
     """
     Defines the way the biases will be updated at each iteration of the training
     It updates the biases of the classifier layer using a decay mechanism adjusted by the output probabilities.
-
-    @param
-        output (torch.Tensor): The output tensor of the layer before applying softmax.
-
     The method applies an exponential decay to the biases, which is modulated by the output probabilities,
     and scales the update by the learning rate. 
     The biases are normalized after the update.
+    @param
+        output (torch.Tensor): The output tensor of the layer before applying softmax.
+    @return
+        ___ (void) = no returns
     """
     def update_bias(self, output):
         y = output.clone().detach().squeeze() # Output tensor probabilities after softmax
@@ -98,8 +101,12 @@ class ClassifierLayer(NetworkLayer):
     """
     Feed forward
     @param
-        train (bool) = model in trainning or not
+        x (torch.Tensor) = data after going through hebbian layer
+        clamped_output (???) = ???
+    @retrun
+        x (torch.Tensor) = data after going through classification layer
     """
+    # NOTE: what is clamped_output
     def forward(self, x, clamped_output=None):
         input_copy = x.clone()
         x = self.fc(x)
@@ -112,6 +119,8 @@ class ClassifierLayer(NetworkLayer):
     Counts the number of active feature selectors (above a certain cutoff beta).
     @param
         beta (float) = cutoff value determining which neuron is active and which is not
+    @return
+        active.nonzero().size(0) (int) = nunmber of active weights
     """
     def active_weights(self, beta):
         weights = self.fc.weight
@@ -121,7 +130,11 @@ class ClassifierLayer(NetworkLayer):
 
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
+    @param
+    @return
+        ___ (void) = no returns
     """
+    # TODO: make the size and presentation of the plots less hard coded AKA replace the 2, 5, 16, 8 with variables
     def visualize_weights(self):
         weight = self.fc.weight
         fig, axes = plt.subplots(2, 5, figsize=(16, 8))
@@ -138,7 +151,10 @@ class ClassifierLayer(NetworkLayer):
 
 
     """
-
+    Sets the scheduler for this layer
+    @param
+    @return
+        ___ (void) = no returns
     """
     # TODO: define this function
     def set_scheduler(self):

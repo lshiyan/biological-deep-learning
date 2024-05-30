@@ -24,11 +24,6 @@ Code Explanation (BaseHebbianExperiment)
         - The moddel has a list of (name, layer) for each of its layers and all the parameters for each layer as attributes
 
 
-    Hebbian Layer Functionality
-
-    Classification Layer Functionality
-
-
 
 Code Implementation
     Create New Experiment
@@ -63,6 +58,17 @@ Code Implementation
 
 
     Create New layer
+        - Extend layers.NetworkLayer
+        - Override set_scheduler(), visualize_weights(), update_weights(input, output, clamped_output), update_bias(output)
+        - Methods:
+            - Constructor:
+            - create_id_tensors(): create an ID tensor
+            - set_scheduler(): defines a scheduler and sets it forthis layer **CURRENTLY NOT IN USE**
+            - visualize_weights(): visualizes the weights of a given layer
+            - update_weights(input, output, clamped_output): method defining how the layer learns
+            - update_bias(output): define how bias is updated **CURRENTLY NOT IN USE**
+            - forward(x, clamped_output): defines how data flows through this layer
+            - active_weights(beta): returns nunmber of weights that are considered active
 
 
 

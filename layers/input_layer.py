@@ -86,7 +86,7 @@ class InputLayer (NetworkLayer):
         labels = open(label_file, "rb")
         
         # Skip start of file because???
-        # TODO: why skip bytes?
+        # NOTE: why skip bytes?
         imgs.read(16)
         labels.read(8)
         
@@ -108,3 +108,14 @@ class InputLayer (NetworkLayer):
         imgs.close()
         out.close()
         labels.close()
+
+
+    # List of all methods from layers.NetworkLayer that are not needed for this layer
+    # TODO: find a better way to implement the logic of having an input processing layer that still extends the layer.NetworkLayer interface
+    def create_id_tensors(self): pass
+    def set_scheduler(self): pass
+    def visualize_weights(self): pass
+    def update_weights(self): pass
+    def update_bias(self): pass
+    def forward(self): pass
+    def active_weights(self): pass

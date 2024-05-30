@@ -33,6 +33,8 @@ class HebbianLayer(NetworkLayer):
             gamma (float) = decay factor -> factor to decay learning rate
             id_tensor (torch.Tensor) = id tensor of layer
         OWN ATTR.
+    @return
+        ___ (layers.Hebbianlayer) = returns instance of HebbianLayer
     """
     def __init__(self, input_dimension, output_dimension, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
         super ().__init__(input_dimension, output_dimension, lamb, heb_lr, gamma, eps)
@@ -41,6 +43,8 @@ class HebbianLayer(NetworkLayer):
     Calculates latheral inhibition
     @param
         x (torch.Tensor) = input to the ReLU function
+    @return
+        x (torch.Tensor) = activatin after lateral inhibition
     """
     def inhibition(self, x):
         x = self.relu(x) 
@@ -56,13 +60,15 @@ class HebbianLayer(NetworkLayer):
     @param
         input (???) = ???
         output (???) = ???
+    @return
+        ___ (void) = no returns
     """
     # TODO: write out explicitly what each step of this method does
     # TODO: finish documentation when understand
-    def update_weights(self, input_data, output_data, clamped_output=None):
-        x = input_data.clone().detach().float().squeeze()
+    def update_weights(self, input, output, clamped_output=None):
+        x = input.clone().detach().float().squeeze()
         x.requires_grad_(False)
-        y = output_data.clone().detach().float().squeeze()
+        y = output.clone().detach().float().squeeze()
         y.requires_grad_(False)
         outer_prod = torch.tensor(outer(y, x))
         initial_weight = torch.transpose(self.fc.weight.clone().detach(), 0,1)
@@ -77,6 +83,8 @@ class HebbianLayer(NetworkLayer):
     @param
         input (???) = ???
         output (???) = ???
+    @return
+        ___ (void) = no returns
     """
     # TODO: write out explicitly what each step of this method does
     # TODO: finish documentation when understand        
@@ -90,6 +98,9 @@ class HebbianLayer(NetworkLayer):
 
     """
     Decays the overused weights and increases the underused weights using tanh functions.
+    @param
+    @return
+        ___ (void) = no returns
     """
     # TODO: write out explicitly what each step of this method does
     def weight_decay(self):
@@ -107,7 +118,13 @@ class HebbianLayer(NetworkLayer):
     
     """
     Feed forward
+    @param
+        x (torch.Tensor) = input processed data
+        clamped_output (???) = ???
+    @retrun
+        x (torch.Tensor) = data after going through hebbian layer
     """
+    # NOTE: what does clamped_output mean?
     def forward(self, x, clamped_output=None):
         input_copy = x.clone()
         x = self.fc(x)
@@ -120,7 +137,11 @@ class HebbianLayer(NetworkLayer):
     
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
+    @param
+    @return
+        ___ (void) = no returns
     """
+        # TODO: make the size and presentation of the plots less hard coded AKA replace the 8, 16 with variables
     def visualize_weights(self):
         weight = self.fc.weight
         fig, axes = plt.subplots(8, 8, figsize=(16, 16))
@@ -140,9 +161,12 @@ class HebbianLayer(NetworkLayer):
     Counts the number of active feature selectors (above a certain cutoff beta).
     @param
         beta (float) = cutoff value determining which neuron is active and which is not
+    @return
+        ___ (void) = no returns
     """
+    # TODO: define how active_weights should be counted in the hebbian layer
     def active_weights(self, beta):
-        print("IDK")
+        pass
 
 
     """

@@ -12,7 +12,7 @@ class Experiment(ABC):
         args (argparse.ArgumentParser) = argument parser that has all the arguments passed to run.py
     @attr.
     @return
-        ___ (experiments.MLPExperiments) = new instance of MLPExperiment 
+        * Can't return * 
     """
     def __init__(self, args=None):
         pass

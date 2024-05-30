@@ -78,7 +78,7 @@ class BaseHebbianExperiment(Experiment):
         for _ in range(self.num_epochs):
             for _, data in enumerate(data_loader):
                 inputs, labels = data
-                self.model(inputs, clamped_output=Experiment.one_hot_encode(labels, 10))
+                self.model(inputs, clamped_output=Experiment.one_hot_encode(labels, 10)) # NOTE: what does clmaped_output do?
                 optimizer.step()
 
 
