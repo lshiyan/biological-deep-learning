@@ -32,12 +32,23 @@ timer.report("Completed imports")
 
 ##############################################################################
 
-from models.hebbian_network import HebbianNetwork
+#from models.hebbian_network import HebbianNetwork
 from layers.scheduler import Scheduler
-from data.data_loader import MNIST_set, fashion_MNIST_set
-from experiments.mlp import MLPExperiment
+#from data.data_loader import MNIST_set, fashion_MNIST_set
+#from experiments.mlp import MLPExperiment
 
 ##############################################################################
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from models.hebbian_network import HebbianNetwork
+from models.network import Network 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
 
 
 #######################################
@@ -53,21 +64,58 @@ from experiments.mlp import MLPExperiment
 
 def get_args_parser(add_help=True):
     parser = argparse.ArgumentParser()
-    # ---------------------------------------
-    parser.add_argument("--epochs", type=int, default=100)
+
+    # Basic configurations.
+    parser.add_argument('--is_training', type=bool, default=True, help='status')
+    parser.add_argument('--data_name', type=str, default="MNIST")
+    
+    # Data Factory
+    parser.add_argument('--train_data', type=str, default="data/mnist/train-images.idx3-ubyte")
+    parser.add_argument('--train_label', type=str, default="data/mnist/train-labels.idx1-ubyte")
+    parser.add_argument('--test_data', type=str, default="data/mnist/t10k-images.idx3-ubyte")
+    parser.add_argument('--test_label', type=str, default="data/mnist/t10k-labels.idx1-ubyte")
+
+    # CSV files generated
+    parser.add_argument('--train_filename', type=str, default="data/mnist/mnist_train.csv")
+    parser.add_argument('--test_filename', type=str, default="data/mnist/mnist_test.csv")
+
+    # Dimension of each layer
+    parser.add_argument('--input_dim', type=int, default=784)
+    parser.add_argument('--heb_dim', type=int, default=64)
+    parser.add_argument('--output_dim', type=int, default=10)
+
+    # Hebbian layer hyperparameters
+    parser.add_argument('--heb_lr', type=float, default=0.005)
+    parser.add_argument('--heb_lamb', type=float, default=15)
+    parser.add_argument('--heb_gam', type=float, default=0)
+
+    # Classification layer hyperparameters
+    parser.add_argument('--cla_lr', type=float, default=0.001)
+    parser.add_argument('--cla_lamb', type=float, default=1)
+    parser.add_argument('--cla_gam', type=float, default=0)
+
+    # Shared hyperparameters
+    parser.add_argument('--eps', type=float, default=0.01)
+
+    # Experiment parameters
+    parser.add_argument('--num_epochs', type=int, default=3)
+
+# ---------------------------------------
+
     # The number of times to loop over the whole dataset
-    # ---------------------------------------
-    parser.add_argument("--test-epochs", type=int, default=5)
+    parser.add_argument("--epochs", type=int, default=100)
+
     # Testing model performance on a test every "test-epochs" epochs
-    # ---------------------------------------
-    parser.add_argument("--dropout", type=float, default=0.2)
+    parser.add_argument("--test-epochs", type=int, default=5)
+    
     # A model training regularisation technique to reduce over-fitting
-    # ---------------------------------------
+    parser.add_argument("--dropout", type=float, default=0.2)
+    
+    # This example demonstrates a StepLR learning rate scheduler. Different schedulers will require different hyper-parameters.
     parser.add_argument("--lr", type=float, default=0.01)
     parser.add_argument("--lr-step-size", type=int, default=1000)
     parser.add_argument("--gamma", type=float, default=1)
-    # This example demonstrates a StepLR learning rate scheduler. Different schedulers will require different
-    # hyper-parameters.
+    
     # ---------------------------------------
     parser.add_argument("--batch-size", type=int, default=16)
     # For distributed training it is important to distinguish between the per-GPU or "local" batch size (which this
@@ -86,12 +134,6 @@ def get_args_parser(add_help=True):
 #####################################
 # We define ``train_loop`` that loops over our optimization code, and ``test_loop`` that evaluates the model's
 # performance against our test data. Inside the training loop, optimization happens in three steps:
-#  * Call ``optimizer.zero_grad()`` to reset the gradients of model parameters. Gradients by default add up; to prevent
-#       double-counting, we explicitly zero them at each iteration.
-#  * Backpropagate the prediction loss with a call to ``loss.backward()``. PyTorch deposits the gradients of the loss
-#       w.r.t. each parameter.
-#  * Once we have our gradients, we call ``optimizer.step()`` to adjust the parameters by the gradients collected in the
-#       backward pass.
 
 def oneHotEncode(labels, num_classes):
     one_hot_encoded = torch.zeros(len(labels), num_classes)
@@ -107,7 +149,8 @@ def set_hebbian_scheduler(heb_lr, step_size, gamma, model):
 def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, writer, args):
     epoch = train_dataloader.sampler.epoch
     train_batches_per_epoch = len(train_dataloader)
-    # Set the model to training mode - important for layers with different training / inference behaviour
+   
+   # Set the model to training mode - important for layers with different training / inference behaviour
     model.train()
 
     if args.gamma != 0 : set_hebbian_scheduler(args.lr, args.lr_step_size, args.gamma, model)
@@ -228,7 +271,22 @@ def test_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, w
                     args.checkpoint_path,
                 )
 
+
+
+
+
 timer.report("Defined helper function/s, loops, and model")
+
+
+# Helper function - optimizer
+def optimizer(model):
+    optimizer = optim.Adam(model.get_layer("Hebbian Layer").parameters(), self.args.cla_lr)
+    return optimizer
+
+def loss_function(model):
+    loss_function = nn.CrossEntropyLoss()
+    return loss_function
+
 
 def main(args, timer):
     ##############################################
@@ -251,20 +309,38 @@ def main(args, timer):
     args.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
     timer.report("Validated checkpoint path")
 
-    ##############################################
-    # Data Transformation and Augmentation
-    # ----------------------
-    # Training data often requires pre-processing to ensure it is suitable for training, for example converting from a
-    # PIL image to a Pytorch Tensor. This is also an opporuntiy to apply random perturbations to the training data each
-    # time it is obtained from the dataset which has the effect of augmenting the size of the dataset and reducing
-    # over-fitting.
 
-    # train_transform = Compose([PILToTensor(), RandAugment(), Lambda(lambda v: v.to(torch.float32) / 255.0)])
-    # test_transform = Compose([PILToTensor(), Lambda(lambda v: v.to(torch.float32) / 255.0)])
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    # training_data = datasets.FashionMNIST(root="data", train=True, download=False, transform=train_transform)
-    # test_data = datasets.FashionMNIST(root="data", train=False, download=False, transform=test_transform)
-    # timer.report("Initialized datasets")
+    # Set up model
+    model = hebbian_network(args)
+    model = model.to(args.device_id)
+    timer.report("Model set up and moved to device")
+
+
+    # Set up Data Sampler and Loaders
+    # First, training data
+    train_data_set = model.get_layer("Input Layer").setup_train_data()
+    train_sampler = InterruptableDistributedSampler(train_data_set)
+    train_data_loader = DataLoader(train_data_set, batch_size=1, shuffle=False, sampler=train_sampler)  # Added sampler, set shuffle to False
+    timer.report("training data(sampler and dataloader) processing set up")
+
+    # Second, testing data
+    test_data_set = model.get_layer("Input Layer").setup_test_data()
+    test_sampler = InterruptableDistributedSampler(test_data_set)  
+    test_data_loader = DataLoader(test_data_set, batch_size=1, shuffle=False, sampler=test_sampler)  # Added sampler, set shuffle to False
+    timer.report("testing data(sampler and dataloader) processing set up")
+
+
+
+
+
+
+
+
+
+
+
 
     ##############################################
     # Data Samplers and Loaders
@@ -274,17 +350,17 @@ def main(args, timer):
     # InterruptibleDistributedSampler from cycling_utils by Strong Compute does this while also tracking progress of the
     # sampler through the dataset.
 
-    training_data = MNIST_set()
-    test_data = MNIST_set(0)
+#    training_data = MNIST_set()
+#    test_data = MNIST_set(0)
 
-    train_sampler = InterruptableDistributedSampler(training_data)
-    test_sampler = InterruptableDistributedSampler(test_data)
-    timer.report("Initialized samplers")
+#    train_sampler = InterruptableDistributedSampler(training_data)
+#    test_sampler = InterruptableDistributedSampler(test_data)
+#    timer.report("Initialized samplers")
 
-    train_dataloader = DataLoader(training_data, batch_size=args.batch_size, sampler=train_sampler, num_workers=3)
-    test_dataloader = DataLoader(test_data, batch_size=1, sampler=test_sampler)
+#    train_dataloader = DataLoader(training_data, batch_size=args.batch_size, sampler=train_sampler, num_workers=3)
+#    test_dataloader = DataLoader(test_data, batch_size=1, sampler=test_sampler)
     
-    timer.report("Initialized dataloaders")
+#    timer.report("Initialized dataloaders")
 
     ##############################################
     # Model Preparation
@@ -298,16 +374,16 @@ def main(args, timer):
     # model = DDP(model, device_ids=[args.device_id])
     # timer.report("Prepared model for distributed training")
 
-    input_dimension = 784
-    hidden_layer_dimension = 64
-    output_dimension = 10
-    heb_lr = 1
-    lamb = 1
-    eps = 0.1
-    model = HebbianNetwork(args, input_dimension, hidden_layer_dimension, 
-                                  output_dimension, heb_lr=heb_lr, lamb=lamb, eps=eps)
-    model = model.to(args.device_id)
-    timer.report("Prepared model for distributed training")
+#    input_dimension = 784
+#    hidden_layer_dimension = 64
+#    output_dimension = 10
+#    heb_lr = 1
+#    lamb = 1
+#    eps = 0.1
+#    model = HebbianNetwork(args, input_dimension, hidden_layer_dimension, 
+#                                  output_dimension, heb_lr=heb_lr, lamb=lamb, eps=eps)
+#    model = model.to(args.device_id)
+#    timer.report("Prepared model for distributed training")
     
 
     ########################################
