@@ -10,25 +10,11 @@ class Network(nn.Module, ABC):
     @attr.
         __layers (dict {str:nn.Module}) = list of layers of the network
     @pram
-        layers (list of tuples) = list of (key(str), value(nn.Module))
     @return
         * Can't return *
     """
     def __init__(self):
         super().__init__()
-        self.__layers = []
-
-
-    """
-    Adds a layer to the network
-    @param
-        name (str) = name of the layer
-        layer (layers.NetworkLayer) = layer that is being added
-    @return
-        ___ (void) = no returns
-    """
-    def add_layer(self, name, layer):
-        self.__layers.append((name, layer))
 
 
     """
@@ -39,33 +25,12 @@ class Network(nn.Module, ABC):
         layer (layer.NetworkLayer) = a layer of the network with searched name
     """
     def get_layer(self, name):
-        for layer_name, layer in self.__layers:
+        layers = self.named_children()
+
+        for layer_name, layer in layers:
             if name == layer_name:
                 return layer
         return None
-
-
-    """
-    Returns list of all layers and their names in network
-    @param
-    @return
-        __layers (list) = list of (name, layer)
-    """
-    def named_layers(self):
-        return self.__layers
-    
-    
-    """
-    Retruns list of all layers in network
-    @param
-    @return
-        layers (list) = list of layers.NetworkLayer
-    """
-    def layers(self):
-        layers = []
-        for _, layer in self.__layers:
-            layers.append(layer)
-        return layers
     
 
     """
