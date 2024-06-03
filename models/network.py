@@ -41,7 +41,7 @@ class Network(nn.Module, ABC):
     """
     # NOTE: What use is this???
     def set_scheduler(self):
-        for module in self.layers():
+        for module in self.children():
             module.set_scheduler()
 
     
@@ -52,7 +52,7 @@ class Network(nn.Module, ABC):
         ___ (void) = no returns
     """
     def visualize_weights(self):
-        for module in self.layers():
+        for module in self.children():
             module.visualize_weights()
 
 
@@ -64,7 +64,7 @@ class Network(nn.Module, ABC):
         ___ (void) = no returns
     """
     def active_weights(self, beta):
-        for module in self.layers():
+        for module in self.children():
             module.active_weights(beta)
 
 
