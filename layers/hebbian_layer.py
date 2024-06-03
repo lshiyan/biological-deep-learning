@@ -36,8 +36,9 @@ class HebbianLayer(NetworkLayer):
     @return
         ___ (layers.Hebbianlayer) = returns instance of HebbianLayer
     """
-    def __init__(self, input_dimension, output_dimension, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
+    def __init__(self, input_dimension, output_dimension, device_id, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
         super ().__init__(input_dimension, output_dimension, lamb, heb_lr, gamma, eps)
+        self.device_id = device_id
 
     """
     Calculates latheral inhibition
@@ -66,12 +67,12 @@ class HebbianLayer(NetworkLayer):
     # TODO: write out explicitly what each step of this method does
     # TODO: finish documentation when understand
     def update_weights(self, input, output, clamped_output=None):
-        x = input.clone().detach().float().squeeze()
+        x = input.clone().detach().float().squeeze().to(self.device_id)
         x.requires_grad_(False)
-        y = output.clone().detach().float().squeeze()
+        y = output.clone().detach().float().squeeze().to(self.device_id)
         y.requires_grad_(False)
         outer_prod = torch.tensor(outer(y, x))
-        initial_weight = torch.transpose(self.fc.weight.clone().detach(), 0,1)
+        initial_weight = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0,1)
         A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
         A = A * (y.unsqueeze(1))
         delta_weight = self.alpha * (outer_prod - A)
@@ -126,10 +127,15 @@ class HebbianLayer(NetworkLayer):
     """
     # NOTE: what does clamped_output mean?
     def forward(self, x, clamped_output=None):
-        input_copy = x.clone()
-        x = self.fc(x)
+        input_copy = x.clone().to(self.device_id).float()
+
+        print(x.type())
+        print(self.fc.weight.type())
+        print(self.fc.bias.type())
+        
+        x = self.fc(x.to(self.device_id))
         x = self.inhibition(x)
-        self.update_weights(input_copy, x, clamped_output)
+# self.update_weights(input_copy, x, clamped_output)
         #self.update_bias(x)
         self.weight_decay() 
         return x

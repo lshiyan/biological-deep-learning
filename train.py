@@ -165,7 +165,7 @@ def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, 
         is_last_batch = (batch + 1) == train_batches_per_epoch
 
         # Move input and targets to device
-        inputs, targets = inputs.to(args.device_id), oneHotEncode(targets, 10).to(args.device_id)
+        inputs, targets = inputs.to(args.device_id).float(), oneHotEncode(targets, 10).to(args.device_id).float()
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
         
         # Forward pass
@@ -325,8 +325,9 @@ def main(args, timer):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # Set up model
-    model = HebbianNetwork(args)
+    model = HebbianNetwork(args).float()
     model = model.to(args.device_id)
+    print(model.get_layer("Hebbian Layer").fc.weight.type())
     timer.report("Model set up and moved to device")
 
 

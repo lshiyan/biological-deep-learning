@@ -29,6 +29,7 @@ class Network(nn.Module, ABC):
     """
     def add_layer(self, name, layer):
         self.__layers.append((name, layer))
+        self.add_module(name, layer)
 
 
     """

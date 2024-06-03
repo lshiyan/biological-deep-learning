@@ -27,6 +27,7 @@ class InputLayer (NetworkLayer):
         test_filename (str) = test data (img + label) filename (.csv)
     """
     def __init__(self, train_data, train_label, train_filename, test_data, test_label, test_filename):
+        super().__init__(0, 0)
         self.train_data = train_data
         self.train_label = train_label
         self.train_filename = train_filename

@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 from layers.input_layer import InputLayer
 from layers.hebbian_layer import HebbianLayer
 from layers.classifier_layer import ClassifierLayer
@@ -54,14 +55,19 @@ class HebbianNetwork(Network):
         # Shared hyperparameters
         self.eps = args.eps
 
+        # Set up device ID
+        self.device_id = args.device_id
+
         # Setting up layers of the network
         input_layer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
-        hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.heb_param["lamb"], self.heb_param["lr"], self.heb_param["gam"], self.eps)
+        hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.heb_param["lamb"], self.heb_param["lr"], self.heb_param["gam"], self.eps, self.device_id)
         classification_layer = ClassifierLayer(self.heb_dim, self.output_dim, self.cla_param["lamb"], self.cla_param["lr"], self.cla_param["gam"], self.eps)
         
         self.add_layer("Input Layer", input_layer)
         self.add_layer("Hebbian Layer", hebbian_layer)
         self.add_layer("Classification Layer", classification_layer)
+
+
 
 
     """
@@ -78,8 +84,12 @@ class HebbianNetwork(Network):
         hebbian_layer = self.get_layer("Hebbian Layer")
         classification_layer = self.get_layer("Classification Layer")
 
+        # Convert input to float if not already
+        if x.dtype != torch.float32:
+            x = x.float()
+
         # Inut data -> Hebbian Layer -> Classification Layer -> Output data
-        data_input = x
+        data_input = x.to(self.device_id)
         data_input = hebbian_layer(data_input, None)
         data_input = classification_layer(data_input, clamped_output)
 
