@@ -13,7 +13,9 @@ class Scheduler():
         data_frame (list-like object) = dataset for training/testing
         labels (torch.Tensor) = labels of dataset
         epoch (int) = epoch counter
-    """
+    @return
+        ___ (layers.Scheduler) = return a scheduler object
+    """ 
     def __init__(self, lr, step_size, gamma=0.99):
         self.lr = lr
         self.step_size = step_size
@@ -22,6 +24,9 @@ class Scheduler():
 
     """
     Method used to increment epoch counter and update learning rate at every multiple of step size
+    @param
+    @return
+        self.lr (float) = return updated learning rate
     """    
     def step(self):
         self.epoch += 1

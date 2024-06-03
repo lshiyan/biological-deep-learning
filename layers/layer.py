@@ -59,6 +59,9 @@ class NetworkLayer (nn.Module, ABC):
 
     """
     Creates identity tensor
+    @param
+    @return
+        id_tensor (torch.Tensor) = return identity tensor of this layer
     """
     def create_id_tensors(self):
         id_tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
@@ -70,6 +73,9 @@ class NetworkLayer (nn.Module, ABC):
 
     """
     Sets scheduler current for layer
+    @param
+    @return
+        ___ (void) = no returns 
     """
     @abstractmethod
     def set_scheduler(self):
@@ -78,6 +84,9 @@ class NetworkLayer (nn.Module, ABC):
 
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
+    @param
+    @return
+        ___ (void) = no returns
     """
     # TODO: find a way to automatically choose size of the plots, and how the plots will be arranged without needing to hard code it
     @abstractmethod
@@ -91,6 +100,8 @@ class NetworkLayer (nn.Module, ABC):
         input_data (???) = ???
         output_data (???) = ???
         clamped_output (???) = ???
+    @return
+        * Can't return * 
     """
     # TODO: finish documentation when understand
     # NOTE: what is clamped_output
@@ -103,6 +114,8 @@ class NetworkLayer (nn.Module, ABC):
     Defines the way the bias will be updated at each iteration of the training
     @param
         output (???) = ???
+    @return
+        * Can't return *
     """
     # TODO: finish documentation when understand  
     @abstractmethod 
@@ -115,6 +128,8 @@ class NetworkLayer (nn.Module, ABC):
     @param
         x (torch.Tensor) = inputs into the layer
         clamped_output (???) = ???
+    @return
+        * Can't return * 
     """
     # TODO: finish documentation when understand
     # NOTE: what is clamped_output?
@@ -126,6 +141,8 @@ class NetworkLayer (nn.Module, ABC):
     Counts the number of active feature selectors (above a certain cutoff beta).
     @param
         beta (float) = cutoff value determining which neuron is active and which is not
+    @return
+        * Can't return *
     """
     @abstractmethod
     def active_weights(self, beta):
