@@ -143,14 +143,15 @@ def oneHotEncode(labels, num_classes):
 
 def set_hebbian_scheduler(heb_lr, step_size, gamma, model):
     scheduler=Scheduler(heb_lr, step_size, gamma)
-    model.setScheduler(scheduler, 0)
+    #model.set_scheduler(scheduler, 0)
+    model.set_scheduler()
 
 
 def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, writer, args):
     epoch = train_dataloader.sampler.epoch
     train_batches_per_epoch = len(train_dataloader)
    
-   # Set the model to training mode - important for layers with different training / inference behaviour
+    # Set the model to training mode - important for layers with different training / inference behaviour
     model.train()
 
     if args.gamma != 0 : set_hebbian_scheduler(args.lr, args.lr_step_size, args.gamma, model)
@@ -158,29 +159,37 @@ def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, 
     for inputs, targets in train_dataloader:
         # Reset model parameter gradients
         # optimizer.zero_grad()
+
         # Determine the current batch
         batch = train_dataloader.sampler.progress // train_dataloader.batch_size
         is_last_batch = (batch + 1) == train_batches_per_epoch
+
         # Move input and targets to device
         inputs, targets = inputs.to(args.device_id), oneHotEncode(targets, 10).to(args.device_id)
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
+        
         # Forward pass
         predictions = model(inputs, clamped_output=targets)
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
+        
         # Compute loss and log to metrics
         # loss = loss_fn(predictions, targets)
         metrics["train"].update({"examples_seen": len(inputs)})
         metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}]")
+        
         # Backpropagation
         # loss.backward()
         # timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - backward pass")
+        
         # Update model weights
         # optimizer.step()
         # timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - model parameter update")
+        
         # Advance sampler - essential for interruptibility
         train_dataloader.sampler.advance(len(inputs))
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - advance sampler")
+        
         # Report training metrics
         examples_seen = itemgetter("examples_seen")(metrics["train"].local)
         # batch_avg_loss = total_batch_loss / examples_seen
@@ -215,6 +224,7 @@ def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, 
 def test_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, writer, args):
     epoch = test_dataloader.sampler.epoch
     test_batches_per_epoch = len(test_dataloader)
+    
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
     model.eval()
 
@@ -222,24 +232,30 @@ def test_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, w
     # reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True
     with torch.no_grad():
         for inputs, targets in test_dataloader:
+            
             # Determine the current batch
             batch = test_dataloader.sampler.progress // test_dataloader.batch_size
             is_last_batch = (batch + 1) == test_batches_per_epoch
+            
             # Move input and targets to device
             inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
+            
             # Inference
             predictions = model(inputs)
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
+            
             # Test loss
             # test_loss = loss_fn(predictions, targets)
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - loss calculation")
+            
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum()
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
             metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
             metrics["test"].reset_local()  # Reset local cache
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
+            
             # Advance sampler
             test_dataloader.sampler.advance(len(inputs))
 
@@ -272,11 +288,7 @@ def test_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, w
                 )
 
 
-
-
-
 timer.report("Defined helper function/s, loops, and model")
-
 
 # Helper function - optimizer
 def optimizer(model):
@@ -313,7 +325,7 @@ def main(args, timer):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # Set up model
-    model = hebbian_network(args)
+    model = HebbianNetwork(args)
     model = model.to(args.device_id)
     timer.report("Model set up and moved to device")
 
@@ -415,8 +427,8 @@ def main(args, timer):
 
         model.load_state_dict(checkpoint["model"])
         # optimizer.load_state_dict(checkpoint["optimizer"])
-        train_dataloader.sampler.load_state_dict(checkpoint["train_sampler"])
-        test_dataloader.sampler.load_state_dict(checkpoint["test_sampler"])
+        train_data_loader.sampler.load_state_dict(checkpoint["train_sampler"])
+        test_data_loader.sampler.load_state_dict(checkpoint["test_sampler"])
         lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
         metrics = checkpoint["metrics"]
         timer.report("Retrieved savedcheckpoint")
@@ -426,15 +438,15 @@ def main(args, timer):
     # --------------------
     # Each epoch the training loop is called within a context set from the training InterruptibleDistributedSampler
 
-    for epoch in range(train_dataloader.sampler.epoch, args.epochs):
-        with train_dataloader.sampler.in_epoch(epoch):
+    for epoch in range(train_data_loader.sampler.epoch, args.epochs):
+        with train_data_loader.sampler.in_epoch(epoch):
             train_loop(
                 model, 
                 # optimizer, 
                 lr_scheduler, 
                 # loss_fn, 
-                train_dataloader, 
-                test_dataloader, 
+                train_data_loader, 
+                test_data_loader, 
                 metrics, 
                 writer, 
                 args
@@ -444,14 +456,14 @@ def main(args, timer):
             # interrupted and resumed from checkpoint.
             
             if epoch % args.test_epochs == 0:
-                with test_dataloader.sampler.in_epoch(epoch):
+                with test_data_loader.sampler.in_epoch(epoch):
                     test_loop(
                         model,
                         # optimizer,
                         lr_scheduler,
                         # loss_fn,
                         train_dataloader,
-                        test_dataloader,
+                        test_data_loader,
                         metrics,
                         writer,
                         args,
