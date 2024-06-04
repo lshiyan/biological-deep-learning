@@ -103,7 +103,7 @@ def get_args_parser(add_help=True):
 # ---------------------------------------
 
     # The number of times to loop over the whole dataset
-    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--epochs", type=int, default=1000)
 
     # Testing model performance on a test every "test-epochs" epochs
     parser.add_argument("--test-epochs", type=int, default=5)
