@@ -60,7 +60,7 @@ class HebbianNetwork(Network):
 
         # Setting up layers of the network
         input_layer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
-        hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.heb_param["lamb"], self.heb_param["lr"], self.heb_param["gam"], self.eps, self.device_id)
+        hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.device_id, self.heb_param["lamb"], self.heb_param["lr"], self.heb_param["gam"], self.eps)
         classification_layer = ClassifierLayer(self.heb_dim, self.output_dim, self.cla_param["lamb"], self.cla_param["lr"], self.cla_param["gam"], self.eps)
         
         self.add_layer("Input Layer", input_layer)
@@ -81,15 +81,22 @@ class HebbianNetwork(Network):
     # TODO: make it so that we can also include the input processing layer here and will not need to pass the inputs to this function
     # NOTE: what is the use of clamped_output
     def forward(self, x, clamped_output=None):
+
+        print(f"step 1: BEFORE CALLING HEBBIAN_LAYER (the device of x): {x.device}")
+
         hebbian_layer = self.get_layer("Hebbian Layer")
         classification_layer = self.get_layer("Classification Layer")
 
         # Convert input to float if not already
         if x.dtype != torch.float32:
-            x = x.float()
+            x = x.float().to(self.device_id)
 
+        
+        print(f"step 2: BEFORE CALLING DATA_INPUT (the device of x): {x.device}")
         # Inut data -> Hebbian Layer -> Classification Layer -> Output data
         data_input = x.to(self.device_id)
+
+        print(f"step 3: BEFORE CALLING HEBBIAN_LAYER for DATA_INPUT (the device of data_input): {data_input.device}")
         data_input = hebbian_layer(data_input, None)
         data_input = classification_layer(data_input, clamped_output)
 

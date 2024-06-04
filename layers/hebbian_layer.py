@@ -127,15 +127,27 @@ class HebbianLayer(NetworkLayer):
     """
     # NOTE: what does clamped_output mean?
     def forward(self, x, clamped_output=None):
+
+        print(f"STEP 1: INSIDE FORWARD OF HEBBIAN_LAYER (the device of x): {x.device}")
+
+
         input_copy = x.clone().to(self.device_id).float()
 
         print(x.type())
         print(self.fc.weight.type())
         print(self.fc.bias.type())
         
-        x = self.fc(x.to(self.device_id))
+        print(f"STEP 2: INSIDE FORWARD OF HEBBIAN_LAYER -  (the device of x): {x.device}")
+        x = x.to(self.device_id)
+        print(f"STEP 3.1: {self.device_id}")
+        print(f"STEP 3.2: {x.device}")
+
+        x = self.fc(x)
         x = self.inhibition(x)
-# self.update_weights(input_copy, x, clamped_output)
+
+        print(f"STEP 4: {x.device}")
+        self.update_weights(input_copy, x, clamped_output)
+
         #self.update_bias(x)
         self.weight_decay() 
         return x

@@ -169,6 +169,12 @@ def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, 
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
         
         # Forward pass
+
+        #print(f"inputs device: {inputs.device}")
+        #print(f"targets device: {targets.device}")
+        # print([d.device for d in model.parameters()])
+        #print({name:d.device for name,d in model.named_parameters()})
+
         predictions = model(inputs, clamped_output=targets)
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
         
