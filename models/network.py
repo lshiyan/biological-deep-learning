@@ -8,28 +8,15 @@ class Network(nn.Module, ABC):
     """
     Constructor method
     @attr.
-        __layers (dict {str:nn.Module}) = list of layers of the network
+        device_id (int) = id of the gpu that the model will be running in
     @pram
-        layers (list of tuples) = list of (key(str), value(nn.Module))
+        device (int) = id of the gpu that the model will be set to
     @return
         * Can't return *
     """
-    def __init__(self):
+    def __init__(self, device):
         super().__init__()
-        self.__layers = []
-
-
-    """
-    Adds a layer to the network
-    @param
-        name (str) = name of the layer
-        layer (layers.NetworkLayer) = layer that is being added
-    @return
-        ___ (void) = no returns
-    """
-    def add_layer(self, name, layer):
-        self.__layers.append((name, layer))
-        self.add_module(name, layer)
+        self.device_id = device
 
 
     """
@@ -40,33 +27,9 @@ class Network(nn.Module, ABC):
         layer (layer.NetworkLayer) = a layer of the network with searched name
     """
     def get_layer(self, name):
-        for layer_name, layer in self.__layers:
+        for layer_name, layer in self.named_children():
             if name == layer_name:
                 return layer
-        return None
-
-
-    """
-    Returns list of all layers and their names in network
-    @param
-    @return
-        __layers (list) = list of (name, layer)
-    """
-    def named_layers(self):
-        return self.__layers
-    
-    
-    """
-    Retruns list of all layers in network
-    @param
-    @return
-        layers (list) = list of layers.NetworkLayer
-    """
-    def layers(self):
-        layers = []
-        for _, layer in self.__layers:
-            layers.append(layer)
-        return layers
     
 
     """
@@ -77,7 +40,7 @@ class Network(nn.Module, ABC):
     """
     # NOTE: What use is this???
     def set_scheduler(self):
-        for module in self.layers():
+        for module in self.children:
             module.set_scheduler()
 
     
@@ -88,7 +51,7 @@ class Network(nn.Module, ABC):
         ___ (void) = no returns
     """
     def visualize_weights(self):
-        for module in self.layers():
+        for module in self.children():
             module.visualize_weights()
 
 
@@ -100,7 +63,7 @@ class Network(nn.Module, ABC):
         ___ (void) = no returns
     """
     def active_weights(self, beta):
-        for module in self.layers():
+        for module in self.children():
             module.active_weights(beta)
 
 

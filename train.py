@@ -14,6 +14,7 @@ from operator import itemgetter
 from pathlib import Path
 
 import torch
+import torch.optim as optim
 import torch.distributed as dist
 from torch import nn
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -96,9 +97,6 @@ def get_args_parser(add_help=True):
 
     # Shared hyperparameters
     parser.add_argument('--eps', type=float, default=0.01)
-
-    # Experiment parameters
-    parser.add_argument('--num_epochs', type=int, default=3)
 
 # ---------------------------------------
 
@@ -300,8 +298,8 @@ def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics,
 timer.report("Defined helper function/s, loops, and model")
 
 # Helper function - optimizer
-def optimizer(model):
-    optimizer = optim.Adam(model.get_layer("Hebbian Layer").parameters(), self.args.cla_lr)
+def optimizer(model, cla_lr):
+    optimizer = optim.Adam(model.get_layer("Hebbian Layer").parameters(), cla_lr)
     return optimizer
 
 def loss_function(model):
@@ -476,6 +474,9 @@ def main(args, timer):
                     )
 
     print("Done!")
+
+
+
 
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
