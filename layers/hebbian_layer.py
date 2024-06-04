@@ -92,14 +92,26 @@ class HebbianLayer(NetworkLayer):
         
         # Move tensors to CPU before calling outer
         outer_prod = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy()))
-        
+
+        # Move back to GPU
+        outer_prod = outer_prod.to(self.device_id)
+
         initial_weight = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0, 1)
+
+        # Ensure id_tensor and exponential_average are on the same device as the others
+        self.id_tensor = self.id_tensor.to(self.device_id)
+        self.exponential_average = self.exponential_average.to(self.device_id)
+
+        print(f"UPDATE-WEIGHTS FUNCTION initial weight: {initial_weight.device}")
+        print(f"UPDATE-WEIGHTS FUNCTION id tensor: {self.id_tensor.device}")
+        print(f"UPDATE-WEIGHTS FUNCTION y: {y.device}")
+        print(f"UPDATE-WEIGHTS FUNCTION exponential_average: {self.exponential_average.device}")
+
         A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
         A = A * (y.unsqueeze(1))
-        delta_weight = self.alpha * (outer_prod.to(self.device_id) - A)
+        delta_weight = self.alpha * (outer_prod - A)
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
-        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y) 
-
+        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
     """
     Defines the way the weights will be updated at each iteration of the training
     @param
@@ -180,18 +192,24 @@ class HebbianLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-        # TODO: make the size and presentation of the plots less hard coded AKA replace the 8, 16 with variables
     def visualize_weights(self):
         weight = self.fc.weight
         fig, axes = plt.subplots(8, 8, figsize=(16, 16))
-        for ele in range(8*8):  
+        
+        for ele in range(8 * 8):
             random_feature_selector = weight[ele]
+            
+            # Move tensor to CPU, convert to NumPy array for visualization
             heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
-                                                    int(math.sqrt(self.fc.weight.size(1))))
+                                                int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
             ax = axes[ele // 8, ele % 8]
             im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
             fig.colorbar(im, ax=ax)
             ax.set_title(f'Weight {ele}')
+            
+            # Move the tensor back to the GPU if needed
+            random_feature_selector = random_feature_selector.to(self.device_id)
+        
         plt.tight_layout()
         plt.show()
 

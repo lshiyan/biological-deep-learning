@@ -147,21 +147,21 @@ def set_hebbian_scheduler(heb_lr, step_size, gamma, model):
     model.set_scheduler()
 
 
-def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, writer, args):
-    epoch = train_dataloader.sampler.epoch
-    train_batches_per_epoch = len(train_dataloader)
+def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
+    epoch = train_data_loader.sampler.epoch
+    train_batches_per_epoch = len(train_data_loader)
    
     # Set the model to training mode - important for layers with different training / inference behaviour
     model.train()
 
     if args.gamma != 0 : set_hebbian_scheduler(args.lr, args.lr_step_size, args.gamma, model)
 
-    for inputs, targets in train_dataloader:
+    for inputs, targets in train_data_loader:
         # Reset model parameter gradients
         # optimizer.zero_grad()
 
         # Determine the current batch
-        batch = train_dataloader.sampler.progress // train_dataloader.batch_size
+        batch = train_data_loader.sampler.progress // train_data_loader.batch_size
         is_last_batch = (batch + 1) == train_batches_per_epoch
 
         # Move input and targets to device
@@ -193,7 +193,7 @@ def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, 
         # timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - model parameter update")
         
         # Advance sampler - essential for interruptibility
-        train_dataloader.sampler.advance(len(inputs))
+        train_data_loader.sampler.advance(len(inputs))
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - advance sampler")
         
         # Report training metrics
@@ -207,7 +207,7 @@ def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, 
 
         # Saving and reporting
         if args.is_master:
-            total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
+            total_progress = train_data_loader.sampler.progress + epoch * train_batches_per_epoch
             # writer.add_scalar("Train/avg_loss", batch_avg_loss, total_progress)
             writer.add_scalar("Train/learn_rate", lr_scheduler.get_last_lr(), total_progress)
             # Save checkpoint
@@ -215,8 +215,8 @@ def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, 
                 {
                     "model": model.state_dict(),
                     # "optimizer": optimizer.state_dict(),
-                    "train_sampler": train_dataloader.sampler.state_dict(),
-                    "test_sampler": test_dataloader.sampler.state_dict(),
+                    "train_sampler": train_data_loader.sampler.state_dict(),
+                    "test_sampler": test_data_loader.sampler.state_dict(),
                     "lr_scheduler": lr_scheduler.state_dict(),
                     "metrics": metrics,
                 },
@@ -224,12 +224,12 @@ def train_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, 
             )
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
     
-    model.visualizeWeights()
+    model.get_layer("Hebbian Layer").visualize_weights()
     
 
-def test_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, writer, args):
-    epoch = test_dataloader.sampler.epoch
-    test_batches_per_epoch = len(test_dataloader)
+def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
+    epoch = test_data_loader.sampler.epoch
+    test_batches_per_epoch = len(test_data_loader)
     
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
     model.eval()
@@ -237,10 +237,10 @@ def test_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, w
     # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode also serves to
     # reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True
     with torch.no_grad():
-        for inputs, targets in test_dataloader:
+        for inputs, targets in test_data_loader:
             
             # Determine the current batch
-            batch = test_dataloader.sampler.progress // test_dataloader.batch_size
+            batch = test_data_loader.sampler.progress // test_data_loader.batch_size
             is_last_batch = (batch + 1) == test_batches_per_epoch
             
             # Move input and targets to device
@@ -263,7 +263,7 @@ def test_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, w
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
             
             # Advance sampler
-            test_dataloader.sampler.advance(len(inputs))
+            test_data_loader.sampler.advance(len(inputs))
 
             # Performance summary at the end of the epoch
             if args.is_master and is_last_batch:
@@ -285,8 +285,8 @@ def test_loop(model, lr_scheduler, train_dataloader, test_dataloader, metrics, w
                     {
                         "model": model.state_dict(),
                         # "optimizer": optimizer.state_dict(),
-                        "train_sampler": train_dataloader.sampler.state_dict(),
-                        "test_sampler": test_dataloader.sampler.state_dict(),
+                        "train_sampler": train_data_loader.sampler.state_dict(),
+                        "test_sampler": test_data_loader.sampler.state_dict(),
                         "lr_scheduler": lr_scheduler.state_dict(),
                         "metrics": metrics,
                     },
@@ -469,7 +469,7 @@ def main(args, timer):
                         # optimizer,
                         lr_scheduler,
                         # loss_fn,
-                        train_dataloader,
+                        train_data_loader,
                         test_data_loader,
                         metrics,
                         writer,
