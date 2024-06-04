@@ -34,8 +34,9 @@ class ClassifierLayer(NetworkLayer):
     @return
         ___ (layers.ClassifierLayer) = returns instance of ClassifierLayer
     """
-    def __init__(self, input_dimension, output_dimension, lamb=2, class_lr=0.001, gamma=0.99, eps=10e-5):
-        super ().__init__(input_dimension, output_dimension, lamb, class_lr, gamma, eps)     
+    def __init__(self, input_dimension, output_dimension, device_id, lamb=2, class_lr=0.001, gamma=0.99, eps=10e-5):
+        super ().__init__(input_dimension, output_dimension, lamb, class_lr, gamma, eps)    
+        self.device_id = device_id 
     
     """
     Defines the way the weights will be updated at each iteration of the training.
@@ -140,15 +141,20 @@ class ClassifierLayer(NetworkLayer):
         fig, axes = plt.subplots(2, 5, figsize=(16, 8))
         for ele in range(2*5):  
             random_feature_selector = weight[ele]
+            # Move tensor to CPU, convert to NumPy array for visualization
             heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
-                                                    int(math.sqrt(self.fc.weight.size(1))))
+                                                int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
+
             ax = axes[ele // 5, ele % 5]
             im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
             fig.colorbar(im, ax=ax)
             ax.set_title(f'Weight {ele}')
+
+            # Move the tensor back to the GPU if needed
+            random_feature_selector = random_feature_selector.to(self.device_id)
+
         plt.tight_layout()
         plt.show()
-
 
     """
     Sets the scheduler for this layer

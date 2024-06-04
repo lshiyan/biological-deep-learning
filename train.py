@@ -224,7 +224,7 @@ def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics
             )
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
     
-    model.get_layer("Hebbian Layer").visualize_weights()
+    model.visualize_weights()
     
 
 def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
