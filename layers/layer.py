@@ -78,10 +78,12 @@ class NetworkLayer (nn.Module, ABC):
 
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
+    @param
+        result_path (Path) = path to folder where results will be printed
     """
     # TODO: find a way to automatically choose size of the plots, and how the plots will be arranged without needing to hard code it
     @abstractmethod
-    def visualize_weights(self):
+    def visualize_weights(self, result_path):
         pass
     
 

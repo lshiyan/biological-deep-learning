@@ -8,6 +8,10 @@ from cycling_utils import TimestampedTimer
 
 timer = TimestampedTimer("Imported TimestampedTimer")
 
+import random
+import datetime
+import logging
+import sys
 import argparse
 import os
 from operator import itemgetter
@@ -33,26 +37,13 @@ timer.report("Completed imports")
 
 ##############################################################################
 
-#from models.hebbian_network import HebbianNetwork
 from layers.scheduler import Scheduler
-#from data.data_loader import MNIST_set, fashion_MNIST_set
-#from experiments.mlp import MLPExperiment
+from models.hebbian_network import HebbianNetwork
 
 ##############################################################################
 
 
 
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-from models.hebbian_network import HebbianNetwork
-from models.network import Network 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-#######################################
 # Hyperparameters
 # -----------------
 # Hyperparameters are adjustable parameters that let you control the model optimization process. Different
@@ -69,6 +60,7 @@ def get_args_parser(add_help=True):
     # Basic configurations.
     parser.add_argument('--is_training', type=bool, default=True, help='status')
     parser.add_argument('--data_name', type=str, default="MNIST")
+    parser.add_argument('--exp_num', type=int, default=1)
     
     # Data Factory
     parser.add_argument('--train_data', type=str, default="data/mnist/train-images.idx3-ubyte")
@@ -139,13 +131,14 @@ def oneHotEncode(labels, num_classes):
 
     return one_hot_encoded.squeeze()
 
+
 def set_hebbian_scheduler(heb_lr, step_size, gamma, model):
     scheduler=Scheduler(heb_lr, step_size, gamma)
     #model.set_scheduler(scheduler, 0)
     model.set_scheduler()
 
 
-def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
+def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
     epoch = train_data_loader.sampler.epoch
     train_batches_per_epoch = len(train_data_loader)
    
@@ -222,10 +215,9 @@ def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics
             )
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
     
-    model.visualize_weights()
+    model.visualize_weights(result_path)
     
     
-
 def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
     epoch = test_data_loader.sampler.epoch
     test_batches_per_epoch = len(test_data_loader)
@@ -278,6 +270,8 @@ def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics,
                 )
                 print(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: AVG TEST LOSS: \
                              {avg_test_loss}, TEST ACC: {pct_test_correct}")
+                
+                logging.info(f'{pct_test_correct}')
 
             # Save checkpoint
             if args.is_master and (is_last_batch or (batch + 1) % 5 == 0):
@@ -301,6 +295,7 @@ timer.report("Defined helper function/s, loops, and model")
 def optimizer(model, cla_lr):
     optimizer = optim.Adam(model.get_layer("Hebbian Layer").parameters(), cla_lr)
     return optimizer
+
 
 def loss_function(model):
     loss_function = nn.CrossEntropyLoss()
@@ -445,6 +440,7 @@ def main(args, timer):
     for epoch in range(train_data_loader.sampler.epoch, args.epochs):
         with train_data_loader.sampler.in_epoch(epoch):
             train_loop(
+                folder_path,
                 model, 
                 # optimizer, 
                 lr_scheduler, 
@@ -480,6 +476,22 @@ def main(args, timer):
 
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
+    
+    # Create folder in results to store training and testing results for this experiment
+    folder_path = f"results/experiment-{args.exp_num}"
+    log_path = f"results/experiment-{args.exp_num}/testing.log"
+    log_format = '%(asctime)s - %(epoch_num)s - Test Accuracy: %(acc)i'
+
+    if not os.path.exists(folder_path):
+        print(not os.path.exists(folder_path))
+        os.makedirs(folder_path)
+        print(f"Experiment {args.exp_num} result folder created successfully.")
+    else:
+        print(f"Experiment {args.exp_num} result folder already exists.")
+    
+    logging.basicConfig(filename=log_path, level=logging.INFO, format=log_format)
+    
+    # running main function
     main(args, timer)
 
 #################################################################

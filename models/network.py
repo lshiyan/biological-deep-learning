@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import torch.nn as nn 
+import os
 
 """
 Interface for all networks to be created
@@ -40,19 +41,25 @@ class Network(nn.Module, ABC):
     """
     # NOTE: What use is this???
     def set_scheduler(self):
-        for module in self.children:
+        for module in self.children():
             module.set_scheduler()
 
     
     """
     Method to visualize the weights/features learned by each neuron during training
     @param
+        path (Path) = path to print out result
     @return
         ___ (void) = no returns
     """
-    def visualize_weights(self):
+    def visualize_weights(self, path):
         for module in self.children():
-            module.visualize_weights()
+            module.visualize_weights(path)
+
+
+
+
+
 
 
     """

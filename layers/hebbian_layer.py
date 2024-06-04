@@ -192,7 +192,7 @@ class HebbianLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-    def visualize_weights(self):
+    def visualize_weights(self, result_path):
         weight = self.fc.weight
         fig, axes = plt.subplots(8, 8, figsize=(16, 16))
         
@@ -210,9 +210,11 @@ class HebbianLayer(NetworkLayer):
             # Move the tensor back to the GPU if needed
             random_feature_selector = random_feature_selector.to(self.device_id)
         
+        file_path = result_path + '/hebbianlayerweights.png'
         plt.tight_layout()
-        plt.savefig('results/hebbianlayerweights.png')
+        plt.savefig(file_path)
         plt.show()
+        
 
 
     """

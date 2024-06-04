@@ -132,11 +132,12 @@ class ClassifierLayer(NetworkLayer):
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
     @param
+        result_path (Path) = path to folder where results will be printed
     @return
         ___ (void) = no returns
     """
     # TODO: make the size and presentation of the plots less hard coded AKA replace the 2, 5, 16, 8 with variables
-    def visualize_weights(self):
+    def visualize_weights(self, result_path):
         weight = self.fc.weight
         fig, axes = plt.subplots(2, 5, figsize=(16, 8))
         for ele in range(2*5):  
@@ -153,8 +154,9 @@ class ClassifierLayer(NetworkLayer):
             # Move the tensor back to the GPU if needed
             random_feature_selector = random_feature_selector.to(self.device_id)
 
+        file_path = result_path + '/classifierlayerweights.png'
         plt.tight_layout()
-        plt.savefig('results/classifierlayerweights.png')
+        plt.savefig(file_path)
         plt.show()
 
     """
