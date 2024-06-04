@@ -66,19 +66,40 @@ class HebbianLayer(NetworkLayer):
     """
     # TODO: write out explicitly what each step of this method does
     # TODO: finish documentation when understand
+#    def update_weights(self, input, output, clamped_output=None):
+#        x = input.clone().detach().float().squeeze().to(self.device_id)
+#        x.requires_grad_(False)
+#        y = output.clone().detach().float().squeeze().to(self.device_id)
+#        y.requires_grad_(False)
+
+        #outer_prod = torch.tensor(outer(y, x))
+    
+        # Move tensors to CPU before calling outer
+#        outer_prod = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy()))
+    
+#        initial_weight = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0,1)
+#        A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
+#        A = A * (y.unsqueeze(1))
+#        delta_weight = self.alpha * (outer_prod - A)
+#        self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
+#        self.exponential_average = torch.add(self.gamma * self.exponential_average,(1 - self.gamma) * y)
+
     def update_weights(self, input, output, clamped_output=None):
         x = input.clone().detach().float().squeeze().to(self.device_id)
         x.requires_grad_(False)
         y = output.clone().detach().float().squeeze().to(self.device_id)
         y.requires_grad_(False)
-        outer_prod = torch.tensor(outer(y, x))
-        initial_weight = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0,1)
+        
+        # Move tensors to CPU before calling outer
+        outer_prod = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy()))
+        
+        initial_weight = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0, 1)
         A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
         A = A * (y.unsqueeze(1))
-        delta_weight = self.alpha * (outer_prod - A)
+        delta_weight = self.alpha * (outer_prod.to(self.device_id) - A)
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
-        self.exponential_average = torch.add(self.gamma * self.exponential_average,(1 - self.gamma) * y)
-    
+        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y) 
+
     """
     Defines the way the weights will be updated at each iteration of the training
     @param
