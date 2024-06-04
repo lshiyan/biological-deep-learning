@@ -211,6 +211,7 @@ class HebbianLayer(NetworkLayer):
             random_feature_selector = random_feature_selector.to(self.device_id)
         
         plt.tight_layout()
+        plt.savefig('results/hebbianlayerweights.png')
         plt.show()
 
 

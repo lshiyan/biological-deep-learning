@@ -226,6 +226,7 @@ def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics
     
     model.visualize_weights()
     
+    
 
 def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
     epoch = test_data_loader.sampler.epoch
@@ -277,6 +278,8 @@ def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics,
                     f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: AVG TEST LOSS: \
                              {avg_test_loss}, TEST ACC: {pct_test_correct}"
                 )
+                print(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: AVG TEST LOSS: \
+                             {avg_test_loss}, TEST ACC: {pct_test_correct}")
 
             # Save checkpoint
             if args.is_master and (is_last_batch or (batch + 1) % 5 == 0):
@@ -349,10 +352,6 @@ def main(args, timer):
     test_sampler = InterruptableDistributedSampler(test_data_set)  
     test_data_loader = DataLoader(test_data_set, batch_size=1, shuffle=False, sampler=test_sampler)  # Added sampler, set shuffle to False
     timer.report("testing data(sampler and dataloader) processing set up")
-
-
-
-
 
 
 
