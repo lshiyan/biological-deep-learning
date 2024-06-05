@@ -1,11 +1,6 @@
 import os
 
 def convert(imgf, labelf, outf, n):
-    project_root = os.getcwd() 
-    imgf = os.path.join(project_root, imgf)
-    labelf = os.path.join(project_root, labelf)
-    outf = os.path.join(project_root, outf)
-
     f = open(imgf, "rb")
     o = open(outf, "w")
     l = open(labelf, "rb")

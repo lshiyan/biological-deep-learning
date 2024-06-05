@@ -1,6 +1,6 @@
 isc_project_id = "2870fa20-9bc3-4a8f-ab41-9f59d91a840f"
-experiment_name = "fashion_mnist"
+experiment_name = "hebbian_mlp"
 gpu_type = "24GB VRAM GPU"
 nnodes = 10
-output_path = "~/outputs/fashion_mnist"
-command = "source ~/.fashion/bin/activate && cd ~/biological-deep-learning/ && torchrun --nnodes=10 --nproc-per-node=6 --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --node_rank=$RANK train.py --epochs 2 --test-epochs 5 --lr 0.001 --lr-step-size 1000 --gamma 1 --batch-size 1 --save-dir $OUTPUT_PATH --tboard-path $OUTPUT_PATH/tb"
+output_path = "~/outputs/hebbian_mlp"
+command = "source ~/.neuroai/bin/activate && cd ~/biological-deep-learning/ && torchrun --nnodes=10 --nproc-per-node=6 --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --node_rank=$RANK train.py --epochs 2 --test-epochs 5 --lr 0.001 --lr-step-size 1000 --gamma 1 --batch-size 1 --save-dir $OUTPUT_PATH --tboard-path $OUTPUT_PATH/tb"
