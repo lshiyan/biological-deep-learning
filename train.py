@@ -122,7 +122,7 @@ def get_args_parser(add_help=True):
 #####################################
 # We define ``train_loop`` that loops over our optimization code, and ``test_loop`` that evaluates the model's
 # performance against our test data. Inside the training loop, optimization happens in three steps:
-def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
+def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
     epoch = train_data_loader.sampler.epoch
     train_batches_per_epoch = len(train_data_loader)
    
@@ -140,7 +140,7 @@ def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_lo
         is_last_batch = (batch + 1) == train_batches_per_epoch
 
         # Move input and targets to device
-        inputs, targets = inputs.to(args.device_id).float(), one_hot(targets, 10).to(args.device_id).float()
+        inputs, targets = inputs.to(args.device_id).float(), one_hot(targets, 10).squeeze().to(args.device_id).float()
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
         
         # Forward pass
@@ -188,8 +188,6 @@ def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_lo
                 args.checkpoint_path,
             )
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
-    
-    model.visualize_weights(result_path)
     
     
 def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
@@ -365,7 +363,6 @@ def main(args, timer):
     for epoch in range(train_data_loader.sampler.epoch, args.epochs):
         with train_data_loader.sampler.in_epoch(epoch):
             train_loop(
-                folder_path,
                 model, 
                 # optimizer, 
                 lr_scheduler, 
@@ -393,6 +390,8 @@ def main(args, timer):
                         writer,
                         args,
                     )
+
+    model.visualize_weights(folder_path)
 
     print("Done!")
 

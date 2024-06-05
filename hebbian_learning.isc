@@ -7,7 +7,7 @@ output_path = "~/outputs/hebbian_learning"
 command = "source ~/hebbian_venv/bin/activate && 
             cd ~/biological-deep-learning/ && 
             torchrun 
-            --nnodes=10 
+            --nnodes=1 
             --nproc-per-node=6 
             --master_addr=$MASTER_ADDR 
             --master_port=$MASTER_PORT 
