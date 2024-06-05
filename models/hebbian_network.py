@@ -66,30 +66,31 @@ class HebbianNetwork(Network):
     Method that defines how an input data flows throw the network
     @param
         x (torch.Tensor) = input data into the network
-        clamped_output (???) = parameter to clamp the output
+        clamped_output (TODO: ???) = ???
     @return
-        data_input (torch.Tensor) = returns the data after pssing it throw the network
+        data_input (torch.Tensor) = returns the data after passing it throw the network
     """
     # TODO: make it so that we can also include the input processing layer here and will not need to pass the inputs to this function
     # NOTE: what is the use of clamped_output
     def forward(self, x, clamped_output=None):
-
-        print(f"step 1: BEFORE CALLING HEBBIAN_LAYER (the device of x): {x.device}")
-
-        hebbian_layer = self.get_layer("Hebbian Layer")
-        classification_layer = self.get_layer("Classification Layer")
+        # Get all the layers in the module
+        input_layer = self.get_module("Inout Layer")
+        hebbian_layer = self.get_module("Hebbian Layer")
+        classification_layer = self.get_module("Classification Layer")
 
         # Convert input to float if not already
         if x.dtype != torch.float32:
             x = x.float().to(self.device_id)
 
-        
-        print(f"step 2: BEFORE CALLING DATA_INPUT (the device of x): {x.device}")
         # Inut data -> Hebbian Layer -> Classification Layer -> Output data
         data_input = x.to(self.device_id)
-
-        print(f"step 3: BEFORE CALLING HEBBIAN_LAYER for DATA_INPUT (the device of data_input): {data_input.device}")
         data_input = hebbian_layer(data_input, None)
         data_input = classification_layer(data_input, clamped_output)
 
         return data_input
+    
+        # Below is the ideal way the forward function should be written without needing input argument
+    
+        # data_input = input_layer.process().float().to(self.device_id)
+        # data_input = hebbian_layer(data_input, None)
+        # data_input = classification_layer(data_input, clamped_output)

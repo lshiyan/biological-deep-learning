@@ -24,6 +24,7 @@ class HebbianLayer(NetworkLayer):
         PARENT ATTR.
             input_dimension (int) = number of inputs into the layer
             output_dimension (int) = number of outputs from layer
+            device_id (int) = the device that the module will be running on
             lamb (float) = lambda hyperparameter for latteral inhibition
             alpha (float) = how fast model learns at each iteration
             fc (fct) = function to apply linear transformation to incoming data
@@ -37,18 +38,19 @@ class HebbianLayer(NetworkLayer):
         ___ (layers.Hebbianlayer) = returns instance of HebbianLayer
     """
     def __init__(self, input_dimension, output_dimension, device_id, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
-        super ().__init__(input_dimension, output_dimension, lamb, heb_lr, gamma, eps)
-        self.device_id = device_id
+        super ().__init__(input_dimension, output_dimension, device_id, lamb, heb_lr, gamma, eps)
+
 
     """
-    Calculates latheral inhibition
+    Calculates lateral inhibition
     @param
         x (torch.Tensor) = input to the ReLU function
     @return
         x (torch.Tensor) = activatin after lateral inhibition
     """
     def inhibition(self, x):
-        x = self.relu(x) 
+        relu = nn.ReLU()
+        x = relu(x) # NOTE: Why are we using ReLU -> why not keep negative activations
         max_ele = torch.max(x).item()
         x = torch.pow(x, self.lamb)
         x /= abs(max_ele) ** self.lamb
@@ -138,9 +140,10 @@ class HebbianLayer(NetworkLayer):
     """
     # TODO: write out explicitly what each step of this method does
     def weight_decay(self):
+        tanh = nn.Tanh()
         average = torch.mean(self.exponential_average).item()
         A = self.exponential_average / average
-        growth_factor_positive = self.eps * self.tanh(-self.eps * (A - 1)) + 1
+        growth_factor_positive = self.eps * tanh(-self.eps * (A - 1)) + 1
         growth_factor_negative = torch.reciprocal(growth_factor_positive)
         positive_weights = torch.where(self.fc.weight > 0, self.fc.weight, 0.0)
         negative_weights = torch.where(self.fc.weight < 0, self.fc.weight, 0.0)
@@ -235,6 +238,5 @@ class HebbianLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-    def set_scheduler(self):
-        scheduler = Scheduler(self.alpha, 1000, self.gamma)
-        self.scheduler = scheduler
+    def set_scheduler(self, scheduler=None):
+        self.scheduler = Scheduler(self.alpha, 1000, self.gamma) if scheduler == None else scheduler

@@ -20,6 +20,7 @@ class NetworkLayer (nn.Module, ABC):
     @attr.
         input_dimension (int) = number of inputs into the layer
         output_dimension (int) = number of outputs from layer
+        device_id (int) = the device that the module will be running on
         lamb (float) = lambda hyperparameter for latteral inhibition
         alpha (float) = how fast model learns at each iteration
         fc (fct) = function to apply linear transformation to incoming data
@@ -31,10 +32,11 @@ class NetworkLayer (nn.Module, ABC):
     @return
         * Can't return *
     """
-    def __init__(self, input_dimension, output_dimension, lamb=2, learning_rate=0.001, gamma=0.99, eps=10e-5):
+    def __init__(self, input_dimension, output_dimension, device_id, lamb=2, learning_rate=0.001, gamma=0.99, eps=10e-5):
         super ().__init__()
         self.input_dimension = input_dimension
         self.output_dimension = output_dimension
+        self.device_id = device_id
         self.lamb = lamb
         self.alpha = learning_rate
         self.fc = nn.Linear(self.input_dimension, self.output_dimension, bias=True)
@@ -47,18 +49,15 @@ class NetworkLayer (nn.Module, ABC):
         self.id_tensor = self.create_id_tensors()
         
         for param in self.fc.parameters():
-            param = torch.nn.init.uniform_(param, a=0.0, b=1.0)
+            torch.nn.init.uniform_(param, a=0.0, b=1.0)
             param.requires_grad_(False)
-        
-        self.relu=nn.ReLU()
-        self.sigmoid=nn.Sigmoid()
-        self.softplus=nn.Softplus()
-        self.tanh=nn.Tanh()
-        self.softmax=nn.Softmax()
 
 
     """
-    Creates identity tensor
+    Method to create an identity tensor
+    @param
+    @return
+        id_tensor (torch.Tensor) = 3D tensor with increasing size of identify matrices
     """
     def create_id_tensors(self):
         id_tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
@@ -69,17 +68,23 @@ class NetworkLayer (nn.Module, ABC):
         return id_tensor
 
     """
-    Sets scheduler current for layer
+    Method to set scheduler for current layer
+    @param
+        scheduler (layers.Scheduler) = a scheduler to be set
+    @return
+        ___ (void) = no returns
     """
     @abstractmethod
-    def set_scheduler(self):
+    def set_scheduler(self, scheduler=None):
         pass
 
 
     """
-    Visualizes the weight/features learnt by neurons in this layer using their heatmap
+    Method to vizualize the weight/features learned by neurons in this layer using a heatmap
     @param
         result_path (Path) = path to folder where results will be printed
+    @return
+        ___ (void) = no returns
     """
     # TODO: find a way to automatically choose size of the plots, and how the plots will be arranged without needing to hard code it
     @abstractmethod
@@ -88,23 +93,27 @@ class NetworkLayer (nn.Module, ABC):
     
 
     """
-    Defines the way the weights will be updated at each iteration of the training
+    Method to define the way the weights will be updated at each iteration of the training
     @param
-        input_data (???) = ???
-        output_data (???) = ???
-        clamped_output (???) = ???
+        input (TODO: ???) = ???
+        output (TODO: ???) = ???
+        clamped_output (TODO: ???) = ???
+    @return
+        ___ (void) = no returns
     """
     # TODO: finish documentation when understand
     # NOTE: what is clamped_output
     @abstractmethod
-    def update_weights(self, input, output, clamped_output):
+    def update_weights(self, input, output, clamped_output=None):
         pass
 
 
     """
-    Defines the way the bias will be updated at each iteration of the training
+    Method to define the way the bias will be updated at each iteration of the training
     @param
-        output (???) = ???
+        output (TODO: ???) = ???
+    @return
+        ___ (void) = no returns
     """
     # TODO: finish documentation when understand  
     @abstractmethod 
@@ -113,10 +122,12 @@ class NetworkLayer (nn.Module, ABC):
     
 
     """
-    Feed forward
+    Method that defines how an input data flows throw the network
     @param
-        x (torch.Tensor) = inputs into the layer
-        clamped_output (???) = ???
+        x (torch.Tensor) = input data into the layer
+        clamped_output (TODO: ???) = ???
+    @return
+        data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
     # TODO: finish documentation when understand
     # NOTE: what is clamped_output?
@@ -124,10 +135,13 @@ class NetworkLayer (nn.Module, ABC):
     def forward(self, x, clamped_output):
         pass
 
+
     """
-    Counts the number of active feature selectors (above a certain cutoff beta).
+    Method to get number of active feature selectors
     @param
-        beta (float) = cutoff value determining which neuron is active and which is not
+        beta (float) = cutoff value determining which neuron is active
+    @return
+        ___ (void) = no returns
     """
     @abstractmethod
     def active_weights(self, beta):

@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-import torch.nn as nn 
-import os
+import torch.nn as nn
 
 """
 Interface for all networks to be created
@@ -21,16 +20,16 @@ class Network(nn.Module, ABC):
 
 
     """
-    Function returning layer with given name
+    Method to get layer with given name
     @param
         name (str) = name of layer to get
     @return
         layer (layer.NetworkLayer) = a layer of the network with searched name
     """
-    def get_layer(self, name):
-        for layer_name, layer in self.named_children():
-            if name == layer_name:
-                return layer
+    def get_module(self, name):
+        for module_name, module in self.named_children():
+            if name == module_name:
+                return module
     
 
     """
@@ -46,6 +45,19 @@ class Network(nn.Module, ABC):
 
     
     """
+    Method to set specific scheduler for specific layer
+    @param
+        name (str) = name of layer to set scheduler
+        scheduler (layers.Scheduler) = scheduler to be set
+    @return
+        ___ (void) = no returns
+    """
+    def set_layer_scheduler(self, name, scheduler):
+        layer = self.get_module(name)
+        layer.set_scheduler(scheduler)
+
+
+    """
     Method to visualize the weights/features learned by each neuron during training
     @param
         path (Path) = path to print out result
@@ -58,22 +70,22 @@ class Network(nn.Module, ABC):
 
 
     """
-    Returns number of active feature selectors
+    Method to get number of active feature selectors
     @param
         beta (float) = cutoff value determining which neuron is active
     @return
         ___ (void) = no returns
     """
     def active_weights(self, beta):
-        for module in self.children():
-            module.active_weights(beta)
+        for name, module in self.name_children():
+            print(f"{name}: {module.active_weights(beta)}")
 
 
     """
     Method that defines how an input data flows throw the network
     @param
         x (torch.Tensor) = input data as a tensor
-        clamped_output (???) = parameter to clamp the output   # TODO: Figure out what clamped_output is used for
+        clamped_output (TODO: ???) = parameter to clamp the output
     @return
         ___ (torch.Tensor) = processed data
     """ 

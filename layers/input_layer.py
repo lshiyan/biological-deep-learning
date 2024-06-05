@@ -19,15 +19,20 @@ class InputLayer (NetworkLayer):
         test_label (str) = test label filename (.ubyte)
         test_filename (str) = test data (img + label) filename (.csv)
     @attr.
-        train_data (str) = train data filename (.ubyte)
-        train_label (str) = train label filename (.ubyte)
-        train_filename (str) = train data (img + label) filename (.csv)
-        test_data (str) = test data filename (.ubyte)
-        test_label (str) = test label filename (.ubyte)
-        test_filename (str) = test data (img + label) filename (.csv)
+        PARENT ATTR.
+            * Not used for this layer *
+        OWN ATTR.
+            train_data (str) = train data filename (.ubyte)
+            train_label (str) = train label filename (.ubyte)
+            train_filename (str) = train data (img + label) filename (.csv)
+            test_data (str) = test data filename (.ubyte)
+            test_label (str) = test label filename (.ubyte)
+            test_filename (str) = test data (img + label) filename (.csv)
+    @return
+        ___ (layers.InputLayer) = returns instance of InputLayer
     """
     def __init__(self, train_data, train_label, train_filename, test_data, test_label, test_filename):
-        super().__init__(0, 0)
+        super().__init__(0, 0, 0)
         self.train_data = train_data
         self.train_label = train_label
         self.train_filename = train_filename
@@ -36,7 +41,7 @@ class InputLayer (NetworkLayer):
         self.test_filename = test_filename
 
     """
-    Function to setup the taining dataset
+    Function to setup the training dataset
     @param
     @return
         data_frame (torch.Tensor) = tensor containing dataset to train
@@ -64,10 +69,6 @@ class InputLayer (NetworkLayer):
         data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
         data_frame /= 255
         return TensorDataset(data_frame, labels)
-
-
-    def __str__(self):
-        return "The input processing layer of the network."
 
 
     """

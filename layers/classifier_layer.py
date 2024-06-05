@@ -22,6 +22,7 @@ class ClassifierLayer(NetworkLayer):
         PARENT ATTR.
             input_dimension (int) = number of inputs into the layer
             output_dimension (int) = number of outputs from layer
+            device_id (int) = the device that the module will be running on
             lamb (float) = lambda hyperparameter for latteral inhibition
             alpha (float) = how fast model learns at each iteration
             fc (fct) = function to apply linear transformation to incoming data
@@ -36,7 +37,7 @@ class ClassifierLayer(NetworkLayer):
     """
     def __init__(self, input_dimension, output_dimension, device_id, lamb=2, class_lr=0.001, gamma=0.99, eps=10e-5):
         super ().__init__(input_dimension, output_dimension, lamb, class_lr, gamma, eps)    
-        self.device_id = device_id 
+    
     
     """
     Defines the way the weights will be updated at each iteration of the training.
@@ -50,7 +51,6 @@ class ClassifierLayer(NetworkLayer):
         ___ (void) = no returns
     """
     def update_weights(self, input, output, clamped_output=None):
-
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
         u = output.clone().detach().squeeze() # Output tensor after layer but before activation
         x = input.clone().detach().squeeze() # Input tensor to layer
@@ -109,11 +109,12 @@ class ClassifierLayer(NetworkLayer):
     """
     # NOTE: what is clamped_output
     def forward(self, x, clamped_output=None):
+        softmax = nn.Softmax()
         input_copy = x.clone()
         x = self.fc(x)
         self.update_weights(input_copy, x, clamped_output)
         # self.update_bias(x)
-        x = self.softmax(x)
+        x = softmax(x)
         return x
     
     """
