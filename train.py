@@ -18,6 +18,7 @@ import torch
 import torch.optim as optim
 import torch.distributed as dist
 from torch import nn
+from torch.nn.functional import one_hot
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -121,14 +122,6 @@ def get_args_parser(add_help=True):
 #####################################
 # We define ``train_loop`` that loops over our optimization code, and ``test_loop`` that evaluates the model's
 # performance against our test data. Inside the training loop, optimization happens in three steps:
-
-def oneHotEncode(labels, num_classes):
-    one_hot_encoded = torch.zeros(len(labels), num_classes)
-    one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
-
-    return one_hot_encoded.squeeze()
-
-
 def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
     epoch = train_data_loader.sampler.epoch
     train_batches_per_epoch = len(train_data_loader)
@@ -147,7 +140,7 @@ def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_lo
         is_last_batch = (batch + 1) == train_batches_per_epoch
 
         # Move input and targets to device
-        inputs, targets = inputs.to(args.device_id).float(), oneHotEncode(targets, 10).to(args.device_id).float()
+        inputs, targets = inputs.to(args.device_id).float(), one_hot(targets, 10).to(args.device_id).float()
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
         
         # Forward pass

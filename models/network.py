@@ -57,11 +57,6 @@ class Network(nn.Module, ABC):
             module.visualize_weights(path)
 
 
-
-
-
-
-
     """
     Returns number of active feature selectors
     @param

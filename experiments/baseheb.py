@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
+from torch.nn.functional import one_hot
 from models.hebbian_network import HebbianNetwork
 from experiments.experiment import Experiment
 
@@ -78,7 +79,7 @@ class BaseHebbianExperiment(Experiment):
         for _ in range(self.num_epochs):
             for _, data in enumerate(data_loader):
                 inputs, labels = data
-                self.model(inputs, clamped_output=Experiment.one_hot_encode(labels, 10)) # NOTE: what does clmaped_output do?
+                self.model(inputs, clamped_output=one_hot(labels, 10)) # NOTE: what does clmaped_output do?
                 optimizer.step()
 
 
