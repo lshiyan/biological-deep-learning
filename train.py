@@ -8,10 +8,7 @@ from cycling_utils import TimestampedTimer
 
 timer = TimestampedTimer("Imported TimestampedTimer")
 
-import random
-import datetime
 import logging
-import sys
 import argparse
 import os
 from operator import itemgetter
@@ -132,12 +129,6 @@ def oneHotEncode(labels, num_classes):
     return one_hot_encoded.squeeze()
 
 
-def set_hebbian_scheduler(heb_lr, step_size, gamma, model):
-    scheduler=Scheduler(heb_lr, step_size, gamma)
-    #model.set_scheduler(scheduler, 0)
-    model.set_scheduler()
-
-
 def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
     epoch = train_data_loader.sampler.epoch
     train_batches_per_epoch = len(train_data_loader)
@@ -145,7 +136,7 @@ def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_lo
     # Set the model to training mode - important for layers with different training / inference behaviour
     model.train()
 
-    if args.gamma != 0 : set_hebbian_scheduler(args.lr, args.lr_step_size, args.gamma, model)
+    if args.gamma != 0 : model.set_scheduler()
 
     for inputs, targets in train_data_loader:
         # Reset model parameter gradients
@@ -160,12 +151,6 @@ def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_lo
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
         
         # Forward pass
-
-        #print(f"inputs device: {inputs.device}")
-        #print(f"targets device: {targets.device}")
-        # print([d.device for d in model.parameters()])
-        #print({name:d.device for name,d in model.named_parameters()})
-
         predictions = model(inputs, clamped_output=targets)
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
         
@@ -174,10 +159,6 @@ def train_loop(result_path, model, lr_scheduler, train_data_loader, test_data_lo
         metrics["train"].update({"examples_seen": len(inputs)})
         metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}]")
-        
-        # Backpropagation
-        # loss.backward()
-        # timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - backward pass")
         
         # Update model weights
         # optimizer.step()
@@ -271,7 +252,7 @@ def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics,
                 print(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: AVG TEST LOSS: \
                              {avg_test_loss}, TEST ACC: {pct_test_correct}")
                 
-                logging.info(f'{pct_test_correct}')
+                logging.info(f'Epoch Number: {epoch} || Test Accuracy: {pct_test_correct}')
 
             # Save checkpoint
             if args.is_master and (is_last_batch or (batch + 1) % 5 == 0):
@@ -348,56 +329,7 @@ def main(args, timer):
 
 
 
-
-
-
-
-
-    ##############################################
-    # Data Samplers and Loaders
-    # ----------------------
-    # Samplers for distributed training will typically assign a unique subset of the dataset to each GPU, shuffling
-    # after each epoch, so that each GPU trains on a distinct subset of the dataset each epoch. The
-    # InterruptibleDistributedSampler from cycling_utils by Strong Compute does this while also tracking progress of the
-    # sampler through the dataset.
-
-#    training_data = MNIST_set()
-#    test_data = MNIST_set(0)
-
-#    train_sampler = InterruptableDistributedSampler(training_data)
-#    test_sampler = InterruptableDistributedSampler(test_data)
-#    timer.report("Initialized samplers")
-
-#    train_dataloader = DataLoader(training_data, batch_size=args.batch_size, sampler=train_sampler, num_workers=3)
-#    test_dataloader = DataLoader(test_data, batch_size=1, sampler=test_sampler)
-    
-#    timer.report("Initialized dataloaders")
-
-    ##############################################
-    # Model Preparation
-    # ----------------------
-    # This example demonstrates a Convolutional Neural Network (ConvNet, refer to the accompanying model.py for
-    # details). After instantiating the model, we move it to the local device and prepare it for distributed training
-    # with DistributedDataParallel (DDP).
-
-    # model = ConvNet(args.dropout)
-    # model = model.to(args.device_id)
-    # model = DDP(model, device_ids=[args.device_id])
-    # timer.report("Prepared model for distributed training")
-
-#    input_dimension = 784
-#    hidden_layer_dimension = 64
-#    output_dimension = 10
-#    heb_lr = 1
-#    lamb = 1
-#    eps = 0.1
-#    model = HebbianNetwork(args, input_dimension, hidden_layer_dimension, 
-#                                  output_dimension, heb_lr=heb_lr, lamb=lamb, eps=eps)
-#    model = model.to(args.device_id)
-#    timer.report("Prepared model for distributed training")
-    
-
-    ########################################
+########################################
     # We initialize the loss function, optimizer, and learning rate scheduler and pass them to ``train_loop`` and
     # ``test_loop``. By setting the loss function reduction strategy to "sum" we are able to confidently summarise the
     # loss accross the whole cluster by summing the loss computed by each node. In general, it is important to consider
@@ -473,18 +405,17 @@ def main(args, timer):
 
 
 
-
+# Actual code that will be running
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
     
     # Create folder in results to store training and testing results for this experiment
     folder_path = f"results/experiment-{args.exp_num}"
     log_path = f"results/experiment-{args.exp_num}/testing.log"
-    log_format = '%(asctime)s - %(epoch_num)s - Test Accuracy: %(acc)i'
+    log_format = '%(asctime)s || %(message)s'
 
     if not os.path.exists(folder_path):
-        print(not os.path.exists(folder_path))
-        os.makedirs(folder_path)
+        os.makedirs(folder_path, exist_ok=True)
         print(f"Experiment {args.exp_num} result folder created successfully.")
     else:
         print(f"Experiment {args.exp_num} result folder already exists.")
@@ -493,10 +424,3 @@ if __name__ == "__main__":
     
     # running main function
     main(args, timer)
-
-#################################################################
-# Further Reading
-# -----------------------
-# - `Loss Functions <https://pytorch.org/docs/stable/nn.html#loss-functions>`_
-# - `torch.optim <https://pytorch.org/docs/stable/optim.html>`_
-# - `Warmstart Training a Model <https://pytorch.org/tutorials/recipes/recipes/warmstarting_model_using_parameters_from_a_different_model.html>`_
