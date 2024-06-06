@@ -101,21 +101,21 @@ class HebbianLayer(NetworkLayer):
     and scales the update by the learning rate. 
     The biases are normalized after the update.
     @param
-        output (torch.Tensor): The output tensor of the layer.
+        output (torch.Tensor) = The output tensor of the layer.
     @return
         ___ (void) = no returns
     """
     def update_bias(self, output):
         y = output.clone().detach().squeeze()
-        exponential_bias = torch.exp(-1 * self.fc.bias) # Apply exponential decay to biases
+        exponential_bias = torch.exp(-1*self.fc.bias) # Apply exponential decay to biases
 
         # Compute bias update scaled by output probabilities.
-        A = torch.mul(exponential_bias, y)-1
-        A = (1 - self.alpha) * self.fc.bias + self.alpha * A
+        A = torch.mul(exponential_bias, y) - 1
+        A = self.fc.bias + self.alpha * A
 
         # Normalize biases to maintain stability. (Divide by max bias value)
         bias_maxes = torch.max(A, dim=0).values
-        self.fc.bias = nn.Parameter(A / bias_maxes.item(), requires_grad=False)
+        self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
 
 
     """

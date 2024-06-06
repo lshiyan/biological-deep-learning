@@ -70,11 +70,11 @@ class ClassifierLayer(NetworkLayer):
             A = torch.outer(y,x) # Hebbian learning rule component
 
         # Adjust weights by learning rate and add contribution from Hebbian update.
-        A = (1 - self.alpha) * self.fc.weight + self.alpha * A
+        A = self.fc.weight + self.alpha * A
 
         # Normalize weights by the maximum value in each row to stabilize the learning.
         weight_maxes = torch.max(A, dim=1).values
-        self.fc.weight = nn.Parameter(A / weight_maxes.unsqueeze(1), requires_grad=False)
+        self.fc.weight = nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
 
         # Zero out the first column of weights -> this is to prevent the first weight from learning everything
         self.fc.weight[:, 0] = 0
@@ -93,7 +93,7 @@ class ClassifierLayer(NetworkLayer):
     """
     def update_bias(self, output):
         y = output.clone().detach().squeeze()
-        exponential_bias = torch.exp(-1 * self.fc.bias) # Apply exponential decay to biases
+        exponential_bias = torch.exp(-1*self.fc.bias) # Apply exponential decay to biases
 
         # Compute bias update scaled by output probabilities.
         A = torch.mul(exponential_bias, y)-1
@@ -101,7 +101,7 @@ class ClassifierLayer(NetworkLayer):
 
         # Normalize biases to maintain stability. (Divide by max bias value)
         bias_maxes = torch.max(A, dim=0).values
-        self.fc.bias = nn.Parameter(A / bias_maxes.item(), requires_grad=False)
+        self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
     
 
     """
