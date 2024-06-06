@@ -61,13 +61,13 @@ class HebbianLayer(NetworkLayer):
     Employs Sanger's Rule, deltaW_(ij)=alpha*x_j*y_i-alpha*y_i*sum(k=1 to i) (w_(kj)*y_k).
     Calculates outer product of input and output and adds it to matrix.
     @param
-        input (???) = ???
-        output (???) = ???
+        input (torch.Tensor) = the inputs into the layer
+        output (torch.Tensor) = the output of the layer
+        clamped_output (TODO: ???) = ???
     @return
         ___ (void) = no returns
     """
     # TODO: write out explicitly what each step of this method does
-    # TODO: finish documentation when understand
     def update_weights(self, input, output, clamped_output=None):
         x = input.clone().detach().float().squeeze().to(self.device_id)
         x.requires_grad_(False)
@@ -86,10 +86,10 @@ class HebbianLayer(NetworkLayer):
         self.id_tensor = self.id_tensor.to(self.device_id)
         self.exponential_average = self.exponential_average.to(self.device_id)
 
-        print(f"UPDATE-WEIGHTS FUNCTION initial weight: {initial_weight.device}")
-        print(f"UPDATE-WEIGHTS FUNCTION id tensor: {self.id_tensor.device}")
-        print(f"UPDATE-WEIGHTS FUNCTION y: {y.device}")
-        print(f"UPDATE-WEIGHTS FUNCTION exponential_average: {self.exponential_average.device}")
+        #print(f"UPDATE-WEIGHTS FUNCTION initial weight: {initial_weight.device}")
+        #print(f"UPDATE-WEIGHTS FUNCTION id tensor: {self.id_tensor.device}")
+        #print(f"UPDATE-WEIGHTS FUNCTION y: {y.device}")
+        #Sprint(f"UPDATE-WEIGHTS FUNCTION exponential_average: {self.exponential_average.device}")
 
         A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
         A = A * (y.unsqueeze(1))
@@ -101,13 +101,11 @@ class HebbianLayer(NetworkLayer):
     """
     Defines the way the weights will be updated at each iteration of the training
     @param
-        input (???) = ???
-        output (???) = ???
+        output (torch.Tensor) = the output of the layer
     @return
         ___ (void) = no returns
     """
-    # TODO: write out explicitly what each step of this method does
-    # TODO: finish documentation when understand        
+    # TODO: write out explicitly what each step of this method does     
     def update_bias(self, output):
         y = output.clone().detach().squeeze()
         exponential_bias = torch.exp(-1*self.fc.bias)
@@ -148,24 +146,24 @@ class HebbianLayer(NetworkLayer):
     # NOTE: what does clamped_output mean?
     def forward(self, x, clamped_output=None):
 
-        print(f"STEP 1: INSIDE FORWARD OF HEBBIAN_LAYER (the device of x): {x.device}")
+        #print(f"STEP 1: INSIDE FORWARD OF HEBBIAN_LAYER (the device of x): {x.device}")
 
 
         input_copy = x.clone().to(self.device_id).float()
 
-        print(x.type())
-        print(self.fc.weight.type())
-        print(self.fc.bias.type())
+        #print(x.type())
+        #print(self.fc.weight.type())
+        #print(self.fc.bias.type())
         
-        print(f"STEP 2: INSIDE FORWARD OF HEBBIAN_LAYER -  (the device of x): {x.device}")
+        #print(f"STEP 2: INSIDE FORWARD OF HEBBIAN_LAYER -  (the device of x): {x.device}")
         x = x.to(self.device_id)
-        print(f"STEP 3.1: {self.device_id}")
-        print(f"STEP 3.2: {x.device}")
+        #print(f"STEP 3.1: {self.device_id}")
+        #print(f"STEP 3.2: {x.device}")
 
         x = self.fc(x)
         x = self.inhibition(x)
 
-        print(f"STEP 4: {x.device}")
+        #print(f"STEP 4: {x.device}")
         self.update_weights(input_copy, x, clamped_output)
 
         #self.update_bias(x)
@@ -180,16 +178,25 @@ class HebbianLayer(NetworkLayer):
         ___ (void) = no returns
     """
     def visualize_weights(self, result_path):
+        row = 0
+        col = 0
+
+        root = int(math.sqrt(self.output_dimension))
+        for i in range(root, 0, -1):
+            if self.output_dimension % i == 0:
+                row = min(i, self.output_dimension // i)
+                col = max(i, self.output_dimension // i)
+                break
+
         weight = self.fc.weight
-        fig, axes = plt.subplots(8, 8, figsize=(16, 16))
-        
-        for ele in range(8 * 8):
+        fig, axes = plt.subplots(row, col, figsize=(16, 16))
+        for ele in range(row*col):  
             random_feature_selector = weight[ele]
-            
             # Move tensor to CPU, convert to NumPy array for visualization
             heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
                                                 int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
-            ax = axes[ele // 8, ele % 8]
+
+            ax = axes[ele // col, ele % col]
             im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
             fig.colorbar(im, ax=ax)
             ax.set_title(f'Weight {ele}')

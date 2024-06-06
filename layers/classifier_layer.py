@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 import torch
 import torch.nn as nn
 from layers.layer import NetworkLayer
+from layers.scheduler import Scheduler
 
 
 """
@@ -38,7 +39,7 @@ class ClassifierLayer(NetworkLayer):
     def __init__(self, input_dimension, output_dimension, device_id, lamb=2, class_lr=0.001, gamma=0.99, eps=10e-5):
         super ().__init__(input_dimension, output_dimension, lamb, class_lr, gamma, eps)    
     
-    
+
     """
     Defines the way the weights will be updated at each iteration of the training.
     The method computes the outer product of the softmax probabilities of the outputs and the inputs. 
@@ -83,7 +84,7 @@ class ClassifierLayer(NetworkLayer):
     and scales the update by the learning rate. 
     The biases are normalized after the update.
     @param
-        output (torch.Tensor): The output tensor of the layer before applying softmax.
+        output (torch.Tensor): The output tensor of the layer.
     @return
         ___ (void) = no returns
     """
@@ -99,6 +100,7 @@ class ClassifierLayer(NetworkLayer):
         bias_maxes = torch.max(A, dim=0).values
         self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
     
+
     """
     Feed forward
     @param
@@ -117,6 +119,7 @@ class ClassifierLayer(NetworkLayer):
         x = softmax(x)
         return x
     
+
     """
     Counts the number of active feature selectors (above a certain cutoff beta).
     @param
@@ -137,17 +140,26 @@ class ClassifierLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-    # TODO: make the size and presentation of the plots less hard coded AKA replace the 2, 5, 16, 8 with variables
     def visualize_weights(self, result_path):
+        row = 0
+        col = 0
+
+        root = int(math.sqrt(self.output_dimension))
+        for i in range(root, 0, -1):
+            if self.output_dimension % i == 0:
+                row = min(i, self.output_dimension // i)
+                col = max(i, self.output_dimension // i)
+                break
+
         weight = self.fc.weight
-        fig, axes = plt.subplots(2, 5, figsize=(16, 8))
-        for ele in range(2*5):  
+        fig, axes = plt.subplots(row, col, figsize=(16, 16))
+        for ele in range(row*col):  
             random_feature_selector = weight[ele]
             # Move tensor to CPU, convert to NumPy array for visualization
             heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
                                                 int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
 
-            ax = axes[ele // 5, ele % 5]
+            ax = axes[ele // col, ele % col]
             im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
             fig.colorbar(im, ax=ax)
             ax.set_title(f'Weight {ele}')
@@ -158,7 +170,7 @@ class ClassifierLayer(NetworkLayer):
         file_path = result_path + '/classifierlayerweights.png'
         plt.tight_layout()
         plt.savefig(file_path)
-        plt.show()
+
 
     """
     Sets the scheduler for this layer
@@ -166,6 +178,6 @@ class ClassifierLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-    # TODO: define this function
-    def set_scheduler(self):
-        pass
+    # NOTE: Might want to define a better scheduler
+    def set_scheduler(self, scheduler=None):
+        self.scheduler = Scheduler(self.alpha, 1000, self.gamma) if scheduler == None else scheduler

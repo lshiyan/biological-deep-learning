@@ -265,7 +265,7 @@ timer.report("Defined helper function/s, loops, and model")
 
 # Helper function - optimizer
 def optimizer(model, cla_lr):
-    optimizer = optim.Adam(model.get_layer("Hebbian Layer").parameters(), cla_lr)
+    optimizer = optim.Adam(model.get_module("Hebbian Layer").parameters(), cla_lr)
     return optimizer
 
 
@@ -301,19 +301,19 @@ def main(args, timer):
     # Set up model
     model = HebbianNetwork(args).float()
     model = model.to(args.device_id)
-    print(model.get_layer("Hebbian Layer").fc.weight.type())
+    print(model.get_module("Hebbian Layer").fc.weight.type())
     timer.report("Model set up and moved to device")
 
 
     # Set up Data Sampler and Loaders
     # First, training data
-    train_data_set = model.get_layer("Input Layer").setup_train_data()
+    train_data_set = model.get_module("Input Layer").setup_train_data()
     train_sampler = InterruptableDistributedSampler(train_data_set)
     train_data_loader = DataLoader(train_data_set, batch_size=1, shuffle=False, sampler=train_sampler)  # Added sampler, set shuffle to False
     timer.report("training data(sampler and dataloader) processing set up")
 
     # Second, testing data
-    test_data_set = model.get_layer("Input Layer").setup_test_data()
+    test_data_set = model.get_module("Input Layer").setup_test_data()
     test_sampler = InterruptableDistributedSampler(test_data_set)  
     test_data_loader = DataLoader(test_data_set, batch_size=1, shuffle=False, sampler=test_sampler)  # Added sampler, set shuffle to False
     timer.report("testing data(sampler and dataloader) processing set up")

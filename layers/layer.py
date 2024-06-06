@@ -86,7 +86,6 @@ class NetworkLayer (nn.Module, ABC):
     @return
         ___ (void) = no returns
     """
-    # TODO: find a way to automatically choose size of the plots, and how the plots will be arranged without needing to hard code it
     @abstractmethod
     def visualize_weights(self, result_path):
         pass
@@ -95,13 +94,12 @@ class NetworkLayer (nn.Module, ABC):
     """
     Method to define the way the weights will be updated at each iteration of the training
     @param
-        input (TODO: ???) = ???
-        output (TODO: ???) = ???
+        input (torch.Tensor) = the inputs into the layer
+        output (torch.Tensor) = the output of the layer
         clamped_output (TODO: ???) = ???
     @return
         ___ (void) = no returns
     """
-    # TODO: finish documentation when understand
     # NOTE: what is clamped_output
     @abstractmethod
     def update_weights(self, input, output, clamped_output=None):
@@ -111,11 +109,10 @@ class NetworkLayer (nn.Module, ABC):
     """
     Method to define the way the bias will be updated at each iteration of the training
     @param
-        output (TODO: ???) = ???
+        output (torch.Tensor) = the output of the layer
     @return
         ___ (void) = no returns
     """
-    # TODO: finish documentation when understand  
     @abstractmethod 
     def update_bias(self, output):
         pass
@@ -129,7 +126,6 @@ class NetworkLayer (nn.Module, ABC):
     @return
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
-    # TODO: finish documentation when understand
     # NOTE: what is clamped_output?
     @abstractmethod
     def forward(self, x, clamped_output):
