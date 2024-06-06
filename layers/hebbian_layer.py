@@ -127,15 +127,25 @@ class HebbianLayer(NetworkLayer):
     # TODO: write out explicitly what each step of this method does
     def weight_decay(self):
         tanh = nn.Tanh()
+
+        # Gets average of exponential averages
         average = torch.mean(self.exponential_average).item()
+
+        # Gets ratio vs mean
         A = self.exponential_average / average
+
+        # calculate the growth factors
         growth_factor_positive = self.eps * tanh(-self.eps * (A - 1)) + 1
         growth_factor_negative = torch.reciprocal(growth_factor_positive)
+
+        # Update the weights depending on growth factor
         positive_weights = torch.where(self.fc.weight > 0, self.fc.weight, 0.0)
         negative_weights = torch.where(self.fc.weight < 0, self.fc.weight, 0.0)
         positive_weights = positive_weights * growth_factor_positive.unsqueeze(1)
         negative_weights = negative_weights * growth_factor_negative.unsqueeze(1)
         self.fc.weight = nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
+        
+        # Check if there are any NaN weights
         if (self.fc.weight.isnan().any()):
             print("NAN WEIGHT")
     
