@@ -56,6 +56,7 @@ class HebbianLayer(NetworkLayer):
         x /= abs(max_ele) ** self.lamb
         return x
         
+
     """
     Defines the way the weights will be updated at each iteration of the training.
     Employs Sanger's Rule, deltaW_(ij)=alpha*x_j*y_i-alpha*y_i*sum(k=1 to i) (w_(kj)*y_k).
@@ -86,11 +87,6 @@ class HebbianLayer(NetworkLayer):
         self.id_tensor = self.id_tensor.to(self.device_id)
         self.exponential_average = self.exponential_average.to(self.device_id)
 
-        #print(f"UPDATE-WEIGHTS FUNCTION initial weight: {initial_weight.device}")
-        #print(f"UPDATE-WEIGHTS FUNCTION id tensor: {self.id_tensor.device}")
-        #print(f"UPDATE-WEIGHTS FUNCTION y: {y.device}")
-        #Sprint(f"UPDATE-WEIGHTS FUNCTION exponential_average: {self.exponential_average.device}")
-
         A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
         A = A * (y.unsqueeze(1))
         delta_weight = self.alpha * (outer_prod - A)
@@ -99,20 +95,28 @@ class HebbianLayer(NetworkLayer):
     
     
     """
-    Defines the way the weights will be updated at each iteration of the training
+    Defines the way the biases will be updated at each iteration of the training
+    It updates the biases of the classifier layer using a decay mechanism adjusted by the output probabilities.
+    The method applies an exponential decay to the biases, which is modulated by the output probabilities,
+    and scales the update by the learning rate. 
+    The biases are normalized after the update.
     @param
-        output (torch.Tensor) = the output of the layer
+        output (torch.Tensor): The output tensor of the layer.
     @return
         ___ (void) = no returns
     """
-    # TODO: write out explicitly what each step of this method does     
     def update_bias(self, output):
         y = output.clone().detach().squeeze()
-        exponential_bias = torch.exp(-1*self.fc.bias)
-        A = torch.mul(exponential_bias, y) - 1
-        A = self.fc.bias + self.alpha * A
+        exponential_bias = torch.exp(-1 * self.fc.bias) # Apply exponential decay to biases
+
+        # Compute bias update scaled by output probabilities.
+        A = torch.mul(exponential_bias, y)-1
+        A = (1 - self.alpha) * self.fc.bias + self.alpha * A
+
+        # Normalize biases to maintain stability. (Divide by max bias value)
         bias_maxes = torch.max(A, dim=0).values
-        self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
+        self.fc.bias = nn.Parameter(A / bias_maxes.item(), requires_grad=False)
+
 
     """
     Decays the overused weights and increases the underused weights using tanh functions.
@@ -135,37 +139,24 @@ class HebbianLayer(NetworkLayer):
         if (self.fc.weight.isnan().any()):
             print("NAN WEIGHT")
     
+
     """
     Feed forward
     @param
         x (torch.Tensor) = input processed data
-        clamped_output (???) = ???
+        clamped_output (TODO: ???) = ???
     @retrun
         x (torch.Tensor) = data after going through hebbian layer
     """
     # NOTE: what does clamped_output mean?
     def forward(self, x, clamped_output=None):
 
-        #print(f"STEP 1: INSIDE FORWARD OF HEBBIAN_LAYER (the device of x): {x.device}")
-
-
+        # Copy input -> calculate output -> update weights -> return output
         input_copy = x.clone().to(self.device_id).float()
-
-        #print(x.type())
-        #print(self.fc.weight.type())
-        #print(self.fc.bias.type())
-        
-        #print(f"STEP 2: INSIDE FORWARD OF HEBBIAN_LAYER -  (the device of x): {x.device}")
         x = x.to(self.device_id)
-        #print(f"STEP 3.1: {self.device_id}")
-        #print(f"STEP 3.2: {x.device}")
-
         x = self.fc(x)
         x = self.inhibition(x)
-
-        #print(f"STEP 4: {x.device}")
         self.update_weights(input_copy, x, clamped_output)
-
         #self.update_bias(x)
         self.weight_decay() 
         return x
@@ -178,6 +169,7 @@ class HebbianLayer(NetworkLayer):
         ___ (void) = no returns
     """
     def visualize_weights(self, result_path):
+        # Find value for row and column
         row = 0
         col = 0
 
@@ -187,7 +179,8 @@ class HebbianLayer(NetworkLayer):
                 row = min(i, self.output_dimension // i)
                 col = max(i, self.output_dimension // i)
                 break
-
+        
+        # Get the weights and create heatmap
         weight = self.fc.weight
         fig, axes = plt.subplots(row, col, figsize=(16, 16))
         for ele in range(row*col):  
@@ -209,7 +202,6 @@ class HebbianLayer(NetworkLayer):
         plt.savefig(file_path)
         plt.show()
         
-
 
     """
     Counts the number of active feature selectors (above a certain cutoff beta).

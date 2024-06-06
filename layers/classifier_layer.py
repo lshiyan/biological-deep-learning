@@ -89,23 +89,23 @@ class ClassifierLayer(NetworkLayer):
         ___ (void) = no returns
     """
     def update_bias(self, output):
-        y = output.clone().detach().squeeze() # Output tensor probabilities after softmax
-        exponential_bias = torch.exp(-1*self.fc.bias) # Apply exponential decay to biases
+        y = output.clone().detach().squeeze()
+        exponential_bias = torch.exp(-1 * self.fc.bias) # Apply exponential decay to biases
 
         # Compute bias update scaled by output probabilities.
         A = torch.mul(exponential_bias, y)-1
-        A = self.fc.bias + self.alpha * A
+        A = (1 - self.alpha) * self.fc.bias + self.alpha * A
 
-        # Normalize biases to maintain stability.
+        # Normalize biases to maintain stability. (Divide by max bias value)
         bias_maxes = torch.max(A, dim=0).values
-        self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
+        self.fc.bias = nn.Parameter(A / bias_maxes.item(), requires_grad=False)
     
 
     """
-    Feed forward
+    Method that defines how an input data flows through the layer
     @param
         x (torch.Tensor) = data after going through hebbian layer
-        clamped_output (???) = ???
+        clamped_output (TODO: ???) = ???
     @retrun
         x (torch.Tensor) = data after going through classification layer
     """
@@ -141,6 +141,7 @@ class ClassifierLayer(NetworkLayer):
         ___ (void) = no returns
     """
     def visualize_weights(self, result_path):
+        # Find value for row and column
         row = 0
         col = 0
 
@@ -150,7 +151,8 @@ class ClassifierLayer(NetworkLayer):
                 row = min(i, self.output_dimension // i)
                 col = max(i, self.output_dimension // i)
                 break
-
+        
+        # Gets the weights and create heatmap
         weight = self.fc.weight
         fig, axes = plt.subplots(row, col, figsize=(16, 16))
         for ele in range(row*col):  
