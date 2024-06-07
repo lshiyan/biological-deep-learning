@@ -41,18 +41,18 @@ class InputLayer (NetworkLayer):
         self.test_filename = test_filename
 
     """
-    Function to setup the training dataset
+    Function to setup the taining dataset
     @param
     @return
         data_frame (torch.Tensor) = tensor containing dataset to train
     """
-    def setup_train_data(self):
-        InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
-        data_frame = pd.read_csv(self.train_filename, header=None, on_bad_lines='skip')
-        labels = torch.tensor(data_frame[0].values)
-        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
-        data_frame /= 255
-        return TensorDataset(data_frame, labels)
+#    def setup_train_data(self):
+#        InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
+##        data_frame = pd.read_csv(self.train_filename, header=None, on_bad_lines='skip')
+#        labels = torch.tensor(data_frame[0].values)
+#        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+#        data_frame /= 255
+#        return TensorDataset(data_frame, labels)
 
 
     """
@@ -61,20 +61,61 @@ class InputLayer (NetworkLayer):
     @return
         data_frame (torch.Tensor) = tensor containing dataset to test
     """
-    def setup_test_data(self):
-        InputLayer.convert(self.test_data, self.test_label, self.test_filename, 10000, 28)
-        data_frame = pd.read_csv(self.test_filename, header=None, on_bad_lines='skip')
-        labels = torch.tensor(data_frame[0].values)
-        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
-        data_frame /= 255
-        return TensorDataset(data_frame, labels)
+#    def setup_test_data(self):
+#        InputLayer.convert(self.test_data, self.test_label, self.test_filename, 10000, 28)
+#        data_frame = pd.read_csv(self.test_filename, header=None, on_bad_lines='skip')
+#        labels = torch.tensor(data_frame[0].values)
+#        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+#        data_frame /= 255
+#        return TensorDataset(data_frame, labels)
+
+
+    def __str__(self):
+        return "The input processing layer of the network."
 
 
     """
     Class method to convert .ubyte files into a .csv file for ease of use
     """
-    @classmethod
-    def convert(cls, img_file, label_file, out_file, data_size, img_size):
+#    @classmethod
+#    def convert(cls, img_file, label_file, out_file, data_size, img_size):
+#        # Get absolute path of all the necessary files (img, label, out)
+#        project_root = os.getcwd()
+#        img_file = os.path.join(project_root, img_file)
+#        label_file = os.path.join(project_root, label_file)
+#        out_file = os.path.join(project_root, out_file)
+
+        # Open all necessary files
+#        imgs = open(img_file, "rb")
+#        out = open(out_file, "w")
+#        labels = open(label_file, "rb")
+        
+        # Skip start of file because???
+#        # NOTE: why skip bytes?
+#        imgs.read(16)
+#        labels.read(8)
+        
+        # Create a 2D list of images where each image is a 1D list where the first element is the label
+#        img_size = img_size**2
+#        images = []
+
+#        for i in range(data_size):
+#            image = [ord(labels.read(1))]
+#            for j in range(img_size):
+#                image.append(ord(imgs.read(1)))
+#            images.append(image)
+
+        # Convert each image from 1D list to a comma seperated str and write it into out file
+#        for image in images:
+#            out.write(",".join(str(pix) for pix in image)+"\n")
+        
+        # Close files
+#        imgs.close()
+#        out.close()
+#        labels.close()
+
+    @staticmethod
+    def convert(img_file, label_file, out_file, data_size, img_size):
         # Get absolute path of all the necessary files (img, label, out)
         project_root = os.getcwd()
         img_file = os.path.join(project_root, img_file)
@@ -86,8 +127,7 @@ class InputLayer (NetworkLayer):
         out = open(out_file, "w")
         labels = open(label_file, "rb")
         
-        # Skip start of file because???
-        # NOTE: why skip bytes?
+        # Skip header bytes
         imgs.read(16)
         labels.read(8)
         
@@ -96,19 +136,50 @@ class InputLayer (NetworkLayer):
         images = []
 
         for i in range(data_size):
-            image = [ord(labels.read(1))]
+            image = [int.from_bytes(labels.read(1), byteorder='big')]
             for j in range(img_size):
-                image.append(ord(imgs.read(1)))
+                image.append(int.from_bytes(imgs.read(1), byteorder='big'))
             images.append(image)
 
-        # Convert each image from 1D list to a comma seperated str and write it into out file
+        # Convert each image from 1D list to a comma-separated string and write it into out file
         for image in images:
-            out.write(",".join(str(pix) for pix in image)+"\n")
+            out.write(",".join(str(pix) for pix in image) + "\n")
         
         # Close files
         imgs.close()
         out.close()
         labels.close()
+
+    def setup_train_data(self):
+        self.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
+        
+        try:
+            data_frame = pd.read_csv(self.train_filename, header=None, on_bad_lines='skip')
+        except pd.errors.ParserError as e:
+            print(f"Error parsing CSV file: {e}")
+            return None
+
+        labels = torch.tensor(data_frame[0].values)
+        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+        data_frame /= 255
+        return TensorDataset(data_frame, labels)
+
+    def setup_test_data(self):
+        self.convert(self.test_data, self.test_label, self.test_filename, 10000, 28)
+        
+        try:
+            data_frame = pd.read_csv(self.test_filename, header=None, on_bad_lines='skip')
+        except pd.errors.ParserError as e:
+            print(f"Error parsing CSV file: {e}")
+            return None
+
+        labels = torch.tensor(data_frame[0].values)
+        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+        data_frame /= 255
+        return TensorDataset(data_frame, labels)
+
+    def __str__(self):
+        return "The input processing layer of the network."
 
 
     # List of all methods from layers.NetworkLayer that are not needed for this layer
