@@ -58,7 +58,6 @@ def get_args_parser(add_help=True):
     # Basic configurations.
     parser.add_argument('--is_training', type=bool, default=True, help='status')
     parser.add_argument('--data_name', type=str, default="MNIST")
-    parser.add_argument('--exp_num', type=int, default=1)
     
     # Data Factory
     parser.add_argument('--train_data', type=str, default="data/mnist/train-images.idx3-ubyte")
@@ -402,15 +401,17 @@ if __name__ == "__main__":
     args = get_args_parser().parse_args()
     
     # Create folder in results to store training and testing results for this experiment
-    folder_path = f"results/experiment-{args.exp_num}"
-    log_path = f"results/experiment-{args.exp_num}/testing.log"
+    output_path = os.environ["OUTPUT_PATH"]
+    exp_num = output_path.split("/")[-1]
+    folder_path = f"results/experiment-{exp_num}"
+    log_path = f"results/experiment-{exp_num}/testing.log"
     log_format = '%(asctime)s || %(message)s'
 
     if not os.path.exists(folder_path):
         os.makedirs(folder_path, exist_ok=True)
-        print(f"Experiment {args.exp_num} result folder created successfully.")
+        print(f"Experiment {exp_num} result folder created successfully.")
     else:
-        print(f"Experiment {args.exp_num} result folder already exists.")
+        print(f"Experiment {exp_num} result folder already exists.")
     
     logging.basicConfig(filename=log_path, level=logging.INFO, format=log_format)
     
