@@ -86,8 +86,7 @@ class InputLayer (NetworkLayer):
         out = open(out_file, "w")
         labels = open(label_file, "rb")
         
-        # Skip start of file because???
-        # NOTE: why skip bytes?
+        # Skip header bytes
         imgs.read(16)
         labels.read(8)
         
@@ -96,14 +95,14 @@ class InputLayer (NetworkLayer):
         images = []
 
         for i in range(data_size):
-            image = [ord(labels.read(1))]
+            image = [int.from_bytes(labels.read(1), byteorder='big')]
             for j in range(img_size):
-                image.append(ord(imgs.read(1)))
+                image.append(int.from_bytes(imgs.read(1), byteorder='big'))
             images.append(image)
 
-        # Convert each image from 1D list to a comma seperated str and write it into out file
+        # Convert each image from 1D list to a comma-seperated str and write it into out file
         for image in images:
-            out.write(",".join(str(pix) for pix in image)+"\n")
+            out.write(",".join(str(pix) for pix in image) + "\n")
         
         # Close files
         imgs.close()
