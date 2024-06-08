@@ -66,7 +66,7 @@ class HebbianNetwork(Network):
     Method that defines how an input data flows throw the network
     @param
         x (torch.Tensor) = input data into the network
-        clamped_output (TODO: ???) = ???
+        clamped_output (torch.Tensor) = one-hot encode of true labels
     @return
         data_input (torch.Tensor) = returns the data after passing it throw the network
     """

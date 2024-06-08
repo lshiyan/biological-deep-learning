@@ -155,14 +155,14 @@ class HebbianLayer(NetworkLayer):
     @retrun
         x (torch.Tensor) = data after going through hebbian layer
     """
-    def forward(self, x, clamped_output=None):
+    def forward(self, x):
 
         # Copy input -> calculate output -> update weights -> return output
         input_copy = x.clone().to(self.device_id).float()
         x = x.to(self.device_id)
         x = self.fc(x)
         x = self.inhibition(x)
-        self.update_weights(input_copy, x, clamped_output)
+        self.update_weights(input_copy, x)
         #self.update_bias(x)
         self.weight_decay() 
         return x

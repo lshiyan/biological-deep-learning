@@ -213,6 +213,8 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
             
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum()
+            print(f"Predictions: {predictions}.")
+            print(f"True Labels: {targets}.")
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
             metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
             metrics["test"].reset_local()  # Reset local cache
@@ -236,7 +238,7 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 print(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: AVG TEST LOSS: \
                              {avg_test_loss}, TEST ACC: {pct_test_correct}")
                 
-                logging.info(f'Epoch Number: {epoch} || Test Accuracy: {pct_test_correct}')
+                test_log.info(f'Epoch Number: {epoch} || Test Accuracy: {pct_test_correct}')
 
             # Save checkpoint
             if args.is_master and (is_last_batch or (batch + 1) % 5 == 0):
@@ -393,7 +395,8 @@ if __name__ == "__main__":
     output_path = os.environ["OUTPUT_PATH"]
     exp_num = output_path.split("/")[-1]
     folder_path = f"results/experiment-{exp_num}"
-    log_path = f"results/experiment-{exp_num}/testing.log"
+    log_result_path = f"results/experiment-{exp_num}/testing.log"
+    log_param_path = f"results/experiment-{exp_num}/parameters.log"
     log_format = '%(asctime)s || %(message)s'
 
     if not os.path.exists(folder_path):
@@ -402,7 +405,30 @@ if __name__ == "__main__":
     else:
         print(f"Experiment {exp_num} result folder already exists.")
     
-    logging.basicConfig(filename=log_path, level=logging.INFO, format=log_format)
-    
+    # Create logging file for test accuracy
+    test_log = logging.getLogger("Test Log")
+    test_log_handler = logging.FileHandler(log_result_path)
+    test_log_handler.setLevel(logging.INFO)
+    test_log_handler.setFormatter(log_format)
+
+    # Create logging file for parameters
+    param_log = logging.getLogger("Parameter Log")
+    param_log_handler = logging.FileHandler(log_param_path)
+    param_log_handler.setLevel(logging.INFO)
+    param_log_handler.setFormatter(log_format)
+
+    # Logging training parameters
+    param_log.info(f"Input Dimension: {args.input_dim}")
+    param_log.info(f"Hebbian Layer Dimension: {args.heb_dim}")
+    param_log.info(f"Outout Dimension: {args.output_dim}")
+    param_log.info(f"Hebbian Layer Learning Rate: {args.heb_lr}")
+    param_log.info(f"Hebbian Layer Lambda: {args.heb_lamb}")
+    param_log.info(f"Hebbian Layer Gamma: {args.heb_gam}")
+    param_log.info(f"Classification Layer Learning Rate: {args.cla_lr}")
+    param_log.info(f"Classification Layer Lambda: {args.cla_lamb}")
+    param_log.info(f"Classification Layer Gamma: {args.cla_gam}")
+    param_log.info(f"Epsilon: {args.eps}")
+    param_log.info(f"Number of Epochs: {args.epochs}")
+
     # running main function
     main(args, timer)
