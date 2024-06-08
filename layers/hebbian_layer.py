@@ -49,7 +49,7 @@ class HebbianLayer(NetworkLayer):
     """
     def inhibition(self, x):
         relu = nn.ReLU()
-        x = relu(x) # NOTE: Why are we using ReLU -> why not keep negative activations
+        x = relu(x)
         max_ele = torch.max(x).item()
         x = torch.pow(x, self.lamb)
         x /= abs(max_ele) ** self.lamb
@@ -67,7 +67,7 @@ class HebbianLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-    def update_weights(self, input, output, clamped_output=None):
+    def update_weights(self, input, output):
         x = input.clone().detach().float().squeeze().to(self.device_id)
         x.requires_grad_(False)
         y = output.clone().detach().float().squeeze().to(self.device_id)

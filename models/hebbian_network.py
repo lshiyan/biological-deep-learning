@@ -84,7 +84,7 @@ class HebbianNetwork(Network):
 
         # Inut data -> Hebbian Layer -> Classification Layer -> Output data
         data_input = x.to(self.device_id)
-        data_input = hebbian_layer(data_input, None)
+        data_input = hebbian_layer(data_input)
         data_input = classification_layer(data_input, clamped_output)
 
         return data_input
