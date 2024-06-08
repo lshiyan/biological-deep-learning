@@ -1,0 +1,4 @@
+2024-06-08 22:32:01,689 || Epoch Number: 0 || Test Accuracy: 0.09560878243512974
+2024-06-08 22:32:28,616 || Epoch Number: 5 || Test Accuracy: 0.09341317365269461
+2024-06-08 22:32:55,494 || Epoch Number: 10 || Test Accuracy: 0.09950099800399202
+2024-06-08 22:34:15,714 || Epoch Number: 15 || Test Accuracy: 0.10339321357285429
