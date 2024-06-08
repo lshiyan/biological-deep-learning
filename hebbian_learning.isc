@@ -26,16 +26,16 @@ command = "source ~/hebbian_venv/bin/activate &&
             --heb_lr=0.005 
             --heb_lamb=15 
             --heb_gam=0 
-            --cla_lr=0.001 
+            --cla_lr=0.1 
             --cla_lamb=1 
             --cla_gam=0 
             --eps=0.01 
-            --epochs 100 
+            --epochs 30 
             --test-epochs 5 
-            --lr 0.001 
+            --lr 0.1 
             --lr-step-size 1000 
-            --gamma 0 
-            --batch-size 1 
+            --gamma 0.1 
+            --batch-size 32 
             --save-dir $OUTPUT_PATH 
             --tboard-path $OUTPUT_PATH/tb"
 
