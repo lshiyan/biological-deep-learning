@@ -3,7 +3,6 @@ from matplotlib import pyplot as plt
 import torch
 import torch.nn as nn
 from layers.layer import NetworkLayer
-from layers.scheduler import Scheduler
 
 
 """
@@ -48,12 +47,10 @@ class ClassifierLayer(NetworkLayer):
     @param
         input (torch.Tensor): The input tensor to the layer before any transformation.
         output (torch.Tensor): The output tensor of the layer before applying softmax.
-        clamped_output (torch.Tensor): TODO: ???
+        clamped_output (torch.Tensor): one-hot encode of true labels
     @return
         ___ (void) = no returns
     """
-    # NOTE: clmaped_output???
-    # NOTE: Need to truly understand what is happenning here
     def update_weights(self, input, output, clamped_output=None):
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
         u = output.clone().detach().squeeze() # Output tensor after layer but before activation
@@ -108,11 +105,10 @@ class ClassifierLayer(NetworkLayer):
     Method that defines how an input data flows through the layer
     @param
         x (torch.Tensor) = data after going through hebbian layer
-        clamped_output (TODO: ???) = ???
+        clamped_output (torch.Tensor) = one-hot encode of true labels
     @retrun
         x (torch.Tensor) = data after going through classification layer
     """
-    # NOTE: what is clamped_output
     def forward(self, x, clamped_output=None):
         softmax = nn.Softmax()
         input_copy = x.clone()
@@ -175,14 +171,3 @@ class ClassifierLayer(NetworkLayer):
         file_path = result_path + '/classifierlayerweights.png'
         plt.tight_layout()
         plt.savefig(file_path)
-
-
-    """
-    Sets the scheduler for this layer
-    @param
-    @return
-        ___ (void) = no returns
-    """
-    # NOTE: Might want to define a better scheduler
-    def set_scheduler(self, scheduler=None):
-        self.scheduler = Scheduler(self.alpha, 1000, self.gamma) if scheduler == None else scheduler

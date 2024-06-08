@@ -4,7 +4,6 @@ import torch
 import torch.nn as nn
 from numpy import outer
 from layers.layer import NetworkLayer
-from layers.scheduler import Scheduler
 
 
 """
@@ -64,11 +63,10 @@ class HebbianLayer(NetworkLayer):
     @param
         input (torch.Tensor) = the inputs into the layer
         output (torch.Tensor) = the output of the layer
-        clamped_output (TODO: ???) = ???
+        clamped_output (torch.Tensor) = one-hot encode of true labels
     @return
         ___ (void) = no returns
     """
-    # TODO: write out explicitly what each step of this method does
     def update_weights(self, input, output, clamped_output=None):
         x = input.clone().detach().float().squeeze().to(self.device_id)
         x.requires_grad_(False)
@@ -124,7 +122,6 @@ class HebbianLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-    # TODO: write out explicitly what each step of this method does
     def weight_decay(self):
         tanh = nn.Tanh()
 
@@ -154,11 +151,10 @@ class HebbianLayer(NetworkLayer):
     Feed forward
     @param
         x (torch.Tensor) = input processed data
-        clamped_output (TODO: ???) = ???
+        clamped_output (torch.Tensor) = one-hot encode of true labels
     @retrun
         x (torch.Tensor) = data after going through hebbian layer
     """
-    # NOTE: what does clamped_output mean?
     def forward(self, x, clamped_output=None):
 
         # Copy input -> calculate output -> update weights -> return output
@@ -223,13 +219,3 @@ class HebbianLayer(NetworkLayer):
     # TODO: define how active_weights should be counted in the hebbian layer
     def active_weights(self, beta):
         pass
-
-
-    """
-    Sets the scheduler for this layer
-    @param
-    @return
-        ___ (void) = no returns
-    """
-    def set_scheduler(self, scheduler=None):
-        self.scheduler = Scheduler(self.alpha, 1000, self.gamma) if scheduler == None else scheduler

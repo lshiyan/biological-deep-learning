@@ -67,17 +67,6 @@ class NetworkLayer (nn.Module, ABC):
             id_tensor[i] = padded_identity
         return id_tensor
 
-    """
-    Method to set scheduler for current layer
-    @param
-        scheduler (layers.Scheduler) = a scheduler to be set
-    @return
-        ___ (void) = no returns
-    """
-    @abstractmethod
-    def set_scheduler(self, scheduler=None):
-        pass
-
 
     """
     Method to vizualize the weight/features learned by neurons in this layer using a heatmap
@@ -122,11 +111,11 @@ class NetworkLayer (nn.Module, ABC):
     Method that defines how an input data flows throw the network
     @param
         x (torch.Tensor) = input data into the layer
-        clamped_output (TODO: ???) = ???
+        clamped_output (torch.Tensor) = one-hot encode of true labels
     @return
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
-    # NOTE: what is clamped_output?
+
     @abstractmethod
     def forward(self, x, clamped_output):
         pass

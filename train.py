@@ -35,7 +35,6 @@ timer.report("Completed imports")
 
 ##############################################################################
 
-from layers.scheduler import Scheduler
 from models.hebbian_network import HebbianNetwork
 
 ##############################################################################
@@ -121,14 +120,12 @@ def get_args_parser(add_help=True):
 #####################################
 # We define ``train_loop`` that loops over our optimization code, and ``test_loop`` that evaluates the model's
 # performance against our test data. Inside the training loop, optimization happens in three steps:
-def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
+def train_loop(model, train_data_loader, test_data_loader, metrics, writer, args):
     epoch = train_data_loader.sampler.epoch
     train_batches_per_epoch = len(train_data_loader)
    
     # Set the model to training mode - important for layers with different training / inference behaviour
     model.train()
-
-    if args.gamma != 0 : model.set_scheduler()
 
     for inputs, targets in train_data_loader:
         # Reset model parameter gradients
@@ -166,14 +163,12 @@ def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics
         metrics["train"].reset_local()
 
         if is_last_batch:
-            lr_scheduler.step()  # Step learning rate scheduler at the end of the epoch
             metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
 
         # Saving and reporting
         if args.is_master:
             total_progress = train_data_loader.sampler.progress + epoch * train_batches_per_epoch
             # writer.add_scalar("Train/avg_loss", batch_avg_loss, total_progress)
-            writer.add_scalar("Train/learn_rate", lr_scheduler.get_last_lr(), total_progress)
             # Save checkpoint
             atomic_torch_save(
                 {
@@ -181,7 +176,6 @@ def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics
                     # "optimizer": optimizer.state_dict(),
                     "train_sampler": train_data_loader.sampler.state_dict(),
                     "test_sampler": test_data_loader.sampler.state_dict(),
-                    "lr_scheduler": lr_scheduler.state_dict(),
                     "metrics": metrics,
                 },
                 args.checkpoint_path,
@@ -189,7 +183,7 @@ def train_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
     
     
-def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics, writer, args):
+def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args):
     epoch = test_data_loader.sampler.epoch
     test_batches_per_epoch = len(test_data_loader)
     
@@ -253,7 +247,6 @@ def test_loop(model, lr_scheduler, train_data_loader, test_data_loader, metrics,
                         # "optimizer": optimizer.state_dict(),
                         "train_sampler": train_data_loader.sampler.state_dict(),
                         "test_sampler": test_data_loader.sampler.state_dict(),
-                        "lr_scheduler": lr_scheduler.state_dict(),
                         "metrics": metrics,
                     },
                     args.checkpoint_path,
@@ -325,7 +318,6 @@ def main(args, timer):
     # loss accross the whole cluster by summing the loss computed by each node. In general, it is important to consider
     # the validity of the metric summarisation strategy when using distributed training.
     
-    lr_scheduler = Scheduler(args.lr, args.lr_step_size, args.gamma)
     timer.report(
         f"Ready for training with hyper-parameters: \ninitial learning_rate: {args.lr}, \nbatch_size: \
                  {args.batch_size}, \nepochs: {args.epochs}"
@@ -350,7 +342,6 @@ def main(args, timer):
         # optimizer.load_state_dict(checkpoint["optimizer"])
         train_data_loader.sampler.load_state_dict(checkpoint["train_sampler"])
         test_data_loader.sampler.load_state_dict(checkpoint["test_sampler"])
-        lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
         metrics = checkpoint["metrics"]
         timer.report("Retrieved savedcheckpoint")
 
@@ -363,8 +354,7 @@ def main(args, timer):
         with train_data_loader.sampler.in_epoch(epoch):
             train_loop(
                 model, 
-                # optimizer, 
-                lr_scheduler, 
+                # optimizer,  
                 # loss_fn, 
                 train_data_loader, 
                 test_data_loader, 
@@ -381,7 +371,6 @@ def main(args, timer):
                     test_loop(
                         model,
                         # optimizer,
-                        lr_scheduler,
                         # loss_fn,
                         train_data_loader,
                         test_data_loader,
