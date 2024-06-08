@@ -220,6 +220,10 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
             metrics["test"].reset_local()  # Reset local cache
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
             
+            # Degubbing purposes
+            debug_log.info(f"Predicitons: {predictions}.")
+            debug_log.info(f"True Labels: {targets}.")
+
             # Advance sampler
             test_data_loader.sampler.advance(len(inputs))
 
@@ -395,9 +399,10 @@ if __name__ == "__main__":
     output_path = os.environ["OUTPUT_PATH"]
     exp_num = output_path.split("/")[-1]
     folder_path = f"results/experiment-{exp_num}"
-    log_result_path = f"results/experiment-{exp_num}/testing.log"
-    log_param_path = f"results/experiment-{exp_num}/parameters.log"
-    log_format = '%(asctime)s || %(message)s'
+    log_result_path = folder_path + "/testing.log"
+    log_param_path = folder_path + "/parameters.log"
+    log_check_path = folder_path + "/debug.log"
+    log_format = logging.Formatter('%(asctime)s || %(message)s')
 
     if not os.path.exists(folder_path):
         os.makedirs(folder_path, exist_ok=True)
@@ -410,12 +415,14 @@ if __name__ == "__main__":
     test_log_handler = logging.FileHandler(log_result_path)
     test_log_handler.setLevel(logging.INFO)
     test_log_handler.setFormatter(log_format)
+    test_log.addHandler(test_log_handler)
 
     # Create logging file for parameters
     param_log = logging.getLogger("Parameter Log")
     param_log_handler = logging.FileHandler(log_param_path)
     param_log_handler.setLevel(logging.INFO)
     param_log_handler.setFormatter(log_format)
+    param_log.addHandler(param_log_handler)
 
     # Logging training parameters
     param_log.info(f"Input Dimension: {args.input_dim}")
@@ -429,6 +436,16 @@ if __name__ == "__main__":
     param_log.info(f"Classification Layer Gamma: {args.cla_gam}")
     param_log.info(f"Epsilon: {args.eps}")
     param_log.info(f"Number of Epochs: {args.epochs}")
+
+    # Any checking needed for debugging purposes only
+    debug_log = logging.getLogger("Debug Log")
+    debug_log_handler = logging.FileHandler(log_check_path)
+    debug_log_handler.setLevel(logging.INFO)
+    debug_log_handler.setFormatter(log_format)
+    debug_log.addHandler(debug_log_handler)
+
+
+
 
     # running main function
     main(args, timer)
