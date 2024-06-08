@@ -11,3 +11,10 @@
 2024-06-08 22:01:34,358 || Epoch Number: 50 || Test Accuracy: 0.1663672654690619
 2024-06-08 22:02:54,909 || Epoch Number: 55 || Test Accuracy: 0.16447105788423153
 2024-06-08 22:03:22,339 || Epoch Number: 60 || Test Accuracy: 0.12075848303393213
+2024-06-08 22:25:19,321 || Epoch Number: 65 || Test Accuracy: 0.11357285429141717
+2024-06-08 22:25:46,866 || Epoch Number: 70 || Test Accuracy: 0.11397205588822355
+2024-06-08 22:26:14,163 || Epoch Number: 75 || Test Accuracy: 0.11387225548902195
+2024-06-08 22:26:41,901 || Epoch Number: 80 || Test Accuracy: 0.11187624750499002
+2024-06-08 22:27:09,326 || Epoch Number: 85 || Test Accuracy: 0.10439121756487026
+2024-06-08 22:27:37,123 || Epoch Number: 90 || Test Accuracy: 0.09900199600798404
+2024-06-08 22:28:04,721 || Epoch Number: 95 || Test Accuracy: 0.09520958083832336
