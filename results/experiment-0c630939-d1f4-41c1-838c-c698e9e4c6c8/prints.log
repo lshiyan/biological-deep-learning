@@ -1,0 +1,79 @@
+2024-06-09 00:23:36,044 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,044 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,044 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:36,046 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,046 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,046 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,046 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,046 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:36,046 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:36,048 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,048 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,048 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,048 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,048 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,048 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,048 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:36,048 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:36,048 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+36,070 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,070 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,070 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,070 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+20242024-06-09 00:23:36,160 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,160 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,160 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,160 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:36,160 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,160 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,160 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,160 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:36,160 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:36,160 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:36,160 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:36,160 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+24-06-09 00:23:36,160 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:36,160 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:23:41,316 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:23:41,316 || Parameter Log Name: Parameters Log
+2024-06-09 00:23:41,316 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:24:06,432 || Epoch Number: 0 || Test Accuracy: 0.09810379241516966
+2024-06-09 00:24:33,967 || Epoch Number: 5 || Test Accuracy: 0.09291417165668663
+2024-06-09 00:25:01,088 || Epoch Number: 10 || Test Accuracy: 0.09900199600798404
+2024-06-09 00:25:39,914 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:39,914 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:39,914 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:25:39,915 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:39,915 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:39,915 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:39,915 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:39,915 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:39,915 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:39,915 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:39,915 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:39,915 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:25:39,915 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+202024-06-09 00:25:40,001 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:40,001 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:40,001 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:25:40,001 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:40,001 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:40,001 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:40,001 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:40,001 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:25:40,001 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:40,001 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:25:40,001 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:40,001 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:25:39,991 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:39,991 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:39,991 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+24-06-09 00:25:40,046 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:25:40,046 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:25:45,067 || Parameter Log Status: <bound method Logger.info of <Logger Parameters Log (DEBUG)>>
+2024-06-09 00:25:45,067 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:45,067 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
+2024-06-09 00:26:21,298 || Epoch Number: 15 || Test Accuracy: 0.15738522954091816
+ger Parameters Log (DEBUG)>>
+2024-06-09 00:25:45,130 || Parameter Log Name: Parameters Log
+2024-06-09 00:25:45,130 || Parameter Log Handler: [<FileHandler /root/biological-deep-learning/results/experiment-0c630939-d1f4-41c1-838c-c698e9e4c6c8/parameters.log (INFO)>]
