@@ -1,0 +1,242 @@
+2024-06-08 23:58:12,025 || Input Dimension: 784
+2024-06-08 23:58:12,026 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,026 || Input Dimension: 784
+2024-06-08 23:58:12,026 || Outout Dimension: 10
+2024-06-08 23:58:12,026 || Input Dimension: 784
+2024-06-08 23:58:12,026 || Input Dimension: 784
+2024-06-08 23:58:12,026 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,026 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,026 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,026 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,026 || Outout Dimension: 10
+2024-06-08 23:58:12,026 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,026 || Outout Dimension: 10
+2024-06-08 23:58:12,026 || Outout Dimension: 10
+2024-06-08 23:58:12,026 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:12,026 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,026 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,026 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,026 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:12,026 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,026 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,026 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,027 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:12,027 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:12,027 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:12,2024-06-08 23:58:12,044 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,044 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,044 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,044 || Outout Dimension: 10
+2024-06-08 23:58:12,045 || Outout Dimension: 10
+2024-06-08 23:58:12,045 || Hebbian Layer Gamma: 0.0
+2024-062024-06-08 23:58:12,062 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:12,063 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:12,063 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,063 || Epsilon: 0.01
+2024-06-08 23:58:12,063 || Number of Epochs: 20
+2024-06-08 23:58:12,063 || Input Dimension: 784
+2024-06-08 23:58:12,063 || Input Dimension: 784
+2024-06-08 23:58:12,063 || Input Dimension: 784
+2024-06-08 23:58:12,063 || Input Dimension: 784
+2024-06-08 23:58:12,063 || Hebbian Layer Dimensi2024-06-08 23:58:12,087 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,087 || Outout Dimension: 10
+2024-06-08 23:58:12,087 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,087 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:12,088 || Outout Dimension: 10
+2024-06-08 23:58:12,088 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,088 || Outout Dimension: 10
+2024-06-08 23:58:12,088 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:12,088 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,088 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,088 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,088 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,088 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Epsilon: 0.01
+2024-06-08 23:58:12,088 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,088 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:12,088 || Number of Epochs: 20
+2024-06-08 23:58:12,088 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:12,088 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:12,088 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:12,088 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:12,088 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Epsilon: 0.01
+2024-06-08 23:58:12,088 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:12,088 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Number of Epochs: 20
+2024-06-08 23:58:12,088 || Input Dimension: 784
+2024-06-08 23:58:12,088 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Epsilon: 0.01
+2024-06-08 23:58:12,088 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,088 || Epsilon: 0.01
+2024-06-08 23:58:12,088 || Number of Epochs: 20
+2024-06-08 23:58:12,088 || Outout Dimension: 10
+2024-06-08 23:58:12,088 || Input Dimension: 784
+2024-06-08 23:58:12,088 || Number of Epochs: 20
+2024-06-08 23:58:12,088 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,088 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,088 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,088 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Outout Dimension: 10
+2024-06-08 23:58:12,088 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:12,088 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,088 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:12,088 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,088 || Epsilon: 0.01
+2024-06-08 23:58:12,088 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Number of Epochs: 20
+2024-06-08 23:58:12,088 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:12,088 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:12,088 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,088 || Epsilon: 0.01
+2024-06-08 23:58:12,088 || Number of Epochs: 20
+:12,096 || Epsilon: 0.01
+2024-06-08 23:58:12,096 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:12,096 || Number of Epochs: 20
+2024-06-08 23:58:12,096 || Outout Dimension: 10
+2024-06-08 23:58:12,096 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:12,096 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:12,096 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:12,096 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:12,096 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:12,096 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,096 || Epsilon: 0.01
+2024-06-08 23:58:12,097 || Number of Epochs: 20
+-06-08 23:58:12,099 || Number of Epochs: 20
+2024-06-08 23:58:12,099 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,099 || Number of Epochs: 20
+2024-06-08 23:58:12,099 || Epsilon: 0.01
+2024-06-08 23:58:12,099 || Number of Epochs: 20
+2024-06-08 23:58:12,099 || Epsilon: 0.01
+2024-06-08 23:58:12,099 || Number of Epochs: 20
+2024-06-08 23:58:12,099 || Number of Epochs: 20
+ssification Layer Gamma: 0.0
+2024-06-08 23:58:12,147 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:12,147 || Epsilon: 0.01
+2024-06-08 23:58:12,147 || Epsilon: 0.01
+2024-06-08 23:58:12,147 || Number of Epochs: 20
+2024-06-08 23:58:12,147 || Number of Epochs: 20
+2024-06-08 23:58:16,949 || Input Dimension: 784
+2024-06-08 23:58:16,949 || Hebbian Layer Dimension: 64
+2024-06-08 23:58:16,949 || Outout Dimension: 10
+2024-06-08 23:58:16,949 || Hebbian Layer Learning Rate: 0.005
+2024-06-08 23:58:16,949 || Hebbian Layer Lambda: 5.0
+2024-06-08 23:58:16,949 || Hebbian Layer Gamma: 0.0
+2024-06-08 23:58:16,949 || Classification Layer Learning Rate: 0.001
+2024-06-08 23:58:16,949 || Classification Layer Lambda: 1.0
+2024-06-08 23:58:16,949 || Classification Layer Gamma: 0.0
+2024-06-08 23:58:16,949 || Epsilon: 0.01
+2024-06-08 23:58:16,949 || Number of Epochs: 20
+2024-06-09 00:00:16,697 || Input Dimension: 784
+2024-06-09 00:00:16,697 || Hebbian Layer Dimension: 64
+2024-06-09 00:00:16,697 || Outout Dimension: 10
+2024-06-09 00:00:16,698 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:16,698 || Hebbian Layer Lambda: 5.0
+2024-06-09 00:00:16,698 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:16,698 || Classification Layer Learning Rate: 0.001
+2024-06-09 00:00:16,698 || Classification Layer Lambda: 1.0
+2024-06-09 00:00:16,698 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:16,698 || Epsilon: 0.01
+2024-06-09 00:00:16,698 || Number of Epochs: 20
+2024-06-09 00:00:16,712 || Input Dimension: 784
+2024-06-09 00:00:16,712 || Hebbian Layer Dimension: 64
+2024-06-09 00:00:16,712 || Input Dimension: 784
+2024-06-09 00:00:16,712 || Outout Dimension: 10
+2024-06-09 00:00:16,712 || Hebbian Layer Dimension: 64
+2024-06-09 00:00:16,712 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:16,712 || Outout Dimension: 10
+2024-06-09 00:00:16,712 || Hebbian Layer Lambda: 5.0
+2024-06-09 00:00:16,712 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:16,712 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:16,712 || Hebbian Layer Lambda: 5.0
+2024-06-09 00:00:16,715 || Classification Layer Learning Rate: 0.001
+2024-06-09 00:00:16,715 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:16,715 || Classification Layer Learning Rate: 0.001
+2024-06-09 00:00:16,715 || Classification Layer Lambda: 1.0
+2024-06-09 00:00:16,715 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:16,715 || Classification Layer Lambda: 1.0
+2024-06-09 00:00:16,715 || Epsilon: 0.01
+2024-06-09 00:00:16,715 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:16,715 || Number of Epochs: 20
+2024-06-09 00:00:16,715 || Epsilon: 0.01
+2024-06-09 00:00:16,715 || Number of Epochs: 20
+2024-06-09 00:00:16,715 || Input Dimension: 784
+2024-06-09 00:00:16,715 || Hebbian Layer Dimension: 64
+2024-06-09 00:00:16,715 || Outout Dimension: 10
+2024-06-09 00:00:16,715 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:16,715 || Hebbian Layer Lambda: 5.0
+2024-06-09 00:00:16,715 || Input Dimension: 784
+2024-06-09 00:00:16,715 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:16,716 || Hebbian Layer Dimension: 64
+2024-06-09 00:00:16,716 || Classification L2024-06-09 00:00:16,749 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:16,749 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:16,750 || Classification Layer Learning Rate: 0.001
+2024-06-09 00:00:16,750 || Classification Layer Learning Rate: 0.001
+2024-06-09 00:00:16,750 || Classification Layer Lambda: 1.0
+2024-06-09 00:00:16,750 || Classification Layer Lambda: 1.0
+2024-06-09 00:00:16,750 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:16,750 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:16,750 || Epsilon: 0.01
+2024-06-09 00:00:16,750 || Epsilon: 0.01
+2024-06-09 00:00:16,750 || Number of Epochs: 20
+2024-06-09 00:00:16,750 || Number of Epochs: 20
+2024-06-09 00:00:16,750 || Input Dimension: 784
+2024-06-09 00:00:16,750 || Hebbian Layer Dimension: 64
+2024-06-09 00:00:16,750 || Outout Dimension: 10
+2024-06-09 00:00:16,750 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:16,750 || Hebbian Layer Lambda: 5.0
+2024-06-09 00:00:16,750 || Input Dimension: 784
+2024-06-09 00:00:16,750 || Input Dimension: 784
+2024-06-09 00:00:16,750 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:16,750 || Classification Layer Learning Rate: 0.001
+2024-06-09 00:00:16,750 || Hebbian Layer Dimension: 64
+2024-06-09 00:00:16,750 || Hebbian Layer Dimension: 64
+2024-06-09 00:00:16,750 || Classification Layer Lambda: 1.0
+2024-06-09 00:00:16,750 || Outout Dimension: 10
+2024-06-09 00:00:16,750 || Outout Dimension: 10
+2024-06-09 00:00:16,750 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:16,750 || Epsilon: 0.01
+2024-06-09 00:00:16,750 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:16,750 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:16,750 || Number of Epochs: 20
+2024-06-09 00:00:16,750 || Hebbian Layer Lambda: 5.0
+2024-06-09 00:00:16,750 || Hebbian Layer Lambda: 5.0
+2024-06-09 00:00:16,750 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:16,750 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:16,750 || Classification Layer Learning Rate: 0.001
+2024-06-09 00:00:16,750 || Classification Layer Learning Rate: 0.001
+2024-06-09 00:00:16,750 || Classification Layer Lambda: 1.0
+2024-06-09 00:00:16,750 || Classification Layer Lambda: 1.0
+2024-06-09 00:00:16,750 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:16,750 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:16,750 || Epsilon: 0.01
+2024-06-09 00:00:16,750 || Epsilon: 0.01
+2024-06-09 00:00:16,750 || Number of Epochs: 20
+2024-06-09 00:00:16,750 || Number of Epochs: 20
+0
+2024-06-09 00:00:16,748 || Epsilon: 0.01
+2024-06-09 00:00:16,748 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:16,748 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:16,748 || Number of Epochs: 20
+2024-06-09 00:00:16,748 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:16,748 || Epsilon: 0.01
+2024-06-09 00:00:16,748 || Hebbian Layer Lambda: 5.0
+2024-06-09 00:00:16,748 || Number of Epochs: 20
+2024-06-09 00:00:16,748 || Hebbian Layer Lambda: 5.0
+2024-06-09 001
+2024-06-09 00:00:16,782 || Number of Epochs: 20
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   2024-06-09 00:00:21,719 || Input Dimension: 784
+2024-06-09 00:00:21,719 || Hebbian Layer Dimension: 64
+2024-06-09 00:00:21,719 || Outout Dimension: 10
+2024-06-09 00:00:21,719 || Hebbian Layer Learning Rate: 0.005
+2024-06-09 00:00:21,719 || Hebbian Layer Lambda: 5.0
+2024-06-09 00:00:21,719 || Hebbian Layer Gamma: 0.0
+2024-06-09 00:00:21,719 || Classification Layer Learning Rate: 0.001
+2024-06-09 00:00:21,719 || Classification Layer Lambda: 1.0
+2024-06-09 00:00:21,719 || Classification Layer Gamma: 0.0
+2024-06-09 00:00:21,719 || Epsilon: 0.01
+2024-06-09 00:00:21,719 || Number of Epochs: 20
