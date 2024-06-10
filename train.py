@@ -462,7 +462,6 @@ if __name__ == "__main__":
         param_log.info(f"Hebbian Layer Gamma: {args.heb_gam}")
         param_log.info(f"Classification Layer Learning Rate: {args.cla_lr}")
         param_log.info(f"Classification Layer Lambda: {args.cla_lamb}")
-        param_log.info(f"Classification Layer Gamma: {args.cla_gam}")
         param_log.info(f"Epsilon: {args.eps}")
         param_log.info(f"Number of Epochs: {args.epochs}")
 

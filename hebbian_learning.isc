@@ -27,7 +27,7 @@ command = "source ~/hebbian_venv/bin/activate &&
             --heb_lamb=15 
             --heb_gam=0.99 
             --cla_lr=0.005 
-            --cla_lamb=15 
+            --cla_lamb=1 
             --eps=0.01 
             --epochs 20 
             --test-epochs 5 
