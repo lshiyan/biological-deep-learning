@@ -74,7 +74,7 @@ class HebbianNetwork(Network):
     # NOTE: what is the use of clamped_output
     def forward(self, x, clamped_output=None):
         # Get all the layers in the module
-        input_layer = self.get_module("Inout Layer")
+        input_layer = self.get_module("Input Layer")
         hebbian_layer = self.get_module("Hebbian Layer")
         classification_layer = self.get_module("Classification Layer")
 
