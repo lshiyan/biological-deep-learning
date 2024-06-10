@@ -16,7 +16,6 @@ class ClassifierLayer(NetworkLayer):
         output_dimension (int) = number of outputs from layer
         lamb (float) = lambda hyperparameter for latteral inhibition
         class_lr (float) = how fast model learns at each iteration
-        gamma (float) = decay factor -> factor to decay learning rate
         eps (float) = to avoid division by 0
     @attr.
         PARENT ATTR.
@@ -26,17 +25,13 @@ class ClassifierLayer(NetworkLayer):
             lamb (float) = lambda hyperparameter for latteral inhibition
             alpha (float) = how fast model learns at each iteration
             fc (fct) = function to apply linear transformation to incoming data
-            scheduler (layers.Scheduler) = scheduler for current layer
             eps (float) = to avoid division by 0
-            exponential_average (torch.Tensor) = 0 tensor to keep track of exponential averages
-            gamma (float) = decay factor -> factor to decay learning rate
-            id_tensor (torch.Tensor) = id tensor of layer
         OWN ATTR.
     @return
         ___ (layers.ClassifierLayer) = returns instance of ClassifierLayer
     """
-    def __init__(self, input_dimension, output_dimension, device_id, lamb=2, class_lr=0.001, gamma=0.99, eps=10e-5):
-        super ().__init__(input_dimension, output_dimension, device_id, lamb, class_lr, gamma, eps)    
+    def __init__(self, input_dimension, output_dimension, device_id, lamb=2, class_lr=0.001, eps=10e-5):
+        super ().__init__(input_dimension, output_dimension, device_id, lamb, class_lr, eps)    
     
 
     """

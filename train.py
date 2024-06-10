@@ -73,15 +73,14 @@ def get_args_parser():
     # Hebbian layer hyperparameters
     parser.add_argument('--heb_lr', type=float, default=0.005)
     parser.add_argument('--heb_lamb', type=float, default=15)
-    parser.add_argument('--heb_gam', type=float, default=0)
+    parser.add_argument('--heb_gam', type=float, default=0.99)
 
     # Classification layer hyperparameters
-    parser.add_argument('--cla_lr', type=float, default=0.001)
+    parser.add_argument('--cla_lr', type=float, default=0.005)
     parser.add_argument('--cla_lamb', type=float, default=1)
-    parser.add_argument('--cla_gam', type=float, default=0)
 
     # Shared hyperparameters
-    parser.add_argument('--eps', type=float, default=0.01)
+    parser.add_argument('--eps', type=float, default=10e-5)
 
 # ---------------------------------------
 

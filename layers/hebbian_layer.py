@@ -27,17 +27,19 @@ class HebbianLayer(NetworkLayer):
             lamb (float) = lambda hyperparameter for latteral inhibition
             alpha (float) = how fast model learns at each iteration
             fc (fct) = function to apply linear transformation to incoming data
-            scheduler (layers.Scheduler) = scheduler for current layer
             eps (float) = to avoid division by 0
+        OWN ATTR.
             exponential_average (torch.Tensor) = 0 tensor to keep track of exponential averages
             gamma (float) = decay factor -> factor to decay learning rate
             id_tensor (torch.Tensor) = id tensor of layer
-        OWN ATTR.
     @return
         ___ (layers.Hebbianlayer) = returns instance of HebbianLayer
     """
     def __init__(self, input_dimension, output_dimension, device_id, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
-        super ().__init__(input_dimension, output_dimension, device_id, lamb, heb_lr, gamma, eps)
+        super ().__init__(input_dimension, output_dimension, device_id, lamb, heb_lr, eps)
+        self.gamma = gamma
+        self.exponential_average = torch.zeros(self.output_dimension)
+        self.id_tensor = self.create_id_tensors()
 
 
     """

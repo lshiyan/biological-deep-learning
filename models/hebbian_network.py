@@ -29,7 +29,6 @@ class HebbianNetwork(Network): # Inherits from the Network base class
             cla_param (dict {str:float}) = dictionary with all the hyperparameters for the classification layer
                 - lr (float) = learning rate of classification layer
                 - lamb (float) = hyperparameter for lateral neuron inhibition
-                - gam (float) = factor to decay learning rate of classification layer
             eps (float) = small value to avoid 0 division
     @pram
         args (argparse.ArgumentParser) = arguments passed from command line
@@ -54,7 +53,6 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         self.cla_param = {}                         # Dictionary for hyperparameters of classification layer 
         self.cla_param["lr"] = args.cla_lr          # Learning rate for classification layer 
         self.cla_param["lamb"] = args.cla_lamb      # Used to control strength of lateral neuron inhibition
-        self.cla_param["gam"] = args.cla_gam
 
         # Shared hyperparameters
         self.eps = args.eps
@@ -62,7 +60,7 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         # Setting up layers of the network
         input_layer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
         hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.device_id, self.heb_param["lamb"], self.heb_param["lr"], self.heb_param["gam"], self.eps)
-        classification_layer = ClassifierLayer(self.heb_dim, self.output_dim, self.device_id, self.cla_param["lamb"], self.cla_param["lr"], self.cla_param["gam"], self.eps)
+        classification_layer = ClassifierLayer(self.heb_dim, self.output_dim, self.device_id, self.cla_param["lamb"], self.cla_param["lr"], self.eps)
         
         self.add_module("Input Layer", input_layer)
         self.add_module("Hebbian Layer", hebbian_layer)
