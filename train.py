@@ -220,9 +220,7 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
             metrics["test"].reset_local()  # Reset local cache
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
             
-            # Degubbing purposes
-            debug_log.info(f"Predicitons: {predictions}.")
-            debug_log.info(f"True Labels: {targets}.")
+
 
             # Advance sampler
             test_data_loader.sampler.advance(len(inputs))
@@ -242,7 +240,13 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 print(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: AVG TEST LOSS: \
                              {avg_test_loss}, TEST ACC: {pct_test_correct}")
                 
-                test_log.info(f'Epoch Number: {epoch} || Test Accuracy: {pct_test_correct}')
+                
+                test = logging.getLogger("Test Log")
+                test.info(f'Epoch Number: {epoch} || Test Accuracy: {pct_test_correct}')
+                
+                # Degubbing purposes
+                debug = logging.getLogger("Debug Log")
+                debug.info(f"Prediciton/Actual: {predictions.argmax(1)}/{targets}.")
 
             # Save checkpoint
             if args.is_master and (is_last_batch or (batch + 1) % 5 == 0):
@@ -401,7 +405,9 @@ if __name__ == "__main__":
     folder_path = f"results/experiment-{exp_num}"
     log_result_path = folder_path + "/testing.log"
     log_param_path = folder_path + "/parameters.log"
-    log_check_path = folder_path + "/debug.log"
+    log_debug_path = folder_path + "/debug.log"
+    log_print_path = folder_path + "/prints.log"
+    log_basic_path = folder_path + "/basic.log"
     log_format = logging.Formatter('%(asctime)s || %(message)s')
 
     if not os.path.exists(folder_path):
@@ -409,7 +415,18 @@ if __name__ == "__main__":
         print(f"Experiment {exp_num} result folder created successfully.")
     else:
         print(f"Experiment {exp_num} result folder already exists.")
-    
+
+
+    logging.basicConfig(filename=log_basic_path, level=logging.DEBUG, format='%(asctime)s || %(message)s')
+    logging.debug("Hello")
+
+    # Create logging file to replace print statements (for debugging purposes)
+    print_log = logging.getLogger("Test Log")
+    print_log_handler = logging.FileHandler(log_print_path)
+    print_log_handler.setLevel(logging.INFO)
+    print_log_handler.setFormatter(log_format)
+    print_log.addHandler(print_log_handler)
+
     # Create logging file for test accuracy
     test_log = logging.getLogger("Test Log")
     test_log_handler = logging.FileHandler(log_result_path)
@@ -424,22 +441,27 @@ if __name__ == "__main__":
     param_log_handler.setFormatter(log_format)
     param_log.addHandler(param_log_handler)
 
-    # Logging training parameters
-    param_log.info(f"Input Dimension: {args.input_dim}")
-    param_log.info(f"Hebbian Layer Dimension: {args.heb_dim}")
-    param_log.info(f"Outout Dimension: {args.output_dim}")
-    param_log.info(f"Hebbian Layer Learning Rate: {args.heb_lr}")
-    param_log.info(f"Hebbian Layer Lambda: {args.heb_lamb}")
-    param_log.info(f"Hebbian Layer Gamma: {args.heb_gam}")
-    param_log.info(f"Classification Layer Learning Rate: {args.cla_lr}")
-    param_log.info(f"Classification Layer Lambda: {args.cla_lamb}")
-    param_log.info(f"Classification Layer Gamma: {args.cla_gam}")
-    param_log.info(f"Epsilon: {args.eps}")
-    param_log.info(f"Number of Epochs: {args.epochs}")
+    print_log.info(f"Parameter Log Status: {param_log.info}")
+    print_log.info(f"Parameter Log Name: {param_log.name}")
+    print_log.info(f"Parameter Log Handler: {param_log.handlers}")
 
-    # Any checking needed for debugging purposes only
+    # Logging training parameters
+    if os.path.getsize(log_param_path) == 0:
+        param_log.info(f"Input Dimension: {args.input_dim}")
+        param_log.info(f"Hebbian Layer Dimension: {args.heb_dim}")
+        param_log.info(f"Outout Dimension: {args.output_dim}")
+        param_log.info(f"Hebbian Layer Learning Rate: {args.heb_lr}")
+        param_log.info(f"Hebbian Layer Lambda: {args.heb_lamb}")
+        param_log.info(f"Hebbian Layer Gamma: {args.heb_gam}")
+        param_log.info(f"Classification Layer Learning Rate: {args.cla_lr}")
+        param_log.info(f"Classification Layer Lambda: {args.cla_lamb}")
+        param_log.info(f"Classification Layer Gamma: {args.cla_gam}")
+        param_log.info(f"Epsilon: {args.eps}")
+        param_log.info(f"Number of Epochs: {args.epochs}")
+
+    # Debugging purposes only
     debug_log = logging.getLogger("Debug Log")
-    debug_log_handler = logging.FileHandler(log_check_path)
+    debug_log_handler = logging.FileHandler(log_debug_path)
     debug_log_handler.setLevel(logging.INFO)
     debug_log_handler.setFormatter(log_format)
     debug_log.addHandler(debug_log_handler)
