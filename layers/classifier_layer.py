@@ -36,7 +36,7 @@ class ClassifierLayer(NetworkLayer):
         ___ (layers.ClassifierLayer) = returns instance of ClassifierLayer
     """
     def __init__(self, input_dimension, output_dimension, device_id, lamb=2, class_lr=0.001, gamma=0.99, eps=10e-5):
-        super ().__init__(input_dimension, output_dimension, lamb, class_lr, gamma, eps)    
+        super ().__init__(input_dimension, output_dimension, device_id, lamb, class_lr, gamma, eps)    
     
 
     """
@@ -60,7 +60,7 @@ class ClassifierLayer(NetworkLayer):
 
         if clamped_output != None:
             outer_prod = torch.outer(clamped_output-y,x)
-            u_times_y  =torch.mul(u,y)
+            u_times_y = torch.mul(u,y)
             A = outer_prod - self.fc.weight * (u_times_y.unsqueeze(1))
         else:
             # Compute the outer product of the softmax output and input.

@@ -24,10 +24,10 @@ command = "source ~/hebbian_venv/bin/activate &&
             --heb_dim=64 
             --output_dim=10 
             --heb_lr=0.005 
-            --heb_lamb=5 
+            --heb_lamb=15 
             --heb_gam=0.99 
-            --cla_lr=0.001 
-            --cla_lamb=1 
+            --cla_lr=0.005 
+            --cla_lamb=15 
             --cla_gam=0 
             --eps=0.01 
             --epochs 20 
