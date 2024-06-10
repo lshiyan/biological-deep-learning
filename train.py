@@ -387,6 +387,14 @@ def main(args, timer):
     print("Done!")
 
 
+
+
+
+##############################################################################
+# PART 6: What code will be ran when file is ran
+##############################################################################
+
+# Helper function
 """
 Method to create a logger to log information
 @param
@@ -408,7 +416,6 @@ def configure_logger(name, file, level=logging.INFO, format=logging.Formatter('%
     return logger
 
 
-# Actual code that will be running
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
     
@@ -450,5 +457,5 @@ if __name__ == "__main__":
         param_log.info(f"Epsilon: {args.eps}")
         param_log.info(f"Number of Epochs: {args.epochs}")
 
-    # Running main function
+    # Run experiment
     main(args, timer)
