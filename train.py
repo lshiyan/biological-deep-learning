@@ -387,6 +387,26 @@ def main(args, timer):
     print("Done!")
 
 
+"""
+Method to create a logger to log information
+@param
+    name (str) = name of logger
+    file (str) - path to file
+    level (logging.Level) = level of the log
+    format (logging.Formatter) = format of the log
+"""
+def configure_logger(name, file, level=logging.INFO, format=logging.Formatter('%(asctime)s || %(message)s')):
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    handler = logging.FileHandler(file)
+    handler.setLevel(level)
+    handler.setFormatter(format)
+    logger.addHandler(handler)
+    logger.propagate = False
+    return logger
+
+
+
 
 # Actual code that will be running
 if __name__ == "__main__":
@@ -402,6 +422,7 @@ if __name__ == "__main__":
     log_print_path = folder_path + "/prints.log"
     log_basic_path = folder_path + "/basic.log"
     log_format = logging.Formatter('%(asctime)s || %(message)s')
+    log_level = logging.INFO
 
     if not os.path.exists(folder_path):
         os.makedirs(folder_path, exist_ok=True)
@@ -410,36 +431,12 @@ if __name__ == "__main__":
         print(f"Experiment {exp_num} result folder already exists.")
 
 
-    # logging.basicConfig(filename=log_basic_path, level=logging.DEBUG, format='%(asctime)s || %(message)s')
-    # logging.debug("Hello")
+    # Create logs
+    print_log = configure_logger("Print Log", log_print_path, log_level, log_format) # Replace print statements (for debugging purposes)
+    test_log = configure_logger("Test Log", log_result_path, log_level, log_format) # Test accuracy
+    param_log = configure_logger("Parameter Log", log_param_path, log_level, log_format) # Experiment parameters
+    debug_log = configure_logger("Debug Log", log_debug_path, log_level, log_format) # Debugging stuff
 
-    # Create logging file to replace print statements (for debugging purposes)
-    print_log = logging.getLogger("Print Log")
-    print_log_handler = logging.FileHandler(log_print_path)
-    print_log_handler.setLevel(logging.INFO)
-    print_log_handler.setFormatter(log_format)
-    print_log.addHandler(print_log_handler)
-    print_log.propagate = False
-
-    # Create logging file for test accuracy
-    test_log = logging.getLogger("Test Log")
-    test_log_handler = logging.FileHandler(log_result_path)
-    test_log_handler.setLevel(logging.INFO)
-    test_log_handler.setFormatter(log_format)
-    test_log.addHandler(test_log_handler)
-    test_log.propagate = False
-
-    # Create logging file for parameters
-    param_log = logging.getLogger("Parameter Log")
-    param_log_handler = logging.FileHandler(log_param_path)
-    param_log_handler.setLevel(logging.INFO)
-    param_log_handler.setFormatter(log_format)
-    param_log.addHandler(param_log_handler)
-    param_log.propagate = False
-
-    # print_log.info(f"Parameter Log Status: {param_log.info}")
-    # print_log.info(f"Parameter Log Name: {param_log.name}")
-    # print_log.info(f"Parameter Log Handler: {param_log.handlers}")
 
     # Logging training parameters
     if os.path.getsize(log_param_path) == 0:
@@ -455,16 +452,6 @@ if __name__ == "__main__":
         param_log.info(f"Epsilon: {args.eps}")
         param_log.info(f"Number of Epochs: {args.epochs}")
 
-    # Debugging purposes only
-    debug_log = logging.getLogger("Debug Log")
-    debug_log_handler = logging.FileHandler(log_debug_path)
-    debug_log_handler.setLevel(logging.INFO)
-    debug_log_handler.setFormatter(log_format)
-    debug_log.addHandler(debug_log_handler)
-    debug_log.propagate = False
 
-
-
-
-    # running main function
+    # Running main function
     main(args, timer)
