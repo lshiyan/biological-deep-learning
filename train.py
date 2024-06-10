@@ -43,10 +43,13 @@ timer.report("Completed imports")
 # PART 2: Hyperparameters argument parsing
 ##############################################################################
 
-# Here:
-    # Gets all the various arguments used for training the model, the parameters are divided into the respective categories
-
-def get_args_parser(add_help=True):
+"""
+Method to setup all the arguments and passe them to an argument parser
+@param
+@return
+    parser (argparse.ArgumentParser) = an argument parser containing all arguments for the experience
+"""
+def get_args_parser():
     parser = argparse.ArgumentParser()
 
     # Basic configurations.
@@ -271,8 +274,6 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
 
 
 
-
-
 ##############################################################################
 # PART 5: Main Function
 ##############################################################################
@@ -388,8 +389,6 @@ def main(args, timer):
 
 
 
-
-
 ##############################################################################
 # PART 6: What code will be ran when file is ran
 ##############################################################################
@@ -416,6 +415,7 @@ def configure_logger(name, file, level=logging.INFO, format=logging.Formatter('%
     return logger
 
 
+# Actual code that will be ran
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
     
