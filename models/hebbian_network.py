@@ -1,3 +1,10 @@
+##############################################################################
+# PART 1: Imports and Timer Initialization
+##############################################################################
+
+# Here:
+    # Import necessary libraries and modules
+
 import torch.nn as nn
 import torch
 from layers.input_layer import InputLayer
@@ -5,7 +12,7 @@ from layers.hebbian_layer import HebbianLayer
 from layers.classifier_layer import ClassifierLayer
 from models.network import Network 
 
-class HebbianNetwork(Network):
+class HebbianNetwork(Network): # Inherits from the Network base class
     """
     Constructor method
     @attr.
@@ -33,20 +40,20 @@ class HebbianNetwork(Network):
         super().__init__(args.device_id)
 
         # Dimension of each layer
-        self.input_dim = args.input_dim
-        self.heb_dim = args.heb_dim
-        self.output_dim = args.output_dim
+        self.input_dim = args.input_dim             # In input layer
+        self.heb_dim = args.heb_dim                 # In hebbian layer 
+        self.output_dim = args.output_dim           # In classification layer
 
         # Hebbian layer hyperparameters
         self.heb_param = {}
         self.heb_param["lr"] = args.heb_lr
         self.heb_param["lamb"] = args.heb_lamb
-        self.heb_param["gam"] = args.heb_gam
+        self.heb_param["gam"] = args.heb_gam        # Used for decay 
 
         # Classification layer hyperparameters
-        self.cla_param = {}
-        self.cla_param["lr"] = args.cla_lr
-        self.cla_param["lamb"] = args.cla_lamb
+        self.cla_param = {}                         # Dictionary for hyperparameters of classification layer 
+        self.cla_param["lr"] = args.cla_lr          # Learning rate for classification layer 
+        self.cla_param["lamb"] = args.cla_lamb      # Used to control strength of lateral neuron inhibition
         self.cla_param["gam"] = args.cla_gam
 
         # Shared hyperparameters
@@ -70,8 +77,6 @@ class HebbianNetwork(Network):
     @return
         data_input (torch.Tensor) = returns the data after passing it throw the network
     """
-    # TODO: make it so that we can also include the input processing layer here and will not need to pass the inputs to this function
-    # NOTE: what is the use of clamped_output
     def forward(self, x, clamped_output=None):
         # Get all the layers in the module
         input_layer = self.get_module("Input Layer")
@@ -82,15 +87,10 @@ class HebbianNetwork(Network):
         if x.dtype != torch.float32:
             x = x.float().to(self.device_id)
 
-        # Inut data -> Hebbian Layer -> Classification Layer -> Output data
+        # Input data -> Hebbian Layer -> Classification Layer -> Output data
         data_input = x.to(self.device_id)
         data_input = hebbian_layer(data_input)
         data_input = classification_layer(data_input, clamped_output)
 
         return data_input
     
-        # Below is the ideal way the forward function should be written without needing input argument
-    
-        # data_input = input_layer.process().float().to(self.device_id)
-        # data_input = hebbian_layer(data_input, None)
-        # data_input = classification_layer(data_input, clamped_output)
