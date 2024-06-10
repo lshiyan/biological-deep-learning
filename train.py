@@ -394,6 +394,8 @@ Method to create a logger to log information
     file (str) - path to file
     level (logging.Level) = level of the log
     format (logging.Formatter) = format of the log
+@return
+    logger (logging.Logger) = a logger
 """
 def configure_logger(name, file, level=logging.INFO, format=logging.Formatter('%(asctime)s || %(message)s')):
     logger = logging.getLogger(name)
@@ -404,8 +406,6 @@ def configure_logger(name, file, level=logging.INFO, format=logging.Formatter('%
     logger.addHandler(handler)
     logger.propagate = False
     return logger
-
-
 
 
 # Actual code that will be running
@@ -430,13 +430,11 @@ if __name__ == "__main__":
     else:
         print(f"Experiment {exp_num} result folder already exists.")
 
-
     # Create logs
     print_log = configure_logger("Print Log", log_print_path, log_level, log_format) # Replace print statements (for debugging purposes)
     test_log = configure_logger("Test Log", log_result_path, log_level, log_format) # Test accuracy
     param_log = configure_logger("Parameter Log", log_param_path, log_level, log_format) # Experiment parameters
     debug_log = configure_logger("Debug Log", log_debug_path, log_level, log_format) # Debugging stuff
-
 
     # Logging training parameters
     if os.path.getsize(log_param_path) == 0:
@@ -451,7 +449,6 @@ if __name__ == "__main__":
         param_log.info(f"Classification Layer Gamma: {args.cla_gam}")
         param_log.info(f"Epsilon: {args.eps}")
         param_log.info(f"Number of Epochs: {args.epochs}")
-
 
     # Running main function
     main(args, timer)
