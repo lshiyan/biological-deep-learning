@@ -231,7 +231,7 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
             
             # Degubbing purposes
             debug = logging.getLogger("Debug Log")
-            debug.info(f"Prediciton/Actual: {predictions.argmax(1)}/{targets}.")
+            debug.info(f"Prediciton/Actual: {predictions.argmax(1).item()}/{targets.item()}.")
 
             # Advance sampler -> Advances the sampler by the number of examples in the current batch.
             test_data_loader.sampler.advance(len(inputs))
@@ -414,11 +414,12 @@ if __name__ == "__main__":
     logging.debug("Hello")
 
     # Create logging file to replace print statements (for debugging purposes)
-    print_log = logging.getLogger("Test Log")
+    print_log = logging.getLogger("Print Log")
     print_log_handler = logging.FileHandler(log_print_path)
     print_log_handler.setLevel(logging.INFO)
     print_log_handler.setFormatter(log_format)
     print_log.addHandler(print_log_handler)
+    print_log.propagate = False
 
     # Create logging file for test accuracy
     test_log = logging.getLogger("Test Log")
@@ -426,6 +427,7 @@ if __name__ == "__main__":
     test_log_handler.setLevel(logging.INFO)
     test_log_handler.setFormatter(log_format)
     test_log.addHandler(test_log_handler)
+    test_log.propagate = False
 
     # Create logging file for parameters
     param_log = logging.getLogger("Parameter Log")
@@ -433,10 +435,11 @@ if __name__ == "__main__":
     param_log_handler.setLevel(logging.INFO)
     param_log_handler.setFormatter(log_format)
     param_log.addHandler(param_log_handler)
+    param_log.propagate = False
 
-    # print_log.info(f"Parameter Log Status: {param_log.info}")
-    # print_log.info(f"Parameter Log Name: {param_log.name}")
-    # print_log.info(f"Parameter Log Handler: {param_log.handlers}")
+    print_log.info(f"Parameter Log Status: {param_log.info}")
+    print_log.info(f"Parameter Log Name: {param_log.name}")
+    print_log.info(f"Parameter Log Handler: {param_log.handlers}")
 
     # Logging training parameters
     if os.path.getsize(log_param_path) == 0:
@@ -458,6 +461,7 @@ if __name__ == "__main__":
     debug_log_handler.setLevel(logging.INFO)
     debug_log_handler.setFormatter(log_format)
     debug_log.addHandler(debug_log_handler)
+    debug_log.propagate = False
 
 
 
