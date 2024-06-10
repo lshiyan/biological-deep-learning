@@ -1,0 +1,4 @@
+2024-06-10 21:05:25,405 || Epoch Number: 0 || Test Accuracy: 0.13273453093812376 || Average Test Loss: 0.0 || PCT Test Loss: 0.13273453093812376
+2024-06-10 21:05:55,166 || Epoch Number: 5 || Test Accuracy: 0.32425149700598804 || Average Test Loss: 0.0 || PCT Test Loss: 0.32425149700598804
+2024-06-10 21:06:22,089 || Epoch Number: 10 || Test Accuracy: 0.4465069860279441 || Average Test Loss: 0.0 || PCT Test Loss: 0.4465069860279441
+2024-06-10 21:07:45,013 || Epoch Number: 15 || Test Accuracy: 0.555189620758483 || Average Test Loss: 0.0 || PCT Test Loss: 0.555189620758483
