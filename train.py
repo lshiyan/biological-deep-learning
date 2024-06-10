@@ -229,7 +229,9 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
             metrics["test"].reset_local()  # Reset local cache
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
             
-
+            # Degubbing purposes
+            debug = logging.getLogger("Debug Log")
+            debug.info(f"Prediciton/Actual: {predictions.argmax(1)}/{targets}.")
 
             # Advance sampler -> Advances the sampler by the number of examples in the current batch.
             test_data_loader.sampler.advance(len(inputs))
@@ -253,9 +255,6 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 test = logging.getLogger("Test Log")
                 test.info(f'Epoch Number: {epoch} || Test Accuracy: {pct_test_correct}')
                 
-                # Degubbing purposes
-                debug = logging.getLogger("Debug Log")
-                debug.info(f"Prediciton/Actual: {predictions.argmax(1)}/{targets}.")
 
             # Save checkpoint
             if args.is_master and (is_last_batch or (batch + 1) % 5 == 0):
@@ -435,9 +434,9 @@ if __name__ == "__main__":
     param_log_handler.setFormatter(log_format)
     param_log.addHandler(param_log_handler)
 
-    print_log.info(f"Parameter Log Status: {param_log.info}")
-    print_log.info(f"Parameter Log Name: {param_log.name}")
-    print_log.info(f"Parameter Log Handler: {param_log.handlers}")
+    # print_log.info(f"Parameter Log Status: {param_log.info}")
+    # print_log.info(f"Parameter Log Name: {param_log.name}")
+    # print_log.info(f"Parameter Log Handler: {param_log.handlers}")
 
     # Logging training parameters
     if os.path.getsize(log_param_path) == 0:
