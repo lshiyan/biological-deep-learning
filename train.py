@@ -1,8 +1,12 @@
-#####################################
-# Progress Timing and Logging
-# ----------------------------
-# Important milestones in progress through this script are logged using a timing utility which also includes details of
-# when milestones were reached and the elapsedtime between milestones. This can assist with debugging and optimisation.
+
+##############################################################################
+# PART 1: Imports and Timer Initialization
+##############################################################################
+
+# Here:
+    # Import necessary libraries and modules
+    # TimestampedTimer is used to log progress and timing of various milestones in the script
+
 
 from cycling_utils import TimestampedTimer
 
@@ -31,25 +35,16 @@ from cycling_utils import (
     atomic_torch_save,
 )
 
+from models.hebbian_network import HebbianNetwork # Model import
+
 timer.report("Completed imports")
 
 ##############################################################################
-
-from models.hebbian_network import HebbianNetwork
-
+# PART 2: Hyperparameters argument parsing
 ##############################################################################
 
-
-
-# Hyperparameters
-# -----------------
-# Hyperparameters are adjustable parameters that let you control the model optimization process. Different
-# hyperparameter values can impact model training and convergence rates (`read more <https://pytorch.org/tutorials/beginner/hyperparameter_tuning_tutorial.html>`
-# about hyperparameter tuning). We define the following hyperparameters for training:
-#  - **Number of Epochs** - the number times to iterate over the dataset
-#  - **Batch Size** - the number of data samples propagated through the network before the parameters are updated
-#  - **Learning Rate** - how much to update models parameters at each batch/epoch. Smaller values yield slow learning
-#       speed, while large values may result in unpredictable behavior during training.
+# Here:
+    # Gets all the various arguments used for training the model, the parameters are divided into the respective categories
 
 def get_args_parser(add_help=True):
     parser = argparse.ArgumentParser()
@@ -104,36 +99,39 @@ def get_args_parser(add_help=True):
     
     # ---------------------------------------
     parser.add_argument("--batch-size", type=int, default=16)
-    # For distributed training it is important to distinguish between the per-GPU or "local" batch size (which this
-    # hyper-parameter sets) and the "effective" batch size which is the product of the local batch size and the number
-    # of GPUs in the cluster. With a local batch size of 16, and 10 nodes with 6 GPUs per node, the effective batch size
-    # is 960. Effective batch size can also be increased using gradient accumulation which is not demonstrated here.
+
     # ---------------------------------------
     parser.add_argument("--save-dir", type=Path, required=True)
     parser.add_argument("--tboard-path", type=Path, required=True)
-    # While the "output_path" is set in the .isc file and receives reports from each node in the cluster (i.e.
-    # "rank_0.txt"), the "save-dir" will be where this script saves and retrieves checkpoints. Referring to the .isc
-    # file, you will see that in this case, the save-dir is the same as the output_path. Tensoboard event logs will be
-    # saved in the "tboard-path" directory.
+
     return parser
 
-#####################################
-# We define ``train_loop`` that loops over our optimization code, and ``test_loop`` that evaluates the model's
-# performance against our test data. Inside the training loop, optimization happens in three steps:
+
+##############################################################################
+# PART 3: Training Loop
+##############################################################################
+
+# Here:
+    # This function is RESPONSIBLE FOR ONE EPOCH (a complete pass through the dataset)
+        # 1. Sets the model to training mode
+        # 2. Loop through the training data, performing forwards passes and updating metrics
+        # 3. Saves checkpoints periodically
+
 def train_loop(model, train_data_loader, test_data_loader, metrics, writer, args):
-    epoch = train_data_loader.sampler.epoch
-    train_batches_per_epoch = len(train_data_loader)
+
+    # Epoch and batch set up
+    epoch = train_data_loader.sampler.epoch # Gets the current epoch from the trian_data_loader
+    train_batches_per_epoch = len(train_data_loader) # This is the number of batches in one epoch 
    
     # Set the model to training mode - important for layers with different training / inference behaviour
     model.train()
 
+    # Loop through training batches
     for inputs, targets in train_data_loader:
-        # Reset model parameter gradients
-        # optimizer.zero_grad()
 
-        # Determine the current batch
-        batch = train_data_loader.sampler.progress // train_data_loader.batch_size
-        is_last_batch = (batch + 1) == train_batches_per_epoch
+        # Batch information
+        batch = train_data_loader.sampler.progress // train_data_loader.batch_size # Calculates the current batch
+        is_last_batch = (batch + 1) == train_batches_per_epoch # Checks if current batch is last batch in current epoch
 
         # Move input and targets to device
         inputs, targets = inputs.to(args.device_id).float(), one_hot(targets, 10).squeeze().to(args.device_id).float()
@@ -143,37 +141,31 @@ def train_loop(model, train_data_loader, test_data_loader, metrics, writer, args
         predictions = model(inputs, clamped_output=targets)
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
         
-        # Compute loss and log to metrics
-        # loss = loss_fn(predictions, targets)
+        # Update metrics
         metrics["train"].update({"examples_seen": len(inputs)})
         metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}]")
         
-        # Update model weights
-        # optimizer.step()
-        # timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - model parameter update")
-        
-        # Advance sampler - essential for interruptibility
-        train_data_loader.sampler.advance(len(inputs))
+        # Advance sampler - essential for interruptibility 
+        train_data_loader.sampler.advance(len(inputs))  # moves the sampler forward by the number of examples in current batch
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - advance sampler")
         
         # Report training metrics
         examples_seen = itemgetter("examples_seen")(metrics["train"].local)
-        # batch_avg_loss = total_batch_loss / examples_seen
         metrics["train"].reset_local()
 
+        # Checks if current batch is last in epoch
         if is_last_batch:
             metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
 
         # Saving and reporting
         if args.is_master:
             total_progress = train_data_loader.sampler.progress + epoch * train_batches_per_epoch
-            # writer.add_scalar("Train/avg_loss", batch_avg_loss, total_progress)
-            # Save checkpoint
+
+            # Save current state of model to checkpoint
             atomic_torch_save(
                 {
                     "model": model.state_dict(),
-                    # "optimizer": optimizer.state_dict(),
                     "train_sampler": train_data_loader.sampler.state_dict(),
                     "test_sampler": test_data_loader.sampler.state_dict(),
                     "metrics": metrics,
@@ -183,16 +175,32 @@ def train_loop(model, train_data_loader, test_data_loader, metrics, writer, args
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
     
     
+
+##############################################################################
+# PART 4: Testing Loop
+##############################################################################
+
+# Here:
+    # This function manages the testing process for each epoch
+        # 1. Sets the model to evaluation mode
+        # 2. Loops through the test data, performing forward passes and updating metrics
+        # 3. Saves checkpoints periodically
+
+
 def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args):
+
+    # Epoch and batch set up
     epoch = test_data_loader.sampler.epoch
     test_batches_per_epoch = len(test_data_loader)
     
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
     model.eval()
 
-    # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode also serves to
-    # reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True
+    # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode 
+    #  also serves to reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True
     with torch.no_grad():
+        
+        # Loop thorugh testing batches
         for inputs, targets in test_data_loader:
             
             # Determine the current batch
@@ -207,12 +215,13 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
             predictions = model(inputs)
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
             
-            # Test loss
-            # test_loss = loss_fn(predictions, targets)
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - loss calculation")
-            
             # Performance metrics logging
-            correct = (predictions.argmax(1) == targets).type(torch.float).sum()
+            correct = (predictions.argmax(1) == targets).type(torch.float).sum() 
+                # For each prediction, 'predictions.argmax(1)' finds the index of the maximum value -> corresponds to the predicted class
+                # Then, this compares the predicted classes to the true target classes
+                # Then, I convert the boolean array of correct to float (where True becomes 1.0 and False becomes 0.0)
+                # Lastly, I sum them to get the total number of correct predictions.
+
             print(f"Predictions: {predictions}.")
             print(f"True Labels: {targets}.")
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
@@ -222,7 +231,7 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
             
 
 
-            # Advance sampler
+            # Advance sampler -> Advances the sampler by the number of examples in the current batch.
             test_data_loader.sampler.advance(len(inputs))
 
             # Performance summary at the end of the epoch
@@ -254,7 +263,6 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 atomic_torch_save(
                     {
                         "model": model.state_dict(),
-                        # "optimizer": optimizer.state_dict(),
                         "train_sampler": train_data_loader.sampler.state_dict(),
                         "test_sampler": test_data_loader.sampler.state_dict(),
                         "metrics": metrics,
@@ -263,27 +271,18 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 )
 
 
-timer.report("Defined helper function/s, loops, and model")
-
-# Helper function - optimizer
-def optimizer(model, cla_lr):
-    optimizer = optim.Adam(model.get_module("Hebbian Layer").parameters(), cla_lr)
-    return optimizer
 
 
-def loss_function(model):
-    loss_function = nn.CrossEntropyLoss()
-    return loss_function
+
+##############################################################################
+# PART 5: Main Function
+##############################################################################
 
 
 def main(args, timer):
     ##############################################
     # Distributed Training Configuration
     # -----------------
-    # The following steps demonstrate configuration of the local GPU for distributed training. This includes
-    # initialising the process group, obtaining and setting the rank of the GPU within the cluster and on the local
-    # node.
-
     dist.init_process_group("nccl")  # Expects RANK set in environment variable
     rank = int(os.environ["RANK"])  # Rank of this GPU in cluster
     world_size = int(os.environ["WORLD_SIZE"]) # Total number of GPUs in the cluster
@@ -298,8 +297,11 @@ def main(args, timer):
     timer.report("Validated checkpoint path")
 
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+    ##############################################
+    # Model set up
+    # -----------------
     # Set up model
     model = HebbianNetwork(args).float()
     model = model.to(args.device_id)
@@ -307,7 +309,9 @@ def main(args, timer):
     timer.report("Model set up and moved to device")
 
 
-    # Set up Data Sampler and Loaders
+    ##############################################
+    # Data Sampler and Loader Set Up
+    # -----------------
     # First, training data
     train_data_set = model.get_module("Input Layer").setup_train_data()
     train_sampler = InterruptableDistributedSampler(train_data_set)
@@ -321,51 +325,43 @@ def main(args, timer):
     timer.report("testing data(sampler and dataloader) processing set up")
 
 
-
-########################################
-    # We initialize the loss function, optimizer, and learning rate scheduler and pass them to ``train_loop`` and
-    # ``test_loop``. By setting the loss function reduction strategy to "sum" we are able to confidently summarise the
-    # loss accross the whole cluster by summing the loss computed by each node. In general, it is important to consider
-    # the validity of the metric summarisation strategy when using distributed training.
-    
     timer.report(
         f"Ready for training with hyper-parameters: \ninitial learning_rate: {args.lr}, \nbatch_size: \
                  {args.batch_size}, \nepochs: {args.epochs}"
     )
 
-    #####################################
-    # Metrics and logging
+    ##############################################
+    # Metrics and Logging
     # -----------------
     # Metrics are commonly tracked and plotted during training to report on progress and model performance.
 
-    metrics = {"train": MetricsTracker(), "test": MetricsTracker()}
+    metrics = {"train": MetricsTracker(), "test": MetricsTracker()} # Initialize Metric Tracker for both training and testing
     writer = SummaryWriter(log_dir=args.tboard_path)
+
 
     #####################################
     # Retrieve the checkpoint if the experiment is resuming from pause
-
     if os.path.isfile(args.checkpoint_path):
         print(f"Loading checkpoint from {args.checkpoint_path}")
         checkpoint = torch.load(args.checkpoint_path, map_location=f"cuda:{args.device_id}")
 
         model.load_state_dict(checkpoint["model"])
-        # optimizer.load_state_dict(checkpoint["optimizer"])
         train_data_loader.sampler.load_state_dict(checkpoint["train_sampler"])
         test_data_loader.sampler.load_state_dict(checkpoint["test_sampler"])
         metrics = checkpoint["metrics"]
         timer.report("Retrieved savedcheckpoint")
 
+
     #####################################
     # Main training loop
     # --------------------
     # Each epoch the training loop is called within a context set from the training InterruptibleDistributedSampler
-
-    for epoch in range(train_data_loader.sampler.epoch, args.epochs):
+   
+    # Loops through each epoch from current epoch to total number of epochs
+    for epoch in range(train_data_loader.sampler.epoch, args.epochs): 
         with train_data_loader.sampler.in_epoch(epoch):
             train_loop(
                 model, 
-                # optimizer,  
-                # loss_fn, 
                 train_data_loader, 
                 test_data_loader, 
                 metrics, 
@@ -373,15 +369,13 @@ def main(args, timer):
                 args
             )
 
-            # An inner context is also set from the testing sampler. This ensures that both training and testing can be
-            # interrupted and resumed from checkpoint.
-            
+
+            # TESTING AT INTERVALS
+            # Determines how frequently the model is tested thorughout training
             if epoch % args.test_epochs == 0:
                 with test_data_loader.sampler.in_epoch(epoch):
                     test_loop(
                         model,
-                        # optimizer,
-                        # loss_fn,
                         train_data_loader,
                         test_data_loader,
                         metrics,
