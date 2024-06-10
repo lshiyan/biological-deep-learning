@@ -410,8 +410,8 @@ if __name__ == "__main__":
         print(f"Experiment {exp_num} result folder already exists.")
 
 
-    logging.basicConfig(filename=log_basic_path, level=logging.DEBUG, format='%(asctime)s || %(message)s')
-    logging.debug("Hello")
+    # logging.basicConfig(filename=log_basic_path, level=logging.DEBUG, format='%(asctime)s || %(message)s')
+    # logging.debug("Hello")
 
     # Create logging file to replace print statements (for debugging purposes)
     print_log = logging.getLogger("Print Log")
@@ -437,9 +437,9 @@ if __name__ == "__main__":
     param_log.addHandler(param_log_handler)
     param_log.propagate = False
 
-    print_log.info(f"Parameter Log Status: {param_log.info}")
-    print_log.info(f"Parameter Log Name: {param_log.name}")
-    print_log.info(f"Parameter Log Handler: {param_log.handlers}")
+    # print_log.info(f"Parameter Log Status: {param_log.info}")
+    # print_log.info(f"Parameter Log Name: {param_log.name}")
+    # print_log.info(f"Parameter Log Handler: {param_log.handlers}")
 
     # Logging training parameters
     if os.path.getsize(log_param_path) == 0:
