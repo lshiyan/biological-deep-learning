@@ -1,0 +1,11 @@
+2024-06-10 19:57:40,110 || Input Dimension: 784
+2024-06-10 19:57:40,110 || Hebbian Layer Dimension: 64
+2024-06-10 19:57:40,110 || Outout Dimension: 10
+2024-06-10 19:57:40,113 || Hebbian Layer Learning Rate: 0.005
+2024-06-10 19:57:40,113 || Hebbian Layer Lambda: 5.0
+2024-06-10 19:57:40,113 || Hebbian Layer Gamma: 0.0
+2024-06-10 19:57:40,113 || Classification Layer Learning Rate: 0.001
+2024-06-10 19:57:40,113 || Classification Layer Lambda: 1.0
+2024-06-10 19:57:40,113 || Classification Layer Gamma: 0.0
+2024-06-10 19:57:40,113 || Epsilon: 0.01
+2024-06-10 19:57:40,113 || Number of Epochs: 20

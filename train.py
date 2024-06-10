@@ -10,7 +10,7 @@
 
 from cycling_utils import TimestampedTimer
 
-timer = TimestampedTimer("Imported TimestampedTimer")
+TIMER = TimestampedTimer("Imported TimestampedTimer")
 
 import logging
 import argparse
@@ -37,12 +37,11 @@ from cycling_utils import (
 
 from models.hebbian_network import HebbianNetwork # Model import
 
-timer.report("Completed imports")
+TIMER.report("Completed imports")
 
 ##############################################################################
 # PART 2: Hyperparameters argument parsing
 ##############################################################################
-
 """
 Method to setup all the arguments and passe them to an argument parser
 @param
@@ -113,13 +112,18 @@ def get_args_parser():
 ##############################################################################
 # PART 3: Training Loop
 ##############################################################################
-
-# Here:
-    # This function is RESPONSIBLE FOR ONE EPOCH (a complete pass through the dataset)
-        # 1. Sets the model to training mode
-        # 2. Loop through the training data, performing forwards passes and updating metrics
-        # 3. Saves checkpoints periodically
-
+"""
+Method defining how a single training epoch works
+@param
+    model (models.Network) = the network that is being trained
+    train_data_loader (torch.DataLoader) = dataloader with the training data
+    test_data_loader (torch.DataLoader) = dataloader with testing data
+    metrics (dict{str:MetricsTracker}) = a tracker to keep track of the metrics
+    writer (SummaryWriter) = a custom logger NOTE: not being used?
+    args (argparse.ArgumentParser) = arguments that were passed to the function
+@return
+    ___ (void) = no returns
+"""
 def train_loop(model, train_data_loader, test_data_loader, metrics, writer, args):
 
     # Epoch and batch set up
@@ -138,20 +142,20 @@ def train_loop(model, train_data_loader, test_data_loader, metrics, writer, args
 
         # Move input and targets to device
         inputs, targets = inputs.to(args.device_id).float(), one_hot(targets, 10).squeeze().to(args.device_id).float()
-        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
+        TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
         
         # Forward pass
         predictions = model(inputs, clamped_output=targets)
-        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
+        TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
         
         # Update metrics
         metrics["train"].update({"examples_seen": len(inputs)})
         metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
-        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}]")
+        TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}]")
         
         # Advance sampler - essential for interruptibility 
         train_data_loader.sampler.advance(len(inputs))  # moves the sampler forward by the number of examples in current batch
-        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - advance sampler")
+        TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - advance sampler")
         
         # Report training metrics
         examples_seen = itemgetter("examples_seen")(metrics["train"].local)
@@ -175,7 +179,7 @@ def train_loop(model, train_data_loader, test_data_loader, metrics, writer, args
                 },
                 args.checkpoint_path,
             )
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
+            TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
     
     
 
@@ -212,11 +216,11 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
             
             # Move input and targets to device
             inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
+            TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
             
             # Inference
             predictions = model(inputs)
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
+            TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
             
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum() 
@@ -225,12 +229,12 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 # Then, I convert the boolean array of correct to float (where True becomes 1.0 and False becomes 0.0)
                 # Lastly, I sum them to get the total number of correct predictions.
 
-            print(f"Predictions: {predictions}.")
-            print(f"True Labels: {targets}.")
+            # print(f"Predictions: {predictions}.")
+            # print(f"True Labels: {targets}.")
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
             metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
             metrics["test"].reset_local()  # Reset local cache
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
+            TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
             
             # Degubbing purposes
             debug = logging.getLogger("Debug Log")
@@ -247,7 +251,7 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 writer.add_scalar("Test/avg_test_loss", avg_test_loss, epoch)
                 writer.add_scalar("Test/pct_test_correct", pct_test_correct, epoch)
                 metrics["test"].end_epoch()
-                timer.report(
+                TIMER.report(
                     f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: AVG TEST LOSS: \
                              {avg_test_loss}, TEST ACC: {pct_test_correct}"
                 )
@@ -256,7 +260,7 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 
                 
                 test = logging.getLogger("Test Log")
-                test.info(f'Epoch Number: {epoch} || Test Accuracy: {pct_test_correct}')
+                test.info(f'Epoch Number: {epoch} || Test Accuracy: {pct_test_correct} || Average Test Loss: {avg_test_loss} || PCT Test Loss: {pct_test_correct}')
                 
 
             # Save checkpoint
@@ -277,12 +281,17 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
 ##############################################################################
 # PART 5: Main Function
 ##############################################################################
-
-
-def main(args, timer):
-    ##############################################
+"""
+Method describing the main part of the code -> how experiment will be ran
+@param
+    args (argparse.ArgumentParser) = arguments passed to the main function
+@return
+    ___ (void) = no returns
+"""
+def main(args):
+    # ===========================================
     # Distributed Training Configuration
-    # -----------------
+    # ===========================================
     dist.init_process_group("nccl")  # Expects RANK set in environment variable
     rank = int(os.environ["RANK"])  # Rank of this GPU in cluster
     world_size = int(os.environ["WORLD_SIZE"]) # Total number of GPUs in the cluster
@@ -290,57 +299,59 @@ def main(args, timer):
     args.is_master = rank == 0  # Master node for saving / reporting
     torch.cuda.set_device(args.device_id)  # Enables calling 'cuda'
 
-    timer.report("Setup for distributed training")
+    TIMER.report("Setup for distributed training")
 
     args.checkpoint_path = args.save_dir / "checkpoint.pt"
     args.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-    timer.report("Validated checkpoint path")
+    TIMER.report("Validated checkpoint path")
 
 
 
-
-    ##############################################
-    # Model set up
-    # -----------------
+    # ===========================================
     # Set up model
+    # ===========================================
     model = HebbianNetwork(args).float()
     model = model.to(args.device_id)
-    print(model.get_module("Hebbian Layer").fc.weight.type())
-    timer.report("Model set up and moved to device")
+    TIMER.report("Model set up and moved to device")
 
 
-    ##############################################
-    # Data Sampler and Loader Set Up
-    # -----------------
-    # First, training data
+
+    # ===========================================
+    # Set up datasets for training and testing purposes
+    # ===========================================
+    
+    # Training dataset
     train_data_set = model.get_module("Input Layer").setup_train_data()
     train_sampler = InterruptableDistributedSampler(train_data_set)
     train_data_loader = DataLoader(train_data_set, batch_size=1, shuffle=False, sampler=train_sampler)  # Added sampler, set shuffle to False
-    timer.report("training data(sampler and dataloader) processing set up")
+    TIMER.report("training data(sampler and dataloader) processing set up")
 
-    # Second, testing data
+    # Testing dataset
     test_data_set = model.get_module("Input Layer").setup_test_data()
     test_sampler = InterruptableDistributedSampler(test_data_set)  
     test_data_loader = DataLoader(test_data_set, batch_size=1, shuffle=False, sampler=test_sampler)  # Added sampler, set shuffle to False
-    timer.report("testing data(sampler and dataloader) processing set up")
+    TIMER.report("testing data(sampler and dataloader) processing set up")
 
-
-    timer.report(
-        f"Ready for training with hyper-parameters: \ninitial learning_rate: {args.lr}, \nbatch_size: \
-                 {args.batch_size}, \nepochs: {args.epochs}"
+    # Logging process
+    TIMER.report(
+        f"Ready for training with hyper-parameters: \ninitial learning_rate: {args.lr}, \nbatch_size: \{args.batch_size}, \nepochs: {args.epochs}"
     )
 
-    ##############################################
-    # Metrics and Logging
-    # -----------------
-    # Metrics are commonly tracked and plotted during training to report on progress and model performance.
 
+
+    # ===========================================
+    # Metrics and Logging
+    # ===========================================
+
+    # Setup metrics and logger
     metrics = {"train": MetricsTracker(), "test": MetricsTracker()} # Initialize Metric Tracker for both training and testing
     writer = SummaryWriter(log_dir=args.tboard_path)
 
 
-    #####################################
+
+    # ===========================================
     # Retrieve the checkpoint if the experiment is resuming from pause
+    # ===========================================
     if os.path.isfile(args.checkpoint_path):
         print(f"Loading checkpoint from {args.checkpoint_path}")
         checkpoint = torch.load(args.checkpoint_path, map_location=f"cuda:{args.device_id}")
@@ -349,13 +360,13 @@ def main(args, timer):
         train_data_loader.sampler.load_state_dict(checkpoint["train_sampler"])
         test_data_loader.sampler.load_state_dict(checkpoint["test_sampler"])
         metrics = checkpoint["metrics"]
-        timer.report("Retrieved savedcheckpoint")
+        TIMER.report("Retrieved savedcheckpoint")
 
 
-    #####################################
-    # Main training loop
-    # --------------------
-    # Each epoch the training loop is called within a context set from the training InterruptibleDistributedSampler
+
+    # ===========================================
+    # Training and testing process
+    # ===========================================
    
     # Loops through each epoch from current epoch to total number of epochs
     for epoch in range(train_data_loader.sampler.epoch, args.epochs): 
@@ -392,7 +403,6 @@ def main(args, timer):
 ##############################################################################
 # PART 6: What code will be ran when file is ran
 ##############################################################################
-
 # Helper function
 """
 Method to create a logger to log information
@@ -458,4 +468,4 @@ if __name__ == "__main__":
         param_log.info(f"Number of Epochs: {args.epochs}")
 
     # Run experiment
-    main(args, timer)
+    main(args)
