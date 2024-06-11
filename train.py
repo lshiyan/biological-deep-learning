@@ -276,6 +276,19 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 )
 
 
+def model_test(model, test_data):
+    model.eval()
+
+    data_loader = DataLoader(test_data, batch_size=1, shuffle=True)
+
+    with torch.no_grad():
+        for inputs, targets in data_loader:
+            inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
+            predictions = model(inputs)
+            correct = (predictions.argmax(1) == targets).type(torch.float).sum()
+
+    return correct/len(data_loader)
+
 
 ##############################################################################
 # PART 5: Main Function
@@ -394,6 +407,9 @@ def main(args):
                     )
 
     model.visualize_weights(folder_path)
+    accuracy = model_test(model, test_data_set) # Final test after entire training
+    param = logging.getLogger("Parameter Log")
+    param.info(f"Accuracy of model after training for {args.epochs} epochs: {accuracy}")
 
     print("Done!")
 
