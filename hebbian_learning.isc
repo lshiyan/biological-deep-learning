@@ -29,7 +29,7 @@ command = "source ~/hebbian_venv/bin/activate &&
             --cla_lr=0.005 
             --cla_lamb=1 
             --eps=0.01 
-            --epochs 1000 
+            --epochs 5000 
             --test-epochs 5 
             --lr 0.001 
             --lr-step-size 1000 
