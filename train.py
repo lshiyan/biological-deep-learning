@@ -3,21 +3,14 @@
 # PART 1: Imports and Timer Initialization
 ##############################################################################
 
-# Here:
-    # Import necessary libraries and modules
-    # TimestampedTimer is used to log progress and timing of various milestones in the script
-
-
-from cycling_utils import TimestampedTimer
-
-TIMER = TimestampedTimer("Imported TimestampedTimer")
-
+# Built-in imports
 import logging
 import argparse
 import os
 from operator import itemgetter
 from pathlib import Path
 
+# Pytorch imports
 import torch
 import torch.optim as optim
 import torch.distributed as dist
@@ -29,15 +22,26 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment
 
+# Strong Compute imports
 from cycling_utils import (
+    TimestampedTimer,
     InterruptableDistributedSampler,
     MetricsTracker,
     atomic_torch_save,
 )
 
+# Custom defined model imports
 from models.hebbian_network import HebbianNetwork # Model import
 
+
+
+##############################################################################
+# PART1.5: Global variables
+##############################################################################
+TIMER = TimestampedTimer("Imported TimestampedTimer")
 TIMER.report("Completed imports")
+
+
 
 ##############################################################################
 # PART 2: Hyperparameters argument parsing
@@ -108,8 +112,9 @@ def get_args_parser():
     return parser
 
 
+
 ##############################################################################
-# PART 3: Training Loop
+# PART 3: Training
 ##############################################################################
 """
 Method defining how a single training epoch works
@@ -183,16 +188,18 @@ def train_loop(model, train_data_loader, test_data_loader, metrics, writer, args
     
 
 ##############################################################################
-# PART 4: Testing Loop
+# PART 4: Testing
 ##############################################################################
-
-# Here:
-    # This function manages the testing process for each epoch
-        # 1. Sets the model to evaluation mode
-        # 2. Loops through the test data, performing forward passes and updating metrics
-        # 3. Saves checkpoints periodically
-
-
+"""
+Method that test the model at certain epochs during the training process
+@param
+    model (models.Network) = model to be trained
+    train_data_loder (torch.DataLoader) = dataloader containing the training dataset
+    test_data_loader (torch.DataLoader) = dataloader containing the testing dataset
+    metrics (dict{str:MetricsTracker}) = a tracker to keep track of the metrics
+    writer (SummaryWriter) = a custom logger
+    args (argparse.ArgumentParser) = arguments that are pased from the command shell
+"""
 def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args):
 
     # Epoch and batch set up
@@ -276,6 +283,14 @@ def test_loop(model, train_data_loader, test_data_loader, metrics, writer, args)
                 )
 
 
+"""
+Method to test the model on the entire testing dataset
+@param
+    model (models.Network) = ML model to be tested
+    test_dataset (torch.DataSet) = testing dataset that model will be tested on
+@return
+    correct/len(data_loader) (floattt) = accuracy of the model
+"""
 def model_test(model, test_data):
     model.eval()
 
