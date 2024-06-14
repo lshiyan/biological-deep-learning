@@ -29,7 +29,7 @@ class BaseHebbianExperiment(Experiment):
     """
     def __init__(self, args=None):
         self.model = HebbianNetwork(args)
-        self.num_epochs = args.num_epochs
+        self.num_epochs = args.epochs
         self.args = args
         self.data_name = args.data_name
         self.train_filename = args.train_filename
@@ -43,7 +43,7 @@ class BaseHebbianExperiment(Experiment):
         optimizer (optim.Adam) = ADAM optimizer
     """    
     def optimizer(self):
-        optimizer = optim.Adam(self.model.get_layer("Hebbian Layer").parameters(), self.args.cla_lr)
+        optimizer = optim.Adam(self.model.get_module("Hebbian Layer").parameters(), self.args.cla_lr)
         return optimizer
     
 
@@ -66,7 +66,7 @@ class BaseHebbianExperiment(Experiment):
     """
     def train(self):
         # Setup training data 
-        data_set = self.model.get_layer("Input Layer").setup_train_data()
+        data_set = self.model.get_module("Input Layer").setup_train_data()
         data_loader = DataLoader(data_set, batch_size=1, shuffle=True)
         
         # Sets the model in training mode
@@ -75,7 +75,7 @@ class BaseHebbianExperiment(Experiment):
         # Setup the trianing environment and starts the training process
         optimizer = self.optimizer()
         
-        for _ in range(self.num_epochs):
+        for _ in range(self.epochs):
             for _, data in enumerate(data_loader):
                 inputs, labels = data
                 self.model(inputs, clamped_output=one_hot(labels, 10))
@@ -90,7 +90,7 @@ class BaseHebbianExperiment(Experiment):
     """
     def test(self):
         # Setup testing data
-        data_set = self.model.get_layer("Input Layer").setup_test_data()
+        data_set = self.model.get_module("Input Layer").setup_test_data()
         data_loader = DataLoader(data_set, batch_size=1, shuffle=True)
 
         # Put the testing data through the trained model and compare the outputs with the labels

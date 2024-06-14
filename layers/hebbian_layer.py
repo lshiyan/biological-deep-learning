@@ -208,7 +208,6 @@ class HebbianLayer(NetworkLayer):
         file_path = result_path + '/hebbianlayerweights.png'
         plt.tight_layout()
         plt.savefig(file_path)
-        plt.show()
         
 
     """
