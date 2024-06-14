@@ -1,8 +1,0 @@
-2024-06-08 22:54:49,989 || Predicitons: tensor([5], device='cuda:0').
-2024-06-08 22:54:49,989 || True Labels: tensor([3], device='cuda:0').
-2024-06-08 22:55:17,179 || Predicitons: tensor([5], device='cuda:0').
-2024-06-08 22:55:17,179 || True Labels: tensor([3], device='cuda:0').
-2024-06-08 22:55:44,176 || Predicitons: tensor([1], device='cuda:0').
-2024-06-08 22:55:44,177 || True Labels: tensor([9], device='cuda:0').
-2024-06-08 22:57:04,539 || Predicitons: tensor([1], device='cuda:0').
-2024-06-08 22:57:04,539 || True Labels: tensor([1], device='cuda:0').

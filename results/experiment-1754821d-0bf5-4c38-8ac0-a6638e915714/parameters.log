@@ -1,8 +1,0 @@
-2024-06-10 20:56:09,353 || Input Dimension: 784
-2024-06-10 20:56:09,353 || Hebbian Layer Dimension: 64
-2024-06-10 20:56:09,354 || Outout Dimension: 10
-2024-06-10 20:56:09,354 || Hebbian Layer Learning Rate: 0.005
-2024-06-10 20:56:09,354 || Hebbian Layer Lambda: 15.0
-2024-06-10 20:56:09,354 || Hebbian Layer Gamma: 0.99
-2024-06-10 20:56:09,354 || Classification Layer Learning Rate: 0.005
-2024-06-10 20:56:09,354 || Classification Layer Lambda: 15.0

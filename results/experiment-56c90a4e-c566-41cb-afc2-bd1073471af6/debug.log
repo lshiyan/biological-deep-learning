@@ -1,4 +1,0 @@
-2024-06-09 01:02:09,986 || Prediciton/Actual: tensor([0], device='cuda:0')/tensor([3], device='cuda:0').
-2024-06-09 01:02:42,002 || Prediciton/Actual: tensor([0], device='cuda:0')/tensor([3], device='cuda:0').
-2024-06-09 01:04:09,097 || Prediciton/Actual: tensor([0], device='cuda:0')/tensor([9], device='cuda:0').
-2024-06-09 01:04:41,014 || Prediciton/Actual: tensor([8], device='cuda:0')/tensor([1], device='cuda:0').

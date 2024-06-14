@@ -74,12 +74,11 @@ class BaseHebbianExperiment(Experiment):
         
         # Setup the trianing environment and starts the training process
         optimizer = self.optimizer()
-        if self.args.heb_gam !=0 : self.set_scheduler() # NOTE: since by default our gamma is 0, what is the point of a scheduler?
         
         for _ in range(self.num_epochs):
             for _, data in enumerate(data_loader):
                 inputs, labels = data
-                self.model(inputs, clamped_output=one_hot(labels, 10)) # NOTE: what does clmaped_output do?
+                self.model(inputs, clamped_output=one_hot(labels, 10))
                 optimizer.step()
 
 
