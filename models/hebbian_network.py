@@ -39,28 +39,27 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         super().__init__(args.device_id)
 
         # Dimension of each layer
-        self.input_dim = args.input_dim             # In input layer
-        self.heb_dim = args.heb_dim                 # In hebbian layer 
-        self.output_dim = args.output_dim           # In classification layer
+        self.input_dim = args.input_dim
+        self.heb_dim = args.heb_dim
+        self.output_dim = args.output_dim
 
         # Hebbian layer hyperparameters
         self.heb_param = {}
-        self.heb_param["lr"] = args.heb_lr
         self.heb_param["lamb"] = args.heb_lamb
-        self.heb_param["gam"] = args.heb_gam        # Used for decay 
+        self.heb_param["gam"] = args.heb_gam
 
         # Classification layer hyperparameters
-        self.cla_param = {}                         # Dictionary for hyperparameters of classification layer 
-        self.cla_param["lr"] = args.cla_lr          # Learning rate for classification layer 
-        self.cla_param["lamb"] = args.cla_lamb      # Used to control strength of lateral neuron inhibition
+        self.cla_param = {}
+        self.cla_param["lamb"] = args.cla_lamb
 
         # Shared hyperparameters
+        self.lr = args.lr
         self.eps = args.eps
 
         # Setting up layers of the network
         input_layer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
-        hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.device_id, self.heb_param["lamb"], self.heb_param["lr"], self.heb_param["gam"], self.eps)
-        classification_layer = ClassifierLayer(self.heb_dim, self.output_dim, self.device_id, self.cla_param["lamb"], self.cla_param["lr"], self.eps)
+        hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.device_id, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.eps)
+        classification_layer = ClassifierLayer(self.heb_dim, self.output_dim, self.device_id, self.cla_param["lamb"], self.lr, self.eps)
         
         self.add_module("Input Layer", input_layer)
         self.add_module("Hebbian Layer", hebbian_layer)
