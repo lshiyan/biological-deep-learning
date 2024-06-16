@@ -5,7 +5,7 @@ import logging
 # CONSTANTS
 #########################################################################
 DEFAULT_LEVEL = logging.INFO
-DEFAULT_FORMAT = logging.Formatter('%(asctime)s || %(levelname)-6s || %(lineno)-4d || %(funcName)-15s || %(message)s')
+DEFAULT_FORMAT = logging.Formatter('%(asctime)s || %(levelname)-10s || %(lineno)-4d || %(funcName)-15s || %(message)s')
 DEFAULT_FILE = 'error.log'
 DEFAULT_NAME = "Error Log"
 
