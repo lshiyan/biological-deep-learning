@@ -527,6 +527,6 @@ if __name__ == "__main__":
     # End timer
     END_TIME = time.time()
     DURATION = END_TIME - START_TIME
-    minutes = (DURATION // 60)
-    seconds = DURATION % 60
+    minutes = int(DURATION // 60)
+    seconds = int(DURATION % 60)
     EXP_LOG.info(f"The experiment took {minutes}m:{seconds}s to be completed.")
