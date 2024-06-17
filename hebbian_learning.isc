@@ -22,19 +22,19 @@ command = "source ~/hebbian_venv/bin/activate &&
             --test_filename='data/mnist/mnist_test.csv' 
             --input_dim=784 
             --heb_dim=64 
-            --output_dim=10 
-            --heb_lr=0.005 
+            --output_dim=10  
             --heb_lamb=15 
             --heb_gam=0.99 
-            --cla_lr=0.005 
             --cla_lamb=1 
             --eps=0.01 
-            --epochs 200 
-            --test-epochs 5 
-            --lr 0.001 
+            --epochs 5 
+            --test-epochs 1 
+            --lr 0.005 
             --lr-step-size 1000 
             --gamma 0 
-            --batch-size 1 
+            --batch-size 1
+            --device-cpu='cpu'
+            --local-machine=False 
             --save-dir $OUTPUT_PATH 
             --tboard-path $OUTPUT_PATH/tb"
 

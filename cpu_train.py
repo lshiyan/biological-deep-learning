@@ -65,20 +65,7 @@ EXP_LOG.info("Completed log setups.")
 
 
 ##############################################################################
-# PART 3: Helper functions
-##############################################################################
-def get_optimizer(model):
-    optimizer = optim.Adam(model.get_module("Hebbian Layer").parameters(), 0.001)
-    return optimizer
-
-def get_loss_function():
-    loss_function = nn.CrossEntropyLoss()
-    return loss_function
-
-
-
-##############################################################################
-# PART 4: Training
+# PART 3: Training
 ##############################################################################
 """
 Method defining how a single training epoch works
@@ -107,7 +94,7 @@ def train_loop(model, train_data_loader, device):
 
 
 ##############################################################################
-# PART 5: Testing
+# PART 4: Testing
 ##############################################################################
 """
 Method that test the model at certain epochs during the training process
@@ -155,7 +142,7 @@ def test_loop(model, test_data_loader, device, epoch):
 
 
 ##############################################################################
-# PART 6: Main Function
+# PART 5: Main Function
 ##############################################################################
 """
 Method describing the main part of the code -> how experiment will be ran
@@ -233,7 +220,7 @@ def main(args):
 
 
 ##############################################################################
-# PART 7: What code will be ran when file is ran
+# PART 6: What code will be ran when file is ran
 ##############################################################################
 
 # Actual code that will be ran
@@ -263,4 +250,6 @@ main(args)
 # End timer
 END_TIME = time.time()
 DURATION = END_TIME - START_TIME
-EXP_LOG.info(f"The experiment took {DURATION} time to be completed.")
+minutes = (DURATION // 60)
+seconds = DURATION % 60
+EXP_LOG.info(f"The experiment took {minutes}m:{seconds}s to be completed.")

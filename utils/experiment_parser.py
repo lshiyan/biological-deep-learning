@@ -52,6 +52,7 @@ def parse_arguments(args_list=None):
     # ---------------------------------------
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--device-id", type=str, default='cpu')
+    parser.add_argument("--local-machine", type=bool, default=True)
 
     # ---------------------------------------
     args = parser.parse_args() if args_list == None else parser.parse_args(args_list)

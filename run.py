@@ -1,7 +1,7 @@
 import subprocess
 
 # Define the script to run and its arguments
-script_name = 'cpu_train.py'
+script_name = 'train.py'
 arguments = ['--is_training=True', 
             "--data_name='MNIST'",
             "--train_data=data/mnist/train-images.idx3-ubyte", 
@@ -22,7 +22,9 @@ arguments = ['--is_training=True',
             '--lr=0.005', 
             '--lr-step-size=1000', 
             '--gamma=0', 
-            '--batch-size=1' ]
+            '--batch-size=1',
+            '--device-id=cpu',
+            '--local-machine=True' ]
 
 
 # Construct the command
