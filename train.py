@@ -404,7 +404,7 @@ def main(args):
         TIMER.report(
             f"Ready for training with hyper-parameters: \nlearning_rate: {args.lr}, \nbatch_size: \{args.batch_size}, \nepochs: {args.epochs}"
         )
-        EXP_LOG.info(f"Ready for training with hyper-parameters: \nlearning_rate: {args.lr}, \nbatch_size: \{args.batch_size}, \nepochs: {args.epochs}.")
+        EXP_LOG.info(f"Ready for training with hyper-parameters: learning_rate ({args.lr}), batch_size ({args.batch_size}), epochs ({args.epochs}).")
     else:
         # Training dataset
         train_data_set = model.get_module("Input Layer").setup_train_data()
@@ -415,7 +415,7 @@ def main(args):
         test_data_set = model.get_module("Input Layer").setup_test_data()
         test_data_loader = DataLoader(test_data_set, batch_size=args.batch_size, shuffle=True)
         EXP_LOG.info("Completed setup for testing dataset and dataloader.")
-        EXP_LOG.info(f"Ready for training with hyper-parameters: \nlearning_rate: {args.lr}, \nbatch_size: \{args.batch_size}, \nepochs: {args.epochs}.")
+        EXP_LOG.info(f"Ready for training with hyper-parameters: learning_rate ({args.lr}), batch_size ({args.batch_size}), epochs ({args.epochs}).")
 
 
     if not args.local_machine:
@@ -486,9 +486,9 @@ def main(args):
             )
     
     EXP_LOG.info("Completed training of model.")        
-    model.visualize_weights(folder_path)
+    model.visualize_weights(RESULT_PATH)
     EXP_LOG.info("Visualize weights of model after training.")
-    accuracy = test_loop_cpu(model, test_data_loader, args.device_id, args.epoch)
+    accuracy = test_loop_cpu(model, test_data_loader, args.device_id, args.epochs)
     EXP_LOG.info("Completed all 3 different testing methods.")
     PARAM_LOG.info(f"Accuracy of model after training for {args.epochs} epochs: {accuracy}")
     EXP_LOG.info("Experiment Completed!!!")
