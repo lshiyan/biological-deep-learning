@@ -1,8 +1,8 @@
-isc_project_id = "2870fa20-9bc3-4a8f-ab41-9f59d91a840f"
-experiment_name = "hebbian_learning"
+isc_project_id = "40890c8c-90e0-4828-9d48-5d793ab0b23e"
+experiment_name = "base_hebbian_learning"
 gpu_type = "24GB VRAM GPU"
 nnodes = 10
-output_path = "~/outputs/hebbian_learning"
+output_path = "~/outputs/base_hebbian_learning"
 
 command = "source ~/hebbian_venv/bin/activate && 
             cd ~/biological-deep-learning/ && 
@@ -37,4 +37,3 @@ command = "source ~/hebbian_venv/bin/activate &&
             --local-machine=False 
             --save-dir $OUTPUT_PATH 
             --tboard-path $OUTPUT_PATH/tb"
-
