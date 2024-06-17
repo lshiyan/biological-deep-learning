@@ -3,6 +3,7 @@ experiment_name = "base_hebbian_learning"
 gpu_type = "24GB VRAM GPU"
 nnodes = 10
 output_path = "~/outputs/base_hebbian_learning"
+_compute_mode = "cycle"
 
 command = "source ~/hebbian_venv/bin/activate && 
             cd ~/biological-deep-learning/ && 
@@ -33,6 +34,5 @@ command = "source ~/hebbian_venv/bin/activate &&
             --lr-step-size 1000 
             --gamma 0 
             --batch-size 1
-            --local-machine=False 
             --save-dir $OUTPUT_PATH 
             --tboard-path $OUTPUT_PATH/tb"
