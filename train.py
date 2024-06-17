@@ -446,7 +446,7 @@ def main(args):
         EXP_LOG.info("Started training and testing loops.")
         for epoch in range(train_data_loader.sampler.epoch, args.epochs): 
             with train_data_loader.sampler.in_epoch(epoch):
-                train_loop(
+                train_loop_sc(
                     model, 
                     train_data_loader, 
                     test_data_loader, 
@@ -460,7 +460,7 @@ def main(args):
                 # Determines how frequently the model is tested thorughout training
                 if epoch % args.test_epochs == 0:
                     with test_data_loader.sampler.in_epoch(epoch):
-                        test_loop(
+                        test_loop_sc(
                             model,
                             train_data_loader,
                             test_data_loader,
