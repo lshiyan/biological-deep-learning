@@ -68,8 +68,8 @@ EXP_LOG.info(f"Experiment '{EXP_NUM}' result folder created successfully.")
 # Strong Compute Logging and Imports
 if not ARGS.local_machine:
     from torch.utils.tensorboard import SummaryWriter
-    from torchvision import datasets
-    from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment
+    from torchvision import datasets # type: ignore
+    from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment # type: ignore
     from cycling_utils import ( # type: ignore
         TimestampedTimer,
         InterruptableDistributedSampler,
