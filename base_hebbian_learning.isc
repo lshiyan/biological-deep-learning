@@ -34,5 +34,6 @@ command = "source ~/hebbian_venv/bin/activate &&
             --lr_step_size=1000 
             --gamma=0 
             --batch_size=1
+            --local-machine=False
             --save-dir=$OUTPUT_PATH 
             --tboard-path=$OUTPUT_PATH/tb"
