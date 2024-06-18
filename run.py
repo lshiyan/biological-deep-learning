@@ -18,13 +18,13 @@ arguments = ['--is_training=True',
             '--cla_lamb=1',
             '--eps=0.01', 
             '--epochs=3', 
-            '--test-epochs=1', 
+            '--test_epochs=1', 
             '--lr=0.005', 
-            '--lr-step-size=1000', 
+            '--lr_step_size=1000', 
             '--gamma=0', 
-            '--batch-size=1',
-            '--device-id=cpu',
-            '--local-machine=True' ]
+            '--batch_size=1',
+            '--device_id=cpu',
+            '--local_machine=True' ]
 
 
 # Construct the command

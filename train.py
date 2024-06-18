@@ -63,14 +63,14 @@ EXP_LOG = get_experiment_log("Experiment Log", RESULT_PATH) # Logs during experi
 EXP_LOG.info("Completed imports.")
 EXP_LOG.info("Completed log setups.")
 EXP_LOG.info("Completed arguments parsing.")
-EXP_LOG.info(f"Experiment {EXP_NUM} result folder created successfully.")
+EXP_LOG.info(f"Experiment '{EXP_NUM}' result folder created successfully.")
 
 # Strong Compute Logging and Imports
 if not ARGS.local_machine:
     from torch.utils.tensorboard import SummaryWriter
     from torchvision import datasets
     from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment
-    from cycling_utils import (
+    from cycling_utils import ( # type: ignore
         TimestampedTimer,
         InterruptableDistributedSampler,
         MetricsTracker,
