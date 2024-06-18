@@ -170,7 +170,7 @@ def train_loop(model, train_data_loader, test_data_loader, train_test_data_loade
                 EXP_LOG.info(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
                 EXP_LOG.info(f"Examples seen: {examples_seen}")
         
-        EXP_LOG.info("Completed 1 epoch of training of 'train_loop'.")
+    EXP_LOG.info("Completed 1 epoch of training of 'train_loop'.")
     
 
 
@@ -217,11 +217,11 @@ def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data
         for inputs, labels in test_data_loader:
             # Move input and targets to device
             inputs, labels = inputs.to(args.device_id), labels.to(args.device_id)
-            EXP_LOG.info(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
+            EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
             
             # Inference
             predictions = model(inputs)
-            EXP_LOG.info(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
+            EXP_LOG.info(f"EPOCH [{epoch}] - inference")
             
             # Evaluates performance of model on testing dataset
             correct = (predictions.argmax(1) == labels).type(torch.float).sum()
@@ -290,12 +290,14 @@ def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data
             # PART IF NOT ON STRONG COMPUTE
             else:
                 EXP_LOG.info(f"Completed testing with {correct_sum} out of {total}.")
-                TEST_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {correct_sum/total}') 
+                
                 final_accuracy = correct_sum/total
             
             EXP_LOG.info("Completed 'test_loop' function.")
 
-            return final_accuracy
+    TEST_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {final_accuracy}') 
+    
+    return final_accuracy
 
 
 """
@@ -338,13 +340,11 @@ def training_accuracy(model, train_data_loader, test_data_loader, train_test_dat
         for inputs, labels in train_test_data_loader:
             # Move input and targets to device
             inputs, labels = inputs.to(args.device_id), labels.to(args.device_id)
-            EXP_LOG.info(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
-            if not args.local_machine: TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
+            EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
             
             # Inference
             predictions = model(inputs)
-            EXP_LOG.info(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
-            if not args.local_machine: TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
+            EXP_LOG.info(f"EPOCH [{epoch}] - inference")
             
             # Evaluates performance of model on testing dataset
             correct = (predictions.argmax(1) == labels).type(torch.float).sum()
@@ -360,6 +360,9 @@ def training_accuracy(model, train_data_loader, test_data_loader, train_test_dat
                 # Determine the current batch
                 batch = train_test_data_loader.sampler.progress // train_test_data_loader.batch_size
                 is_last_batch = (batch + 1) == test_batches_per_epoch
+                
+                TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
+                TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
                 
                 # Updating metrics
                 metrics["train-test"].update({"examples_seen": len(inputs), "correct": correct.item()})
@@ -410,12 +413,14 @@ def training_accuracy(model, train_data_loader, test_data_loader, train_test_dat
             # PART IF NOT ON STRONG COMPUTE
             else:
                 EXP_LOG.info(f"Completed testing with {correct_sum} out of {total}.")
-                TRAIN_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {correct_sum/total}') 
+                 
                 final_accuracy = correct_sum/total
             
             EXP_LOG.info("Completed 'training_accuracy' function.")
 
-            return final_accuracy
+    TRAIN_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {final_accuracy}')
+    
+    return final_accuracy
 
 
 
@@ -620,8 +625,8 @@ def main(args):
     EXP_LOG.info("Completed training of model.")        
     model.visualize_weights(RESULT_PATH)
     EXP_LOG.info("Visualize weights of model after training.")
-    test_acc = testing_accuracy(model, train_data_loader, test_data_loader, args, args.epochs)
-    train_acc = training_accuracy(model, train_data_loader, test_data_loader, args, args.epochs)
+    test_acc = testing_accuracy(model, train_data_loader, test_data_loader, train_test_data_loader, args, args.epochs)
+    train_acc = training_accuracy(model, train_data_loader, test_data_loader, train_test_data_loader, args, args.epochs)
     EXP_LOG.info("Completed testing methods.")
     PARAM_LOG.info(f"Training accuracy of model after training for {args.epochs} epochs: {train_acc}")
     PARAM_LOG.info(f"Testing accuracy of model after training for {args.epochs} epochs: {test_acc}")
