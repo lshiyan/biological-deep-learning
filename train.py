@@ -112,22 +112,25 @@ def train_loop(model, train_data_loader, test_data_loader, train_test_data_loade
     EXP_LOG.info("Set the model to training mode.")
 
     # Loop through training batches
-    for inputs, labels in train_data_loader:
+    for inputs, labels in train_data_loader:   
         # Move input and targets to device
         inputs, labels = inputs.to(args.device_id).float(), one_hot(labels, 10).squeeze().to(args.device_id).float()
-        EXP_LOG.info(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
-        if not args.local_machine: TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
+        EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
+        
         
         # Forward pass
         model(inputs, clamped_output=labels)
-        EXP_LOG.info(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
-        if not args.local_machine: TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
+        EXP_LOG.info(f"EPOCH [{epoch}] - forward pass")
+        
         
         # PART ONLY USED IN STRONG COMPUTE
         if not args.local_machine:
             # Batch information
             batch = train_data_loader.sampler.progress // train_data_loader.batch_size # Calculates the current batch
             is_last_batch = (batch + 1) == train_batches_per_epoch # Checks if current batch is last batch in current epoch
+            
+            TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
+            TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
             
             # Update metrics
             metrics["train"].update({"examples_seen": len(inputs)})
@@ -215,12 +218,10 @@ def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data
             # Move input and targets to device
             inputs, labels = inputs.to(args.device_id), labels.to(args.device_id)
             EXP_LOG.info(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
-            if not args.local_machine: TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
             
             # Inference
             predictions = model(inputs)
             EXP_LOG.info(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
-            if not args.local_machine: TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
             
             # Evaluates performance of model on testing dataset
             correct = (predictions.argmax(1) == labels).type(torch.float).sum()
@@ -236,6 +237,9 @@ def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data
                 # Determine the current batch
                 batch = test_data_loader.sampler.progress // test_data_loader.batch_size
                 is_last_batch = (batch + 1) == test_batches_per_epoch
+                
+                TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
+                TIMER.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
                 
                 # Updating metrics
                 metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
