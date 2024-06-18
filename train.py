@@ -658,6 +658,9 @@ if __name__ == "__main__":
 
     # Logging start of experiment
     EXP_LOG.info("Start of experiment.")
+    
+    # Log arguments
+    PRINT_LOG.info(f"local_machine: {ARGS.local_machine}.")
 
     # Run experiment
     main(ARGS)
