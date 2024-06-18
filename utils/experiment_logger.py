@@ -39,12 +39,15 @@ def get_print_log(name, path, level=DEFAULT_LEVEL, format=DEFAULT_FORMAT):
 def get_parameter_log(name, path, level=DEFAULT_LEVEL, format=DEFAULT_FORMAT):
     return configure_logger(name, path+"/parameters.log", level, format)
 
-def get_test_log(name, path, level=DEFAULT_LEVEL, format=DEFAULT_FORMAT):
-    return configure_logger(name, path+"/testing.log", level, format)
+def get_test_acc_log(name, path, level=DEFAULT_LEVEL, format=DEFAULT_FORMAT):
+    return configure_logger(name, path+"/testing_accuracy.log", level, format)
+
+def get_train_acc_log(name, path, level=DEFAULT_LEVEL, format=DEFAULT_FORMAT):
+    return configure_logger(name, path+"/training_accuracy.log", level, format)
 
 def get_debug_log(name, path, level=logging.DEBUG, format=DEFAULT_FORMAT):
     return configure_logger(name, path+"/debug.log", level, format)
 
 def get_experiment_log(name, path, level=DEFAULT_LEVEL, format=DEFAULT_FORMAT):
-    return configure_logger(name, path+"/experiment_log.log", level, format)
+    return configure_logger(name, path+"/experiment_process.log", level, format)
 

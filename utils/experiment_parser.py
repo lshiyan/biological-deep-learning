@@ -39,20 +39,20 @@ def parse_arguments(args_list=None):
     parser.add_argument("--epochs", type=int, default=3)
 
     # Testing model performance on a test every "test-epochs" epochs
-    parser.add_argument("--test-epochs", type=int, default=1)
+    parser.add_argument("--test_epochs", type=int, default=1)
 
     # A model training regularisation technique to reduce over-fitting
     parser.add_argument("--dropout", type=float, default=0.2)
 
     # This example demonstrates a StepLR learning rate scheduler. Different schedulers will require different hyper-parameters.
     parser.add_argument("--lr", type=float, default=0.005)
-    parser.add_argument("--lr-step-size", type=int, default=1000)
+    parser.add_argument("--lr_step_size", type=int, default=1000)
     parser.add_argument("--gamma", type=float, default=1)
 
     # ---------------------------------------
-    parser.add_argument("--batch-size", type=int, default=1)
-    parser.add_argument("--device-id", type=str, default='cpu')
-    parser.add_argument("--local-machine", type=bool, default=True)
+    parser.add_argument("--batch_size", type=int, default=1)
+    parser.add_argument("--device_id", type=str, default='cpu')
+    parser.add_argument("--local_machine", type=bool, default=True)
 
     # ---------------------------------------
     args = parser.parse_args() if args_list == None else parser.parse_args(args_list)
