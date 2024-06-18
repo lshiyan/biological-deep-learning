@@ -4,7 +4,6 @@
 ##############################################################################
 
 # Built-in imports
-import logging
 import os
 import shutil
 import time
