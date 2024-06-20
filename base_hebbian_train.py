@@ -33,6 +33,7 @@ START_TIME = time.time()
 
 # Parse Arguments
 ARGS = parse_arguments()
+ARGS.local_machine = False
 
 # Setup the result folder
 EXP_NUM = 'cpu-1' if ARGS.local_machine else os.environ["OUTPUT_PATH"].split("/")[-1]
@@ -229,7 +230,7 @@ def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data
             # Degubbing purposes
             EXP_LOG.info(f"The inputs were put into the model ({labels.item()}) and {predictions.argmax(1).item()} are the predictions.")
             DEBUG_LOG.info(f"Prediciton/Actual: {predictions.argmax(1).item()}/{labels.item()}.")
-            EXP_LOG.info(f"The number of correct predictions until now: {correct} out of {total}.")
+            EXP_LOG.info(f"The number of correct predictions until now: {correct_sum} out of {total}.")
 
             # PART ONLY USED IN STRONG COMPUTE
             if not args.local_machine:
@@ -352,7 +353,7 @@ def training_accuracy(model, train_data_loader, test_data_loader, train_test_dat
             # Degubbing purposes
             EXP_LOG.info(f"The inputs were put into the model ({labels.item()}) and {predictions.argmax(1).item()} are the predictions.")
             DEBUG_LOG.info(f"Prediciton/Actual: {predictions.argmax(1).item()}/{labels.item()}.")
-            EXP_LOG.info(f"The number of correct predictions until now: {correct} out of {total}.")
+            EXP_LOG.info(f"The number of correct predictions until now: {correct_sum} out of {total}.")
 
             # PART ONLY USED IN STRONG COMPUTE
             if not args.local_machine:
