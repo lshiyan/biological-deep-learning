@@ -1,7 +1,7 @@
 import subprocess
 
 # Define the script to run and its arguments
-script_name = 'base_hebbian_train.py'
+script_name = 'train.py'
 arguments = ['--is_training=True', 
             "--data_name='MNIST'",
             "--train_data=data/mnist/train-images.idx3-ubyte", 
