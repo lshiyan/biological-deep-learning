@@ -294,7 +294,7 @@ def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data
             
             EXP_LOG.info("Completed 'test_loop' function.")
 
-    TEST_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {round(final_accuracy, 5)}') 
+    TEST_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {final_accuracy}') 
     
     return final_accuracy
 
@@ -417,7 +417,7 @@ def training_accuracy(model, train_data_loader, test_data_loader, train_test_dat
             
             EXP_LOG.info("Completed 'training_accuracy' function.")
 
-    TRAIN_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {round(final_accuracy, 5)}')
+    TRAIN_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {final_accuracy}')
     
     return final_accuracy
 
