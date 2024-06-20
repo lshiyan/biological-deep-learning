@@ -1,5 +1,0 @@
-2024-06-18 12:25:28,428 || Epoch Number: 0 || Test Accuracy: 0.1341317365269461 || Average Test Loss: 0.0 || PCT Test Loss: 0.1341317365269461
-2024-06-18 12:25:34,227 || Epoch Number: 1 || Test Accuracy: 0.17894211576846308 || Average Test Loss: 0.0 || PCT Test Loss: 0.17894211576846308
-2024-06-18 12:25:40,022 || Epoch Number: 2 || Test Accuracy: 0.21297405189620758 || Average Test Loss: 0.0 || PCT Test Loss: 0.21297405189620758
-2024-06-18 12:25:45,838 || Epoch Number: 3 || Test Accuracy: 0.25239520958083833 || Average Test Loss: 0.0 || PCT Test Loss: 0.25239520958083833
-2024-06-18 12:25:51,584 || Epoch Number: 4 || Test Accuracy: 0.2894211576846307 || Average Test Loss: 0.0 || PCT Test Loss: 0.2894211576846307
