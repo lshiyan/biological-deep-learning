@@ -480,52 +480,30 @@ def main(args):
     train_test_data_set = None
     train_test_data_sampler = None
     train_test_data_loader = None
-    
-    final_train_data_set = None
-    final_train_data_sampler = None
-    final_train_data_loader = None
-    
-    final_test_data_set = None
-    final_test_data_sampler = None
-    final_test_data_loader = None
 
     
     if not args.local_machine:
         # Training dataset
         train_data_set = model.get_module("Input Layer").setup_train_data()
         train_sampler = InterruptableDistributedSampler(train_data_set)
-        train_data_loader = DataLoader(train_data_set, batch_size=args.batch_size, shuffle=False, sampler=train_sampler)
+        train_data_loader = DataLoader(train_data_set, batch_size=args.batch_size, shuffle=False, sampler=train_sampler)  # Added sampler, set shuffle to False
         TIMER.report("training data(sampler and dataloader) processing set up")
         EXP_LOG.info("Completed setup for training dataset and dataloader.")
 
         # Testing dataset
         test_data_set = model.get_module("Input Layer").setup_test_data()
         test_sampler = InterruptableDistributedSampler(test_data_set)  
-        test_data_loader = DataLoader(test_data_set, batch_size=args.batch_size, shuffle=False, sampler=test_sampler)
+        test_data_loader = DataLoader(test_data_set, batch_size=args.batch_size, shuffle=False, sampler=test_sampler)  # Added sampler, set shuffle to False
         TIMER.report("testing data(sampler and dataloader) processing set up")
         EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
         # Training dataset for testing
         train_test_data_set = model.get_module("Input Layer").setup_train_data()
         train_test_sampler = InterruptableDistributedSampler(test_data_set)  
-        train_test_data_loader = DataLoader(train_test_data_set, batch_size=args.batch_size, shuffle=False, sampler=train_test_sampler)
+        train_test_data_loader = DataLoader(train_test_data_set, batch_size=args.batch_size, shuffle=False, sampler=train_test_sampler)  # Added sampler, set shuffle to False
         TIMER.report("training testing data(sampler and dataloader) processing set up")
         EXP_LOG.info("Completed setup for training dataset and dataloader for testing purposes.")
 
-        # Final testing dataset
-        finla_test_data_set = model.get_module("Input Layer").setup_test_data()
-        finla_test_sampler = InterruptableDistributedSampler(finla_test_data_set)  
-        finla_test_data_loader = DataLoader(finla_test_data_set, batch_size=args.batch_size, shuffle=False, sampler=finla_test_sampler)
-        TIMER.report("final testing data(sampler and dataloader) processing set up")
-        EXP_LOG.info("Completed setup for final testing dataset and dataloader.")
-        
-        # Final training test dataset
-        final_train_data_set = model.get_module("Input Layer").setup_train_data()
-        final_train_sampler = InterruptableDistributedSampler(final_train_data_set)  
-        final_train_data_loader = DataLoader(final_train_data_set, batch_size=args.batch_size, shuffle=False, sampler=final_train_sampler)
-        TIMER.report("final training testing data(sampler and dataloader) processing set up")
-        EXP_LOG.info("Completed setup for final training dataset and dataloader for testing purposes.")
-        
         # Logging process
         TIMER.report(
             f"Ready for training with hyper-parameters: \nlearning_rate: {args.lr}, \nbatch_size: \{args.batch_size}, \nepochs: {args.epochs}"
@@ -544,18 +522,8 @@ def main(args):
 
         # Training dataset for testing
         train_test_data_set = model.get_module("Input Layer").setup_train_data()
-        train_test_data_loader = DataLoader(train_test_data_set, batch_size=args.batch_size, shuffle=True)
+        train_test_data_loader = DataLoader(test_data_set, batch_size=args.batch_size, shuffle=True)
         EXP_LOG.info("Completed setup for training dataset and dataloader for testing purposes.")
-        
-        # Final testing dataset
-        final_test_data_set = model.get_module("Input Layer").setup_train_data()
-        final_test_data_loader = DataLoader(final_test_data_set, batch_size=args.batch_size, shuffle=True)
-        EXP_LOG.info("Completed setup for final testing dataset and dataloader.")
-        
-        # Final training test dataset
-        final_train_data_set = model.get_module("Input Layer").setup_train_data()
-        final_train_data_loader = DataLoader(final_train_data_set, batch_size=args.batch_size, shuffle=True)
-        EXP_LOG.info("Completed setup for final training dataset and dataloader for testing purposes.")
 
         EXP_LOG.info(f"Ready for training with hyper-parameters: learning_rate ({args.lr}), batch_size ({args.batch_size}), epochs ({args.epochs}).")
 
@@ -656,8 +624,8 @@ def main(args):
     EXP_LOG.info("Completed training of model.")        
     model.visualize_weights(RESULT_PATH)
     EXP_LOG.info("Visualize weights of model after training.")
-    test_acc = testing_accuracy(model, train_data_loader, final_test_data_loader, final_train_data_loader, args, args.epochs)
-    train_acc = training_accuracy(model, train_data_loader, final_test_data_loader, final_train_data_loader, args, args.epochs)
+    test_acc = testing_accuracy(model, train_data_loader, test_data_loader, train_test_data_loader, args, args.epochs)
+    train_acc = training_accuracy(model, train_data_loader, test_data_loader, train_test_data_loader, args, args.epochs)
     EXP_LOG.info("Completed testing methods.")
     PARAM_LOG.info(f"Training accuracy of model after training for {args.epochs} epochs: {train_acc}")
     PARAM_LOG.info(f"Testing accuracy of model after training for {args.epochs} epochs: {test_acc}")
