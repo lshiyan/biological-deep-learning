@@ -47,7 +47,8 @@ class InputLayer (NetworkLayer):
         data_frame (torch.Tensor) = tensor containing dataset to train
     """
     def setup_train_data(self):
-        InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
+        if not os.path.exists(self.train_filename):
+            InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
         data_frame = pd.read_csv(self.train_filename, header=None, on_bad_lines='skip')
         labels = torch.tensor(data_frame[0].values)
         data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
@@ -62,7 +63,8 @@ class InputLayer (NetworkLayer):
         data_frame (torch.Tensor) = tensor containing dataset to test
     """
     def setup_test_data(self):
-        InputLayer.convert(self.test_data, self.test_label, self.test_filename, 10000, 28)
+        if not os.path.exists(self.test_filename):
+            InputLayer.convert(self.test_data, self.test_label, self.test_filename, 10000, 28)
         data_frame = pd.read_csv(self.test_filename, header=None, on_bad_lines='skip')
         labels = torch.tensor(data_frame[0].values)
         data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
