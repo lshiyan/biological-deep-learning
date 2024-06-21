@@ -41,7 +41,7 @@ RESULT_PATH = f"results/experiment-{EXP_NUM}"
 
 if not os.path.exists(RESULT_PATH):
     os.makedirs(RESULT_PATH, exist_ok=True)
-    print(f"Experiment {EXP_NUM} result folder created successfully.")
+    print(f"Experiment '{EXP_NUM}' result folder created successfully.")
 
 # else:
 #     try:
