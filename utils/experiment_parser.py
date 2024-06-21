@@ -52,7 +52,7 @@ def parse_arguments(args_list=None):
     # ---------------------------------------
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--device_id", type=str, default='cpu')
-    parser.add_argument("--local_machine", type=bool, default=True)
+    parser.add_argument("--local_machine", type=bool, default=False)
     parser.add_argument("--save_dir", type=str, default='')
     parser.add_argument("--tboard_path", type=str, default='')
 
