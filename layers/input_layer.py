@@ -116,8 +116,10 @@ class InputLayer (NetworkLayer):
     # TODO: find a better way to implement the logic of having an input processing layer that still extends the layer.NetworkLayer interface
     def create_id_tensors(self): pass
     def set_scheduler(self): pass
-    def visualize_weights(self, path): pass
+    def visualize_weights(self, path, num, use): pass
     def update_weights(self): pass
     def update_bias(self): pass
     def forward(self): pass
     def active_weights(self): pass
+    def _train_forward(self, x, clamped_output): pass
+    def _eval_forward(self, x, clamped_output): pass

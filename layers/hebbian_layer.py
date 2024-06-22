@@ -148,17 +148,18 @@ class HebbianLayer(NetworkLayer):
         if (self.fc.weight.isnan().any()):
             print("NAN WEIGHT")
     
-
+    
     """
-    Feed forward
+    Method that defines how an input data flows throw the network when training
     @param
-        x (torch.Tensor) = input processed data
-        clamped_output (torch.Tensor) = one-hot encode of true labels
-    @retrun
-        x (torch.Tensor) = data after going through hebbian layer
+        x (torch.Tensor) = input data into the layer
+        clamped_output (torch.Tensor) = *NOT USED*
+    @return
+        data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
-    def forward(self, x):
-
+    def _train_forward(self, x, clamped_output=None):
+        if not isinstance(x, torch.Tensor):
+            raise TypeError("Input x must be a torch.Tensor")
         # Copy input -> calculate output -> update weights -> return output
         input_copy = x.clone().to(self.device_id).float()
         x = x.to(self.device_id)
@@ -166,9 +167,36 @@ class HebbianLayer(NetworkLayer):
         x = self.inhibition(x)
         self.update_weights(input_copy, x)
         #self.update_bias(x)
-        self.weight_decay() 
+        self.weight_decay()
         return x
-
+    
+    
+    """
+    Method that defines how an input data flows throw the network when testing
+    @param
+        x (torch.Tensor) = input data into the layer
+    @return
+        data_input (torch.Tensor) = returns the data after passing it throw the layer
+    """
+    def _eval_forward(self, x):
+        # Copy input -> calculate output -> return output
+        x = x.to(self.device_id)
+        x = self.fc(x)
+        x = self.inhibition(x)
+        return x
+    
+    
+    """
+    Counts the number of active feature selectors (above a certain cutoff beta).
+    @param
+        beta (float) = cutoff value determining which neuron is active and which is not
+    @return
+        ___ (void) = no returns
+    """
+    # TODO: define how active_weights should be counted in the hebbian layer
+    def active_weights(self, beta):
+        pass
+    
     
     """
     Visualizes the weight/features learnt by neurons in this layer using their heatmap
@@ -176,7 +204,7 @@ class HebbianLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-    def visualize_weights(self, result_path):
+    def visualize_weights(self, result_path, num, use):
         # Find value for row and column
         row = 0
         col = 0
@@ -205,18 +233,7 @@ class HebbianLayer(NetworkLayer):
             # Move the tensor back to the GPU if needed
             random_feature_selector = random_feature_selector.to(self.device_id)
         
-        file_path = result_path + '/hebbianlayerweights.png'
+        file_path = result_path + f'/hebbian/hebbianlayerweights-{num}-{use}.png'
         plt.tight_layout()
         plt.savefig(file_path)
-        
-
-    """
-    Counts the number of active feature selectors (above a certain cutoff beta).
-    @param
-        beta (float) = cutoff value determining which neuron is active and which is not
-    @return
-        ___ (void) = no returns
-    """
-    # TODO: define how active_weights should be counted in the hebbian layer
-    def active_weights(self, beta):
-        pass
+        plt.close()
