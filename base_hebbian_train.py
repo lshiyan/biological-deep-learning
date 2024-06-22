@@ -10,11 +10,12 @@ import time
 from operator import itemgetter
 
 # Pytorch imports
+import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.functional import one_hot
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 
 # Custom defined model imports
 from models.hebbian_network import HebbianNetwork # Model import
@@ -28,6 +29,12 @@ from utils.experiment_parser import *
 ##############################################################################
 # PART 2: Create logs for experiment and parse arguments
 ##############################################################################
+
+# # Setting random seed
+# seed_value = 42
+# torch.manual_seed(seed_value)
+# np.random.seed(seed_value)
+
 # Start timer
 START_TIME = time.time()
 
@@ -41,7 +48,12 @@ RESULT_PATH = f"results/experiment-{EXP_NUM}"
 
 if not os.path.exists(RESULT_PATH):
     os.makedirs(RESULT_PATH, exist_ok=True)
+    os.makedirs(f"{RESULT_PATH}/classification", exist_ok=True)
+    os.makedirs(f"{RESULT_PATH}/hebbian", exist_ok=True)
     print(f"Experiment '{EXP_NUM}' result folder created successfully.")
+    print(f"Experiment '{EXP_NUM}/classification' result folder created successfully.")
+    print(f"Experiment '{EXP_NUM}/hebbian' result folder created successfully.")
+    
 
 # else:
 #     try:
@@ -80,9 +92,76 @@ if not ARGS.local_machine:
     TIMER.report("Completed imports")
 
 
+##############################################################################
+# PART 3: Helper functions
+##############################################################################
+"""
+Method to compare 2 dataloaders
+@param
+    loader1 = a DataLoader
+    loader2 = a DataLoader
+@return
+    equal = equal or not
+"""
+def compare_dataloaders(loader1:DataLoader, loader2:DataLoader) -> bool:
+    EXP_LOG.info("Started comparing training dataloaders.")
+    equal = True
+    for batch1, batch2 in zip(loader1, loader2):
+        input1, label1 = batch1
+        label1 = label1.item()
+        input2, label2 = batch2
+        label2 = label2.item()
+        
+        if label1 != label2:
+            equal = False
+            PRINT_LOG.info(f"Dataloaders are producing different labels ({label1}/{label2})")
+        
+        if not torch.equal(input1, input2):
+            equal = False
+            PRINT_LOG.info(f"The 2 dataloaders do not have the same inputs.")
+        
+        if not equal: break
+
+    
+    if equal: 
+        PRINT_LOG.info("Both dataloaders are the same.")
+    else:
+        PRINT_LOG.info("Dataloaders are different.")
+    
+    EXP_LOG.info("Completed comparing training dataloaders.")
+    
+    return equal
+    
+
+"""
+Method to compare 2 datasets
+@param
+    dataset1 = a TensorDataset
+    dataset2 = a TensorDataset
+@return
+    equal = equal or not
+"""
+def compare_datasets(dataset1: TensorDataset, dataset2: TensorDataset) -> bool:
+    EXP_LOG.info("Started comparing training dataset.")
+    equal = True
+    if len(dataset1) != len(dataset2):
+        equal = False
+        PRINT_LOG.info("Datasets are of different lengths.")
+
+    for tensor1, tensor2 in zip(dataset1.tensors, dataset2.tensors):
+        if not torch.equal(tensor1, tensor2):
+            equal = False
+            PRINT_LOG.info(f"Datasets have different values: \n Dataset 1: {tensor1} \n Dataset 2: {tensor2}.")
+    
+    if equal: PRINT_LOG.info("Both datasets are the same.")
+    EXP_LOG.info("Completed comparing training dataset.")
+    
+    return equal
+
+
 
 ##############################################################################
-# PART 3: Training
+# PART 4: Training
 ##############################################################################
 """
 Method defining how a single training epoch works
@@ -97,7 +176,7 @@ Method defining how a single training epoch works
     ___ (void) = no returns
 """
 def train_loop(model, train_data_loader, test_data_loader, train_test_data_loader, args, epoch_num, metrics=None):
-    EXP_LOG.info("Started 'train_loop.")
+    EXP_LOG.info("Started 'train_loop'.")
 
     # Epoch and batch set up
     epoch = epoch_num if args.local_machine else train_data_loader.sampler.epoch # Gets the current epoch from the train_data_loader
@@ -115,12 +194,12 @@ def train_loop(model, train_data_loader, test_data_loader, train_test_data_loade
     for inputs, labels in train_data_loader:   
         # Move input and targets to device
         inputs, labels = inputs.to(args.device_id).float(), one_hot(labels, 10).squeeze().to(args.device_id).float()
-        EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
+        # EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
         
         
         # Forward pass
         model(inputs, clamped_output=labels)
-        EXP_LOG.info(f"EPOCH [{epoch}] - forward pass")
+        # EXP_LOG.info(f"EPOCH [{epoch}] - forward pass")
         
         
         # PART ONLY USED IN STRONG COMPUTE
@@ -170,12 +249,13 @@ def train_loop(model, train_data_loader, test_data_loader, train_test_data_loade
                 EXP_LOG.info(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
                 EXP_LOG.info(f"Examples seen: {examples_seen}")
         
-    EXP_LOG.info("Completed 1 epoch of training of 'train_loop'.")
+    EXP_LOG.info("Completed 1 epoch of 'train_loop'.")
+    model.visualize_weights(RESULT_PATH, epoch_num, 'training')
     
 
 
 ##############################################################################
-# PART 4: Testing
+# PART 5: Testing
 ##############################################################################
 """
 Method that test the model at certain epochs during the training process
@@ -191,7 +271,7 @@ Method that test the model at certain epochs during the training process
     final_accuracy (float) = accuracy of the test
 """
 def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data_loader, args, epoch_num, metrics=None, writer=None):
-    EXP_LOG.info("Started 'test_loop' function.")
+    EXP_LOG.info("Started 'testing_accuracy' function.")
 
     # Epoch and batch set up
     epoch = epoch_num if args.local_machine else test_data_loader.sampler.epoch
@@ -217,20 +297,20 @@ def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data
         for inputs, labels in test_data_loader:
             # Move input and targets to device
             inputs, labels = inputs.to(args.device_id), labels.to(args.device_id)
-            EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
+            # EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
             
             # Inference
             predictions = model(inputs)
-            EXP_LOG.info(f"EPOCH [{epoch}] - inference")
+            # EXP_LOG.info(f"EPOCH [{epoch}] - inference")
             
             # Evaluates performance of model on testing dataset
             correct = (predictions.argmax(1) == labels).type(torch.float).sum()
             correct_sum += correct 
 
             # Degubbing purposes
-            EXP_LOG.info(f"The inputs were put into the model ({labels.item()}) and {predictions.argmax(1).item()} are the predictions.")
-            DEBUG_LOG.info(f"Prediciton/Actual: {predictions.argmax(1).item()}/{labels.item()}.")
-            EXP_LOG.info(f"The number of correct predictions until now: {correct_sum} out of {total}.")
+            # EXP_LOG.info(f"The inputs were put into the model ({labels.item()}) and {predictions.argmax(1).item()} are the predictions.")
+            # DEBUG_LOG.info(f"Prediciton/Actual: {predictions.argmax(1).item()}/{labels.item()}.")
+            # EXP_LOG.info(f"The number of correct predictions until now: {correct_sum} out of {total}.")
 
             # PART ONLY USED IN STRONG COMPUTE
             if not args.local_machine:
@@ -289,13 +369,13 @@ def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data
                     )
             # PART IF NOT ON STRONG COMPUTE
             else:
-                EXP_LOG.info(f"Completed testing with {correct_sum} out of {total}.")
-                
                 final_accuracy = correct_sum/total
             
-            EXP_LOG.info("Completed 'test_loop' function.")
+    EXP_LOG.info(f"Completed testing with {correct_sum} out of {total}.")
+    EXP_LOG.info("Completed 'testing_accuracy' function.")
 
     TEST_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {final_accuracy}') 
+    model.visualize_weights(RESULT_PATH, epoch_num, 'test_acc')
     
     return final_accuracy
 
@@ -340,20 +420,20 @@ def training_accuracy(model, train_data_loader, test_data_loader, train_test_dat
         for inputs, labels in train_test_data_loader:
             # Move input and targets to device
             inputs, labels = inputs.to(args.device_id), labels.to(args.device_id)
-            EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
+            # EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
             
             # Inference
             predictions = model(inputs)
-            EXP_LOG.info(f"EPOCH [{epoch}] - inference")
+            # EXP_LOG.info(f"EPOCH [{epoch}] - inference")
             
             # Evaluates performance of model on testing dataset
             correct = (predictions.argmax(1) == labels).type(torch.float).sum()
             correct_sum += correct 
 
             # Degubbing purposes
-            EXP_LOG.info(f"The inputs were put into the model ({labels.item()}) and {predictions.argmax(1).item()} are the predictions.")
-            DEBUG_LOG.info(f"Prediciton/Actual: {predictions.argmax(1).item()}/{labels.item()}.")
-            EXP_LOG.info(f"The number of correct predictions until now: {correct_sum} out of {total}.")
+            # EXP_LOG.info(f"The inputs were put into the model ({labels.item()}) and {predictions.argmax(1).item()} are the predictions.")
+            # DEBUG_LOG.info(f"Prediciton/Actual: {predictions.argmax(1).item()}/{labels.item()}.")
+            # EXP_LOG.info(f"The number of correct predictions until now: {correct_sum} out of {total}.")
 
             # PART ONLY USED IN STRONG COMPUTE
             if not args.local_machine:
@@ -412,20 +492,20 @@ def training_accuracy(model, train_data_loader, test_data_loader, train_test_dat
                     )
             # PART IF NOT ON STRONG COMPUTE
             else:
-                EXP_LOG.info(f"Completed testing with {correct_sum} out of {total}.")
-                 
                 final_accuracy = correct_sum/total
             
-            EXP_LOG.info("Completed 'training_accuracy' function.")
+    EXP_LOG.info(f"Completed testing with {correct_sum} out of {total}.")
+    EXP_LOG.info("Completed 'training_accuracy' function.")
 
     TRAIN_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {final_accuracy}')
+    model.visualize_weights(RESULT_PATH, epoch_num, 'train_acc')
     
     return final_accuracy
 
 
 
 ##############################################################################
-# PART 5: Main Function
+# PART 6: Main Function
 ##############################################################################
 """
 Method describing the main part of the code -> how experiment will be ran
@@ -481,6 +561,14 @@ def main(args):
     train_test_data_set = None
     train_test_data_sampler = None
     train_test_data_loader = None
+    
+    final_train_data_set = None
+    final_train_data_sampler = None
+    final_train_data_loader = None
+    
+    final_test_data_set = None
+    final_test_data_sampler = None
+    final_test_data_loader = None
 
     
     if not args.local_machine:
@@ -523,7 +611,7 @@ def main(args):
 
         # Training dataset for testing
         train_test_data_set = model.get_module("Input Layer").setup_train_data()
-        train_test_data_loader = DataLoader(test_data_set, batch_size=args.batch_size, shuffle=True)
+        train_test_data_loader = DataLoader(train_test_data_set, batch_size=args.batch_size, shuffle=True)
         EXP_LOG.info("Completed setup for training dataset and dataloader for testing purposes.")
 
         EXP_LOG.info(f"Ready for training with hyper-parameters: learning_rate ({args.lr}), batch_size ({args.batch_size}), epochs ({args.epochs}).")
@@ -594,11 +682,14 @@ def main(args):
                         )
 
     else:
+        # compare_datasets(train_data_set, train_test_data_set)
+        # compare_dataloaders(train_data_loader, train_test_data_loader)
+        
         EXP_LOG.info("Started training and testing loops.")
         for epoch in range(0, args.epochs): 
             train_loop(
                 model, 
-                train_data_loader, 
+                train_data_loader,
                 test_data_loader,
                 train_test_data_loader,
                 args,
@@ -623,7 +714,7 @@ def main(args):
                 )
     
     EXP_LOG.info("Completed training of model.")        
-    model.visualize_weights(RESULT_PATH)
+    model.visualize_weights(RESULT_PATH, args.epochs, 'final')
     EXP_LOG.info("Visualize weights of model after training.")
     test_acc = testing_accuracy(model, train_data_loader, test_data_loader, train_test_data_loader, args, args.epochs)
     train_acc = training_accuracy(model, train_data_loader, test_data_loader, train_test_data_loader, args, args.epochs)
@@ -637,7 +728,7 @@ def main(args):
 
 
 ##############################################################################
-# PART 6: What code will be ran when file is ran
+# PART 7: What code will be ran when file is ran
 ##############################################################################
 
 # Actual code that will be ran
@@ -669,6 +760,8 @@ if __name__ == "__main__":
     # End timer
     END_TIME = time.time()
     DURATION = END_TIME - START_TIME
-    minutes = int(DURATION // 60)
+    hours = int(DURATION // 3600)
+    minutes = int((DURATION % 3600) // 60)
     seconds = int(DURATION % 60)
-    EXP_LOG.info(f"The experiment took {minutes}m:{seconds}s to be completed.")
+    EXP_LOG.info(f"The experiment took {hours}h:{minutes}m:{seconds}s to be completed.")
+    PARAM_LOG.info(f"Runtime of experiment: {hours}h:{minutes}m:{seconds}s")

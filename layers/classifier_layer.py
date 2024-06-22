@@ -95,21 +95,35 @@ class ClassifierLayer(NetworkLayer):
         bias_maxes = torch.max(A, dim=0).values
         self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
     
-
+    
     """
-    Method that defines how an input data flows through the layer
+    Method that defines how an input data flows throw the network when training
     @param
-        x (torch.Tensor) = data after going through hebbian layer
+        x (torch.Tensor) = input data into the layer
         clamped_output (torch.Tensor) = one-hot encode of true labels
-    @retrun
-        x (torch.Tensor) = data after going through classification layer
+    @return
+        data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
-    def forward(self, x, clamped_output=None):
+    def _train_forward(self, x, clamped_output=None):
         softmax = nn.Softmax()
         input_copy = x.clone()
         x = self.fc(x)
         self.update_weights(input_copy, x, clamped_output)
         # self.update_bias(x)
+        x = softmax(x)
+        return x
+    
+    
+    """
+    Method that defines how an input data flows throw the network when testing
+    @param
+        x (torch.Tensor) = input data into the layer
+    @return
+        data_input (torch.Tensor) = returns the data after passing it throw the layer
+    """
+    def _eval_forward(self, x):
+        softmax = nn.Softmax()
+        x = self.fc(x)
         x = softmax(x)
         return x
     
@@ -134,7 +148,7 @@ class ClassifierLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-    def visualize_weights(self, result_path):
+    def visualize_weights(self, result_path, num, use):
         # Find value for row and column
         row = 0
         col = 0
@@ -163,6 +177,7 @@ class ClassifierLayer(NetworkLayer):
             # Move the tensor back to the GPU if needed
             random_feature_selector = random_feature_selector.to(self.device_id)
 
-        file_path = result_path + '/classifierlayerweights.png'
+        file_path = result_path + f'/classification/classifierlayerweights-{num}-{use}.png'
         plt.tight_layout()
         plt.savefig(file_path)
+        plt.close()

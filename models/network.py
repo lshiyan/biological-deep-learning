@@ -64,9 +64,9 @@ class Network(nn.Module, ABC):
     @return
         ___ (void) = no returns
     """
-    def visualize_weights(self, path):
+    def visualize_weights(self, path, num, use):
         for module in self.children():
-            module.visualize_weights(path)
+            module.visualize_weights(path, num, use)
 
 
     """

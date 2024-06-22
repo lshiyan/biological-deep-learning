@@ -27,7 +27,7 @@ class NetworkLayer (nn.Module, ABC):
     @return
         * Can't return *
     """
-    def __init__(self, input_dimension, output_dimension, device_id, lamb=1, learning_rate=0.001, eps=10e-5):
+    def __init__(self, input_dimension, output_dimension, device_id, lamb=1, learning_rate=0.005, eps=0.01):
         super ().__init__()
         self.input_dimension = input_dimension
         self.output_dimension = output_dimension
@@ -65,7 +65,7 @@ class NetworkLayer (nn.Module, ABC):
         ___ (void) = no returns
     """
     @abstractmethod
-    def visualize_weights(self, result_path):
+    def visualize_weights(self, result_path, num, use):
         pass
     
 
@@ -74,11 +74,10 @@ class NetworkLayer (nn.Module, ABC):
     @param
         input (torch.Tensor) = the inputs into the layer
         output (torch.Tensor) = the output of the layer
-        clamped_output (TODO: ???) = ???
+        clamped_output (torch.Tensor) = true labels
     @return
         ___ (void) = no returns
     """
-    # NOTE: what is clamped_output
     @abstractmethod
     def update_weights(self, input, output, clamped_output=None):
         pass
@@ -104,9 +103,36 @@ class NetworkLayer (nn.Module, ABC):
     @return
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
-
+    def forward(self, x, clamped_output=None):
+        if self.training:
+            x = self._train_forward(x, clamped_output)
+        else:
+            x = self._eval_forward(x)
+        return x
+    
+    
+    """
+    Method that defines how an input data flows throw the network when training
+    @param
+        x (torch.Tensor) = input data into the layer
+        clamped_output (torch.Tensor) = one-hot encode of true labels
+    @return
+        data_input (torch.Tensor) = returns the data after passing it throw the layer
+    """
     @abstractmethod
-    def forward(self, x, clamped_output):
+    def _train_forward(self, x, clamped_output=None):
+        pass
+    
+    
+    """
+    Method that defines how an input data flows throw the network when testing
+    @param
+        x (torch.Tensor) = input data into the layer
+    @return
+        data_input (torch.Tensor) = returns the data after passing it throw the layer
+    """
+    @abstractmethod
+    def _eval_forward(self, x):
         pass
 
 
