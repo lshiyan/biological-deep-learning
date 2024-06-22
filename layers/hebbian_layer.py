@@ -70,28 +70,41 @@ class HebbianLayer(NetworkLayer):
         ___ (void) = no returns
     """
     def update_weights(self, input, output):
+
+        # STEP 1: Extract and prepare input and output vectors to be 'x' and 'y' respectively
         x = input.clone().detach().float().squeeze().to(self.device_id)
         x.requires_grad_(False)
         y = output.clone().detach().float().squeeze().to(self.device_id)
         y.requires_grad_(False)
         
-        # Move tensors to CPU before calling outer
-        outer_prod = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy()))
+        
+        # STEP 2: Calculate the Outer product of 'x' and 'y'
+        outer_prod = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())) # Move tensors to CPU before calling outer
 
         # Move back to GPU
         outer_prod = outer_prod.to(self.device_id)
 
+        # STEP 3: Retrieve and Prepare Initial Weights
+            # Here, weight is of size -> output_dimensionXinput_dimension
         initial_weight = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0, 1)
 
         # Ensure id_tensor and exponential_average are on the same device as the others
         self.id_tensor = self.id_tensor.to(self.device_id)
         self.exponential_average = self.exponential_average.to(self.device_id)
 
+        # STEP 4: COMPUTE LATERAL INHIBITION TERM
         A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
-        A = A * (y.unsqueeze(1))
-        delta_weight = self.alpha * (outer_prod - A)
-        self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
-        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+        A = A * (y.unsqueeze(1)) # 'A'  represents the inhibitory effect based on current weights and activations.
+        # In brief, the above calculates how much each neuron’s activation is influenced by others in the context of their current weights.
+
+        # STEP 5: Compute weight update
+        delta_weight = self.alpha * (outer_prod - A)    # So basically, Here,  alpha  is the learning rate, I have the outer product, and A is the inhibition term.
+        
+        # STEP 6: Update the weights
+        self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False) # Basically W = W + (delta_W)
+        
+        # STEP 7: Update the exponential average
+        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y) # Update the exponential moving average of the output activations:
     
     
     """

@@ -7,3 +7,6 @@ __pycache__/
 
 #Virtual env
 fundamental_virtual_env/
+
+#Large log files
+*.log

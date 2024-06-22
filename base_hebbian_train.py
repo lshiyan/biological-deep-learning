@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader
 
 # Custom defined model imports
 from models.hebbian_network import HebbianNetwork # Model import
+from models.hebbian_network_with_attention import HebbianNetworkWithAttention
 
 # Utils imports
 from utils.experiment_logger import *
@@ -459,7 +460,8 @@ def main(args):
     # ===========================================
     # Set up model
     # ===========================================
-    model = HebbianNetwork(args).float()
+    #model = HebbianNetwork(args).float()
+    model = HebbianNetworkWithAttention(args).float()
     model = model.to(args.device_id)
     if not args.local_machine: TIMER.report("Model set up and moved to device")
     EXP_LOG.info("Created model for the experiment.")
