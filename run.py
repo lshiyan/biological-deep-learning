@@ -17,7 +17,7 @@ arguments = ['--is_training=True',
             '--heb_gam=0.99', 
             '--cla_lamb=1',
             '--eps=0.01', 
-            '--epochs=5', 
+            '--epochs=30', 
             '--test_epochs=1', 
             '--lr=0.005', 
             '--lr_step_size=1000', 
@@ -35,5 +35,5 @@ command = ['python', script_name] + arguments
 result = subprocess.run(command, capture_output=True, text=True)
 
 # Print the output
-print("Standard Output:", result.stdout)
-print("Standard Error:", result.stderr)
+print("Standard Output:\n", result.stdout)
+print("Standard Error:\n", result.stderr)
