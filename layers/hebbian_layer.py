@@ -182,7 +182,7 @@ class HebbianLayer(NetworkLayer):
         # Copy input -> calculate output -> return output
         x = x.to(self.device_id)
         x = self.fc(x)
-        #x = self.inhibition(x)
+        x = self.inhibition(x)
         return x
     
     
