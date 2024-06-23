@@ -101,7 +101,7 @@ class NetworkLayer (nn.Module, ABC):
         x (torch.Tensor) = input data into the layer
         clamped_output (torch.Tensor) = one-hot encode of true labels
     @return
-        data_input (torch.Tensor) = returns the data after passing it throw the layer
+        data_input (torch.Tensor) = returns the data after passing it through the layer
     """
     @abstractmethod
     def _train_forward(self, x, clamped_output=None):
@@ -113,7 +113,7 @@ class NetworkLayer (nn.Module, ABC):
     @param
         x (torch.Tensor) = input data into the layer
     @return
-        data_input (torch.Tensor) = returns the data after passing it throw the layer
+        data_input (torch.Tensor) = returns the data after passing it through the layer
     """
     @abstractmethod
     def _eval_forward(self, x):
