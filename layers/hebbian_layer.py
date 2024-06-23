@@ -156,13 +156,16 @@ class HebbianLayer(NetworkLayer):
         x = relu(x)  # Apply ReLU activation to ensure non-negative values
         max_ele = torch.max(x).item()  # Find the maximum element in the tensor
 
-        # Apply the exponential function to the activations
-        x = torch.exp(self.lamb * x)
+        # Apply the exponential function to the activations with stability
+        exp_x = torch.exp(self.lamb * (x - max_ele))
 
-        # Normalize the activations by dividing by the exponential of the maximum element
-        x /= torch.exp(self.lamb * max_ele)
+        # Normalize the activations by dividing by the sum of the exponentials
+        x = exp_x / torch.sum(exp_x)
         
         return x
+
+
+
 
     """
     Defines the way the weights will be updated at each iteration of the training.
