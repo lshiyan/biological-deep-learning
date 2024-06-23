@@ -105,7 +105,7 @@ class ClassifierLayer(NetworkLayer):
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
     def _train_forward(self, x, clamped_output=None):
-        softmax = nn.Softmax(dim=10)
+        softmax = nn.Softmax(dim=1)
         input_copy = x.clone()
         x = self.fc(x)
         self.update_weights(input_copy, x, clamped_output)
@@ -122,7 +122,7 @@ class ClassifierLayer(NetworkLayer):
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
     def _eval_forward(self, x):
-        softmax = nn.Softmax(dim=10)
+        softmax = nn.Softmax(dim=1)
         x = self.fc(x)
         x = softmax(x)
         return x
