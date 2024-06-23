@@ -157,7 +157,7 @@ class HebbianLayer(NetworkLayer):
     @return
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
-    def _train_forward(self, x, clamped_output=None):
+    def _train_forward(self, x, num_class=10, clamped_output=None):
         if not isinstance(x, torch.Tensor):
             raise TypeError("Input x must be a torch.Tensor")
         # Copy input -> calculate output -> update weights -> return output
@@ -178,7 +178,7 @@ class HebbianLayer(NetworkLayer):
     @return
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
-    def _eval_forward(self, x):
+    def _eval_forward(self, x, num_class=10):
         # Copy input -> calculate output -> return output
         x = x.to(self.device_id)
         x = self.fc(x)
