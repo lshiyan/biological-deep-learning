@@ -121,5 +121,5 @@ class InputLayer (NetworkLayer):
     def update_bias(self): pass
     def forward(self): pass
     def active_weights(self): pass
-    def _train_forward(self, x, num_class=10, clamped_output=None): pass
-    def _eval_forward(self, x, num_class=10): pass
+    def _train_forward(self, x, clamped_output=None): pass
+    def _eval_forward(self, x): pass

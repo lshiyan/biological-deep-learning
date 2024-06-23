@@ -120,7 +120,7 @@ class NetworkLayer (nn.Module, ABC):
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
     @abstractmethod
-    def _train_forward(self, x, num_class=10, clamped_output=None):
+    def _train_forward(self, x, clamped_output=None):
         pass
     
     
@@ -132,7 +132,7 @@ class NetworkLayer (nn.Module, ABC):
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
     @abstractmethod
-    def _eval_forward(self, x, num_class=10):
+    def _eval_forward(self, x):
         pass
 
 
