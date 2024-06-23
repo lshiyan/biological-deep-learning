@@ -96,22 +96,6 @@ class NetworkLayer (nn.Module, ABC):
     
 
     """
-    Method that defines how an input data flows throw the network
-    @param
-        x (torch.Tensor) = input data into the layer
-        clamped_output (torch.Tensor) = one-hot encode of true labels
-    @return
-        data_input (torch.Tensor) = returns the data after passing it throw the layer
-    """
-    def forward(self, x, clamped_output=None):
-        if self.training:
-            x = self._train_forward(x, clamped_output)
-        else:
-            x = self._eval_forward(x)
-        return x
-    
-    
-    """
     Method that defines how an input data flows throw the network when training
     @param
         x (torch.Tensor) = input data into the layer
@@ -146,3 +130,19 @@ class NetworkLayer (nn.Module, ABC):
     @abstractmethod
     def active_weights(self, beta):
         pass
+
+    """
+    Method that defines how an input data flows throw the network
+    @param
+        x (torch.Tensor) = input data into the layer
+        clamped_output (torch.Tensor) = one-hot encode of true labels
+    @return
+        data_input (torch.Tensor) = returns the data after passing it throw the layer
+    """
+    def forward(self, x, clamped_output=None):
+        if self.training:
+            x = self._train_forward(x, clamped_output)
+        else:
+            x = self._eval_forward(x)
+        return x
+    
