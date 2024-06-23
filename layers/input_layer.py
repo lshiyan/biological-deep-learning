@@ -40,6 +40,10 @@ class InputLayer (NetworkLayer):
         self.test_label = test_label
         self.test_filename = test_filename
 
+
+    # TODO 1: CAN REDUCE THE TWO FUNCTIONS INTO 1, BY PROVIDING A HYPERPARAM INDICATING TRAINING OR NOT
+
+
     """
     Function to setup the training dataset
     @param
