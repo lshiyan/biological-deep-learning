@@ -55,7 +55,7 @@ class HebbianLayer(NetworkLayer):
     @param
         x (torch.Tensor) = input to the ReLU function
     @return
-        x (torch.Tensor) = activation after lateral inhibition
+        x (torch.Tensor) = activatin after lateral inhibition
     """
     def relu_inhibition(self, x):
 
@@ -79,21 +79,6 @@ class HebbianLayer(NetworkLayer):
             # Normalizes the tensor x by dividing it by the absolute value of the maximum element raised to the power of self.lamb.
             # This ensures that the scaled values are within a consistent range, preventing them from becoming excessively large or small.
 
-        return x
-    
-
-
-
-    """
-    This function implements the divisive normalization inhibition
-    @param
-        x (torch.Tensor) = input
-    @return
-        x (torch.Tensor) = activation after lateral inhibition
-    """
-    def divisive_normalization_inhibition(x, epsilon=1e-6):
-        sum_activity = torch.sum(x)
-        x = x / (sum_activity + epsilon)
         return x
     
 
