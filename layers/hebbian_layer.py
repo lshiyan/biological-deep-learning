@@ -2,6 +2,7 @@ import math
 from matplotlib import pyplot as plt
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from numpy import outer
 from layers.layer import NetworkLayer
 
@@ -97,6 +98,22 @@ class HebbianLayer(NetworkLayer):
         return x
     
 
+
+
+    """
+    This function implements the gaussian inhibition
+    @param
+        x (torch.Tensor) = input
+    @return
+        x (torch.Tensor) = activation after lateral inhibition
+    """
+    def gaussian_inhibition(x, sigma=1.0):
+        size = int(2 * sigma + 1)
+        kernel = torch.tensor([torch.exp(-(i - size // 2) ** 2 / (2 * sigma ** 2)) for i in range(size)])
+        kernel = kernel / torch.sum(kernel)
+
+        x = F.conv1d(x.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
+        return x
 
 
         
