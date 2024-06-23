@@ -175,41 +175,56 @@ class HebbianLayer(NetworkLayer):
     @return
         ___ (void) = no returns
     """
-    def update_weights(self, input, output):
-
-        # STEP 1: Extract and prepare input and output vectors to be 'x' and 'y' respectively
+    def update_weights(self, input, output, clamped_output=None):
+        
+    # STEP 1: Extract and prepare input and output vectors so that I can update the weights accordingly
         x = input.clone().detach().float().squeeze().to(self.device_id)
         x.requires_grad_(False)
         y = output.clone().detach().float().squeeze().to(self.device_id)
         y.requires_grad_(False)
-        
-        # STEP 2: Calculate the Outer product of 'x' and 'y'
+
+        # What is done in the above lines of code is the following:
+            # The input (x) and output (y) tensors are cloned, detached from the computation graph, converted to float, squeezed to remove any singleton dimensions, and moved to the specified device (self.device_id)
+            # requires_grad_(False) ensures these tensors will not track gradients.
+
+
+    # STEP 2: Calculate the outer product
         outer_prod = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy()))  # Move tensors to CPU before calling outer
-
-        # Move back to GPU
         outer_prod = outer_prod.to(self.device_id)
+        # Here, the outer product of the output (y) and input (x) vectors is computed and then moved back to the GPU
 
-        # STEP 3: Retrieve and Prepare Initial Weights
-            # Here, weight is of size -> output_dimensionXinput_dimension
+
+    # STEP 3: Retrieve and Prepare initial weights
         initial_weight = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0, 1)
+        # Here, the current weights of the fully connected layer (self.fc.weight) are cloned, detached, and transposed. This prepares the weights for subsequent calculations.
 
-        # Ensure id_tensor and exponential_average are on the same device as the others
+        
+    # STEP 4: Ensure Tensors are on the same device
         self.id_tensor = self.id_tensor.to(self.device_id)
         self.exponential_average = self.exponential_average.to(self.device_id)
+        # Here, I move the id_tensor and exponential_average tensors to the same device as the other tensors to ensure compatibility in calculations.
 
-        # STEP 4: COMPUTE LATERAL INHIBITION TERM
+
+    # STEP 5: Compute lateral inhibition term
         A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
-        A = A * (y.unsqueeze(1))# 'A'  represents the inhibitory effect based on current weights and activations.
-        # In brief, the above calculates how much each neuron’s activation is influenced by others in the context of their current weights.
+        A = A * (y.unsqueeze(1))  # 'A' represents the inhibitory effect based on current weights and activations.
 
-        # STEP 5: Compute weight update
+    # TODO -> UNDERSTAND THIS EINSUM!
+
+
+    # STEP 6: Compute weight update
         delta_weight = self.alpha * (outer_prod - A)
+        # Here, the weight update (delta_weight) is computed by subtracting the lateral inhibition term (A) from the outer product and scaling by the learning rate self.alpha.
 
-        # STEP 6: Update the weights
+    # STEP 7: Update the weights
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
+        # The weights of the fully connected layer are updated by adding delta_weight. 
+        # The updated weights are wrapped in nn.Parameter with requires_grad=False to ensure they do not track gradients.
 
-        # STEP 7: Update the exponential average
+
+    # STEP 8: Update the exponential average
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+        # The exponential average of the output activations is updated using a moving average formula with decay factor self.gamma.
     
     
     """
@@ -282,7 +297,7 @@ class HebbianLayer(NetworkLayer):
         input_copy = x.clone().to(self.device_id).float()
         x = x.to(self.device_id)
         x = self.fc(x)
-        x = self.relu_inhibition(x)
+        x = self.modern_hopfield_inhibition(x)
         self.update_weights(input_copy, x)
         #self.update_bias(x)
         self.weight_decay()
@@ -300,7 +315,7 @@ class HebbianLayer(NetworkLayer):
         # Copy input -> calculate output -> return output
         x = x.to(self.device_id)
         x = self.fc(x)
-        x = self.relu_inhibition(x)
+        x = self.modern_hopfield_inhibition(x)
         return x
     
     
