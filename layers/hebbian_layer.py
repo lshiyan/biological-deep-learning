@@ -114,6 +114,21 @@ class HebbianLayer(NetworkLayer):
 
         x = F.conv1d(x.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
         return x
+    
+
+
+    """
+    This function implements the winner takes all inhibition
+    @param
+        x (torch.Tensor) = input
+    @return
+        x (torch.Tensor) = activation after lateral inhibition
+    """
+    def winner_take_all_inhibition(x, top_k=1):
+        topk_values, _ = torch.topk(x, top_k)
+        threshold = topk_values[-1]
+        x = torch.where(x >= threshold, x, torch.tensor(0.0, device=x.device))
+        return x
 
 
         
