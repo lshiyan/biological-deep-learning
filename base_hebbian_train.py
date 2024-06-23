@@ -10,7 +10,6 @@ import time
 from operator import itemgetter
 
 # Pytorch imports
-import numpy as np
 import torch
 import torch.distributed as dist
 from torch.nn.functional import one_hot
@@ -29,11 +28,6 @@ from utils.experiment_parser import *
 ##############################################################################
 # PART 2: Create logs for experiment and parse arguments
 ##############################################################################
-
-# # Setting random seed
-# seed_value = 42
-# torch.manual_seed(seed_value)
-# np.random.seed(seed_value)
 
 # Start timer
 START_TIME = time.time()
