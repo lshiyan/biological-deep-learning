@@ -21,8 +21,12 @@ class InputLayer (NetworkLayer):
             test_label (str) = test label filename (.ubyte)
             test_filename (str) = test data (img + label) filename (.csv)
     """
-
-    def __init__(self, train_data: str, train_label: str, train_filename: str, test_data: str, test_label: str, test_filename: str) -> None:
+    def __init__(self, train_data: str, 
+                 train_label: str, 
+                 train_filename: str, 
+                 test_data: str, 
+                 test_label: str, 
+                 test_filename: str) -> None:
         """
         Constructor method
         @param
@@ -83,7 +87,11 @@ class InputLayer (NetworkLayer):
 
 
     @classmethod
-    def convert(cls, img_file: str, label_file: str, out_file: str, data_size: int, img_size: int):
+    def convert(cls, img_file: str, 
+                label_file: str, 
+                out_file: str, 
+                data_size: int, 
+                img_size: int) -> None:
         """
         CLASS METHOD
         Convert .ubyte files into a .csv file for ease of use
@@ -94,6 +102,7 @@ class InputLayer (NetworkLayer):
             data_size: number of data inputs
             img_size: size of image
         @return
+            None
         """    
         # Get absolute path of all the necessary files (img, label, out)
         project_root: str = os.getcwd()

@@ -18,7 +18,12 @@ class NetworkLayer (nn.Module, ABC):
         fc (nn.Linear): function to apply linear transformation to incoming data
         eps (float): to avoid division by 0
     """
-    def __init__(self, input_dimension: int, output_dimension: int, device_id: str, lamb: float = 1, learning_rate: float = 0.005, eps: float = 0.01) -> None:
+    def __init__(self, input_dimension: int, 
+                 output_dimension: int, 
+                 device_id: str, 
+                 lamb: float = 1, 
+                 learning_rate: float = 0.005, 
+                 eps: float = 0.01) -> None:
         """
         CONSTRUCTOR METHOD
         @param

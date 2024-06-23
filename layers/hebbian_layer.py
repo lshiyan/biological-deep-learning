@@ -6,98 +6,102 @@ from numpy import outer
 from layers.layer import NetworkLayer
 
 
-"""
-Class defining the functionality of the hebbian layer
-"""
 class HebbianLayer(NetworkLayer):
     """
-    Constructor method NetworkLayer
-    @param
-        input_dimension (int) = number of inputs into the layer
-        output_dimension (int) = number of outputs from layer
-        lamb (float) = lambda hyperparameter for latteral inhibition
-        heb_lr (float) = how fast model learns at each iteration
-        gamma (float) = decay factor -> factor to decay learning rate
-        eps (float) = to avoid division by 0
-    @attr.
+    CLASS
+    Defining the functionality of the hebbian layer
+    @instance attr.
         PARENT ATTR.
-            input_dimension (int) = number of inputs into the layer
-            output_dimension (int) = number of outputs from layer
-            device_id (int) = the device that the module will be running on
-            lamb (float) = lambda hyperparameter for latteral inhibition
-            alpha (float) = how fast model learns at each iteration
-            fc (fct) = function to apply linear transformation to incoming data
-            eps (float) = to avoid division by 0
+            input_dimension (int): number of inputs into the layer
+            output_dimension (int): number of outputs from layer
+            device_id (str): the device that the module will be running on
+            lamb (float): lambda hyperparameter for latteral inhibition
+            alpha (float): how fast model learns at each iteration
+            fc (nn.Linear): function to apply linear transformation to incoming data
+            eps (float): to avoid division by 0
         OWN ATTR.
-            exponential_average (torch.Tensor) = 0 tensor to keep track of exponential averages
-            gamma (float) = decay factor -> factor to decay learning rate
-            id_tensor (torch.Tensor) = id tensor of layer
-    @return
-        ___ (layers.Hebbianlayer) = returns instance of HebbianLayer
+            exponential_average (torch.Tensor): 0 tensor to keep track of exponential averages
+            gamma (float): decay factor -> factor to decay learning rate
+            id_tensor (torch.Tensor): id tensor of layer
     """
-    def __init__(self, input_dimension, output_dimension, device_id, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
-        super ().__init__(input_dimension, output_dimension, device_id, lamb, heb_lr, eps)
-        self.gamma = gamma
-        self.exponential_average = torch.zeros(self.output_dimension)
-        self.id_tensor = self.create_id_tensors()
+    def __init__(self, input_dimension: int, 
+                 output_dimension: int, 
+                 device_id: str, 
+                 lamb: float = 1, 
+                 heb_lr: float = 0.005, 
+                 gamma: float = 0.99, 
+                 eps: float = 0.01) -> None:
+        """
+        CONSTRUCTOR METHOD
+        @param
+            input_dimension: number of inputs into the layer
+            output_dimension: number of outputs from layer
+            lamb: lambda hyperparameter for latteral inhibition
+            heb_lr: how fast model learns at each iteration
+            gamma: decay factor -> factor to decay learning rate
+            eps: to avoid division by 0
+        @return
+            None
+        """
+        super().__init__(input_dimension, output_dimension, device_id, lamb, heb_lr, eps)
+        self.gamma: float = gamma
+        self.exponential_average: torch.Tensor = torch.zeros(self.output_dimension)
+        self.id_tensor: torch.Tensor = self.create_id_tensors()
 
 
-    """
-    Calculates lateral inhibition
-    @param
-        x (torch.Tensor) = input to the ReLU function
-    @return
-        x (torch.Tensor) = activatin after lateral inhibition
-    """
-    def inhibition(self, x):
-        relu = nn.ReLU()
-        x = relu(x)
-        max_ele = torch.max(x).item()
-        x = torch.pow(x, self.lamb)
-        x /= abs(max_ele) ** self.lamb
-        return x
+    def inhibition(self, input: torch.Tensor):
+        """
+        METHOD
+        Calculates lateral inhibition
+        @param
+            input: input to the ReLU function
+        @return
+            input: activation after lateral inhibition
+        """
+        relu: nn.ReLU = nn.ReLU()
+        input: torch.Tensor = relu(input)
+        max_ele: int = torch.max(input).item()
+        input = torch.pow(input, self.lamb)
+        input /= abs(max_ele) ** self.lamb
+        return input
         
 
-    """
-    Defines the way the weights will be updated at each iteration of the training.
-    Employs Sanger's Rule, deltaW_(ij)=alpha*x_j*y_i-alpha*y_i*sum(k=1 to i) (w_(kj)*y_k).
-    Calculates outer product of input and output and adds it to matrix.
-    @param
-        input (torch.Tensor) = the inputs into the layer
-        output (torch.Tensor) = the output of the layer
-        clamped_output (torch.Tensor) = one-hot encode of true labels
-    @return
-        ___ (void) = no returns
-    """
-    def update_weights(self, input, output):
-
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor) -> None:
+        """
+        METHOD
+        Update weights using Sanger's Rule.
+        @param
+            input: the inputs into the layer
+            output: the output of the layer
+        @return
+            None
+        """
         # STEP 1: Extract and prepare input and output vectors to be 'x' and 'y' respectively
-        x = input.clone().detach().float().squeeze().to(self.device_id)
+        x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device_id)
         x.requires_grad_(False)
-        y = output.clone().detach().float().squeeze().to(self.device_id)
+        y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device_id)
         y.requires_grad_(False)
         
         # STEP 2: Calculate the Outer product of 'x' and 'y'
-        outer_prod = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy()))  # Move tensors to CPU before calling outer
+        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy()))  # Move tensors to CPU before calling outer
 
         # Move back to GPU
         outer_prod = outer_prod.to(self.device_id)
 
         # STEP 3: Retrieve and Prepare Initial Weights
             # Here, weight is of size -> output_dimensionXinput_dimension
-        initial_weight = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0, 1)
+        initial_weight: torch.Tensor = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0, 1)
 
         # Ensure id_tensor and exponential_average are on the same device as the others
         self.id_tensor = self.id_tensor.to(self.device_id)
         self.exponential_average = self.exponential_average.to(self.device_id)
 
         # STEP 4: COMPUTE LATERAL INHIBITION TERM
-        A = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
-        A = A * (y.unsqueeze(1))# 'A'  represents the inhibitory effect based on current weights and activations.
-        # In brief, the above calculates how much each neuron’s activation is influenced by others in the context of their current weights.
+        A: torch.Tensor = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
+        A = A * (y.unsqueeze(1))
 
         # STEP 5: Compute weight update
-        delta_weight = self.alpha * (outer_prod - A)
+        delta_weight: torch.Tensor = self.alpha * (outer_prod - A)
 
         # STEP 6: Update the weights
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
@@ -105,49 +109,52 @@ class HebbianLayer(NetworkLayer):
         # STEP 7: Update the exponential average
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
     
-    
-    """
-    Defines the way the biases will be updated at each iteration of the training
-    It updates the biases of the classifier layer using a decay mechanism adjusted by the output probabilities.
-    The method applies an exponential decay to the biases, which is modulated by the output probabilities,
-    and scales the update by the learning rate. 
-    The biases are normalized after the update.
-    @param
-        output (torch.Tensor) = The output tensor of the layer.
-    @return
-        ___ (void) = no returns
-    """
-    def update_bias(self, output):
-        y = output.clone().detach().squeeze()
+
+    def update_bias(self, output: torch.Tensor) -> None:
+        """
+        METHOD
+        Defines the way the biases will be updated at each iteration of the training
+        It updates the biases of the classifier layer using a decay mechanism adjusted by the output probabilities.
+        The method applies an exponential decay to the biases, which is modulated by the output probabilities,
+        and scales the update by the learning rate. 
+        The biases are normalized after the update.
+        @param
+            output: The output tensor of the layer.
+        @return
+            None
+        """
+        y: torch.Tensor = output.clone().detach().squeeze()
         exponential_bias = torch.exp(-1*self.fc.bias) # Apply exponential decay to biases
 
         # Compute bias update scaled by output probabilities.
-        A = torch.mul(exponential_bias, y) - 1
+        A: torch.Tensor = torch.mul(exponential_bias, y) - 1
         A = self.fc.bias + self.alpha * A
 
         # Normalize biases to maintain stability. (Divide by max bias value)
-        bias_maxes = torch.max(A, dim=0).values
+        bias_maxes: float = torch.max(A, dim=0).values
         self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
+        
 
-
-    """
-    Decays the overused weights and increases the underused weights using tanh functions.
-    @param
-    @return
-        ___ (void) = no returns
-    """
-    def weight_decay(self):
-        tanh = nn.Tanh()
+    def weight_decay(self) -> None:
+        """
+        METHOD
+        Decays the overused weights and increases the underused weights using tanh functions.
+        @param
+            None
+        @return
+            None
+        """
+        tanh: nn.Tanh = nn.Tanh()
 
         # Gets average of exponential averages
-        average = torch.mean(self.exponential_average).item()
+        average: float = torch.mean(self.exponential_average).item()
 
         # Gets ratio vs mean
-        A = self.exponential_average / average
+        A: torch.Tensor = self.exponential_average / average
 
         # calculate the growth factors
-        growth_factor_positive = self.eps * tanh(-self.eps * (A - 1)) + 1
-        growth_factor_negative = torch.reciprocal(growth_factor_positive)
+        growth_factor_positive: torch.Tensor = self.eps * tanh(-self.eps * (A - 1)) + 1
+        growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
 
         # Update the weights depending on growth factor
         positive_weights = torch.where(self.fc.weight > 0, self.fc.weight, 0.0)
@@ -160,63 +167,55 @@ class HebbianLayer(NetworkLayer):
         if (self.fc.weight.isnan().any()):
             print("NAN WEIGHT")
     
-    
-    """
-    Method that defines how an input data flows throw the network when training
-    @param
-        x (torch.Tensor) = input data into the layer
-        clamped_output (torch.Tensor) = *NOT USED*
-    @return
-        data_input (torch.Tensor) = returns the data after passing it throw the layer
-    """
-    def _train_forward(self, x, clamped_output=None):
-        if not isinstance(x, torch.Tensor):
-            raise TypeError("Input x must be a torch.Tensor")
+
+    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+        """
+        METHOD
+        Defines how an input data flows throw the network when training
+        @param
+            input: input data into the layer
+            clamped_output: *NOT USED*
+        @return
+            input: returns the data after passing it throw the layer
+        """
         # Copy input -> calculate output -> update weights -> return output
-        input_copy = x.clone().to(self.device_id).float()
-        x = x.to(self.device_id)
-        x = self.fc(x)
-        x = self.inhibition(x)
-        self.update_weights(input_copy, x)
-        #self.update_bias(x)
+        input_copy = input.clone().to(self.device_id).float()
+        input = input.to(self.device_id)
+        input = self.fc(input)
+        input = self.inhibition(input)
+        self.update_weights(input_copy, input)
+        #self.update_bias(input)
         self.weight_decay()
-        return x
+        return input
     
-    
-    """
-    Method that defines how an input data flows throw the network when testing
-    @param
-        x (torch.Tensor) = input data into the layer
-    @return
-        data_input (torch.Tensor) = returns the data after passing it throw the layer
-    """
-    def _eval_forward(self, x):
+
+    def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Define how an input data flows throw the network when testing
+        @param
+            input: input data into the layer
+        @return
+            input: returns the data after passing it throw the layer
+        """
         # Copy input -> calculate output -> return output
-        x = x.to(self.device_id)
-        x = self.fc(x)
-        x = self.inhibition(x)
-        return x
+        input = input.to(self.device_id)
+        input = self.fc(input)
+        input = self.inhibition(input)
+        return input
     
-    
-    """
-    Counts the number of active feature selectors (above a certain cutoff beta).
-    @param
-        beta (float) = cutoff value determining which neuron is active and which is not
-    @return
-        ___ (void) = no returns
-    """
-    # TODO: define how active_weights should be counted in the hebbian layer
-    def active_weights(self, beta):
-        pass
-    
-    
-    """
-    Visualizes the weight/features learnt by neurons in this layer using their heatmap
-    @param
-    @return
-        ___ (void) = no returns
-    """
-    def visualize_weights(self, result_path, num, use):
+
+    def visualize_weights(self, result_path: str, num: int, use: str) -> None:
+        """
+        METHOD
+        Vizualize the weight/features learned by neurons in this layer using a heatmap
+        @param
+            result_path: path to folder where results will be printed
+            num: integer representing certain property (for file name creation purposes)
+            use: the use that called this method (for file name creation purposes)
+        @return
+            None
+        """
         # Find value for row and column
         row = 0
         col = 0
