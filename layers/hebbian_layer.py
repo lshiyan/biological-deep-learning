@@ -1,8 +1,11 @@
 import math
 from matplotlib import pyplot as plt
+import matplotlib
+import matplotlib.figure
 import torch
 import torch.nn as nn
 from numpy import outer
+import numpy as np
 from layers.layer import NetworkLayer
 
 
@@ -217,10 +220,10 @@ class HebbianLayer(NetworkLayer):
             None
         """
         # Find value for row and column
-        row = 0
-        col = 0
+        row: int = 0
+        col: int = 0
 
-        root = int(math.sqrt(self.output_dimension))
+        root: int = int(math.sqrt(self.output_dimension))
         for i in range(root, 0, -1):
             if self.output_dimension % i == 0:
                 row = min(i, self.output_dimension // i)
@@ -228,12 +231,14 @@ class HebbianLayer(NetworkLayer):
                 break
         
         # Get the weights and create heatmap
-        weight = self.fc.weight
+        weight: nn.parameter.Parameter = self.fc.weight
+        fig: matplotlib.figure.Figure = None
+        axes: np.ndarray = None
         fig, axes = plt.subplots(row, col, figsize=(16, 16))
         for ele in range(row*col):  
-            random_feature_selector = weight[ele]
+            random_feature_selector: torch.Tensor = weight[ele]
             # Move tensor to CPU, convert to NumPy array for visualization
-            heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
+            heatmap: torch.Tensor = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
                                                 int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
 
             ax = axes[ele // col, ele % col]
@@ -244,7 +249,7 @@ class HebbianLayer(NetworkLayer):
             # Move the tensor back to the GPU if needed
             random_feature_selector = random_feature_selector.to(self.device_id)
         
-        file_path = result_path + f'/hebbian/hebbianlayerweights-{num}-{use}.png'
+        file_path: str = result_path + f'/hebbian/hebbianlayerweights-{num}-{use}.png'
         plt.tight_layout()
         plt.savefig(file_path)
         plt.close()

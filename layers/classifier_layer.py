@@ -72,18 +72,15 @@ class ClassifierLayer(NetworkLayer):
         self.fc.weight[:, 0] = 0
         
 
-    """
-    Defines the way the biases will be updated at each iteration of the training
-    It updates the biases of the classifier layer using a decay mechanism adjusted by the output probabilities.
-    The method applies an exponential decay to the biases, which is modulated by the output probabilities,
-    and scales the update by the learning rate. 
-    The biases are normalized after the update.
-    @param
-        output (torch.Tensor): The output tensor of the layer.
-    @return
-        ___ (void) = no returns
-    """
-    def update_bias(self, output):
+    def update_bias(self, output: torch.Tensor) -> None:
+        """
+        METHOD
+        Define the way the bias will be updated at each iteration of the training
+        @param
+            output: the output of the layer
+        @return
+            None
+        """
         y = output.clone().detach().squeeze()
         exponential_bias = torch.exp(-1*self.fc.bias) # Apply exponential decay to biases
 
@@ -95,60 +92,52 @@ class ClassifierLayer(NetworkLayer):
         bias_maxes = torch.max(A, dim=0).values
         self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
     
-    
-    """
-    Method that defines how an input data flows throw the network when training
-    @param
-        x (torch.Tensor) = input data into the layer
-        clamped_output (torch.Tensor) = one-hot encode of true labels
-    @return
-        data_input (torch.Tensor) = returns the data after passing it throw the layer
-    """
-    def _train_forward(self, x, clamped_output=None):
+
+    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+        """
+        METHOD
+        Defines how an input data flows throw the network when training
+        @param
+            input: input data into the layer
+            clamped_output: one-hot encode of true labels
+        @return
+            input: returns the data after passing it throw the layer
+        """
         softmax = nn.Softmax(dim=1)
-        input_copy = x.clone()
-        x = self.fc(x)
-        self.update_weights(input_copy, x, clamped_output)
-        # self.update_bias(x)
-        x = softmax(x)
-        return x
+        input_copy = input.clone()
+        input = self.fc(input)
+        self.update_weights(input_copy, input, clamped_output)
+        # self.update_bias(input)
+        input = softmax(input)
+        return input
     
     
-    """
-    Method that defines how an input data flows throw the network when testing
-    @param
-        x (torch.Tensor) = input data into the layer
-    @return
-        data_input (torch.Tensor) = returns the data after passing it throw the layer
-    """
-    def _eval_forward(self, x):
+    def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Defines how an input data flows throw the network when testing
+        @param
+            input: input data into the layer
+        @return
+            input: returns the data after passing it throw the layer
+        """
         softmax = nn.Softmax(dim=1)
-        x = self.fc(x)
-        x = softmax(x)
-        return x
-    
-
-    """
-    Counts the number of active feature selectors (above a certain cutoff beta).
-    @param
-        beta (float) = cutoff value determining which neuron is active and which is not
-    @return
-        active.nonzero().size(0) (int) = nunmber of active weights
-    """
-    def active_weights(self, beta):
-        weights = self.fc.weight
-        active = torch.where(weights > beta, weights, 0.0)
-        return active.nonzero().size(0)
+        input = self.fc(input)
+        input = softmax(input)
+        return input
 
 
-    """
-    Visualizes the weight/features learnt by neurons in this layer using their heatmap
-    @param
-        result_path (Path) = path to folder where results will be printed
-    @return
-        ___ (void) = no returns
-    """
-    def visualize_weights(self, result_path, num, use):
+    def visualize_weights(self, result_path: str, num: int, use: str) -> None:
+        """
+        METHOD
+        Vizualize the weight/features learned by neurons in this layer using a heatmap
+        @param
+            result_path: path to folder where results will be printed
+            num: integer representing certain property (for file name creation purposes)
+            use: the use that called this method (for file name creation purposes)
+        @return
+            None
+        """
         # Find value for row and column
         row = 0
         col = 0
@@ -181,3 +170,17 @@ class ClassifierLayer(NetworkLayer):
         plt.tight_layout()
         plt.savefig(file_path)
         plt.close()
+
+    
+    def active_weights(self, beta):
+        """
+        METHOD
+        Get number of active feature selectors
+        @param
+            beta: cutoff value determining which neuron is active
+        @return
+            number of active weights
+        """
+        weights = self.fc.weight
+        active = torch.where(weights > beta, weights, 0.0)
+        return active.nonzero().size(0)

@@ -66,37 +66,6 @@ class NetworkLayer (nn.Module, ABC):
             padded_identity: torch.Tensor = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, self.output_dimension - i-1))
             id_tensor[i] = padded_identity
         return id_tensor
-
-
-    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
-        """
-        METHOD
-        Defines how input data flows throw the network
-        @param
-            input: input data into the layer
-            clamped_output: one-hot encode of true labels
-        @return
-            input: returns the data after passing it throw the layer
-        """
-        if self.training:
-            input = self._train_forward(input, clamped_output)
-        else:
-            input = self._eval_forward(input)
-        return input
-    
-
-    def visualize_weights(self, result_path: str, num: int, use: str) -> None:
-        """
-        METHOD
-        Vizualize the weight/features learned by neurons in this layer using a heatmap
-        @param
-            result_path: path to folder where results will be printed
-            num: integer representing certain property (for file name creation purposes)
-            use: the use that called this method (for file name creation purposes)
-        @return
-            None
-        """
-        raise NotImplementedError("This method is not implemented.")
     
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
@@ -125,6 +94,23 @@ class NetworkLayer (nn.Module, ABC):
         raise NotImplementedError("This method is not implemented.")
     
 
+    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+        """
+        METHOD
+        Defines how input data flows throw the network
+        @param
+            input: input data into the layer
+            clamped_output: one-hot encode of true labels
+        @return
+            input: returns the data after passing it throw the layer
+        """
+        if self.training:
+            input = self._train_forward(input, clamped_output)
+        else:
+            input = self._eval_forward(input)
+        return input
+
+
     def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
         """
         METHOD
@@ -150,6 +136,20 @@ class NetworkLayer (nn.Module, ABC):
         raise NotImplementedError("This method is not implemented.")
 
 
+    def visualize_weights(self, result_path: str, num: int, use: str) -> None:
+        """
+        METHOD
+        Vizualize the weight/features learned by neurons in this layer using a heatmap
+        @param
+            result_path: path to folder where results will be printed
+            num: integer representing certain property (for file name creation purposes)
+            use: the use that called this method (for file name creation purposes)
+        @return
+            None
+        """
+        raise NotImplementedError("This method is not implemented.")
+    
+    
     def active_weights(self, beta: float) -> int:
         """
         METHOD

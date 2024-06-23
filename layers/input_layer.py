@@ -137,3 +137,15 @@ class InputLayer (NetworkLayer):
         imgs.close()
         out.close()
         labels.close()
+        
+
+    # List of all methods from layers.NetworkLayer that are not needed for this layer
+    # TODO: find a better way to implement the logic of having an input processing layer that still extends the layer.NetworkLayer interface
+    def create_id_tensors(self): pass
+    def update_weights(self): pass
+    def update_bias(self): pass
+    def forward(self, input, clamped_output): pass
+    def _train_forward(self, x, clamped_output=None): pass
+    def _eval_forward(self, x): pass
+    def visualize_weights(self, path, num, use): pass
+    def active_weights(self): pass
