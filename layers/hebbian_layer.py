@@ -143,6 +143,27 @@ class HebbianLayer(NetworkLayer):
         return x / torch.sum(x)
         
 
+
+    """
+    Calculates lateral inhibition using an exponential function -> This function mimics MODERN HOPFIELD NET
+    @param
+        x (torch.Tensor)
+    @return
+        x (torch.Tensor) = activation after lateral inhibition
+    """
+    def modern_hopfield_inhibition(self, x):
+        relu = nn.ReLU()
+        x = relu(x)  # Apply ReLU activation to ensure non-negative values
+        max_ele = torch.max(x).item()  # Find the maximum element in the tensor
+
+        # Apply the exponential function to the activations
+        x = torch.exp(self.lamb * x)
+
+        # Normalize the activations by dividing by the exponential of the maximum element
+        x /= torch.exp(self.lamb * max_ele)
+        
+        return x
+
     """
     Defines the way the weights will be updated at each iteration of the training.
     Employs Sanger's Rule, deltaW_(ij)=alpha*x_j*y_i-alpha*y_i*sum(k=1 to i) (w_(kj)*y_k).
