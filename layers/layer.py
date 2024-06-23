@@ -5,7 +5,8 @@ import torch.nn as nn
 
 class NetworkLayer (nn.Module, ABC):
     """
-    Abstract class for a single layer of the ANN -> Every layer of the interface must implement interface
+    ABSTRACT CLASS
+    Single layer of the ANN -> Every layer of the interface must implement interface
     This will help with the support of multiple hidden layers inside the network
     
     @instance attr.
@@ -19,7 +20,7 @@ class NetworkLayer (nn.Module, ABC):
     """
     def __init__(self, input_dimension: int, output_dimension: int, device_id: str, lamb: float = 1, learning_rate: float = 0.005, eps: float = 0.01) -> None:
         """
-        Constructor method NetworkLayer
+        CONSTRUCTOR METHOD
         @param
             input_dimension: number of inputs into the layer
             output_dimension: number of outputs from layer
@@ -47,7 +48,8 @@ class NetworkLayer (nn.Module, ABC):
 
     def create_id_tensors(self) -> torch.Tensor:   
         """
-        Method to create an identity tensor
+        METHOD
+        Create an identity tensor
         @param
             None
         @return
@@ -63,7 +65,8 @@ class NetworkLayer (nn.Module, ABC):
 
     def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
         """
-        Method that defines how an input data flows throw the network
+        METHOD
+        Defines how input data flows throw the network
         @param
             input: input data into the layer
             clamped_output: one-hot encode of true labels
@@ -77,10 +80,10 @@ class NetworkLayer (nn.Module, ABC):
         return input
     
 
-    @abstractmethod
     def visualize_weights(self, result_path: str, num: int, use: str) -> None:
         """
-        Method to vizualize the weight/features learned by neurons in this layer using a heatmap
+        METHOD
+        Vizualize the weight/features learned by neurons in this layer using a heatmap
         @param
             result_path: path to folder where results will be printed
             num: integer representing certain property (for file name creation purposes)
@@ -88,13 +91,13 @@ class NetworkLayer (nn.Module, ABC):
         @return
             None
         """
-        pass
+        raise NotImplementedError("This method is not implemented.")
     
 
-    @abstractmethod
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
         """
-        Method to define the way the weights will be updated at each iteration of the training
+        METHOD
+        Define the way the weights will be updated at each iteration of the training
         @param
             input: the inputs into the layer
             output: the output of the layer
@@ -102,53 +105,53 @@ class NetworkLayer (nn.Module, ABC):
         @return
             None
         """
-        pass
+        raise NotImplementedError("This method is not implemented.")
 
 
-    @abstractmethod 
     def update_bias(self, output: torch.Tensor) -> None:
         """
-        Method to define the way the bias will be updated at each iteration of the training
+        METHOD
+        Define the way the bias will be updated at each iteration of the training
         @param
             output: the output of the layer
         @return
             None
         """
-        pass
+        raise NotImplementedError("This method is not implemented.")
     
 
-    @abstractmethod
     def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
         """
-        Method that defines how an input data flows throw the network when training
+        METHOD
+        Defines how an input data flows throw the network when training
         @param
             input: input data into the layer
             clamped_output: one-hot encode of true labels
         @return
             input: returns the data after passing it throw the layer
         """
-        pass
+        raise NotImplementedError("This method is not implemented.")
     
 
-    @abstractmethod
     def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
         """
-        Method that defines how an input data flows throw the network when testing
+        METHOD
+        Defines how an input data flows throw the network when testing
         @param
             input: input data into the layer
         @return
             input: returns the data after passing it throw the layer
         """
-        pass
+        raise NotImplementedError("This method is not implemented.")
 
 
-    @abstractmethod
     def active_weights(self, beta: float) -> int:
         """
-        Method to get number of active feature selectors
+        METHOD
+        Get number of active feature selectors
         @param
             beta: cutoff value determining which neuron is active
         @return
             number of active weights
         """
-        pass
+        raise NotImplementedError("This method is not implemented.")

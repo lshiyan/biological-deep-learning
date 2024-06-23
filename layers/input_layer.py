@@ -3,22 +3,14 @@ from torch.utils.data import TensorDataset
 import os
 import pandas as pd
 from layers.layer import NetworkLayer
+from typing import IO, List
 
 
-"""
-Class defining how the input dataset will be processed before feeding it to the network
-"""
 class InputLayer (NetworkLayer):
     """
-    Constructor method InputLayer
-    @param
-        train_data (str) = train data filename (.ubyte)
-        train_label (str) = train label filename (.ubyte)
-        train_filename (str) = train data (img + label) filename (.csv)
-        test_data (str) = test data filename (.ubyte)
-        test_label (str) = test label filename (.ubyte)
-        test_filename (str) = test data (img + label) filename (.csv)
-    @attr.
+    Class defining how the input dataset will be processed before feeding it to the network
+    
+    @instance attr.
         PARENT ATTR.
             * Not used for this layer *
         OWN ATTR.
@@ -28,65 +20,91 @@ class InputLayer (NetworkLayer):
             test_data (str) = test data filename (.ubyte)
             test_label (str) = test label filename (.ubyte)
             test_filename (str) = test data (img + label) filename (.csv)
-    @return
-        ___ (layers.InputLayer) = returns instance of InputLayer
     """
-    def __init__(self, train_data, train_label, train_filename, test_data, test_label, test_filename):
-        super().__init__(0, 0, 0)
-        self.train_data = train_data
-        self.train_label = train_label
-        self.train_filename = train_filename
-        self.test_data = test_data
-        self.test_label = test_label
-        self.test_filename = test_filename
 
-    """
-    Function to setup the training dataset
-    @param
-    @return
-        data_frame (torch.Tensor) = tensor containing dataset to train
-    """
-    def setup_train_data(self):
+    def __init__(self, train_data: str, train_label: str, train_filename: str, test_data: str, test_label: str, test_filename: str) -> None:
+        """
+        Constructor method
+        @param
+            train_data: train data filename (.ubyte)
+            train_label: train label filename (.ubyte)
+            train_filename: train data (img + label) filename (.csv)
+            test_data: test data filename (.ubyte)
+            test_label: test label filename (.ubyte)
+            test_filename: test data (img + label) filename (.csv)
+        @return
+            None
+        """
+        super().__init__(0, 0, 0)
+        self.train_data: str = train_data
+        self.train_label: str = train_label
+        self.train_filename: str = train_filename
+        self.test_data: str = test_data
+        self.test_label: str = test_label
+        self.test_filename: str = test_filename
+
+
+    def setup_train_data(self) -> TensorDataset:
+        """
+        Function to setup the training dataset
+        @param
+            None
+        @return
+            tensor dataset containing (data, label)
+        """
         if not os.path.exists(self.train_filename):
             InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
-        data_frame = pd.read_csv(self.train_filename, header=None, on_bad_lines='skip')
-        labels = torch.tensor(data_frame[0].values)
-        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
-        data_frame /= 255
-        return TensorDataset(data_frame, labels)
+        
+        data_frame: pd.DataFrame = pd.read_csv(self.train_filename, header=None, on_bad_lines='skip')
+        labels: torch.Tensor = torch.tensor(data_frame[0].values)
+        data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+        data_tensor /= 255
+        
+        return TensorDataset(data_tensor, labels)
 
 
-    """
-    Function to setup the testing dataset
-    @param
-    @return
-        data_frame (torch.Tensor) = tensor containing dataset to test
-    """
-    def setup_test_data(self):
+    def setup_test_data(self) -> TensorDataset:
+        """
+        Function to setup the testing dataset
+        @param
+            None
+        @return
+            tensor dataset containing (data, label)
+        """
         if not os.path.exists(self.test_filename):
             InputLayer.convert(self.test_data, self.test_label, self.test_filename, 10000, 28)
-        data_frame = pd.read_csv(self.test_filename, header=None, on_bad_lines='skip')
-        labels = torch.tensor(data_frame[0].values)
-        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
-        data_frame /= 255
-        return TensorDataset(data_frame, labels)
+            
+        data_frame: pd.DataFrame = pd.read_csv(self.test_filename, header=None, on_bad_lines='skip')
+        labels: torch.Tensor = torch.tensor(data_frame[0].values)
+        data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+        data_tensor /= 255
+        
+        return TensorDataset(data_tensor, labels)
 
 
-    """
-    Class method to convert .ubyte files into a .csv file for ease of use
-    """
     @classmethod
-    def convert(cls, img_file, label_file, out_file, data_size, img_size):
+    def convert(cls, img_file: str, label_file: str, out_file: str, data_size: int, img_size: int):
+        """
+        CLASS METHOD
+        Convert .ubyte files into a .csv file for ease of use
+        @param
+            img_file: path to image files
+            label_file: path to file with labels
+            out_file: path to .cvs file that merges data and label
+            data_size: number of data inputs
+            img_size: size of image
+        @return
+        """    
         # Get absolute path of all the necessary files (img, label, out)
-        project_root = os.getcwd()
-        img_file = os.path.join(project_root, img_file)
-        label_file = os.path.join(project_root, label_file)
-        out_file = os.path.join(project_root, out_file)
+        project_root: str = os.getcwd()
+        img_file: str = os.path.join(project_root, img_file)
+        label_file: str = os.path.join(project_root, label_file)
+        out_file: str = os.path.join(project_root, out_file)
 
         # Open all necessary files
-        imgs = open(img_file, "rb")
-        out = open(out_file, "w")
-        labels = open(label_file, "rb")
+        imgs: IO = open(img_file, "rb")
+        out: IO = open(out_file, "w")
+        labels: IO = open(label_file, "rb")
         
         # Skip header bytes
         imgs.read(16)
@@ -94,11 +112,11 @@ class InputLayer (NetworkLayer):
         
         # Create a 2D list of images where each image is a 1D list where the first element is the label
         img_size = img_size**2
-        images = []
+        images: List[List[int]] = []
 
-        for i in range(data_size):
-            image = [int.from_bytes(labels.read(1), byteorder='big')]
-            for j in range(img_size):
+        for _ in range(data_size):
+            image: List[int] = [int.from_bytes(labels.read(1), byteorder='big')]
+            for _ in range(img_size):
                 image.append(int.from_bytes(imgs.read(1), byteorder='big'))
             images.append(image)
 
@@ -110,16 +128,3 @@ class InputLayer (NetworkLayer):
         imgs.close()
         out.close()
         labels.close()
-
-
-    # List of all methods from layers.NetworkLayer that are not needed for this layer
-    # TODO: find a better way to implement the logic of having an input processing layer that still extends the layer.NetworkLayer interface
-    def create_id_tensors(self): pass
-    def set_scheduler(self): pass
-    def visualize_weights(self, path, num, use): pass
-    def update_weights(self): pass
-    def update_bias(self): pass
-    def forward(self): pass
-    def active_weights(self): pass
-    def _train_forward(self, x, clamped_output=None): pass
-    def _eval_forward(self, x): pass
