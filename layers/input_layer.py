@@ -43,6 +43,14 @@ class InputLayer (NetworkLayer):
 
     # TODO 1: CAN REDUCE THE TWO FUNCTIONS INTO 1, BY PROVIDING A HYPERPARAM INDICATING TRAINING OR NOT
 
+    # Static method to log bad lines
+    @staticmethod
+    def log_bad_lines(line, line_number):
+        log_dir = os.path.dirname(os.path.abspath(__file__))
+        log_file_path = os.path.join(log_dir, "bad_lines.log")
+        with open(log_file_path, "a") as log_file:                  # Open log file in append mode
+            log_file.write(f"Line {line_number}: {line}\n")         # Write bad line and its line number
+
 
     """
     Function to setup the training dataset
@@ -53,7 +61,7 @@ class InputLayer (NetworkLayer):
     def setup_train_data(self):
         if not os.path.exists(self.train_filename):
             InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
-        data_frame = pd.read_csv(self.train_filename, header=None, on_bad_lines='skip')
+        data_frame = pd.read_csv(self.train_filename, header=None, on_bad_lines=InputLayer.log_bad_lines, engine='python')
         labels = torch.tensor(data_frame[0].values)
         data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
         data_frame /= 255
