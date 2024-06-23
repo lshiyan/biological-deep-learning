@@ -573,21 +573,21 @@ def main(args):
     
     if not args.local_machine:
         # Training dataset
-        train_data_set = model.get_module("Input Layer").setup_data(dataset_type='train')
+        train_data_set = model.get_module("Input Layer").setup_train_data()
         train_sampler = InterruptableDistributedSampler(train_data_set)
         train_data_loader = DataLoader(train_data_set, batch_size=args.batch_size, shuffle=False, sampler=train_sampler)  # Added sampler, set shuffle to False
         TIMER.report("training data(sampler and dataloader) processing set up")
         EXP_LOG.info("Completed setup for training dataset and dataloader.")
 
         # Testing dataset
-        test_data_set = model.get_module("Input Layer").setup_data(dataset_type='test')
+        test_data_set = model.get_module("Input Layer").setup_test_data()
         test_sampler = InterruptableDistributedSampler(test_data_set)  
         test_data_loader = DataLoader(test_data_set, batch_size=args.batch_size, shuffle=False, sampler=test_sampler)  # Added sampler, set shuffle to False
         TIMER.report("testing data(sampler and dataloader) processing set up")
         EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
         # Training dataset for testing
-        train_test_data_set = model.get_module("Input Layer").setup_data(dataset_type='train')
+        train_test_data_set = model.get_module("Input Layer").setup_train_data()
         train_test_sampler = InterruptableDistributedSampler(test_data_set)  
         train_test_data_loader = DataLoader(train_test_data_set, batch_size=args.batch_size, shuffle=False, sampler=train_test_sampler)  # Added sampler, set shuffle to False
         TIMER.report("training testing data(sampler and dataloader) processing set up")
@@ -600,17 +600,17 @@ def main(args):
         EXP_LOG.info(f"Ready for training with hyper-parameters: learning_rate ({args.lr}), batch_size ({args.batch_size}), epochs ({args.epochs}).")
     else:
         # Training dataset
-        train_data_set = model.get_module("Input Layer").setup_data(dataset_type='train')
+        train_data_set = model.get_module("Input Layer").setup_train_data()
         train_data_loader = DataLoader(train_data_set, batch_size=args.batch_size, shuffle=True)
         EXP_LOG.info("Completed setup for training dataset and dataloader.")
 
         # Testing dataset
-        test_data_set = model.get_module("Input Layer").setup_data(dataset_type='test')
+        test_data_set = model.get_module("Input Layer").setup_test_data()
         test_data_loader = DataLoader(test_data_set, batch_size=args.batch_size, shuffle=True)
         EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
         # Training dataset for testing
-        train_test_data_set = model.get_module("Input Layer").setup_data(dataset_type='train')
+        train_test_data_set = model.get_module("Input Layer").setup_train_data()
         train_test_data_loader = DataLoader(train_test_data_set, batch_size=args.batch_size, shuffle=True)
         EXP_LOG.info("Completed setup for training dataset and dataloader for testing purposes.")
 

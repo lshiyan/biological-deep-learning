@@ -52,34 +52,36 @@ class InputLayer (NetworkLayer):
             log_file.write(f"Line {line_number}: {line}\n")         # Write bad line and its line number
 
 
-
     """
-    Function to setup the dataset
+    Function to setup the training dataset
     @param
     @return
-        data_frame (torch.Tensor) = tensor containing dataset
+        data_frame (torch.Tensor) = tensor containing dataset to train
     """
-    def setup_data(self, dataset_type='train'):
-        if dataset_type == 'train':
-            filename = self.train_filename
-            data_file = self.train_data
-            label_file = self.train_label
-            data_size = 60000
-        else:
-            filename = self.test_filename
-            data_file = self.test_data
-            label_file = self.test_label
-            data_size = 10000
-
-        if not os.path.exists(filename):
-            InputLayer.convert(data_file, label_file, filename, data_size, 28)
-        
-        data_frame = pd.read_csv(filename, header=None, on_bad_lines=InputLayer.log_bad_lines if dataset_type == 'train' else 'skip', engine='python')
+    def setup_train_data(self):
+        if not os.path.exists(self.train_filename):
+            InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
+        data_frame = pd.read_csv(self.train_filename, header=None, on_bad_lines=InputLayer.log_bad_lines, engine='python')
         labels = torch.tensor(data_frame[0].values)
         data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
         data_frame /= 255
         return TensorDataset(data_frame, labels)
 
+
+    """
+    Function to setup the testing dataset
+    @param
+    @return
+        data_frame (torch.Tensor) = tensor containing dataset to test
+    """
+    def setup_test_data(self):
+        if not os.path.exists(self.test_filename):
+            InputLayer.convert(self.test_data, self.test_label, self.test_filename, 10000, 28)
+        data_frame = pd.read_csv(self.test_filename, header=None, on_bad_lines='skip')
+        labels = torch.tensor(data_frame[0].values)
+        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+        data_frame /= 255
+        return TensorDataset(data_frame, labels)
 
 
     """
