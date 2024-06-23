@@ -10,3 +10,6 @@ fundamental_virtual_env/
 
 #Tests
 tests/
+
+#Results
+results/
