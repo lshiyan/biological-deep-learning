@@ -24,7 +24,7 @@ class HebbianLayer(NetworkLayer):
             input_dimension (int) = number of inputs into the layer
             output_dimension (int) = number of outputs from layer
             device_id (int) = the device that the module will be running on
-            lamb (float) = lambda hyperparameter for latteral inhibition
+            lamb (float) = lambda hyperparameter for lateral inhibition (FOR relu_inhibition specifically)
             alpha (float) = how fast model learns at each iteration
             fc (fct) = function to apply linear transformation to incoming data
             eps (float) = to avoid division by 0
@@ -43,19 +43,47 @@ class HebbianLayer(NetworkLayer):
 
 
     """
-    Calculates lateral inhibition
+    This function mimicks the behaviour of classical hopfield net!
+
+    This function implements a form of lateral inhibition with a ReLU activation function
+
+    Lateral inhibition is a process where an activated neuron suppresses the activity of its neighbors, enhancing the contrast in the activity pattern.
+    
+    This function ensures that stronger activations are further emphasized
+    This can lead to more distinct and sparse activations, which can be beneficial
+
     @param
         x (torch.Tensor) = input to the ReLU function
     @return
         x (torch.Tensor) = activatin after lateral inhibition
     """
-    def inhibition(self, x):
+    def relu_inhibition(self, x):
+
+        # Step 1: ReLU Activation
         relu = nn.ReLU()
         x = relu(x)
+
+        # Step 2: Find max element -> this step finds the maximum value in the tensor x after ReLU activation
         max_ele = torch.max(x).item()
+            # The .item() method converts the tensor containing the maximum value to a Python scalar.
+
+
+        # Step 3: Apply power function
         x = torch.pow(x, self.lamb)
+            # Raises each element of the tensor x to the power of self.lamb.
+            # This operation enhances the differences between the activated values, with higher values becoming more pronounced.
+
+
+        # Step 4: Normalization
         x /= abs(max_ele) ** self.lamb
+            # Normalizes the tensor x by dividing it by the absolute value of the maximum element raised to the power of self.lamb.
+            # This ensures that the scaled values are within a consistent range, preventing them from becoming excessively large or small.
+
         return x
+    
+
+
+
         
 
     """
@@ -176,7 +204,7 @@ class HebbianLayer(NetworkLayer):
         input_copy = x.clone().to(self.device_id).float()
         x = x.to(self.device_id)
         x = self.fc(x)
-        x = self.inhibition(x)
+        x = self.relu_inhibition(x)
         self.update_weights(input_copy, x)
         #self.update_bias(x)
         self.weight_decay()
@@ -194,7 +222,7 @@ class HebbianLayer(NetworkLayer):
         # Copy input -> calculate output -> return output
         x = x.to(self.device_id)
         x = self.fc(x)
-        x = self.inhibition(x)
+        x = self.relu_inhibition(x)
         return x
     
     
