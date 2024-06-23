@@ -31,8 +31,8 @@ class InputLayer (NetworkLayer):
     @return
         ___ (layers.InputLayer) = returns instance of InputLayer
     """
-    def __init__(self, train_data, train_label, train_filename, test_data, test_label, test_filename, device_id):
-        super().__init__(0, 0, device_id) # WHY WAS THE DEVICE ID SET TO 0???? 
+    def __init__(self, train_data, train_label, train_filename, test_data, test_label, test_filename):
+        super().__init__(0, 0, 0)
         self.train_data = train_data
         self.train_label = train_label
         self.train_filename = train_filename
