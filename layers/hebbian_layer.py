@@ -131,6 +131,16 @@ class HebbianLayer(NetworkLayer):
         return x
 
 
+    """
+    This function implements the softmax inhibition
+    @param
+        x (torch.Tensor) = input
+    @return
+        x (torch.Tensor) = activation after lateral inhibition
+    """
+    def softmax_inhibition(x):
+        x = torch.exp(x - torch.max(x))
+        return x / torch.sum(x)
         
 
     """
