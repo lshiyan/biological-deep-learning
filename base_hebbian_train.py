@@ -1,4 +1,3 @@
-
 ##############################################################################
 # PART 1: Imports and Timer Initialization
 ##############################################################################
@@ -90,76 +89,9 @@ if not ARGS.local_machine:
     TIMER.report("Completed imports")
 
 
-##############################################################################
-# PART 3: Helper functions
-##############################################################################
-"""
-Method to compare 2 dataloaders
-@param
-    loader1 = a DataLoader
-    loader2 = a DataLoader
-@return
-    equal = equal or not
-"""
-def compare_dataloaders(loader1:DataLoader, loader2:DataLoader) -> bool:
-    EXP_LOG.info("Started comparing training dataloaders.")
-    equal = True
-    for batch1, batch2 in zip(loader1, loader2):
-        input1, label1 = batch1
-        label1 = label1.item()
-        input2, label2 = batch2
-        label2 = label2.item()
-        
-        if label1 != label2:
-            equal = False
-            PRINT_LOG.info(f"Dataloaders are producing different labels ({label1}/{label2})")
-        
-        if not torch.equal(input1, input2):
-            equal = False
-            PRINT_LOG.info(f"The 2 dataloaders do not have the same inputs.")
-        
-        if not equal: break
-
-    
-    if equal: 
-        PRINT_LOG.info("Both dataloaders are the same.")
-    else:
-        PRINT_LOG.info("Dataloaders are different.")
-    
-    EXP_LOG.info("Completed comparing training dataloaders.")
-    
-    return equal
-    
-
-"""
-Method to compare 2 datasets
-@param
-    dataset1 = a TensorDataset
-    dataset2 = a TensorDataset
-@return
-    equal = equal or not
-"""
-def compare_datasets(dataset1: TensorDataset, dataset2: TensorDataset) -> bool:
-    EXP_LOG.info("Started comparing training dataset.")
-    equal = True
-    if len(dataset1) != len(dataset2):
-        equal = False
-        PRINT_LOG.info("Datasets are of different lengths.")
-
-    for tensor1, tensor2 in zip(dataset1.tensors, dataset2.tensors):
-        if not torch.equal(tensor1, tensor2):
-            equal = False
-            PRINT_LOG.info(f"Datasets have different values: \n Dataset 1: {tensor1} \n Dataset 2: {tensor2}.")
-    
-    if equal: PRINT_LOG.info("Both datasets are the same.")
-    EXP_LOG.info("Completed comparing training dataset.")
-    
-    return equal
-
-
 
 ##############################################################################
-# PART 4: Training
+# PART 3: Training
 ##############################################################################
 """
 Method defining how a single training epoch works
@@ -261,7 +193,7 @@ def train_loop(model, train_data_loader, test_data_loader, train_test_data_loade
 
 
 ##############################################################################
-# PART 5: Testing
+# PART 4: Testing
 ##############################################################################
 """
 Method that test the model at certain epochs during the training process
@@ -527,7 +459,7 @@ def training_accuracy(model, train_data_loader, test_data_loader, train_test_dat
 
 
 ##############################################################################
-# PART 6: Main Function
+# PART 5: Main Function
 ##############################################################################
 """
 Method describing the main part of the code -> how experiment will be ran
@@ -554,7 +486,6 @@ def main(args):
         args.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
         TIMER.report("Validated checkpoint path")
     else:
-        args.device_id = 'cpu'
         torch.device(args.device_id)
 
 
@@ -583,14 +514,6 @@ def main(args):
     train_test_data_set = None
     train_test_data_sampler = None
     train_test_data_loader = None
-    
-    final_train_data_set = None
-    final_train_data_sampler = None
-    final_train_data_loader = None
-    
-    final_test_data_set = None
-    final_test_data_sampler = None
-    final_test_data_loader = None
 
     
     if not args.local_machine:
@@ -750,7 +673,7 @@ def main(args):
 
 
 ##############################################################################
-# PART 7: What code will be ran when file is ran
+# PART 6: What code will be ran when file is ran
 ##############################################################################
 
 # Actual code that will be ran

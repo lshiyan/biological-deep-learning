@@ -5,7 +5,7 @@ import torch.nn as nn
 
 class NetworkLayer (nn.Module, ABC):
     """
-    ABSTRACT CLASS
+    INTERFACE
     Single layer of the ANN -> Every layer of the interface must implement interface
     This will help with the support of multiple hidden layers inside the network
     
