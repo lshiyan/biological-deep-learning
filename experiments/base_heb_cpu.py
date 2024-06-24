@@ -7,6 +7,7 @@ from torch.nn.functional import one_hot
 from torch.utils.data import DataLoader
 
 # Custom defined model imports
+from experiments.experiment import Experiment
 from models.hebbian_network import HebbianNetwork
 
 # Utils imports
@@ -15,7 +16,7 @@ from utils.experiment_parser import *
 from utils.experiment_timer import *
 
 
-class BaseHebCpu():
+class BaseHebCpu(Experiment):
     """
     CLASS
     Experiment for base hebbian model on cpu
