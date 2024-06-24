@@ -82,7 +82,11 @@ class Experiment(ABC):
                 shutil.rmtree(self.RESULT_PATH)
                 print(f"Removed {self.RESULT_PATH}.")
                 os.makedirs(self.RESULT_PATH, exist_ok=True)
+                os.makedirs(f"{self.RESULT_PATH}/classification", exist_ok=True)
+                os.makedirs(f"{self.RESULT_PATH}/hebbian", exist_ok=True)
                 print(f"Experiment {self.EXP_NAME} result folder re-created successfully.")
+                print(f"Experiment '{self.EXP_NAME}/classification' result folder re-created successfully.")
+                print(f"Experiment '{self.EXP_NAME}/hebbian' result folder re-created successfully.")
             except OSError as e:
                 print(f"Error: {e.strerror}")
         
@@ -103,8 +107,10 @@ class Experiment(ABC):
     def training(self, train_data_loader: DataLoader, epoch: int, visualize: bool = True) -> None:
         raise NotImplementedError("This method was not implemented.")
     
+    
     def testing(self, test_data_loader: DataLoader, set_name: str, epoch: int, visualize: bool = True) -> float:
         raise NotImplementedError("This method was not implemented.")
+    
     
     def run(self) -> Tuple[float, float]:
         """
@@ -160,8 +166,8 @@ class Experiment(ABC):
         self.EXP_LOG.info("Completed training of model.")        
         self.model.visualize_weights(self.RESULT_PATH, self.ARGS.epochs, 'final')
         self.EXP_LOG.info("Visualize weights of model after training.")
-        test_acc = self.testing(test_data_loader, 'test', epoch, visualize=True)
-        train_acc = self.testing(train_data_loader, 'train', epoch, visualize=True)
+        test_acc = self.testing(test_data_loader, 'test', self.ARGS.epochs, visualize=True)
+        train_acc = self.testing(train_data_loader, 'train', self.ARGS.epochs, visualize=True)
         self.EXP_LOG.info("Completed final testing methods.")
         self.PARAM_LOG.info(f"Training accuracy of model after training for {self.ARGS.epochs} epochs: {train_acc}")
         self.PARAM_LOG.info(f"Testing accuracy of model after training for {self.ARGS.epochs} epochs: {test_acc}")
