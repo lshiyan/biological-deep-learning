@@ -133,7 +133,7 @@ class Experiment(ABC):
         self.PARAM_LOG.info(f"Network Learning Rate: {self.ARGS.lr}")
         self.PARAM_LOG.info(f"Epsilon: {self.ARGS.eps}")
         self.PARAM_LOG.info(f"Number of Epochs: {self.ARGS.epochs}")
-        self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
+        self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
         
         self.EXP_LOG.info("Completed logging of experiment parameters.")
         

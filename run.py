@@ -4,7 +4,10 @@ from utils.experiment_parser import *
 from utils.experiment_comparer import *
 from utils.experiment_logger import *
 from utils.experiment_timer import *
+from utils.experiment_stats import *
 
+# Create log
+results_log = configure_logger('Result Log', './results/results.log')
 
 # Simulate the command line arguments
 args_dict = {
@@ -23,7 +26,7 @@ args_dict = {
     '--heb_gam': 0.99,
     '--cla_lamb': 1,
     '--eps': 0.01,
-    '--epochs': 1,
+    '--epochs': 3,
     '--test_epochs': 1,
     '--dropout': 0.2,
     '--lr': 0.005,
@@ -42,8 +45,23 @@ for k, v in args_dict.items():
     
 ARGS = parse_arguments(args_list)
 
-model = HebbianNetwork(ARGS)
-experiment = BaseHebCPU(model, ARGS, 'tryout')
-test_acc, train_acc = experiment.run()
-print(f"Test Acc: {test_acc}.")
-print(f"Train Acc: {train_acc}.")
+
+
+for l in range(1, 16):
+    ARGS.heb_lamb = l
+    test_acc_list = []
+    train_acc_list = []
+    for _ in range(30):
+        model = HebbianNetwork(ARGS)
+        experiment = BaseHebCPU(model, ARGS, f'cpu-{l}')
+        test_acc, train_acc = experiment.run()
+        test_acc_list.append(test_acc)
+        train_acc_list.append(train_acc)
+    
+    avg_test = average(test_acc_list)
+    var_test = variance(test_acc_list)
+    avg_train = average(train_acc_list)
+    var_train = variance(train_acc_list)
+    
+    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
+    
