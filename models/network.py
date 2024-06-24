@@ -63,7 +63,13 @@ class Network(nn.Module, ABC):
     """
     def set_layer_scheduler(self, name, scheduler):
         layer = self.get_module(name)
+        # Uses the get_module method to retrieve the layer by its name. 
+        # This assumes the layer names are uniquely defined within the network.
+
         layer.set_scheduler(scheduler)
+        # This calls the set_scheduler method on the retrieved layer, passing the scheduler as an argument. 
+        # This sets the scheduler specifically for this layer, allowing it to update its parameters according to the scheduler’s logic.
+
 
 
     """
