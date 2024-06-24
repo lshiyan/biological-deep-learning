@@ -44,11 +44,14 @@ class Network(nn.Module, ABC):
     @return
         ___ (void) = no returns
     """
-    # NOTE: What use is this???
     def set_scheduler(self):
-        for module in self.children():
-            module.set_scheduler()
 
+    # STEP 1: Iterate through child modules
+        for module in self.children():
+            # self.children() is a method from PyTorch’s nn.Module that iterates over all direct children modules (layers) of the current network module.
+            
+            module.set_scheduler()
+            # The line above calls set_scheduler on each child module
     
     """
     Method to set specific scheduler for specific layer
