@@ -157,11 +157,20 @@ class ClassifierLayer(NetworkLayer):
     @return
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
-    def _eval_forward(self, x):
+    def _eval_forward(self, input_value):
+    
+    # STEP 1: Initialize softmax function
         softmax = nn.Softmax()
-        x = self.fc(x)
-        x = softmax(x)
-        return x
+
+    # STEP 2: Apply the fully connected layer
+        raw_output = self.fc(input_value)
+        #  Here, this layer computes the linear transformation of the inputs, 
+        #  this effectively generating logits for each class based on the input features.
+
+    # STEP 3: Apply softmax activation
+        softmax_output = softmax(raw_output)
+
+        return softmax_output
     
 
     """
