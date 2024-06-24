@@ -85,19 +85,21 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         data_input (torch.Tensor) = returns the data after passing it throw the network
     """
     def forward(self, x, clamped_output=None):
-        # Get all the layers in the module
-        input_layer = self.get_module("Input Layer")
+
+    # STEP 1: Layer retrieval
         hebbian_layer = self.get_module("Hebbian Layer")
         classification_layer = self.get_module("Classification Layer")
 
-        # Convert input to float if not already
+    # STEP 2: Input type conversion
         if x.dtype != torch.float32:
             x = x.float().to(self.device_id)
+        # This step is crucial for ensuring compatibility with PyTorch operations, which often require floating-point precision.
 
-        # Input data -> Hebbian Layer -> Classification Layer -> Output data
-        data_input = x.to(self.device_id)
-        data_input = hebbian_layer(data_input)
-        data_input = classification_layer(data_input, clamped_output)
+    # STEP 3: DATA flow through layers
+        data_input = x.to(self.device_id)                                                       # The input data is first moved to the correct device, if not already done in the type conversion step.
+        post_hebbian_value = hebbian_layer(data_input)                                          # The data then flows through the Hebbian Layer. 
+        post_classification_value = classification_layer(post_hebbian_value, clamped_output)    # Lastly, the data the processed data is passed to the Classification Layer. 
+                                                                                                    # If clamped_output is provided, it is used during this stage. 
 
-        return data_input
+        return post_classification_value
     
