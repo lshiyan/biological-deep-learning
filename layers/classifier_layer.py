@@ -47,28 +47,49 @@ class ClassifierLayer(NetworkLayer):
         ___ (void) = no returns
     """
     def update_weights(self, input, output, clamped_output=None):
-        # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
-        u = output.clone().detach().squeeze() # Output tensor after layer but before activation
-        x = input.clone().detach().squeeze() # Input tensor to layer
-        y = torch.softmax(u, dim=0) # Apply softmax to output tensor to get probabilities
-        A = None
 
+    # STEP 1: Detach, squeeze tensors
+        prior_activation_output = output.clone().detach().squeeze()             # Output tensor after layer but before activation
+        input_value = input.clone().detach().squeeze()                          # Input tensor to layer
+        post_activation_output = torch.softmax(prior_activation_output, dim=0)  # Apply softmax to output tensor to get probabilities
+        A = None # 'A' is used for adjusting weights
+        
+        # Here:
+            # u is the output tensor after the layer but before any activation function
+            # x is the input tensor to the layer (detached and squeezed similarly)
+            # y is the result of applying the softmax function to u, giving the probabilities for each class
+
+
+    # STEP 2: Conditional update based on clamped_output
+        
+        # First, I check the case where clamped_output IS PROVIDED
         if clamped_output != None:
-            outer_prod = torch.outer(clamped_output-y,x)
-            u_times_y = torch.mul(u,y)
-            A = outer_prod - self.fc.weight * (u_times_y.unsqueeze(1))
+            outer_prod = torch.outer(clamped_output - post_activation_output, input_value)                          
+            # The line above calculate outer product of (difference between clamped_output and post_activation_output) AND input_value
+
+            prior_activation_times_post_activation = torch.mul(prior_activation_output, post_activation_output)
+            # The line above is element wise multiplication of prior_ativation_output and post_activation_output
+
+            A = outer_prod - self.fc.weight * (prior_activation_times_post_activation.unsqueeze(1))
+            # A is then computed as the outer product minus the scaled weights.
+
         else:
-            # Compute the outer product of the softmax output and input.
-            A = torch.outer(y,x) # Hebbian learning rule component
+            A = torch.outer(post_activation_output, input_value)  # Hebbian learning rule component
+            # If clamped_output is not provided, A is simply the outer product of y and x.
 
-        # Adjust weights by learning rate and add contribution from Hebbian update.
+
+    # STEP 3: Adjust weights
         A = self.fc.weight + self.alpha * A
+        # The weights are adjusted by adding the scaled update A to the current weights.
 
-        # Normalize weights by the maximum value in each row to stabilize the learning.
+
+    # STEP 4: Normalize weights
         weight_maxes = torch.max(A, dim=1).values
-        self.fc.weight = nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
-
-        # Zero out the first column of weights -> this is to prevent the first weight from learning everything
+        self.fc.weight = nn.Parameter(A / weight_maxes.unsqueeze(1), requires_grad=False)
+        # Here, to ensure stability, the weights are normalized by dividing each row by its maximum value.
+        
+        
+    # Zero out the first column of weights -> this is to prevent the first weight from learning everything
         self.fc.weight[:, 0] = 0
         
 
