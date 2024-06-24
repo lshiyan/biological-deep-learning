@@ -294,17 +294,48 @@ class HebbianLayer(NetworkLayer):
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
     def _train_forward(self, x, clamped_output=None):
+
+    # STEP 1: Check if input x in a torch tensor
         if not isinstance(x, torch.Tensor):
-            raise TypeError("Input x must be a torch.Tensor")
-        # Copy input -> calculate output -> update weights -> return output
+            raise TypeError("Input X must be a torch.Tensor")
+        
+    # STEP 2: Copy input and move to device
         input_copy = x.clone().to(self.device_id).float()
         x = x.to(self.device_id)
+    
+    # STEP 3: Output calculation
         x = self.fc(x)
+        # Here, I pass the input x through the fully connected (linear) layer (self.fc). 
+        # This computes the linear transformation of the input.
+
+
+#############################################################################################################
+#############################################################################################################
+    # STEP 4: Apply modern Hopfield Inhibition  THIS IS WHERE I ADJUST inhibition functions for different tests
+#############################################################################################################
+#############################################################################################################
+
         x = self.modern_hopfield_inhibition(x)
+
+#############################################################################################################
+#############################################################################################################
+#############################################################################################################
+#############################################################################################################
+    
+
+    # STEP 5: Update weights
         self.update_weights(input_copy, x)
-        #self.update_bias(x)
+        # adjust the weights of the layer based on the input and the output after inhibition. 
+        # uses Sanger’s Rule to update the weights.
+
+    # STEP 6: Weight decay
         self.weight_decay()
+            # Here, adjust the weights further by:
+                # decaying overused weights and 
+                # increasing underused weights
+                
         return x
+
     
     
     """
