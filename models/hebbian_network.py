@@ -36,7 +36,7 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         ___ (models.HebianNetwork) = new instance of a HebbianNetwork
     """
     def __init__(self, args):
-        super().__init__(args.device_id)
+        super().__init__(args.device_id)            # SIMILARLY, I CAN DELETE THIS DEVICE ID IF THE PREVIOUS CHANGE IS IMPLEMENTED
 
         # Dimension of each layer
         self.input_dim = args.input_dim
