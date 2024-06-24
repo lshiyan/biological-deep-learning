@@ -1,23 +1,18 @@
 import math
 from matplotlib import pyplot as plt
+import matplotlib
+import numpy as np
 import torch
 import torch.nn as nn
 from layers.layer import NetworkLayer
 
 
-"""
-Class defining the functionality of the classification layer
-"""
 class ClassifierLayer(NetworkLayer):
     """
-    Constructor method NetworkLayer
-    @param
-        input_dimension (int) = number of inputs into the layer
-        output_dimension (int) = number of outputs from layer
-        lamb (float) = lambda hyperparameter for latteral inhibition
-        class_lr (float) = how fast model learns at each iteration
-        eps (float) = to avoid division by 0
-    @attr.
+    CLASS
+    Defining the functionality of the classification layer
+    
+    @instance attr.
         PARENT ATTR.
             input_dimension (int) = number of inputs into the layer
             output_dimension (int) = number of outputs from layer
@@ -27,35 +22,49 @@ class ClassifierLayer(NetworkLayer):
             fc (fct) = function to apply linear transformation to incoming data
             eps (float) = to avoid division by 0
         OWN ATTR.
-    @return
-        ___ (layers.ClassifierLayer) = returns instance of ClassifierLayer
     """
-    def __init__(self, input_dimension, output_dimension, device_id, lamb=2, class_lr=0.001, eps=10e-5):
+    def __init__(self, input_dimension: int,
+                 output_dimension: int, 
+                 device_id: str, 
+                 lamb: float = 1, 
+                 class_lr: float = 0.005, 
+                 eps: float = 0.01) -> None:
+        """
+        CONSTRUCTOR METHOD
+        @param
+            input_dimension: number of inputs into the layer
+            output_dimension: number of outputs from layer
+            device_id: the device that the module will be running on
+            lamb: lambda hyperparameter for latteral inhibition
+            class_lr: how fast model learns at each iteration
+            eps: to avoid division by 0
+
+        @return
+            None
+        """
         super ().__init__(input_dimension, output_dimension, device_id, lamb, class_lr, eps)    
     
 
-    """
-    Defines the way the weights will be updated at each iteration of the training.
-    The method computes the outer product of the softmax probabilities of the outputs and the inputs. 
-    This product is scaled by the learning rate and used to adjust the weights. 
-    The weights are then normalized to ensure stability.
-    @param
-        input (torch.Tensor): The input tensor to the layer before any transformation.
-        output (torch.Tensor): The output tensor of the layer before applying softmax.
-        clamped_output (torch.Tensor): one-hot encode of true labels
-    @return
-        ___ (void) = no returns
-    """
-    def update_weights(self, input, output, clamped_output=None):
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
+        """
+        METHOD
+        Defines the way the weights will be updated at each iteration of the training.
+        @param
+            input: The input tensor to the layer before any transformation.
+            output: The output tensor of the layer before applying softmax.
+            clamped_output: one-hot encode of true labels
+        @return
+            None
+        """
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
-        u = output.clone().detach().squeeze() # Output tensor after layer but before activation
-        x = input.clone().detach().squeeze() # Input tensor to layer
-        y = torch.softmax(u, dim=0) # Apply softmax to output tensor to get probabilities
-        A = None
+        u: torch.Tensor = output.clone().detach().squeeze() # Output tensor after layer but before activation
+        x: torch.Tensor = input.clone().detach().squeeze() # Input tensor to layer
+        y: torch.Tensor = torch.softmax(u, dim=0) # Apply softmax to output tensor to get probabilities
+        A: torch.Tensor = None
 
         if clamped_output != None:
-            outer_prod = torch.outer(clamped_output-y,x)
-            u_times_y = torch.mul(u,y)
+            outer_prod: torch.Tensor = torch.outer(clamped_output-y,x)
+            u_times_y: torch.Tensor = torch.mul(u,y)
             A = outer_prod - self.fc.weight * (u_times_y.unsqueeze(1))
         else:
             # Compute the outer product of the softmax output and input.
@@ -65,7 +74,7 @@ class ClassifierLayer(NetworkLayer):
         A = self.fc.weight + self.alpha * A
 
         # Normalize weights by the maximum value in each row to stabilize the learning.
-        weight_maxes = torch.max(A, dim=1).values
+        weight_maxes: torch.Tensor = torch.max(A, dim=1).values
         self.fc.weight = nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
 
         # Zero out the first column of weights -> this is to prevent the first weight from learning everything
@@ -81,15 +90,15 @@ class ClassifierLayer(NetworkLayer):
         @return
             None
         """
-        y = output.clone().detach().squeeze()
-        exponential_bias = torch.exp(-1*self.fc.bias) # Apply exponential decay to biases
+        y: torch.Tensor = output.clone().detach().squeeze()
+        exponential_bias: torch.Tensor = torch.exp(-1*self.fc.bias) # Apply exponential decay to biases
 
         # Compute bias update scaled by output probabilities.
-        A = torch.mul(exponential_bias, y)-1
+        A: torch.Tensor = torch.mul(exponential_bias, y)-1
         A = (1 - self.alpha) * self.fc.bias + self.alpha * A
 
         # Normalize biases to maintain stability. (Divide by max bias value)
-        bias_maxes = torch.max(A, dim=0).values
+        bias_maxes: torch.Tensor = torch.max(A, dim=0).values
         self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
     
 
@@ -103,8 +112,8 @@ class ClassifierLayer(NetworkLayer):
         @return
             input: returns the data after passing it throw the layer
         """
-        softmax = nn.Softmax(dim=1)
-        input_copy = input.clone()
+        softmax: nn.Softmax = nn.Softmax(dim=1)
+        input_copy: torch.Tensor = input.clone()
         input = self.fc(input)
         self.update_weights(input_copy, input, clamped_output)
         # self.update_bias(input)
@@ -139,10 +148,10 @@ class ClassifierLayer(NetworkLayer):
             None
         """
         # Find value for row and column
-        row = 0
-        col = 0
+        row: int = 0
+        col: int = 0
 
-        root = int(math.sqrt(self.output_dimension))
+        root: int = int(math.sqrt(self.output_dimension))
         for i in range(root, 0, -1):
             if self.output_dimension % i == 0:
                 row = min(i, self.output_dimension // i)
@@ -150,12 +159,14 @@ class ClassifierLayer(NetworkLayer):
                 break
         
         # Gets the weights and create heatmap
-        weight = self.fc.weight
+        weight: nn.parameter.Parameter = self.fc.weight
+        fig: matplotlib.figure.Figure = None
+        axes: np.ndarray = None
         fig, axes = plt.subplots(row, col, figsize=(16, 16))
         for ele in range(row*col):  
-            random_feature_selector = weight[ele]
+            random_feature_selector: torch.Tensor = weight[ele]
             # Move tensor to CPU, convert to NumPy array for visualization
-            heatmap = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
+            heatmap: torch.Tensor = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
                                                 int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
 
             ax = axes[ele // col, ele % col]
@@ -166,13 +177,13 @@ class ClassifierLayer(NetworkLayer):
             # Move the tensor back to the GPU if needed
             random_feature_selector = random_feature_selector.to(self.device_id)
 
-        file_path = result_path + f'/classification/classifierlayerweights-{num}-{use}.png'
+        file_path: str = result_path + f'/classification/classifierlayerweights-{num}-{use}.png'
         plt.tight_layout()
         plt.savefig(file_path)
         plt.close()
 
     
-    def active_weights(self, beta):
+    def active_weights(self, beta: float) -> int:
         """
         METHOD
         Get number of active feature selectors
@@ -181,6 +192,6 @@ class ClassifierLayer(NetworkLayer):
         @return
             number of active weights
         """
-        weights = self.fc.weight
-        active = torch.where(weights > beta, weights, 0.0)
+        weights: nn.parameter.Parameter = self.fc.weight
+        active: torch.Tensor = torch.where(weights > beta, weights, 0.0)
         return active.nonzero().size(0)

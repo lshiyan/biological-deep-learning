@@ -92,7 +92,6 @@ class HebbianLayer(NetworkLayer):
         outer_prod = outer_prod.to(self.device_id)
 
         # STEP 3: Retrieve and Prepare Initial Weights
-            # Here, weight is of size -> output_dimensionXinput_dimension
         initial_weight: torch.Tensor = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0, 1)
 
         # Ensure id_tensor and exponential_average are on the same device as the others
