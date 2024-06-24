@@ -4,7 +4,7 @@ import shutil
 import time
 from abc import ABC
 import argparse
-from typing import Tuple
+from typing import Tuple, List
 
 # Pytorch imports
 import torch
@@ -91,12 +91,19 @@ class Experiment(ABC):
                 print(f"Error: {e.strerror}")
         
         # Loggers for experiment
+        self.loggers: List[logging.Logger] = []
         self.PRINT_LOG: logging.Logger = get_print_log("Print Log", self.RESULT_PATH) # Replace print statements (for debugging purposes)
         self.TEST_LOG: logging.Logger = get_test_acc_log("Test Log", self.RESULT_PATH) # Testing accuracy
         self.TRAIN_LOG: logging.Logger = get_train_acc_log("Train Log", self.RESULT_PATH) # Training accuracy
         self.PARAM_LOG: logging.Logger = get_parameter_log("Parameter Log", self.RESULT_PATH) # Experiment parameters
         self.DEBUG_LOG: logging.Logger = get_debug_log("Debug Log", self.RESULT_PATH) # Debugging stuff
         self.EXP_LOG: logging.Logger = get_experiment_log("Experiment Log", self.RESULT_PATH) # Logs during experiment
+        self.loggers.append(self.PRINT_LOG)
+        self.loggers.append(self.TEST_LOG)
+        self.loggers.append(self.TRAIN_LOG)
+        self.loggers.append(self.PARAM_LOG)
+        self.loggers.append(self.DEBUG_LOG)
+        self.loggers.append(self.EXP_LOG)
 
         self.EXP_LOG.info("Completed imports.")
         self.EXP_LOG.info("Completed log setups.")
@@ -184,3 +191,16 @@ class Experiment(ABC):
         self.EXP_LOG.info("The experiment has been completed.")
         
         return (test_acc, train_acc)
+    
+    
+    def cleanup(self) -> None:
+        """
+        METHOD
+        Cleanup used ressources
+        @param
+            None
+        @return
+            None        
+        """
+        for logger in self.loggers:
+            close_logger(logger)

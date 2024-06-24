@@ -57,6 +57,7 @@ for l in range(1, 16):
         test_acc, train_acc = experiment.run()
         test_acc_list.append(test_acc)
         train_acc_list.append(train_acc)
+        experiment.cleanup()
     
     avg_test = average(test_acc_list)
     var_test = variance(test_acc_list)
