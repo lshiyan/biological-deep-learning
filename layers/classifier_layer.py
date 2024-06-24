@@ -125,14 +125,29 @@ class ClassifierLayer(NetworkLayer):
     @return
         data_input (torch.Tensor) = returns the data after passing it throw the layer
     """
-    def _train_forward(self, x, clamped_output=None):
+    def _train_forward(self, input_value, clamped_output=None):
+        
+    # STEP 1: Initialize the softmax function
         softmax = nn.Softmax()
-        input_copy = x.clone()
-        x = self.fc(x)
-        self.update_weights(input_copy, x, clamped_output)
-        # self.update_bias(x)
-        x = softmax(x)
-        return x
+
+    # STEP 2: clone the inputs to the classifier layer
+        input_copy = input_value.clone()
+
+    # STEP 3: calcuate output with fully connected layer
+        raw_output = self.fc(input_value)
+
+    # STEP 4: update weights
+        self.update_weights(input_copy, raw_output, clamped_output)
+        # Notice that the weights are updated differently depending on the presence of true labels(clamped_output)
+
+    # STEP 5: Apply softmax activation
+        softmax_output = softmax(raw_output)
+        # Here, I apply the softmax function to the outputs of the fully connected layer 
+        #  Softmax converts logits (raw scores from the layer) into probabilities by exponentiating and normalizing them, 
+            # this makes them suitable for probabilistic interpretation and multi-class classification.
+
+
+        return softmax_output
     
     
     """
