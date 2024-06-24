@@ -43,14 +43,16 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         self.heb_dim = args.heb_dim
         self.output_dim = args.output_dim
 
-        # Hebbian layer hyperparameters
-        self.heb_param = {}
-        self.heb_param["lamb"] = args.heb_lamb
-        self.heb_param["gam"] = args.heb_gam
+        # Hebbian layer hyperparameters stored in dictionary
+        self.heb_param = {
+            "lamb": args.heb_lamb,
+            "gam": args.heb_gam
+        }
 
-        # Classification layer hyperparameters
-        self.cla_param = {}
-        self.cla_param["lamb"] = args.cla_lamb
+        # Classification layer hyperparameters stored in dictionary
+        self.cla_param = {
+            "lamb": args.cla_lamb
+        }
 
         # Shared hyperparameters
         self.lr = args.lr
@@ -64,6 +66,14 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         self.add_module("Input Layer", input_layer)
         self.add_module("Hebbian Layer", hebbian_layer)
         self.add_module("Classification Layer", classification_layer)
+        # In the above block, I register each layer with the network using add_module, 
+            # note that this is a method from PyTorch’s nn.Module that allows the network to keep track of its submodules for purposes like parameter updates, backpropagation, and saving/loading models.
+
+
+
+
+
+
 
 
     """
