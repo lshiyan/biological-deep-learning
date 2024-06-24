@@ -15,9 +15,22 @@ from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
 
+# StrongCompute imports
+from torch.utils.tensorboard import SummaryWriter
+from torchvision import datasets # type: ignore
+from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment # type: ignore
+from cycling_utils import ( # type: ignore
+    TimestampedTimer,
+    InterruptableDistributedSampler,
+    MetricsTracker,
+    atomic_torch_save,
+)
+TIMER = TimestampedTimer("Imported TimestampedTimer")
+TIMER.report("Completed imports")
 
 
-class BaseHebCPU(Experiment):
+
+class BaseHebSC(Experiment):
     """
     CLASS
     Experiment for base hebbian model on cpu
@@ -69,8 +82,9 @@ class BaseHebCPU(Experiment):
         self.EXP_LOG.info("Started 'train_loop' function.")
 
         # Epoch and batch set up
+        epoch_num = train_data_loader.sampler.epoch
         train_batches_per_epoch: int = len(train_data_loader)
-        self.EXP_LOG.info(f"This training batch is epoch #{epoch} with {train_batches_per_epoch} batches of size {self.ARGS.batch_size} in this epoch.")
+        self.EXP_LOG.info(f"This training batch is epoch #{epoch_num} with {train_batches_per_epoch} batches of size {self.ARGS.batch_size} in this epoch.")
 
         # Set the model to training mode - important for layers with different training / inference behaviour
         self.model.train()

@@ -1,4 +1,4 @@
-from experiments.base_heb_cpu import BaseHebCpu
+from experiments.base_heb_cpu import BaseHebCPU
 from models.hebbian_network import HebbianNetwork
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
@@ -43,7 +43,7 @@ for k, v in args_dict.items():
 ARGS = parse_arguments(args_list)
 
 model = HebbianNetwork(ARGS)
-experiment = BaseHebCpu(model, ARGS, 'tryout')
+experiment = BaseHebCPU(model, ARGS, 'tryout')
 test_acc, train_acc = experiment.run()
 print(f"Test Acc: {test_acc}.")
 print(f"Train Acc: {train_acc}.")
