@@ -27,7 +27,13 @@ class Network(nn.Module, ABC):
         layer (layer.NetworkLayer) = a layer of the network with searched name
     """
     def get_module(self, name):
-        for module_name, module in self.named_children():
+
+    # STEP 1: loop through the network layeres
+        for module_name, module in self.named_children():       
+            # self.named_children() is a method provided by PyTorch’s nn.Module class 
+            # It yields pairs of layer names (module_name) and the corresponding layer objects (module)
+
+    # STEP 2: Layer matching and retrieval
             if name == module_name:
                 return module
     
