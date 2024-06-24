@@ -22,6 +22,7 @@ from models.hebbian_network import HebbianNetwork # Model import
 # Utils imports
 from utils.experiment_logger import *
 from utils.experiment_parser import *
+from utils.experiment_timer import *
 
 
 
@@ -31,6 +32,9 @@ from utils.experiment_parser import *
 
 # Start timer
 START_TIME = time.time()
+TRAIN_TIME = 0
+TEST_ACC_TIME = 0
+TRAIN_ACC_TIME = 0
 
 # Parse Arguments
 ARGS = parse_arguments()
@@ -170,6 +174,8 @@ Method defining how a single training epoch works
     ___ (void) = no returns
 """
 def train_loop(model, train_data_loader, test_data_loader, train_test_data_loader, args, epoch_num, metrics=None):
+    global TRAIN_TIME
+    train_start = time.time()
     EXP_LOG.info("Started 'train_loop'.")
 
     # Epoch and batch set up
@@ -242,10 +248,16 @@ def train_loop(model, train_data_loader, test_data_loader, train_test_data_loade
                 TIMER.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
                 EXP_LOG.info(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
                 EXP_LOG.info(f"Examples seen: {examples_seen}")
+    
+    train_end = time.time()
+    training_time = train_end - train_start
+    TRAIN_TIME += training_time
+    
+    model.visualize_weights(RESULT_PATH, epoch_num, 'training')
         
     EXP_LOG.info("Completed 1 epoch of 'train_loop'.")
-    model.visualize_weights(RESULT_PATH, epoch_num, 'training')
-    
+    EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(training_time)}.")
+
 
 
 ##############################################################################
@@ -265,6 +277,8 @@ Method that test the model at certain epochs during the training process
     final_accuracy (float) = accuracy of the test
 """
 def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data_loader, args, epoch_num, metrics=None, writer=None):
+    global TEST_ACC_TIME
+    test_start = time.time()
     EXP_LOG.info("Started 'testing_accuracy' function.")
 
     # Epoch and batch set up
@@ -365,11 +379,17 @@ def testing_accuracy(model, train_data_loader, test_data_loader, train_test_data
             else:
                 final_accuracy = correct_sum/total
             
+    test_end = time.time()
+    testing_time = test_end - test_start
+    TEST_ACC_TIME += testing_time
+    
+    model.visualize_weights(RESULT_PATH, epoch_num, 'test_acc')
+    
     EXP_LOG.info(f"Completed testing with {correct_sum} out of {total}.")
     EXP_LOG.info("Completed 'testing_accuracy' function.")
+    EXP_LOG.info(f"Testing (test acc) of epoch #{epoch} took {time_to_str(testing_time)}.")
 
-    TEST_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {final_accuracy}') 
-    model.visualize_weights(RESULT_PATH, epoch_num, 'test_acc')
+    TEST_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {final_accuracy}')
     
     return final_accuracy
 
@@ -388,6 +408,8 @@ Method that test the model on the training data at certain epochs during the tra
     final_accuracy (float) = accuracy of the test
 """
 def training_accuracy(model, train_data_loader, test_data_loader, train_test_data_loader, args, epoch_num, metrics=None, writer=None):
+    global TRAIN_ACC_TIME
+    test_start = time.time()
     EXP_LOG.info("Started 'training_accuracy' function.")
 
     # Epoch and batch set up
@@ -487,12 +509,18 @@ def training_accuracy(model, train_data_loader, test_data_loader, train_test_dat
             # PART IF NOT ON STRONG COMPUTE
             else:
                 final_accuracy = correct_sum/total
+    
+    test_end = time.time()
+    testing_time = test_end - test_start
+    TRAIN_ACC_TIME += testing_time
+    
+    model.visualize_weights(RESULT_PATH, epoch_num, 'train_acc')
             
     EXP_LOG.info(f"Completed testing with {correct_sum} out of {total}.")
     EXP_LOG.info("Completed 'training_accuracy' function.")
+    EXP_LOG.info(f"Testing (train acc) of epoch #{epoch} took {time_to_str(testing_time)}.")
 
     TRAIN_LOG.info(f'Epoch Number: {epoch} || Test Accuracy: {final_accuracy}')
-    model.visualize_weights(RESULT_PATH, epoch_num, 'train_acc')
     
     return final_accuracy
 
@@ -740,6 +768,8 @@ if __name__ == "__main__":
         PARAM_LOG.info(f"Network Learning Rate: {ARGS.lr}")
         PARAM_LOG.info(f"Epsilon: {ARGS.eps}")
         PARAM_LOG.info(f"Number of Epochs: {ARGS.epochs}")
+        PARAM_LOG.info(f"Start time of experiment: {time_to_str(START_TIME)}")
+        
         EXP_LOG.info("Completed logging of experiment parameters.")
 
     # Logging start of experiment
@@ -754,8 +784,9 @@ if __name__ == "__main__":
     # End timer
     END_TIME = time.time()
     DURATION = END_TIME - START_TIME
-    hours = int(DURATION // 3600)
-    minutes = int((DURATION % 3600) // 60)
-    seconds = int(DURATION % 60)
-    EXP_LOG.info(f"The experiment took {hours}h:{minutes}m:{seconds}s to be completed.")
-    PARAM_LOG.info(f"Runtime of experiment: {hours}h:{minutes}m:{seconds}s")
+    EXP_LOG.info(f"The experiment took {time_to_str(DURATION)} to be completed.")
+    PARAM_LOG.info(f"End time of experiment: {time_to_str(END_TIME)}")
+    PARAM_LOG.info(f"Runtime of experiment: {time_to_str(DURATION)}")
+    PARAM_LOG.info(f"Train time of experiment: {time_to_str(TRAIN_TIME)}")
+    PARAM_LOG.info(f"Test time (test acc) of experiment: {time_to_str(TEST_ACC_TIME)}")
+    PARAM_LOG.info(f"Test time (train acc) of experiment: {time_to_str(TRAIN_ACC_TIME)}")
