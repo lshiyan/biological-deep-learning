@@ -121,12 +121,31 @@ class HebbianLayer(NetworkLayer):
     @return
         x (torch.Tensor) = activation after lateral inhibition
     """
-    def gaussian_inhibition(x, sigma=1.0):
-        size = int(2 * sigma + 1)
-        kernel = torch.tensor([torch.exp(-(i - size // 2) ** 2 / (2 * sigma ** 2)) for i in range(size)])
-        kernel = kernel / torch.sum(kernel)
+    def gaussian_inhibition(self, x, sigma=1.0):
+        # Step 1: ReLU Activation
+        relu = nn.ReLU()
+        x = relu(x)
 
-        x = F.conv1d(x.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
+        # Step 2: Create Gaussian kernel
+        def gaussian_kernel(size, sigma):
+            coords = torch.arange(size, dtype=torch.float32) - size // 2
+            grid = coords.view(-1, 1) ** 2 + coords.view(1, -1) ** 2
+            kernel = torch.exp(-0.5 * grid / (sigma ** 2))
+            kernel /= kernel.sum()
+            return kernel
+
+        kernel_size = 3  # Example kernel size
+        kernel = gaussian_kernel(kernel_size, sigma)
+        kernel = kernel.view(1, 1, kernel_size, kernel_size)
+
+        # Step 3: Apply Gaussian filter
+        x = F.conv2d(x.unsqueeze(1), kernel, padding=kernel_size//2)
+        x = x.squeeze(1)
+
+        # Step 4: Normalization
+        max_ele = torch.max(x).item()
+        x /= abs(max_ele)
+
         return x
     
 
