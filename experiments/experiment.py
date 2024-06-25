@@ -70,6 +70,15 @@ class Experiment(ABC):
     @abstractmethod
     def test(self):
         pass
+
+
+    '''
+    Abstract method for calculating reconstruction error
+    @param
+        data_loader is a DataLoader object
+    '''
+    def compute_reconstruction_error(self, data_loader: DataLoader) -> float:
+        pass
     
 
     """

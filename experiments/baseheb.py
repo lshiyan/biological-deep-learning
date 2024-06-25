@@ -105,6 +105,42 @@ class BaseHebbianExperiment(Experiment):
         return correct / total
     
 
+
+    '''
+    Function is used to compute the reconstruction error
+    '''
+    def compute_reconstruction_error(self, data_loader: DataLoader) -> float:
+
+    # STEP 1: Set the model to evaluation mode so no weight is updated
+        self.model.eval()
+
+    # STEP 2: Initialize the total error to 0
+        total_error = 0.0
+
+    # STEP 3: Loop through each batch in data_loader
+        with torch.no_grad():
+            for batch in data_loader:
+
+                # Unpack inputs and labels (note that labels aren't needed here)
+                inputs, _ = batch
+                inputs = inputs.to(self.ARGS.device_id).float()
+
+                # Get hidden activations from the Hebbian layer
+                hidden_activations = self.model.get_module("Hebbian Layer")(inputs)
+                
+                # Reconstruct inputs using hidden activations and weights
+                reconstructed_inputs = torch.matmul(hidden_activations, self.model.get_module("Hebbian Layer").fc.weight.T)
+                
+                # Calculate and accumulate the reconstruction error
+                total_error += torch.nn.functional.mse_loss(reconstructed_inputs, inputs, reduction='sum').item()
+        
+        # STEP 4: Return the average reconstruction error over the dataset
+        return total_error / len(data_loader.dataset)
+
+
+
+    
+
     """
     Plots visually the exponential averages
     @param
