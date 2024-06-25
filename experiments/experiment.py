@@ -77,9 +77,28 @@ class Experiment(ABC):
     @param
         data_loader is a DataLoader object
     '''
+    @abstractmethod
     def compute_reconstruction_error(self, data_loader: DataLoader) -> float:
         pass
     
+
+    '''
+    Abstract method used to freeze weights for my model
+    '''
+    @abstractmethod
+    def freeze_weights(self):
+        pass
+
+    
+    '''
+    Abstract method to reinitialize the classification weights
+    '''
+    @abstractmethod
+    def reinitialize_classification_weights(self):
+        pass
+    
+
+
 
     """
     Plots visually the exponential averages

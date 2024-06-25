@@ -139,6 +139,25 @@ class BaseHebbianExperiment(Experiment):
 
 
 
+
+    '''
+    Function is used to freeze Input-to-Hidden Weights
+    '''
+    def freeze_weights(self):
+        for param in self.model.get_module("Hebbian Layer").fc.parameters():
+            # Disable gradient computation for input-to-hidden weights
+            param.requires_grad = False 
+
+
+    '''
+    Function is used to reinitialize Hidden-to-Output Weights
+    '''
+    def reinitialize_classification_weights(self):
+        classification_layer = self.model.get_module("Classification Layer")
+        # Reinitialize hidden-to-output weights using Xavier initialization
+        classification_layer.fc.weight.data = torch.nn.init.xavier_uniform_(classification_layer.fc.weight.data)
+        # Reinitialize biases to zero
+        classification_layer.fc.bias.data = torch.nn.init.zeros_(classification_layer.fc.bias.data)
     
 
     """
