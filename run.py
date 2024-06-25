@@ -60,12 +60,13 @@ for l in lambda_test:
     test_acc_list = []
     train_acc_list = []
     
-    model = HebbianNetwork(ARGS)
-    experiment = BaseHebCPU(model, ARGS, f'cpu-{l}')
-    test_acc, train_acc = experiment.run()
-    test_acc_list.append(test_acc)
-    train_acc_list.append(train_acc)
-    experiment.cleanup()
+    for num in range(0, 30):
+        model = HebbianNetwork(ARGS)
+        experiment = BaseHebCPU(model, ARGS, f'cpu-{l}-{num}')
+        test_acc, train_acc = experiment.run()
+        test_acc_list.append(test_acc)
+        train_acc_list.append(train_acc)
+        experiment.cleanup()
     
     avg_test = average(test_acc_list)
     var_test = variance(test_acc_list)
