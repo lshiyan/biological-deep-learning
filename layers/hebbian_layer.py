@@ -179,9 +179,14 @@ class HebbianLayer(NetworkLayer):
         x (torch.Tensor) = activation after lateral inhibition
     """
     def softmax_inhibition(x):
+        # Step 1: Subtract the max value for numerical stability
         x = torch.exp(x - torch.max(x))
-        return x / torch.sum(x)
         
+        # Step 2: Normalize by the sum of exponentials
+        x = x / torch.sum(x)
+        
+        return x
+            
 
 
     """
