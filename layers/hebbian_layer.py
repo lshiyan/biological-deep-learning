@@ -158,9 +158,16 @@ class HebbianLayer(NetworkLayer):
         x (torch.Tensor) = activation after lateral inhibition
     """
     def winner_take_all_inhibition(x, top_k=1):
-        topk_values, _ = torch.topk(x, top_k)
+        # Step 1: Flatten the tensor to apply top-k
+        flattened_x = x.flatten()
+
+        # Step 2: Get the top-k values and their indices
+        topk_values, _ = torch.topk(flattened_x, top_k)
         threshold = topk_values[-1]
+
+        # Step 3: Apply the threshold to keep only the top-k values
         x = torch.where(x >= threshold, x, torch.tensor(0.0, device=x.device))
+
         return x
 
 
