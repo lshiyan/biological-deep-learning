@@ -92,10 +92,24 @@ class HebbianLayer(NetworkLayer):
     @return
         x (torch.Tensor) = activation after lateral inhibition
     """
-    def divisive_normalization_inhibition(x, epsilon=1e-6):
-        sum_activity = torch.sum(x)
-        x = x / (sum_activity + epsilon)
+
+    def divisive_inhibition(self, x):
+        # Step 1: ReLU Activation
+        relu = nn.ReLU()
+        x = relu(x)
+
+        # Step 2: Sum of all elements
+        sum_x = torch.sum(x, dim=-1, keepdim=True)
+
+        # Step 3: Prevent division by zero
+        sum_x = torch.clamp(sum_x, min=1e-6)
+
+        # Step 4: Apply divisive inhibition
+        x /= sum_x
+
         return x
+
+
     
 
 
@@ -315,7 +329,7 @@ class HebbianLayer(NetworkLayer):
 #############################################################################################################
 #############################################################################################################
 
-        x = self.modern_hopfield_inhibition(x)
+        x = self.divisive_inhibition(x)
 
 #############################################################################################################
 #############################################################################################################
@@ -360,7 +374,7 @@ class HebbianLayer(NetworkLayer):
 #############################################################################################################
 #############################################################################################################
 
-        x = self.modern_hopfield_inhibition(x)
+        x = self.divisive_inhibition(x)
 
 #############################################################################################################
 #############################################################################################################
