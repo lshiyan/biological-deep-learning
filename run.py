@@ -39,25 +39,33 @@ args_dict = {
 
 # Convert the dictionary to a list of arguments
 args_list = []
+
 for k, v in args_dict.items():
     args_list.append(k)
     args_list.append(str(v))
     
 ARGS = parse_arguments(args_list)
 
+lambda_test = []
 
+for num in range(1,16):
+    lambda_test.append(1/num)
+    lambda_test.append(num)
+    
+lambda_test.sort()
+print(lambda_test)
 
-for l in range(1, 16):
+for l in lambda_test:
     ARGS.heb_lamb = l
     test_acc_list = []
     train_acc_list = []
-    for _ in range(30):
-        model = HebbianNetwork(ARGS)
-        experiment = BaseHebCPU(model, ARGS, f'cpu-{l}')
-        test_acc, train_acc = experiment.run()
-        test_acc_list.append(test_acc)
-        train_acc_list.append(train_acc)
-        experiment.cleanup()
+    
+    model = HebbianNetwork(ARGS)
+    experiment = BaseHebCPU(model, ARGS, f'cpu-{l}')
+    test_acc, train_acc = experiment.run()
+    test_acc_list.append(test_acc)
+    train_acc_list.append(train_acc)
+    experiment.cleanup()
     
     avg_test = average(test_acc_list)
     var_test = variance(test_acc_list)

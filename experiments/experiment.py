@@ -98,6 +98,7 @@ class Experiment(ABC):
         self.PARAM_LOG: logging.Logger = get_parameter_log("Parameter Log", self.RESULT_PATH) # Experiment parameters
         self.DEBUG_LOG: logging.Logger = get_debug_log("Debug Log", self.RESULT_PATH) # Debugging stuff
         self.EXP_LOG: logging.Logger = get_experiment_log("Experiment Log", self.RESULT_PATH) # Logs during experiment
+        
         self.loggers.append(self.PRINT_LOG)
         self.loggers.append(self.TEST_LOG)
         self.loggers.append(self.TRAIN_LOG)
@@ -105,6 +106,7 @@ class Experiment(ABC):
         self.loggers.append(self.DEBUG_LOG)
         self.loggers.append(self.EXP_LOG)
 
+        # Logging of experiment
         self.EXP_LOG.info("Completed imports.")
         self.EXP_LOG.info("Completed log setups.")
         self.EXP_LOG.info("Completed arguments parsing.")
@@ -161,14 +163,16 @@ class Experiment(ABC):
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         
         self.EXP_LOG.info("Started training and testing loops.")
+        
         for epoch in range(0, self.ARGS.epochs):
+            # Testing accuracy
+            self.testing(test_data_loader, 'test', epoch, visualize=True)
+            
+            # Training accuracy
+            self.testing(train_data_loader, 'train', epoch, visualize=True)
+            
+            # Training
             self.training(train_data_loader, epoch, visualize=True)
-
-            if epoch % self.ARGS.test_epochs == 0:
-                # Testing accuracy
-                self.testing(test_data_loader, 'test', epoch, visualize=True)
-                # Training accuracy
-                self.testing(train_data_loader, 'train', epoch, visualize=True)
         
         self.EXP_LOG.info("Completed training of model.")        
         self.model.visualize_weights(self.RESULT_PATH, self.ARGS.epochs, 'final')
@@ -183,7 +187,7 @@ class Experiment(ABC):
         self.END_TIME = time.time()
         self.DURATION = self.END_TIME - self.START_TIME
         self.EXP_LOG.info(f"The experiment took {time_to_str(self.DURATION)} to be completed.")
-        self.PARAM_LOG.info(f"End time of experiment: {time_to_str(self.END_TIME)}")
+        self.PARAM_LOG.info(f"End time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.END_TIME))}")
         self.PARAM_LOG.info(f"Runtime of experiment: {time_to_str(self.DURATION)}")
         self.PARAM_LOG.info(f"Train time of experiment: {time_to_str(self.TRAIN_TIME)}")
         self.PARAM_LOG.info(f"Test time (test acc) of experiment: {time_to_str(self.TEST_ACC_TIME)}")

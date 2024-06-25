@@ -148,7 +148,9 @@ class BaseHebCPU(Experiment):
                 
         test_end = time.time()
         testing_time = test_end - test_start
-        self.TEST_ACC_TIME += testing_time
+
+        if set_name == 'test': self.TEST_ACC_TIME += testing_time
+        if set_name == 'train': self.TRAIN_ACC_TIME += testing_time
         
         if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, f'{set_name.lower()}_acc')
         
