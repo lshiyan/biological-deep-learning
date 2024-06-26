@@ -7,3 +7,9 @@ __pycache__/
 
 #Virtual env
 fundamental_virtual_env/
+
+#Tests
+#tests/
+
+#Results
+#results/

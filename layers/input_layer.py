@@ -3,120 +3,150 @@ from torch.utils.data import TensorDataset
 import os
 import pandas as pd
 from layers.layer import NetworkLayer
+from typing import IO, List
 
 
-"""
-Class defining how the input dataset will be processed before feeding it to the network
-"""
 class InputLayer (NetworkLayer):
     """
-    Constructor method InputLayer
-    @param
-        train_data (str) = train data filename (.ubyte)
-        train_label (str) = train label filename (.ubyte)
-        train_filename (str) = train data (img + label) filename (.csv)
-        test_data (str) = test data filename (.ubyte)
-        test_label (str) = test label filename (.ubyte)
-        test_filename (str) = test data (img + label) filename (.csv)
-    @attr.
-        train_data (str) = train data filename (.ubyte)
-        train_label (str) = train label filename (.ubyte)
-        train_filename (str) = train data (img + label) filename (.csv)
-        test_data (str) = test data filename (.ubyte)
-        test_label (str) = test label filename (.ubyte)
-        test_filename (str) = test data (img + label) filename (.csv)
+    Class defining how the input dataset will be processed before feeding it to the network
+    
+    @instance attr.
+        PARENT ATTR.
+            * Not used for this layer *
+        OWN ATTR.
+            train_data (str) = train data filename (.ubyte)
+            train_label (str) = train label filename (.ubyte)
+            train_filename (str) = train data (img + label) filename (.csv)
+            test_data (str) = test data filename (.ubyte)
+            test_label (str) = test label filename (.ubyte)
+            test_filename (str) = test data (img + label) filename (.csv)
     """
-    def __init__(self, train_data, train_label, train_filename, test_data, test_label, test_filename):
-        super().__init__(0, 0)
-        self.train_data = train_data
-        self.train_label = train_label
-        self.train_filename = train_filename
-        self.test_data = test_data
-        self.test_label = test_label
-        self.test_filename = test_filename
+    def __init__(self, train_data: str, 
+                 train_label: str, 
+                 train_filename: str, 
+                 test_data: str, 
+                 test_label: str, 
+                 test_filename: str) -> None:
+        """
+        Constructor method
+        @param
+            train_data: train data filename (.ubyte)
+            train_label: train label filename (.ubyte)
+            train_filename: train data (img + label) filename (.csv)
+            test_data: test data filename (.ubyte)
+            test_label: test label filename (.ubyte)
+            test_filename: test data (img + label) filename (.csv)
+        @return
+            None
+        """
+        super().__init__(0, 0, 0)
+        self.train_data: str = train_data
+        self.train_label: str = train_label
+        self.train_filename: str = train_filename
+        self.test_data: str = test_data
+        self.test_label: str = test_label
+        self.test_filename: str = test_filename
 
-    """
-    Function to setup the taining dataset
-    @param
-    @return
-        data_frame (torch.Tensor) = tensor containing dataset to train
-    """
-    def setup_train_data(self):
-        InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
+
+    def setup_data(self, data_type: str = 'train'):
+        """
+        Function to setup requested dataset
+        @param
+            data_type: which dataset to setup
+        @return
+            tensor dataset containing (data, label)
+        """
+        filename: str = None
+        data: str = None
+        label: str = None
+        size: int = None
         
-        data_frame = pd.read_csv(self.train_filename, header=None)
-        labels = torch.tensor(data_frame[0].values)
-        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
-        data_frame /= 255
-        return TensorDataset(data_frame, labels)
+        # Which dataset to setup
+        if data_type == 'train':
+            filename = self.train_filename
+            data = self.train_data
+            label = self.train_label
+            size = 60000
+        
+        elif data_type == 'test':
+            filename = self.test_filename
+            data = self.test_data
+            label = self.test_label
+            size = 10000
+        
+        # Converting to .csv file if needed
+        if not os.path.exists(filename):
+            InputLayer.convert(data, label, filename, size, 28)
+         
+        # Setup dataset   
+        data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
+        labels: torch.Tensor = torch.tensor(data_frame[0].values)
+        data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+        data_tensor /= 255
+        
+        return TensorDataset(data_tensor, labels)
+        
 
-
-    """
-    Function to setup the testing dataset
-    @param
-    @return
-        data_frame (torch.Tensor) = tensor containing dataset to test
-    """
-    def setup_test_data(self):
-        InputLayer.convert(self.test_data, self.test_label, self.test_filename, 10000, 28)
-        data_frame = pd.read_csv(self.test_filename, header=None)
-        labels = torch.tensor(data_frame[0].values)
-        data_frame = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
-        data_frame /= 255
-        return TensorDataset(data_frame, labels)
-
-
-    def __str__(self):
-        return "The input processing layer of the network."
-
-
-    """
-    Class method to convert .ubyte files into a .csv file for ease of use
-    """
     @classmethod
-    def convert(cls, img_file, label_file, out_file, data_size, img_size):
+    def convert(cls, img_file: str, 
+                label_file: str, 
+                out_file: str, 
+                data_size: int, 
+                img_size: int) -> None:
+        """
+        CLASS METHOD
+        Convert .ubyte files into a .csv file for ease of use
+        @param
+            img_file: path to image files
+            label_file: path to file with labels
+            out_file: path to .cvs file that merges data and label
+            data_size: number of data inputs
+            img_size: size of image
+        @return
+            None
+        """    
         # Get absolute path of all the necessary files (img, label, out)
-        project_root = os.getcwd()
-        img_file = os.path.join(project_root, img_file)
-        label_file = os.path.join(project_root, label_file)
-        out_file = os.path.join(project_root, out_file)
+        project_root: str = os.getcwd()
+        img_file: str = os.path.join(project_root, img_file)
+        label_file: str = os.path.join(project_root, label_file)
+        out_file: str = os.path.join(project_root, out_file)
 
         # Open all necessary files
-        imgs = open(img_file, "rb")
-        out = open(out_file, "w")
-        labels = open(label_file, "rb")
+        imgs: IO = open(img_file, "rb")
+        out: IO = open(out_file, "w")
+        labels: IO = open(label_file, "rb")
         
-        # Skip start of file because???
-        # NOTE: why skip bytes?
+        # Skip header bytes
         imgs.read(16)
         labels.read(8)
         
         # Create a 2D list of images where each image is a 1D list where the first element is the label
         img_size = img_size**2
-        images = []
+        images: List[List[int]] = []
 
-        for i in range(data_size):
-            image = [ord(labels.read(1))]
-            for j in range(img_size):
-                image.append(ord(imgs.read(1)))
+        for _ in range(data_size):
+            image: List[int] = [int.from_bytes(labels.read(1), byteorder='big')]
+            for _ in range(img_size):
+                image.append(int.from_bytes(imgs.read(1), byteorder='big'))
             images.append(image)
 
-        # Convert each image from 1D list to a comma seperated str and write it into out file
+        # Convert each image from 1D list to a comma-seperated str and write it into out file
         for image in images:
-            out.write(",".join(str(pix) for pix in image)+"\n")
+            out.write(",".join(str(pix) for pix in image) + "\n")
         
         # Close files
         imgs.close()
         out.close()
         labels.close()
-
+        
 
     # List of all methods from layers.NetworkLayer that are not needed for this layer
     # TODO: find a better way to implement the logic of having an input processing layer that still extends the layer.NetworkLayer interface
     def create_id_tensors(self): pass
-    def set_scheduler(self): pass
-    def visualize_weights(self): pass
     def update_weights(self): pass
     def update_bias(self): pass
-    def forward(self): pass
+    def forward(self, input, clamped_output): pass
+    def _train_forward(self, x, clamped_output=None): pass
+    def _eval_forward(self, x): pass
+    def visualize_weights(self, path, num, use): pass
     def active_weights(self): pass

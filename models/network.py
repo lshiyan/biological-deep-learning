@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import torch.nn as nn 
+import torch.nn as nn
 
 """
 Interface for all networks to be created
@@ -8,71 +8,86 @@ class Network(nn.Module, ABC):
     """
     Constructor method
     @attr.
-        __layers (dict {str:nn.Module}) = list of layers of the network
+        device_id (int) = id of the gpu that the model will be running in
     @pram
+<<<<<<< HEAD
+=======
+        device (int) = id of the gpu that the model will be set to
+>>>>>>> fundamentals_strong_compute_branch
     @return
         * Can't return *
     """
-    def __init__(self):
+    def __init__(self, device):
         super().__init__()
+<<<<<<< HEAD
 
 
     """
     Function returning layer with given name
+=======
+        self.device_id = device                                             # WHY IS THIS NEEDED HERE? NOT NECESSARY AT ALL
+
+
+    """
+    Method to get layer with given name
+>>>>>>> fundamentals_strong_compute_branch
     @param
         name (str) = name of layer to get
     @return
         layer (layer.NetworkLayer) = a layer of the network with searched name
     """
-    def get_layer(self, name):
-        layers = self.named_children()
+    def get_module(self, name):
 
-        for layer_name, layer in layers:
-            if name == layer_name:
-                return layer
-        return None
-    
+    # STEP 1: loop through the network layeres
+        for module_name, module in self.named_children():       
+            # self.named_children() is a method provided by PyTorch’s nn.Module class 
+            # It yields pairs of layer names (module_name) and the corresponding layer objects (module)
 
-    """
-    Method to set scheduler to all layers
-    @param
-    @return
-        ___ (void) = no returns
-    """
-    # NOTE: What use is this???
-    def set_scheduler(self):
-        for module in self.children():
-            module.set_scheduler()
+    # STEP 2: Layer matching and retrieval
+            if name == module_name:
+                return module
 
-    
+
     """
     Method to visualize the weights/features learned by each neuron during training
     @param
+        path (Path) = path to print out result
     @return
         ___ (void) = no returns
     """
+<<<<<<< HEAD
     def visualize_weights(self):
         for module in self.children():
             module.visualize_weights()
+=======
+    def visualize_weights(self, path, num, use):
+        for module in self.children():
+            module.visualize_weights(path, num, use)
+>>>>>>> fundamentals_strong_compute_branch
 
 
     """
-    Returns number of active feature selectors
+    Method to get number of active feature selectors
     @param
         beta (float) = cutoff value determining which neuron is active
     @return
         ___ (void) = no returns
     """
     def active_weights(self, beta):
+<<<<<<< HEAD
         for module in self.children():
             module.active_weights(beta)
+=======
+        for name, module in self.name_children():
+            print(f"{name}: {module.active_weights(beta)}")
+>>>>>>> fundamentals_strong_compute_branch
 
 
     """
     Method that defines how an input data flows throw the network
     @param
         x (torch.Tensor) = input data as a tensor
-        clamped_output (???) = parameter to clamp the output   # TODO: Figure out what clamped_output is used for
+        clamped_output (TODO: ???) = parameter to clamp the output
     @return
         ___ (torch.Tensor) = processed data
     """ 

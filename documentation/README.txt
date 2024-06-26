@@ -72,6 +72,11 @@ Code Implementation
 
 
 
+***** TESTING PURPOSES *****
+- notebook.ipynb can and should be used to test small parts of code and look at runtime/imediate feedback
+- cmd python run.py for use on cpu, isc train base_hebbian_learning.isc for SC
+
+
 
 #################### WHAT NEEDSIMPROVEMENT ####################
 - Check the TODOs and NOTEs within the code

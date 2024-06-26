@@ -1,0 +1,39 @@
+isc_project_id = "40890c8c-90e0-4828-9d48-5d793ab0b23e"
+experiment_name = "base_hebbian_learning"
+gpu_type = "24GB VRAM GPU"
+nnodes = 10
+output_path = "~/outputs/base_hebbian_learning"
+_compute_mode = "cycle"
+
+command = "source ~/hebbian_venv/bin/activate && 
+            cd ~/biological-deep-learning/ && 
+            torchrun 
+            --nnodes=10 
+            --nproc-per-node=6 
+            --master_addr=$MASTER_ADDR 
+            --master_port=$MASTER_PORT 
+            --node_rank=$RANK base_hebbian_train.py
+            --is_training=True 
+            --data_name='MNIST' 
+            --train_data='data/mnist/train-images.idx3-ubyte' 
+            --train_label='data/mnist/train-labels.idx1-ubyte' 
+            --test_data='data/mnist/t10k-images.idx3-ubyte' 
+            --test_label='data/mnist/t10k-labels.idx1-ubyte' 
+            --train_filename='data/mnist/mnist_train.csv' 
+            --test_filename='data/mnist/mnist_test.csv' 
+            --input_dim=784 
+            --heb_dim=64 
+            --output_dim=10  
+            --heb_lamb=15 
+            --heb_gam=0.99 
+            --cla_lamb=1 
+            --eps=0.01 
+            --epochs=5 
+            --test_epochs=1 
+            --lr=0.005 
+            --lr_step_size=1000 
+            --gamma=0 
+            --batch_size=1
+            --local_machine=False
+            --save_dir=$OUTPUT_PATH 
+            --tboard_path=$OUTPUT_PATH/tb"
