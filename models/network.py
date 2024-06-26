@@ -16,7 +16,7 @@ class Network(nn.Module, ABC):
     """
     def __init__(self, device):
         super().__init__()
-        self.device_id = device                                             # WHY IS THIS NEEDED HERE? NOT NECESSARY AT ALL
+        self.device_id = device
 
 
     """
