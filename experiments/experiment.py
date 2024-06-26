@@ -92,12 +92,12 @@ class Experiment(ABC):
         
         # Loggers for experiment
         self.loggers: List[logging.Logger] = []
-        self.PRINT_LOG: logging.Logger = get_print_log("Print Log", self.RESULT_PATH) # Replace print statements (for debugging purposes)
-        self.TEST_LOG: logging.Logger = get_test_acc_log("Test Log", self.RESULT_PATH) # Testing accuracy
-        self.TRAIN_LOG: logging.Logger = get_train_acc_log("Train Log", self.RESULT_PATH) # Training accuracy
-        self.PARAM_LOG: logging.Logger = get_parameter_log("Parameter Log", self.RESULT_PATH) # Experiment parameters
-        self.DEBUG_LOG: logging.Logger = get_debug_log("Debug Log", self.RESULT_PATH) # Debugging stuff
-        self.EXP_LOG: logging.Logger = get_experiment_log("Experiment Log", self.RESULT_PATH) # Logs during experiment
+        self.PRINT_LOG: logging.Logger = configure_logger("Print Log", f"{self.RESULT_PATH}/prints.log") # Replace print statements (for debugging purposes)
+        self.TEST_LOG: logging.Logger = configure_logger("Test Log", f"{self.RESULT_PATH}/testing_accuracy.log") # Testing accuracy
+        self.TRAIN_LOG: logging.Logger = configure_logger("Train Log", f"{self.RESULT_PATH}/training_accuracy.log") # Training accuracy
+        self.PARAM_LOG: logging.Logger = configure_logger("Parameter Log", f"{self.RESULT_PATH}/parameters.log") # Experiment parameters
+        self.DEBUG_LOG: logging.Logger = configure_logger("Debug Log", f"{self.RESULT_PATH}/debug.log", level=logging.DEBUG) # Debugging stuff
+        self.EXP_LOG: logging.Logger = configure_logger("Experiment Log", f"{self.RESULT_PATH}/experiment_process.log") # Logs during experiment
         
         self.loggers.append(self.PRINT_LOG)
         self.loggers.append(self.TEST_LOG)
