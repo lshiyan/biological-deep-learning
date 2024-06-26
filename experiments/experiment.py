@@ -144,9 +144,8 @@ class Experiment(ABC):
         self.PARAM_LOG.info(f"Outout Dimension: {self.ARGS.output_dim}")
         self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.ARGS.heb_lamb}")
         self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.ARGS.heb_gam}")
-        self.PARAM_LOG.info(f"Classification Layer Lambda: {self.ARGS.cla_lamb}")
+        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.ARGS.heb_eps}")
         self.PARAM_LOG.info(f"Network Learning Rate: {self.ARGS.lr}")
-        self.PARAM_LOG.info(f"Epsilon: {self.ARGS.eps}")
         self.PARAM_LOG.info(f"Number of Epochs: {self.ARGS.epochs}")
         self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
         

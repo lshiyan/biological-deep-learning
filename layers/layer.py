@@ -45,16 +45,6 @@ class NetworkLayer (nn.Module, ABC):
             param.requires_grad_(False)
 
 
-<<<<<<< HEAD
-    """
-    Creates identity tensor
-    @param
-    @return
-        id_tensor (torch.Tensor) = return identity tensor of this layer
-    """
-    def create_id_tensors(self):
-        id_tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
-=======
     def create_id_tensors(self) -> torch.Tensor:   
         """
         METHOD
@@ -65,91 +55,11 @@ class NetworkLayer (nn.Module, ABC):
             id_tensor: 3D tensor with increasing size of identify matrices
         """
         id_tensor: torch.Tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
->>>>>>> fundamentals_strong_compute_branch
         for i in range(0, self.output_dimension):
             identity: torch.tensor = torch.eye(i+1)
             padded_identity: torch.Tensor = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, self.output_dimension - i-1))
             id_tensor[i] = padded_identity
         return id_tensor
-<<<<<<< HEAD
-
-    """
-    Sets scheduler current for layer
-    @param
-    @return
-        ___ (void) = no returns 
-    """
-    @abstractmethod
-    def set_scheduler(self):
-        pass
-
-
-    """
-    Visualizes the weight/features learnt by neurons in this layer using their heatmap
-    @param
-    @return
-        ___ (void) = no returns
-    """
-    # TODO: find a way to automatically choose size of the plots, and how the plots will be arranged without needing to hard code it
-    @abstractmethod
-    def visualize_weights(self):
-        pass
-    
-
-    """
-    Defines the way the weights will be updated at each iteration of the training
-    @param
-        input_data (???) = ???
-        output_data (???) = ???
-        clamped_output (???) = ???
-    @return
-        * Can't return * 
-    """
-    # TODO: finish documentation when understand
-    # NOTE: what is clamped_output
-    @abstractmethod
-    def update_weights(self, input, output, clamped_output):
-        pass
-
-
-    """
-    Defines the way the bias will be updated at each iteration of the training
-    @param
-        output (???) = ???
-    @return
-        * Can't return *
-    """
-    # TODO: finish documentation when understand  
-    @abstractmethod 
-    def update_bias(self, output):
-        pass
-    
-
-    """
-    Feed forward
-    @param
-        x (torch.Tensor) = inputs into the layer
-        clamped_output (???) = ???
-    @return
-        * Can't return * 
-    """
-    # TODO: finish documentation when understand
-    # NOTE: what is clamped_output?
-    @abstractmethod
-    def forward(self, x, clamped_output):
-        pass
-
-    """
-    Counts the number of active feature selectors (above a certain cutoff beta).
-    @param
-        beta (float) = cutoff value determining which neuron is active and which is not
-    @return
-        * Can't return *
-    """
-    @abstractmethod
-    def active_weights(self, beta):
-        pass
-=======
     
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
@@ -244,4 +154,3 @@ class NetworkLayer (nn.Module, ABC):
             number of active weights
         """
         raise NotImplementedError("This method is not implemented.")
->>>>>>> fundamentals_strong_compute_branch
