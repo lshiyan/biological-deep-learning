@@ -38,7 +38,7 @@ for l in lambda_test:
     #     experiment.cleanup()
     
     model = HebbianNetwork(ARGS)
-    experiment = BaseHebCPU(model, ARGS, f'cpu-{l}')
+    experiment = BaseHebCPU(model, ARGS, f'gaussian-inhibition-lambda-{l}')
     test_acc, train_acc = experiment.run()
 
     experiment.cleanup()
