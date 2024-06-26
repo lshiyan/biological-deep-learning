@@ -22,7 +22,6 @@ lambda_test = [1]
 #     lambda_test.append(num)
     
 lambda_test.sort()
-print(lambda_test)
 
 for l in lambda_test:
     ARGS.heb_lamb = l
