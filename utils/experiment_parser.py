@@ -35,13 +35,13 @@ def parse_arguments(args_list: List = None) -> argparse.Namespace:
     # Hebbian layer hyperparameters
     parser.add_argument('--heb_lamb', type=float, default=15)
     parser.add_argument('--heb_gam', type=float, default=0.99)
+    parser.add_argument('--heb_eps', type=float, default=0.01)
 
     # Classification layer hyperparameters
-    parser.add_argument('--cla_lamb', type=float, default=1)
 
     # Shared hyperparameters
     parser.add_argument("--lr", type=float, default=0.005)
-    parser.add_argument('--eps', type=float, default=0.01)
+
 
 
     # Experiment parameters
