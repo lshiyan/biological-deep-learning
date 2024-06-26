@@ -36,14 +36,14 @@ for l in lambda_test:
     for num in range(0, 30):
         # Base model training
         base_model = HebbianNetwork(ARGS)
-        base_experiment = BaseHebCPU(base_model, ARGS, f'cpu-base-{l}-')
+        base_experiment = BaseHebCPU(base_model, ARGS, f'cpu-base-{l}-{num}')
         base_test_acc, base_train_acc = base_experiment.run()
         base_test_acc_list.append(base_test_acc)
         base_train_acc_list.append(base_train_acc)
         base_experiment.cleanup()
     
         ortho_model = OrthoHebNetwork(ARGS)
-        ortho_exp = BaseHebCPU(ortho_model, ARGS, f'cpu-ortho-{l}')
+        ortho_exp = BaseHebCPU(ortho_model, ARGS, f'cpu-ortho-{l}-{num}')
         ortho_test_acc, ortho_train_acc = ortho_exp.run()
         ortho_exp.cleanup()
     
