@@ -13,7 +13,7 @@ DEFAULT_NAME = "Error Log"
 #########################################################################
 # Logging functions
 #########################################################################
-def configure_logger(name: str, file: str, level: logging.int = DEFAULT_LEVEL, format: str = DEFAULT_FORMAT) -> logging.Logger:
+def configure_logger(name: str, file: str, level: int = DEFAULT_LEVEL, format: str = DEFAULT_FORMAT) -> logging.Logger:
     """
     FUNCTION
     Create a logger to log information

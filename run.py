@@ -19,7 +19,7 @@ arguments = ['--is_training=True',
             '--heb_gam=0.99', 
             '--cla_lamb=1',
             '--eps=0.01', 
-            '--epochs=5', 
+            '--epochs=1', 
             '--test_epochs=1', 
             '--lr=0.005',  
             '--batch_size=1',
@@ -30,7 +30,7 @@ arguments = ['--is_training=True',
 command = ['python', script_name] + arguments
 
 # Run the command
-result = subprocess.run(command, capture_output=True, text=True)
+result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 # Print the output
 print("Standard Output:\n", result.stdout)

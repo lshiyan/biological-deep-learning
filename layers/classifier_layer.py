@@ -78,7 +78,7 @@ class ClassifierLayer(NetworkLayer):
         self.fc.weight = nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
 
         # Zero out the first column of weights -> this is to prevent the first weight from learning everything
-        self.fc.weight[:, 0] = 0
+        # self.fc.weight[:, 0] = 0
         
 
     def update_bias(self, output: torch.Tensor) -> None:

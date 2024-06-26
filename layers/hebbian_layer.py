@@ -4,6 +4,7 @@ import matplotlib
 import matplotlib.figure
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from numpy import outer
 import numpy as np
 from layers.layer import NetworkLayer
@@ -52,21 +53,101 @@ class HebbianLayer(NetworkLayer):
         self.id_tensor: torch.Tensor = self.create_id_tensors()
 
 
-    def inhibition(self, input: torch.Tensor):
+    def relu_inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Calculates lateral inhibition
+        Calculates ReLU lateral inhibition
         @param
-            input: input to the ReLU function
+            input: input to layer
         @return
-            input: activation after lateral inhibition
+            output: activation after lateral inhibition
         """
         relu: nn.ReLU = nn.ReLU()
         input: torch.Tensor = relu(input)
         max_ele: int = torch.max(input).item()
         input = torch.pow(input, self.lamb)
-        input /= abs(max_ele) ** self.lamb
-        return input
+        output: torch.Tensor =  input / abs(max_ele) ** self.lamb
+        return output
+    
+    
+    def softmax_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates softmax lateral inhibition
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        output: torch.Tensor = F.softmax(input*self.lamb, dim=-1)
+        return output
+    
+    
+    def exp_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates exponential (Hopfield Networks) lateral inhibition
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        max_ele: int = torch.max(input).item()
+        input -= max_ele
+        output: torch.Tensor = F.softmax(input*self.lamb, dim=-1)
+        return output
+    
+    
+    def wta_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates winner-takes-all lateral inhibition
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        print(input, flush=True)
+        max_ele: int = torch.max(input).item()
+        print(max_ele, flush=True)
+        input //= max_ele
+        print(input)
+        output = input * max_ele
+        print(output, flush=True)
+        return output
+        
+        
+    def norm_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates divisive normalization lateral inhibition
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        relu: nn.ReLU = nn.ReLU()
+        input: torch.Tensor = relu(input)
+        sum_inputs: float = torch.sum(input, dim=-1, keepdim=True)
+        output: torch.Tensor = input / sum_inputs
+        return output
+    
+    
+    def gaussian_inhibition(self, input: torch.Tensor, sigma: float = 1.0) -> torch.Tensor:
+        """
+        METHOD
+        Calculates gaussian lateral inhibition
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        kernel_size: int = 2 * int(2 * sigma) + 1
+        kernel: torch.Tensor = torch.tensor(np.exp(-(np.arange(-kernel_size // 2, kernel_size // 2 + 1)**2) / (2 * sigma**2)), dtype=torch.float32)
+        kernel = kernel / torch.sum(kernel)
+        kernel = kernel.unsqueeze(0).unsqueeze(0)
+        output: torch.Tensor = F.conv1d(input.unsqueeze(0).unsqueeze(0), kernel, padding=kernel_size // 2).squeeze(0).squeeze(0)
+        return output
         
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor) -> None:
@@ -98,7 +179,7 @@ class HebbianLayer(NetworkLayer):
         self.id_tensor = self.id_tensor.to(self.device_id)
         self.exponential_average = self.exponential_average.to(self.device_id)
 
-        # STEP 4: COMPUTE LATERAL INHIBITION TERM
+        # STEP 4: Sanger's Rule
         A: torch.Tensor = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
         A = A * (y.unsqueeze(1))
 
@@ -178,17 +259,22 @@ class HebbianLayer(NetworkLayer):
             input: input data into the layer
             clamped_output: *NOT USED*
         @return
-            input: returns the data after passing it throw the layer
+            output: returns the data after passing it throw the layer
         """
         # Copy input -> calculate output -> update weights -> return output
         input_copy = input.clone().to(self.device_id).float()
         input = input.to(self.device_id)
         input = self.fc(input)
-        input = self.inhibition(input)
-        self.update_weights(input_copy, input)
+        # output = self.relu_inhibition(input)
+        # output = self.softmax_inhibition(input)
+        output = self.exp_inhibition(input)
+        # output = self.wta_inhibition(input)
+        # output = self.norm_inhibition(input)
+        # output = self.gaussian_inhibition(input)
+        self.update_weights(input_copy, output)
         #self.update_bias(input)
         self.weight_decay()
-        return input
+        return output
     
 
     def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -198,13 +284,18 @@ class HebbianLayer(NetworkLayer):
         @param
             input: input data into the layer
         @return
-            input: returns the data after passing it throw the layer
+            output: returns the data after passing it throw the layer
         """
         # Copy input -> calculate output -> return output
         input = input.to(self.device_id)
         input = self.fc(input)
-        input = self.inhibition(input)
-        return input
+        # output = self.relu_inhibition(input)
+        # output = self.softmax_inhibition(input)
+        output = self.exp_inhibition(input)
+        # output = self.wta_inhibition(input)
+        # output = self.norm_inhibition(input)
+        # output = self.gaussian_inhibition(input)
+        return output
     
 
     def visualize_weights(self, result_path: str, num: int, use: str) -> None:
