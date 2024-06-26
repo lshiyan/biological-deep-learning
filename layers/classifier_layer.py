@@ -17,18 +17,14 @@ class ClassifierLayer(NetworkLayer):
             input_dimension (int) = number of inputs into the layer
             output_dimension (int) = number of outputs from layer
             device_id (int) = the device that the module will be running on
-            lamb (float) = lambda hyperparameter for latteral inhibition
             alpha (float) = how fast model learns at each iteration
             fc (fct) = function to apply linear transformation to incoming data
-            eps (float) = to avoid division by 0
         OWN ATTR.
     """
     def __init__(self, input_dimension: int,
                  output_dimension: int, 
                  device_id: str, 
-                 lamb: float = 1, 
-                 class_lr: float = 0.005, 
-                 eps: float = 0.01) -> None:
+                 class_lr: float = 0.005) -> None:
         """
         CONSTRUCTOR METHOD
         @param
@@ -42,7 +38,7 @@ class ClassifierLayer(NetworkLayer):
         @return
             None
         """
-        super ().__init__(input_dimension, output_dimension, device_id, lamb, class_lr, eps)    
+        super ().__init__(input_dimension, output_dimension, device_id, class_lr)    
     
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
@@ -67,11 +63,9 @@ class ClassifierLayer(NetworkLayer):
             u_times_y: torch.Tensor = torch.mul(u,y)
             A = outer_prod - self.fc.weight * (u_times_y.unsqueeze(1))
         else:
-            A = torch.outer(post_activation_output, input_value)  # Hebbian learning rule component
-            # If clamped_output is not provided, A is simply the outer product of y and x.
+            A = torch.outer(y, x)
 
-
-    # STEP 3: Adjust weights
+        # STEP 3: Adjust weights
         A = self.fc.weight + self.alpha * A
         # The weights are adjusted by adding the scaled update A to the current weights.
 

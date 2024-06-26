@@ -19,13 +19,13 @@ class HebbianLayer(NetworkLayer):
             input_dimension (int): number of inputs into the layer
             output_dimension (int): number of outputs from layer
             device_id (str): the device that the module will be running on
-            lamb (float): lambda hyperparameter for latteral inhibition
             alpha (float): how fast model learns at each iteration
             fc (nn.Linear): function to apply linear transformation to incoming data
-            eps (float): to avoid division by 0
         OWN ATTR.
             exponential_average (torch.Tensor): 0 tensor to keep track of exponential averages
             gamma (float): decay factor -> factor to decay learning rate
+            lamb (float): lambda hyperparameter for latteral inhibition
+            eps (float): to avoid division by 0
             id_tensor (torch.Tensor): id tensor of layer
     """
     def __init__(self, input_dimension: int, 
@@ -47,8 +47,10 @@ class HebbianLayer(NetworkLayer):
         @return
             None
         """
-        super().__init__(input_dimension, output_dimension, device_id, lamb, heb_lr, eps)
+        super().__init__(input_dimension, output_dimension, device_id, heb_lr)
         self.gamma: float = gamma
+        self.lamb = lamb
+        self.eps = eps
         self.exponential_average: torch.Tensor = torch.zeros(self.output_dimension)
         self.id_tensor: torch.Tensor = self.create_id_tensors()
 

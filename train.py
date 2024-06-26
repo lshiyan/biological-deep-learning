@@ -14,8 +14,8 @@ results_log = configure_logger('Result Log', './results/results.log')
 ARGS = parse_arguments()
 
 # Experiments setup
-lambda_test = [1, 5, 10, 15]
-# lambda_test = [1]
+# lambda_test = [1, 5, 10, 15]
+lambda_test = [1]
 
 # for num in range(1,16):
 #     lambda_test.append(1/num)

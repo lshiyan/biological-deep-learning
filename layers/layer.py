@@ -13,17 +13,13 @@ class NetworkLayer (nn.Module, ABC):
         input_dimension (int): number of inputs into the layer
         output_dimension (int): number of outputs from layer
         device_id (str): the device that the module will be running on
-        lamb (float): lambda hyperparameter for latteral inhibition
         alpha (float): how fast model learns at each iteration
         fc (nn.Linear): function to apply linear transformation to incoming data
-        eps (float): to avoid division by 0
     """
     def __init__(self, input_dimension: int, 
                  output_dimension: int, 
-                 device_id: str, 
-                 lamb: float = 1, 
-                 learning_rate: float = 0.005, 
-                 eps: float = 0.01) -> None:
+                 device_id: str,
+                 learning_rate: float = 0.005) -> None:
         """
         CONSTRUCTOR METHOD
         @param
@@ -40,10 +36,8 @@ class NetworkLayer (nn.Module, ABC):
         self.input_dimension: int = input_dimension
         self.output_dimension: int = output_dimension
         self.device_id: str = device_id
-        self.lamb: float = lamb
         self.alpha: float = learning_rate
         self.fc: nn.Linear = nn.Linear(self.input_dimension, self.output_dimension, bias=True)
-        self.eps: float = eps
         
         # Setup linear activation
         for param in self.fc.parameters():
@@ -119,7 +113,7 @@ class NetworkLayer (nn.Module, ABC):
             input: input data into the layer
             clamped_output: one-hot encode of true labels
         @return
-            input: returns the data after passing it throw the layer
+            output: returns the data after passing it throw the layer
         """
         raise NotImplementedError("This method is not implemented.")
     
@@ -131,7 +125,7 @@ class NetworkLayer (nn.Module, ABC):
         @param
             input: input data into the layer
         @return
-            input: returns the data after passing it throw the layer
+            output: returns the data after passing it throw the layer
         """
         raise NotImplementedError("This method is not implemented.")
 

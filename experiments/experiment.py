@@ -153,12 +153,12 @@ class Experiment(ABC):
         self.EXP_LOG.info("Completed logging of experiment parameters.")
         
         # Training dataset
-        train_data_set: TensorDataset = self.model.get_module("Input Layer").setup_train_data()
+        train_data_set: TensorDataset = self.model.get_module("Input Layer").setup_data('train')
         train_data_loader: DataLoader = DataLoader(train_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
 
         # Testing dataset
-        test_data_set: TensorDataset = self.model.get_module("Input Layer").setup_test_data()
+        test_data_set: TensorDataset = self.model.get_module("Input Layer").setup_data('test')
         test_data_loader: DataLoader = DataLoader(test_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         

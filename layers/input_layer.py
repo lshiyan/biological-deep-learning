@@ -48,43 +48,44 @@ class InputLayer (NetworkLayer):
         self.test_filename: str = test_filename
 
 
-    def setup_train_data(self) -> TensorDataset:
+    def setup_data(self, data_type: str = 'train'):
         """
-        Function to setup the training dataset
+        Function to setup requested dataset
         @param
-            None
+            data_type: which dataset to setup
         @return
             tensor dataset containing (data, label)
         """
-        if not os.path.exists(self.train_filename):
-            InputLayer.convert(self.train_data, self.train_label, self.train_filename, 60000, 28)
+        filename: str = None
+        data: str = None
+        label: str = None
+        size: int = None
         
-        data_frame: pd.DataFrame = pd.read_csv(self.train_filename, header=None, on_bad_lines='skip')
+        # Which dataset to setup
+        if data_type == 'train':
+            filename = self.train_filename
+            data = self.train_data
+            label = self.train_label
+            size = 60000
+        
+        elif data_type == 'test':
+            filename = self.test_filename
+            data = self.test_data
+            label = self.test_label
+            size = 10000
+        
+        # Converting to .csv file if needed
+        if not os.path.exists(filename):
+            InputLayer.convert(data, label, filename, size, 28)
+         
+        # Setup dataset   
+        data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
         labels: torch.Tensor = torch.tensor(data_frame[0].values)
         data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
         data_tensor /= 255
         
         return TensorDataset(data_tensor, labels)
-
-
-    def setup_test_data(self) -> TensorDataset:
-        """
-        Function to setup the testing dataset
-        @param
-            None
-        @return
-            tensor dataset containing (data, label)
-        """
-        if not os.path.exists(self.test_filename):
-            InputLayer.convert(self.test_data, self.test_label, self.test_filename, 10000, 28)
-            
-        data_frame: pd.DataFrame = pd.read_csv(self.test_filename, header=None, on_bad_lines='skip')
-        labels: torch.Tensor = torch.tensor(data_frame[0].values)
-        data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
-        data_tensor /= 255
         
-        return TensorDataset(data_tensor, labels)
-
 
     @classmethod
     def convert(cls, img_file: str, 
