@@ -81,7 +81,7 @@ class OrthoHebLayer(NetworkLayer):
         @return
             output: activation after lateral inhibition
         """
-        output: torch.Tensor = F.softmax(input*self.lamb, dim=-1)
+        output: torch.Tensor = F.softmax(input, dim=-1)
         return output
     
     
@@ -95,8 +95,7 @@ class OrthoHebLayer(NetworkLayer):
             output: activation after lateral inhibition
         """
         max_ele: int = torch.max(input).item()
-        input -= max_ele
-        output: torch.Tensor = F.softmax(input*self.lamb, dim=-1)
+        output: torch.Tensor = F.softmax((input - max_ele)*self.lamb, dim=-1)
         return output
     
         
@@ -252,8 +251,8 @@ class OrthoHebLayer(NetworkLayer):
         input_copy = input.clone().to(self.device_id).float()
         input = input.to(self.device_id)
         input = self.fc(input)
-        output = self.relu_inhibition(input)
-        # output = self.softmax_inhibition(input)
+        # output = self.relu_inhibition(input)
+        output = self.softmax_inhibition(input)
         # output = self.exp_inhibition(input)
         # output = self.wta_inhibition(input)
         # output = self.norm_inhibition(input)
@@ -276,8 +275,8 @@ class OrthoHebLayer(NetworkLayer):
         # Copy input -> calculate output -> return output
         input = input.to(self.device_id)
         input = self.fc(input)
-        output = self.relu_inhibition(input)
-        # output = self.softmax_inhibition(input)
+        # output = self.relu_inhibition(input)
+        output = self.softmax_inhibition(input)
         # output = self.exp_inhibition(input)
         # output = self.wta_inhibition(input)
         # output = self.norm_inhibition(input)

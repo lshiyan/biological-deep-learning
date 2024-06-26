@@ -14,8 +14,8 @@ results_log = configure_logger('Result Log', './results/results.log')
 ARGS = parse_arguments()
 
 # Experiments setup
-# lambda_test = [1, 5, 10, 15]
-lambda_test = [15]
+lambda_test = [1, 5, 10, 15]
+# lambda_test = [15]
 
 # for num in range(1,16):
 #     lambda_test.append(1/num)
@@ -36,11 +36,11 @@ for l in lambda_test:
     #     train_acc_list.append(train_acc)
     #     experiment.cleanup()
     
-    base_model = HebbianNetwork(ARGS)
-    base_experiment = BaseHebCPU(base_model, ARGS, f'cpu-base-{l}-')
-    base_test_acc, base_train_acc = base_experiment.run()
-    base_experiment.cleanup()
-    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Test Acc: {base_test_acc} || Train Acc: {base_train_acc}")
+    # base_model = HebbianNetwork(ARGS)
+    # base_experiment = BaseHebCPU(base_model, ARGS, f'cpu-base-{l}-')
+    # base_test_acc, base_train_acc = base_experiment.run()
+    # base_experiment.cleanup()
+    # results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Test Acc: {base_test_acc} || Train Acc: {base_train_acc}")
     
     ortho_model = OrthoHebNetwork(ARGS)
     ortho_exp = BaseHebCPU(ortho_model, ARGS, f'cpu-ortho-{l}')

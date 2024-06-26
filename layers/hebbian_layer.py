@@ -81,7 +81,7 @@ class HebbianLayer(NetworkLayer):
         @return
             output: activation after lateral inhibition
         """
-        output: torch.Tensor = F.softmax(input*self.lamb, dim=-1)
+        output: torch.Tensor = F.softmax(input, dim=-1)
         return output
     
     
@@ -96,7 +96,7 @@ class HebbianLayer(NetworkLayer):
         """
         max_ele: int = torch.max(input).item()
         input -= max_ele
-        output: torch.Tensor = F.softmax(input*self.lamb, dim=-1)
+        output: torch.Tensor = F.softmax((input - max_ele)*self.lamb, dim=-1)
         return output
     
         
