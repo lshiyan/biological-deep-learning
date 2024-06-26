@@ -36,21 +36,23 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         ___ (models.HebianNetwork) = new instance of a HebbianNetwork
     """
     def __init__(self, args):
-        super().__init__(args.device_id)
+        super().__init__(args.device_id)            # SIMILARLY, I CAN DELETE THIS DEVICE ID IF THE PREVIOUS CHANGE IS IMPLEMENTED
 
         # Dimension of each layer
         self.input_dim = args.input_dim
         self.heb_dim = args.heb_dim
         self.output_dim = args.output_dim
 
-        # Hebbian layer hyperparameters
-        self.heb_param = {}
-        self.heb_param["lamb"] = args.heb_lamb
-        self.heb_param["gam"] = args.heb_gam
+        # Hebbian layer hyperparameters stored in dictionary
+        self.heb_param = {
+            "lamb": args.heb_lamb,
+            "gam": args.heb_gam
+        }
 
-        # Classification layer hyperparameters
-        self.cla_param = {}
-        self.cla_param["lamb"] = args.cla_lamb
+        # Classification layer hyperparameters stored in dictionary
+        self.cla_param = {
+            "lamb": args.cla_lamb
+        }
 
         # Shared hyperparameters
         self.lr = args.lr
@@ -64,6 +66,14 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         self.add_module("Input Layer", input_layer)
         self.add_module("Hebbian Layer", hebbian_layer)
         self.add_module("Classification Layer", classification_layer)
+        # In the above block, I register each layer with the network using add_module, 
+            # note that this is a method from PyTorch’s nn.Module that allows the network to keep track of its submodules for purposes like parameter updates, backpropagation, and saving/loading models.
+
+
+
+
+
+
 
 
     """
@@ -75,19 +85,21 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         data_input (torch.Tensor) = returns the data after passing it throw the network
     """
     def forward(self, x, clamped_output=None):
-        # Get all the layers in the module
-        input_layer = self.get_module("Input Layer")
+
+    # STEP 1: Layer retrieval
         hebbian_layer = self.get_module("Hebbian Layer")
         classification_layer = self.get_module("Classification Layer")
 
-        # Convert input to float if not already
+    # STEP 2: Input type conversion
         if x.dtype != torch.float32:
             x = x.float().to(self.device_id)
+        # This step is crucial for ensuring compatibility with PyTorch operations, which often require floating-point precision.
 
-        # Input data -> Hebbian Layer -> Classification Layer -> Output data
-        data_input = x.to(self.device_id)
-        data_input = hebbian_layer(data_input)
-        data_input = classification_layer(data_input, clamped_output)
+    # STEP 3: DATA flow through layers
+        data_input = x.to(self.device_id)                                                       # The input data is first moved to the correct device, if not already done in the type conversion step.
+        post_hebbian_value = hebbian_layer(data_input)                                          # The data then flows through the Hebbian Layer. 
+        post_classification_value = classification_layer(post_hebbian_value, clamped_output)    # Lastly, the data the processed data is passed to the Classification Layer. 
+                                                                                                    # If clamped_output is provided, it is used during this stage. 
 
-        return data_input
+        return post_classification_value
     

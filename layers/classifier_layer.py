@@ -67,11 +67,14 @@ class ClassifierLayer(NetworkLayer):
             u_times_y: torch.Tensor = torch.mul(u,y)
             A = outer_prod - self.fc.weight * (u_times_y.unsqueeze(1))
         else:
-            # Compute the outer product of the softmax output and input.
-            A = torch.outer(y,x) # Hebbian learning rule component
+            A = torch.outer(post_activation_output, input_value)  # Hebbian learning rule component
+            # If clamped_output is not provided, A is simply the outer product of y and x.
 
-        # Adjust weights by learning rate and add contribution from Hebbian update.
+
+    # STEP 3: Adjust weights
         A = self.fc.weight + self.alpha * A
+        # The weights are adjusted by adding the scaled update A to the current weights.
+
 
         # Normalize weights by the maximum value in each row to stabilize the learning.
         weight_maxes: torch.Tensor = torch.max(A, dim=1).values

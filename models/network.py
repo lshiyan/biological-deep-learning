@@ -16,7 +16,7 @@ class Network(nn.Module, ABC):
     """
     def __init__(self, device):
         super().__init__()
-        self.device_id = device
+        self.device_id = device                                             # WHY IS THIS NEEDED HERE? NOT NECESSARY AT ALL
 
 
     """
@@ -27,7 +27,13 @@ class Network(nn.Module, ABC):
         layer (layer.NetworkLayer) = a layer of the network with searched name
     """
     def get_module(self, name):
-        for module_name, module in self.named_children():
+
+    # STEP 1: loop through the network layeres
+        for module_name, module in self.named_children():       
+            # self.named_children() is a method provided by PyTorch’s nn.Module class 
+            # It yields pairs of layer names (module_name) and the corresponding layer objects (module)
+
+    # STEP 2: Layer matching and retrieval
             if name == module_name:
                 return module
     
@@ -38,11 +44,14 @@ class Network(nn.Module, ABC):
     @return
         ___ (void) = no returns
     """
-    # NOTE: What use is this???
     def set_scheduler(self):
-        for module in self.children():
-            module.set_scheduler()
 
+    # STEP 1: Iterate through child modules
+        for module in self.children():
+            # self.children() is a method from PyTorch’s nn.Module that iterates over all direct children modules (layers) of the current network module.
+            
+            module.set_scheduler()
+            # The line above calls set_scheduler on each child module
     
     """
     Method to set specific scheduler for specific layer
@@ -54,7 +63,13 @@ class Network(nn.Module, ABC):
     """
     def set_layer_scheduler(self, name, scheduler):
         layer = self.get_module(name)
+        # Uses the get_module method to retrieve the layer by its name. 
+        # This assumes the layer names are uniquely defined within the network.
+
         layer.set_scheduler(scheduler)
+        # This calls the set_scheduler method on the retrieved layer, passing the scheduler as an argument. 
+        # This sets the scheduler specifically for this layer, allowing it to update its parameters according to the scheduler’s logic.
+
 
 
     """

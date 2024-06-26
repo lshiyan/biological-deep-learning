@@ -98,42 +98,33 @@ class HebbianLayer(NetworkLayer):
         return output
     
     
-    def wta_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        
+    def wta_inhibition(self, input:torch.Tensor, top_k: int = 1) -> torch.Tensor:
         """
         METHOD
         Calculates winner-takes-all lateral inhibition
         @param
             input: input to layer
+            top_k: 
         @return
             output: activation after lateral inhibition
         """
-        print(input, flush=True)
-        max_ele: int = torch.max(input).item()
-        print(max_ele, flush=True)
-        input //= max_ele
-        print(input)
-        output = input * max_ele
-        print(output, flush=True)
+        # Step 1: Flatten the tensor to apply top-k
+        flattened_input = input.flatten()
+
+        # Step 2: Get the top-k values and their indices
+        topk_values, _ = torch.topk(flattened_input, top_k)
+        threshold = topk_values[-1]
+
+        # Step 3: Apply the threshold to keep only the top-k values
+        output: torch.Tensor = torch.where(input >= threshold, input, torch.tensor(0.0, device=input.device))
+
         return output
-        
-        
-    def norm_inhibition(self, input: torch.Tensor) -> torch.Tensor:
-        """
-        METHOD
-        Calculates divisive normalization lateral inhibition
-        @param
-            input: input to layer
-        @return
-            output: activation after lateral inhibition
-        """
-        relu: nn.ReLU = nn.ReLU()
-        input: torch.Tensor = relu(input)
-        sum_inputs: float = torch.sum(input, dim=-1, keepdim=True)
-        output: torch.Tensor = input / sum_inputs
-        return output
-    
-    
-    def gaussian_inhibition(self, input: torch.Tensor, sigma: float = 1.0) -> torch.Tensor:
+
+
+
+
+    def gaussian_inhibition(input: torch.Tensor, sigma=1.0) -> torch.Tensor:
         """
         METHOD
         Calculates gaussian lateral inhibition
@@ -142,12 +133,14 @@ class HebbianLayer(NetworkLayer):
         @return
             output: activation after lateral inhibition
         """
-        kernel_size: int = 2 * int(2 * sigma) + 1
-        kernel: torch.Tensor = torch.tensor(np.exp(-(np.arange(-kernel_size // 2, kernel_size // 2 + 1)**2) / (2 * sigma**2)), dtype=torch.float32)
+        size: int = int(2 * sigma + 1)
+        kernel: torch.Tensor = torch.tensor([torch.exp(-(i - size // 2) ** 2 / (2 * sigma ** 2)) for i in range(size)])
         kernel = kernel / torch.sum(kernel)
-        kernel = kernel.unsqueeze(0).unsqueeze(0)
-        output: torch.Tensor = F.conv1d(input.unsqueeze(0).unsqueeze(0), kernel, padding=kernel_size // 2).squeeze(0).squeeze(0)
+
+        output: torch.Tensor = F.conv1d(input.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
         return output
+
+
         
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor) -> None:
@@ -171,6 +164,8 @@ class HebbianLayer(NetworkLayer):
 
         # Move back to GPU
         outer_prod = outer_prod.to(self.device_id)
+        # Here, the outer product of the output (y) and input (x) vectors is computed and then moved back to the GPU
+
 
         # STEP 3: Retrieve and Prepare Initial Weights
         initial_weight: torch.Tensor = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0, 1)
@@ -178,6 +173,8 @@ class HebbianLayer(NetworkLayer):
         # Ensure id_tensor and exponential_average are on the same device as the others
         self.id_tensor = self.id_tensor.to(self.device_id)
         self.exponential_average = self.exponential_average.to(self.device_id)
+        # Here, I move the id_tensor and exponential_average tensors to the same device as the other tensors to ensure compatibility in calculations.
+
 
         # STEP 4: Sanger's Rule
         A: torch.Tensor = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
@@ -186,11 +183,15 @@ class HebbianLayer(NetworkLayer):
         # STEP 5: Compute weight update
         delta_weight: torch.Tensor = self.alpha * (outer_prod - A)
 
-        # STEP 6: Update the weights
+    # STEP 7: Update the weights
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
+        # The weights of the fully connected layer are updated by adding delta_weight. 
+        # The updated weights are wrapped in nn.Parameter with requires_grad=False to ensure they do not track gradients.
 
-        # STEP 7: Update the exponential average
+
+    # STEP 8: Update the exponential average
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+        # The exponential average of the output activations is updated using a moving average formula with decay factor self.gamma.
     
 
     def update_bias(self, output: torch.Tensor) -> None:
