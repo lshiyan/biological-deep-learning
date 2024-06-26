@@ -24,7 +24,7 @@ class HebbianLayer(NetworkLayer):
         OWN ATTR.
             exponential_average (torch.Tensor): 0 tensor to keep track of exponential averages
             gamma (float): decay factor -> factor to decay learning rate
-            lamb (float): lambda hyperparameter for latteral inhibition
+            lamb (float): lambda hyperparameter for lateral inhibition
             eps (float): to avoid division by 0
             id_tensor (torch.Tensor): id tensor of layer
     """
@@ -40,7 +40,7 @@ class HebbianLayer(NetworkLayer):
         @param
             input_dimension: number of inputs into the layer
             output_dimension: number of outputs from layer
-            lamb: lambda hyperparameter for latteral inhibition
+            lamb: lambda hyperparameter for lateral inhibition
             heb_lr: how fast model learns at each iteration
             gamma: decay factor -> factor to decay learning rate
             eps: to avoid division by 0
@@ -263,9 +263,9 @@ class HebbianLayer(NetworkLayer):
         input_copy = input.clone().to(self.device_id).float()
         input = input.to(self.device_id)
         input = self.fc(input)
-        # output = self.relu_inhibition(input)
+        output = self.relu_inhibition(input)
         # output = self.softmax_inhibition(input)
-        output = self.exp_inhibition(input)
+        # output = self.exp_inhibition(input)
         # output = self.wta_inhibition(input)
         # output = self.norm_inhibition(input)
         # output = self.gaussian_inhibition(input)
@@ -287,9 +287,9 @@ class HebbianLayer(NetworkLayer):
         # Copy input -> calculate output -> return output
         input = input.to(self.device_id)
         input = self.fc(input)
-        # output = self.relu_inhibition(input)
+        output = self.relu_inhibition(input)
         # output = self.softmax_inhibition(input)
-        output = self.exp_inhibition(input)
+        # output = self.exp_inhibition(input)
         # output = self.wta_inhibition(input)
         # output = self.norm_inhibition(input)
         # output = self.gaussian_inhibition(input)
