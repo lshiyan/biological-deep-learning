@@ -59,7 +59,7 @@ class HebbianNetwork(Network): # Inherits from the Network base class
         self.eps = args.eps
 
         # Setting up layers of the network
-        input_layer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename, self.device_id)
+        input_layer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
         hebbian_layer = HebbianLayer(self.input_dim, self.heb_dim, self.device_id, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.eps)
         classification_layer = ClassifierLayer(self.heb_dim, self.output_dim, self.device_id, self.cla_param["lamb"], self.lr, self.eps)
         

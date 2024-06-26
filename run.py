@@ -1,7 +1,9 @@
 import subprocess
 
-# Define the script to run and its arguments
-script_name = 'base_hebbian_train.py'
+# Create log
+script_name = 'train.py'
+
+# Simulate the command line arguments
 arguments = ['--is_training=True', 
             "--data_name='MNIST'",
             "--train_data=data/mnist/train-images.idx3-ubyte", 
@@ -17,22 +19,18 @@ arguments = ['--is_training=True',
             '--heb_gam=0.99', 
             '--cla_lamb=1',
             '--eps=0.01', 
-            '--epochs=30', 
+            '--epochs=1', 
             '--test_epochs=1', 
-            '--lr=0.005', 
-            '--lr_step_size=1000', 
-            '--gamma=0', 
+            '--lr=0.005',  
             '--batch_size=1',
             '--device_id=cpu',
             '--local_machine=True' ]
 
-
 # Construct the command
 command = ['python', script_name] + arguments
 
-
 # Run the command
-result = subprocess.run(command, capture_output=True, text=True)
+result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 # Print the output
 print("Standard Output:\n", result.stdout)

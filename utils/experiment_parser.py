@@ -1,8 +1,17 @@
 import argparse
+from typing import List
 
-def parse_arguments(args_list=None):
+def parse_arguments(args_list: List = None) -> argparse.Namespace:
+    """
+    FUNCTION
+    Parse arguments giving on command line and return arguments
+    @param
+        args_list: if calling function from script and using list as command line simulation
+    @return
+        args: parsed arguments
+    """
     # Argument parser
-    parser = argparse.ArgumentParser()
+    parser: argparse.ArgumentParser = argparse.ArgumentParser()
 
     # Basic configurations.
     parser.add_argument('--is_training', type=bool, default=True, help='status')
@@ -31,32 +40,18 @@ def parse_arguments(args_list=None):
     parser.add_argument('--cla_lamb', type=float, default=1)
 
     # Shared hyperparameters
-    parser.add_argument('--eps', type=float, default=10e-5)
-
-    # ---------------------------------------
-
-    # The number of times to loop over the whole dataset
-    parser.add_argument("--epochs", type=int, default=3)
-
-    # Testing model performance on a test every "test-epochs" epochs
-    parser.add_argument("--test_epochs", type=int, default=1)
-
-    # A model training regularisation technique to reduce over-fitting
-    parser.add_argument("--dropout", type=float, default=0.2)
-
-    # This example demonstrates a StepLR learning rate scheduler. Different schedulers will require different hyper-parameters.
     parser.add_argument("--lr", type=float, default=0.005)
-    parser.add_argument("--lr_step_size", type=int, default=1000)
-    parser.add_argument("--gamma", type=float, default=1)
+    parser.add_argument('--eps', type=float, default=0.01)
 
-    # ---------------------------------------
+
+    # Experiment parameters
     parser.add_argument("--batch_size", type=int, default=1)
+    parser.add_argument("--epochs", type=int, default=5)
+    parser.add_argument("--test_epochs", type=int, default=1)
     parser.add_argument("--device_id", type=str, default='cpu')
-    parser.add_argument("--local_machine", type=bool, default=False)
-    parser.add_argument("--save_dir", type=str, default='')
-    parser.add_argument("--tboard_path", type=str, default='')
+    parser.add_argument("--local_machine", type=bool, default=True)
 
-    # ---------------------------------------
-    args = parser.parse_args() if args_list == None else parser.parse_args(args_list)
+    # Parse arguments into Namespace
+    args: argparse.Namespace = parser.parse_args() if args_list == None else parser.parse_args(args_list)
 
     return args
