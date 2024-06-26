@@ -97,7 +97,6 @@ class HebbianLayer(NetworkLayer):
         output: torch.Tensor = F.softmax(input*self.lamb, dim=-1)
         return output
     
-    
         
     def wta_inhibition(self, input:torch.Tensor, top_k: int = 1) -> torch.Tensor:
         """
@@ -122,8 +121,6 @@ class HebbianLayer(NetworkLayer):
         return output
 
 
-
-
     def gaussian_inhibition(input: torch.Tensor, sigma=1.0) -> torch.Tensor:
         """
         METHOD
@@ -140,8 +137,6 @@ class HebbianLayer(NetworkLayer):
         output: torch.Tensor = F.conv1d(input.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
         return output
 
-
-        
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor) -> None:
         """
