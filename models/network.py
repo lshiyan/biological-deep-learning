@@ -10,27 +10,17 @@ class Network(nn.Module, ABC):
     @attr.
         device_id (int) = id of the gpu that the model will be running in
     @pram
-<<<<<<< HEAD
-=======
         device (int) = id of the gpu that the model will be set to
->>>>>>> fundamentals_strong_compute_branch
     @return
         * Can't return *
     """
     def __init__(self, device):
         super().__init__()
-<<<<<<< HEAD
-
-
-    """
-    Function returning layer with given name
-=======
         self.device_id = device                                             # WHY IS THIS NEEDED HERE? NOT NECESSARY AT ALL
 
 
     """
     Method to get layer with given name
->>>>>>> fundamentals_strong_compute_branch
     @param
         name (str) = name of layer to get
     @return
@@ -55,15 +45,9 @@ class Network(nn.Module, ABC):
     @return
         ___ (void) = no returns
     """
-<<<<<<< HEAD
-    def visualize_weights(self):
-        for module in self.children():
-            module.visualize_weights()
-=======
     def visualize_weights(self, path, num, use):
         for module in self.children():
             module.visualize_weights(path, num, use)
->>>>>>> fundamentals_strong_compute_branch
 
 
     """
@@ -74,13 +58,8 @@ class Network(nn.Module, ABC):
         ___ (void) = no returns
     """
     def active_weights(self, beta):
-<<<<<<< HEAD
-        for module in self.children():
-            module.active_weights(beta)
-=======
         for name, module in self.name_children():
             print(f"{name}: {module.active_weights(beta)}")
->>>>>>> fundamentals_strong_compute_branch
 
 
     """
