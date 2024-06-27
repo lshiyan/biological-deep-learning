@@ -1,8 +1,5 @@
 import argparse
 import torch
-from layers.base.base_input_layer import BaseInputLayer
-from layers.base.base_hebbian_layer import BaseHebbianLayer
-from layers.base.base_classification_layer import BaseClassificationLayer
 from interfaces.network import Network
 from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
