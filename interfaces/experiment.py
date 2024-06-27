@@ -1,25 +1,17 @@
 # Built-in imports
 import os
 import shutil
-import time
 from abc import ABC
 import argparse
-from typing import Tuple, List, Type
+from typing import Tuple, List
 
 # Pytorch imports
-import torch
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 
 # Custom defined model imports
 from interfaces.network import Network
-from layers.base.base_input_layer import BaseInputLayer
-from layers.YZZ.YZZ_input_layer import YZZInputLayer
-from layers.sigmoid.sigmoid_input_layer import SigmoidInputLayer
-from layers.softmax.softmax_input_layer import SoftmaxInputLayer
-from layers.hopfield.hopfield_input_layer import HopfieldInputLayer
 
 # Utils imports
-from layers.input_layer import InputLayer
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -128,83 +120,8 @@ class Experiment(ABC):
     
     
     def run(self) -> Tuple[float, float]:
-        """
-        METHOD
-        Runs the experiment
-        @param
-            None
-        @return
-            (test_acc, train_acc): tuple of final testing and training accuracies
-        """
-        # Start timer
-        self.START_TIME = time.time()
-        self.EXP_LOG.info("Start of experiment.")
+        raise NotImplementedError("This method was not implemented.")
         
-        torch.device(self.ARGS.device) # NOTE: Should this line be here or used where we create the experiment itself
-        self.PRINT_LOG.info(f"local_machine: {self.ARGS.local_machine}.")
-        
-        # Logging training parameters
-        self.EXP_LOG.info("Started logging of experiment parameters.")
-        self.PARAM_LOG.info(f"Input Dimension: {self.ARGS.input_dim}")
-        self.PARAM_LOG.info(f"Hebbian Layer Dimension: {self.ARGS.heb_dim}")
-        self.PARAM_LOG.info(f"Outout Dimension: {self.ARGS.output_dim}")
-        self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.ARGS.heb_lamb}")
-        self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.ARGS.heb_gam}")
-        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.ARGS.heb_eps}")
-        self.PARAM_LOG.info(f"Network Learning Rate: {self.ARGS.lr}")
-        self.PARAM_LOG.info(f"Number of Epochs: {self.ARGS.epochs}")
-        self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
-        
-        self.EXP_LOG.info("Completed logging of experiment parameters.")
-        
-        # Get input layer class of model
-        input_layer: InputLayer = self.model.get_module("Input")
-        input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
-        
-        # Training dataset
-        train_data_set: TensorDataset = input_class.setup_data(self.ARGS.train_data, self.ARGS.train_label, self.ARGS.train_filename, 'train', 60000)
-        train_data_loader: DataLoader = DataLoader(train_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
-        self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
-
-        # Testing dataset
-        test_data_set: TensorDataset = input_class.setup_data(self.ARGS.test_data, self.ARGS.test_label, self.ARGS.test_filename, 'test', 10000)
-        test_data_loader: DataLoader = DataLoader(test_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
-        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
-        
-        self.EXP_LOG.info("Started training and testing loops.")
-        
-        for epoch in range(0, self.ARGS.epochs):
-            # Testing accuracy
-            self.testing(test_data_loader, 'test', epoch, visualize=True)
-            
-            # Training accuracy
-            self.testing(train_data_loader, 'train', epoch, visualize=True)
-            
-            # Training
-            self.training(train_data_loader, epoch, visualize=True)
-        
-        self.EXP_LOG.info("Completed training of model.")        
-        self.model.visualize_weights(self.RESULT_PATH, self.ARGS.epochs, 'final')
-        self.EXP_LOG.info("Visualize weights of model after training.")
-        test_acc = self.testing(test_data_loader, 'test', self.ARGS.epochs, visualize=True)
-        train_acc = self.testing(train_data_loader, 'train', self.ARGS.epochs, visualize=True)
-        self.EXP_LOG.info("Completed final testing methods.")
-        self.PARAM_LOG.info(f"Training accuracy of model after training for {self.ARGS.epochs} epochs: {train_acc}")
-        self.PARAM_LOG.info(f"Testing accuracy of model after training for {self.ARGS.epochs} epochs: {test_acc}")
-        
-        # End timer
-        self.END_TIME = time.time()
-        self.DURATION = self.END_TIME - self.START_TIME
-        self.EXP_LOG.info(f"The experiment took {time_to_str(self.DURATION)} to be completed.")
-        self.PARAM_LOG.info(f"End time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.END_TIME))}")
-        self.PARAM_LOG.info(f"Runtime of experiment: {time_to_str(self.DURATION)}")
-        self.PARAM_LOG.info(f"Train time of experiment: {time_to_str(self.TRAIN_TIME)}")
-        self.PARAM_LOG.info(f"Test time (test acc) of experiment: {time_to_str(self.TEST_ACC_TIME)}")
-        self.PARAM_LOG.info(f"Test time (train acc) of experiment: {time_to_str(self.TRAIN_ACC_TIME)}")
-        self.EXP_LOG.info("The experiment has been completed.")
-        
-        return (test_acc, train_acc)
-    
     
     def cleanup(self) -> None:
         """
