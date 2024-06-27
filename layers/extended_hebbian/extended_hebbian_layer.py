@@ -128,7 +128,13 @@ class EHebHebbianLayer(HiddenLayer):
             print("NAN WEIGHT")
     
 
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+    '''
+    Here, I will add a boolean indicating either I am using MNIST or not
+        This will dictate whether or not I will be training my model.
+        This is because if it is EMNIST, then I will not be updating weights
+    
+    '''
+    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, is_mnist: bool = True) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network when training
@@ -143,9 +149,14 @@ class EHebHebbianLayer(HiddenLayer):
         input = input.to(self.device)
         input = self.fc(input)
         output = self.inhibition(input)
-        self.update_weights(input_copy, output)
-        #self.update_bias(input)
-        self.weight_decay()
+
+        # So 
+            # if this is MNIST, then I am actively training the input - to - hebbian layer weights
+            # if this is not MNIST, then I will be evaluating my model and hence I should not evaluate
+        if is_mnist:
+            self.update_weights(input_copy, output)
+            self.weight_decay()
+
         return output
     
 
