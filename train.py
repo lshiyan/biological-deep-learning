@@ -80,3 +80,57 @@ base_test_acc, base_train_acc = base_experiment.run()
 base_experiment.cleanup()
 
 base_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {base_test_acc} || Train Acc: avg = {base_train_acc}")
+
+
+
+
+# ----------------------------------------
+# TESTING FOR OUT OF DISTRIBUTION
+# ----------------------------------------
+
+out_of_distribution_results_log = configure_logger('Out of Distribution Result Log', './results/out_of_distribution_results.log')
+
+
+
+lambdas = [1, 3, 5, 10, 15]
+neurons = [2, 4, 8, 16, 32, 64, 128]
+
+# Loop of experiemnt
+for lambda_val in lambdas:
+    for neuron_count in neurons:
+        ARGS.heb_lamb = lambda_val
+        ARGS.heb_dim = neuron_count
+        model = HebbianNetwork(ARGS)
+        out_of_distribution_experiment = CPUExperiment(model, ARGS, f"experiment_lambda_{lambda_val}_neurons_{neuron_count}")
+        out_of_distribution_experiment.run()
+        out_of_distribution_test_acc, out_of_distribution_train_acc = out_of_distribution_experiment.run()
+        base_experiment.cleanup()
+
+        out_of_distribution_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {out_of_distribution_test_acc} || Train Acc: avg = {out_of_distribution_train_acc}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
