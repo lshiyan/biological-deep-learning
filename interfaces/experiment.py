@@ -16,6 +16,7 @@ from layers.base.base_input_layer import BaseInputLayer
 from layers.YZZ.YZZ_input_layer import YZZInputLayer
 from layers.sigmoid.sigmoid_input_layer import SigmoidInputLayer
 from layers.softmax.softmax_input_layer import SoftmaxInputLayer
+from layers.hopfield.hopfield_input_layer import HopfieldInputLayer
 
 # Utils imports
 from layers.input_layer import InputLayer
