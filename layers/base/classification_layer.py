@@ -3,7 +3,7 @@ import torch.nn as nn
 from layers.output_layer import OutputLayer
 
 
-class SSangClassificationLayer(OutputLayer):
+class ClassificationLayer(OutputLayer):
     """
     CLASS
     Defining the functionality of the base classification layer
@@ -16,11 +16,13 @@ class SSangClassificationLayer(OutputLayer):
             lr (float): how fast model learns at each iteration
             fc (nn.Linear): fully connected layer using linear transformation
         OWN ATTR.
+            include_first (bool): wether or not to include first neuro in classification
     """
     def __init__(self, input_dimension: int,
                  output_dimension: int, 
                  device: str, 
-                 learning_rate: float = 0.005) -> None:
+                 learning_rate: float = 0.005,
+                 include_first: bool = True) -> None:
         """
         CONSTRUCTOR METHOD
         @param
@@ -28,13 +30,16 @@ class SSangClassificationLayer(OutputLayer):
             output_dimension: number of outputs from layer
             device: the device that the module will be running on
             learning_rate: how fast model learns at each iteration
+            include_first: wether or not to include first neuro in classification
         @return
             None
         """
-        super().__init__(input_dimension, output_dimension, device, learning_rate)    
+        super().__init__(input_dimension, output_dimension, device, learning_rate)
+        self.include_first = include_first
+        
     
 
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None, include_first: bool = False) -> None:
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
         """
         METHOD
         Defines the way the weights will be updated at each iteration of the training.
@@ -69,7 +74,7 @@ class SSangClassificationLayer(OutputLayer):
         self.fc.weight = nn.Parameter(weights/weight_maxes.unsqueeze(1), requires_grad=False)
 
         # Zero out the first column of weights -> this is to prevent the first weight from learning everything
-        if not include_first: self.fc.weight[:, 0] = 0
+        if not self.include_first: self.fc.weight[:, 0] = 0
         
 
     def update_bias(self, output: torch.Tensor) -> None:
@@ -106,7 +111,7 @@ class SSangClassificationLayer(OutputLayer):
         softmax: nn.Softmax = nn.Softmax(dim=1)
         input_copy: torch.Tensor = input.clone()
         input = self.fc(input)
-        self.update_weights(input_copy, input, clamped_output, include_first=True)
+        self.update_weights(input_copy, input, clamped_output)
         # self.update_bias(input)
         output = softmax(input)
         return output

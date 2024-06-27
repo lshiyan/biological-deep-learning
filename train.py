@@ -1,16 +1,6 @@
 from experiments.cpu_experiment import CPUExperiment
 
-from models.hopfield_sanger_network import HSangNetwork
-from models.hopfield_sigmoid_network import HSigNetwork
-from models.hopfield_YZZ_network import HYZZNetwork
-
-from models.relu_sanger_network import RSangNetwork
-from models.relu_sigmoid_network import RSigNetwork
-from models.relu_YZZ_network import RYZZNetwork
-
-from models.softmax_sanger_network import SSangNetwork
-from models.softmax_sigmoid_network import SSigNetwork
-from models.softmax_YZZ_network import SYZZNetwork
+from models.hebbian_network import HebbianNetwork
 
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
@@ -74,10 +64,10 @@ lambda_test = []
 #     ortho_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Test Acc: avg = {ortho_avg_test}, var = {ortho_var_test} || Train Acc: avg = {ortho_avg_train}, var = {ortho_var_train}")
 
 
-# Hopfield Sanger Model Experiment
-hsang_model = HSangNetwork(ARGS)
-hsang_experiment = CPUExperiment(hsang_model, ARGS, f'cpu-hsang-{ARGS.heb_lamb}')
-hsang_test_acc, hsang_train_acc = hsang_experiment.run()
-hsang_experiment.cleanup()
+# Hebbian Model Experiment
+hebbian_model = HebbianNetwork(ARGS)
+hebbian_experiment = CPUExperiment(hebbian_model, ARGS, f'cpu-hebbian-{ARGS.heb_lamb}')
+hebbian_test_acc, hebbian_train_acc = hebbian_experiment.run()
+hebbian_experiment.cleanup()
 
-results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {hsang_test_acc} || Train Acc: avg = {hsang_train_acc}")
+results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {hebbian_test_acc} || Train Acc: avg = {hebbian_train_acc}")

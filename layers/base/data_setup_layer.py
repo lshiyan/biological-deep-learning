@@ -6,7 +6,7 @@ from layers.input_layer import InputLayer
 from typing import IO, List
 
 
-class RSangInputLayer(InputLayer):
+class DataSetupLayer(InputLayer):
     """
     Class defining how the input dataset will be processed before feeding it to the network
     
@@ -14,12 +14,6 @@ class RSangInputLayer(InputLayer):
         NetworkLayer ATTR.
             * Not used for this layer *
         InputLayer ATTR.
-            train_data (str) = train data filename (.ubyte)
-            train_label (str) = train label filename (.ubyte)
-            train_filename (str) = train data (img + label) filename (.csv)
-            test_data (str) = test data filename (.ubyte)
-            test_label (str) = test label filename (.ubyte)
-            test_filename (str) = test data (img + label) filename (.csv)
         OWN ATTR.
     """
     def __init__(self) -> None:
@@ -36,7 +30,7 @@ class RSangInputLayer(InputLayer):
     @staticmethod
     def setup_data(data: str, label: str, filename: str, data_type: str, size: int) -> TensorDataset:
         """
-        METHOD
+        STATIC METHOD
         Function to setup requested dataset
         @param
             data: data filename
@@ -66,7 +60,7 @@ class RSangInputLayer(InputLayer):
                 data_size: int, 
                 img_size: int) -> None:
         """
-        CLASS METHOD
+        STATIC METHOD
         Convert .ubyte files into a .csv file for ease of use
         @param
             img_file: path to image files

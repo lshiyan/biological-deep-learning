@@ -12,17 +12,7 @@ from interfaces.experiment import Experiment
 from interfaces.network import Network
 from layers.input_layer import InputLayer
 
-from layers.hopfield_sanger.hsang_input_layer import HSangInputLayer
-from layers.hopfield_sigmoid.hsig_input_layer import HSigInputLayer
-from layers.hopfield_YZZ.hyzz_input_layer import HYZZInputLayer
-
-from layers.relu_sanger.rsang_input_layer import RSangInputLayer
-from layers.relu_sigmoid.rsig_input_layer import RSigInputLayer
-from layers.relu_YZZ.ryzz_input_layer import RYZZInputLayer
-
-from layers.softmax_sanger.ssang_input_layer import SSangInputLayer
-from layers.softmax_sigmoid.ssig_input_layer import SSigInputLayer
-from layers.softmax_YZZ.syzz_input_layer import SYZZInputLayer
+from layers.base.data_setup_layer import DataSetupLayer
 
 # Utils imports
 from utils.experiment_logger import *
@@ -152,11 +142,6 @@ class CPUExperiment(Experiment):
                 
                 # Evaluates performance of model on testing dataset
                 correct += (predictions.argmax(1) == labels).type(torch.float).sum()
-
-                # Degubbing purposes
-                # EXP_LOG.info(f"The inputs were put into the model ({labels.item()}) and {predictions.argmax(1).item()} are the predictions.")
-                # DEBUG_LOG.info(f"Prediciton/Actual: {predictions.argmax(1).item()}/{labels.item()}.")
-                # EXP_LOG.info(f"The number of correct predictions until now: {correct_sum} out of {total}.")
 
             final_accuracy = correct/total
                 

@@ -11,12 +11,6 @@ class InputLayer(NetworkLayer):
         PARENT ATTR.
             * Not used for this layer *
         OWN ATTR.
-            train_data (str) = train data filename
-            train_label (str) = train label filename
-            train_filename (str) = train data (img + label) filename
-            test_data (str) = test data filename
-            test_label (str) = test label filename
-            test_filename (str) = test data (img + label) filename
     """
     def __init__(self) -> None:
         """

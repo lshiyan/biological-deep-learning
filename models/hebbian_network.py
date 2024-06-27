@@ -1,15 +1,15 @@
 import argparse
 import torch
 from interfaces.network import Network
+from layers.base.classification_layer import ClassificationLayer
+from layers.base.data_setup_layer import DataSetupLayer
+from layers.base.hebbian_layer import HebbianLayer
 from layers.hidden_layer import HiddenLayer
-from layers.hopfield_sanger.hsang_classification_layer import HSangClassificationLayer
-from layers.hopfield_sanger.hsang_hebbian_layer import HSangHebbianLayer
-from layers.hopfield_sanger.hsang_input_layer import HSangInputLayer
 from layers.input_layer import InputLayer
 from layers.output_layer import OutputLayer
 
 
-class HSangNetwork(Network):
+class HebbianNetwork(Network):
     """
     CLASS
     Defining the base hebbian network
@@ -57,13 +57,13 @@ class HSangNetwork(Network):
         self.lr: float = args.lr
 
         # Setting up layers of the network
-        input_layer: InputLayer = HSangInputLayer()
-        hebbian_layer: HiddenLayer = HSangHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
-        classification_layer: OutputLayer = HSangClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
+        input_layer: InputLayer = DataSetupLayer()
+        hebbian_layer: HiddenLayer = HebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
+        classification_layer: OutputLayer = ClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
         
         self.add_module("Input", input_layer)
-        self.add_module("Hebbian", hebbian_layer)
-        self.add_module("Classification", classification_layer)
+        self.add_module("Hidden", hebbian_layer)
+        self.add_module("Output", classification_layer)
 
 
     def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
@@ -77,8 +77,8 @@ class HSangNetwork(Network):
             output: returns the data after passing it throw the network
         """
         # Get layers of network
-        hebbian_layer = self.get_module("Hebbian")
-        classification_layer = self.get_module("Classification")
+        hebbian_layer = self.get_module("Hidden")
+        classification_layer = self.get_module("Output")
 
         # Feedforward data input into network
         input = input.to(self.device)

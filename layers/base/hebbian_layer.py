@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
 from layers.hidden_layer import HiddenLayer
+from utils.experiment_constants import *
 
 
-class RYZZHebbianLayer(HiddenLayer):
+class HebbianLayer(HiddenLayer):
     """
     CLASS
-    Defining the functionality of the YZZ hebbian layer
+    Defining the functionality of the base hebbian layer
     @instance attr.
         NetworkLayer ATTR.
             input_dimension (int): number of inputs into the layer
@@ -21,6 +22,9 @@ class RYZZHebbianLayer(HiddenLayer):
             eps (float): to avoid division by 0
             id_tensor (torch.Tensor): id tensor of layer
         OWN ATTR.
+            inhibition_rule (LateralInhibitions): which inhibition to be used
+            learning_rule (LearningRules): which learning rule to use
+            function_type (FunctionTypes): which function type should the weight updates follow
     """
     def __init__(self, input_dimension: int, 
                  output_dimension: int, 
@@ -28,7 +32,10 @@ class RYZZHebbianLayer(HiddenLayer):
                  lamb: float = 1, 
                  learning_rate: float = 0.005, 
                  gamma: float = 0.99, 
-                 eps: float = 0.01) -> None:
+                 eps: float = 0.01,
+                 inhibition_rule: LateralInhibitions = LateralInhibitions.RELU_INHIBITION, 
+                 learning_rule: LearningRules = LearningRules.SANGER_LEARNING_RULE,
+                 function_type: FunctionTypes = FunctionTypes.LINEAR) -> None:
         """
         CONSTRUCTOR METHOD
         @param
@@ -38,36 +45,64 @@ class RYZZHebbianLayer(HiddenLayer):
             learning_rate: how fast model learns at each iteration
             gamma: affects exponentialaverages updates
             eps: affects weight decay updates
+            inhibition_rule (LateralInhibitions): which inhibition to be used
+            learning_rule (LearningRules): which learning rule to use
+            function_type (FunctionTypes): which function type should the weight updates follow
         @return
             None
         """
         super().__init__(input_dimension, output_dimension, device, learning_rate, lamb, gamma, eps)
+        self.inhibition_rule = inhibition_rule
+        self.learning_rule = learning_rule
+        self.function_type = function_type
 
     
     def inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Choice of inhibition to be used.
+        Lateral inhibition using defined rule.
         @param
             input: the inputs into the layer
             output: the output of the layer
         @return
             inputs after inhibition
         """
-        return self._relu_inhibition(input)
+        if self.inhibition_rule == LateralInhibitions.RELU_INHIBITION:
+            return self._relu_inhibition(input)
+        elif self.inhibition_rule == LateralInhibitions.SOFTMAX_INHIBITION:
+            return self._softmax_inhibition(input)
+        elif self.inhibition_rule == LateralInhibitions.HOPFIELD_INHIBITION:
+            return self._exp_inhibition(input)
     
     
     def update_weights(self, input: torch.Tensor, output: torch.Tensor) -> None:
         """
         METHOD
-        Update weights using Sanger's Rule.
+        Update weights using defined rule.
         @param
             input: the inputs into the layer
             output: the output of the layer
         @return
             None
         """
-        self._orthogonal_rule(input, output)
+        calculated_rule: torch.Tensor = None
+        function_derivative: torch.Tensor = None
+        
+        if self.learning_rule == LearningRules.HEBBIAN_LEARNING_RULE:
+            calculated_rule = self._hebbian_rule(input, output)
+        elif self.learning_rule == LearningRules.SANGER_LEARNING_RULE:
+            calculated_rule = self._sanger_rule(input, output)
+        elif self.learning_rule == LearningRules.FULLY_ORTHOGONAL_LEARNING_RULE:
+            calculated_rule = self._fully_orthogonal_rule(input, output)
+        
+        if self.function_type == FunctionTypes.LINEAR:
+            function_derivative = self._linear_function()
+        elif self.function_type == FunctionTypes.SIGMOID:
+            function_derivative = self._sigmoid_function()
+            
+        # Weight Update
+        delta_weight: torch.Tensor = calculated_rule * function_derivative
+        self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
         
 
     def update_bias(self, output: torch.Tensor) -> None:

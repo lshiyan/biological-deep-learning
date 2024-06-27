@@ -70,21 +70,21 @@ class Experiment(ABC):
         
         if not os.path.exists(self.RESULT_PATH):
             os.makedirs(self.RESULT_PATH, exist_ok=True)
-            os.makedirs(f"{self.RESULT_PATH}/Classification", exist_ok=True)
-            os.makedirs(f"{self.RESULT_PATH}/Hebbian", exist_ok=True)
+            os.makedirs(f"{self.RESULT_PATH}/Output", exist_ok=True)
+            os.makedirs(f"{self.RESULT_PATH}/Hidden", exist_ok=True)
             print(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
-            print(f"Experiment '{self.EXP_NAME}/Classification' result folder created successfully.")
-            print(f"Experiment '{self.EXP_NAME}/Hebbian' result folder created successfully.")
+            print(f"Experiment '{self.EXP_NAME}/Output' result folder created successfully.")
+            print(f"Experiment '{self.EXP_NAME}/Hidden' result folder created successfully.")
         else:
             try:
                 shutil.rmtree(self.RESULT_PATH)
                 print(f"Removed {self.RESULT_PATH}.")
                 os.makedirs(self.RESULT_PATH, exist_ok=True)
-                os.makedirs(f"{self.RESULT_PATH}/Classification", exist_ok=True)
-                os.makedirs(f"{self.RESULT_PATH}/Hebbian", exist_ok=True)
+                os.makedirs(f"{self.RESULT_PATH}/Outputn", exist_ok=True)
+                os.makedirs(f"{self.RESULT_PATH}/Hidden", exist_ok=True)
                 print(f"Experiment {self.EXP_NAME} result folder re-created successfully.")
-                print(f"Experiment '{self.EXP_NAME}/Classification' result folder re-created successfully.")
-                print(f"Experiment '{self.EXP_NAME}/Hebbian' result folder re-created successfully.")
+                print(f"Experiment '{self.EXP_NAME}/Output' result folder re-created successfully.")
+                print(f"Experiment '{self.EXP_NAME}/Hidden' result folder re-created successfully.")
             except OSError as e:
                 print(f"Error: {e.strerror}")
         

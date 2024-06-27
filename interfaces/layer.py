@@ -144,7 +144,7 @@ class NetworkLayer (nn.Module, ABC):
             None
         """
         # Name of saved plot
-        plot_name: str = f'/{name}/{name}layerweights-{num}-{use}.png'
+        plot_name: str = f'/{name}/{name.lower()}layerweights-{num}-{use}.png'
         
         # Find value for row and column
         row: int = 0
