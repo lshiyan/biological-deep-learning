@@ -1,15 +1,15 @@
 import argparse
 import torch
-from layers.YZZ.YZZ_classification_layer import YZZClassificationLayer
-from layers.YZZ.YZZ_hebbian_layer import YZZHebbianLayer
-from layers.YZZ.YZZ_input_layer import YZZInputLayer
 from interfaces.network import Network
 from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
-from layers.output_layer import OutputLayer 
+from layers.output_layer import OutputLayer
+from layers.relu_sanger.rsang_classification_layer import RSangClassificationLayer
+from layers.relu_sanger.rsang_hebbian_layer import RSangHebbianLayer
+from layers.relu_sanger.rsang_input_layer import RSangInputLayer 
 
 
-class YYZHebbianNetwork(Network):
+class RSangNetwork(Network):
     """
     CLASS
     Defining the base hebbian network
@@ -57,9 +57,9 @@ class YYZHebbianNetwork(Network):
         self.lr: float = args.lr
 
         # Setting up layers of the network
-        input_layer: InputLayer = YZZInputLayer()
-        hebbian_layer: HiddenLayer = YZZHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
-        classification_layer: OutputLayer = YZZClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
+        input_layer: InputLayer = RSangInputLayer()
+        hebbian_layer: HiddenLayer = RSangHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
+        classification_layer: OutputLayer = RSangClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
         
         self.add_module("Input", input_layer)
         self.add_module("Hebbian", hebbian_layer)

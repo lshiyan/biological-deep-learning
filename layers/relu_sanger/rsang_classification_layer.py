@@ -3,7 +3,7 @@ import torch.nn as nn
 from layers.output_layer import OutputLayer
 
 
-class BaseClassificationLayer(OutputLayer):
+class RSangClassificationLayer(OutputLayer):
     """
     CLASS
     Defining the functionality of the base classification layer
@@ -106,7 +106,7 @@ class BaseClassificationLayer(OutputLayer):
         softmax: nn.Softmax = nn.Softmax(dim=1)
         input_copy: torch.Tensor = input.clone()
         input = self.fc(input)
-        self.update_weights(input_copy, input, clamped_output)
+        self.update_weights(input_copy, input, clamped_output, include_first=False)
         # self.update_bias(input)
         output = softmax(input)
         return output

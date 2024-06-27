@@ -3,7 +3,7 @@ import torch.nn as nn
 from layers.hidden_layer import HiddenLayer
 
 
-class SoftmaxHebbianLayer(HiddenLayer):
+class SSigHebbianLayer(HiddenLayer):
     """
     CLASS
     Defining the functionality of the base hebbian layer
@@ -67,7 +67,7 @@ class SoftmaxHebbianLayer(HiddenLayer):
         @return
             None
         """
-        self._linear_sanger_rule(input, output)
+        self._sigmoid_sanger_rule(input, output)
         
 
     def update_bias(self, output: torch.Tensor) -> None:

@@ -3,7 +3,7 @@ import torch.nn as nn
 from layers.hidden_layer import HiddenLayer
 
 
-class YZZHebbianLayer(HiddenLayer):
+class RYZZHebbianLayer(HiddenLayer):
     """
     CLASS
     Defining the functionality of the YZZ hebbian layer

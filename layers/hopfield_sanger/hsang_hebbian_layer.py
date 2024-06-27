@@ -3,7 +3,7 @@ import torch.nn as nn
 from layers.hidden_layer import HiddenLayer
 
 
-class HopfieldHebbianLayer(HiddenLayer):
+class HSangHebbianLayer(HiddenLayer):
     """
     CLASS
     Defining the functionality of the base hebbian layer

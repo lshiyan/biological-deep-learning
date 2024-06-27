@@ -2,14 +2,14 @@ import argparse
 import torch
 from interfaces.network import Network
 from layers.hidden_layer import HiddenLayer
-from layers.hopfield.hopfield_classification_layer import HopfieldClassificationLayer
-from layers.hopfield.hopfield_hebbian_layer import HopfieldHebbianLayer
-from layers.hopfield.hopfield_input_layer import HopfieldInputLayer
 from layers.input_layer import InputLayer
 from layers.output_layer import OutputLayer
+from layers.relu_YZZ.ryzz_classification_layer import RYZZClassificationLayer
+from layers.relu_YZZ.ryzz_hebbian_layer import RYZZHebbianLayer
+from layers.relu_YZZ.ryzz_input_layer import RYZZInputLayer 
 
 
-class HopfieldHebbianNetwork(Network):
+class RYZZNetwork(Network):
     """
     CLASS
     Defining the base hebbian network
@@ -57,9 +57,9 @@ class HopfieldHebbianNetwork(Network):
         self.lr: float = args.lr
 
         # Setting up layers of the network
-        input_layer: InputLayer = HopfieldInputLayer()
-        hebbian_layer: HiddenLayer = HopfieldHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
-        classification_layer: OutputLayer = HopfieldClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
+        input_layer: InputLayer = RYZZInputLayer()
+        hebbian_layer: HiddenLayer = RYZZHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
+        classification_layer: OutputLayer = RYZZClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
         
         self.add_module("Input", input_layer)
         self.add_module("Hebbian", hebbian_layer)

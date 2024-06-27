@@ -1,18 +1,15 @@
 import argparse
 import torch
-
-from layers.sigmoid.sigmoid_input_layer import SigmoidInputLayer
-from layers.sigmoid.sigmoid_hebbian_layer import SigmoidHebbianLayer
-from layers.sigmoid.sigmoid_classification_layer import SigmoidClassificationLayer
-
 from interfaces.network import Network
 from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
-from layers.output_layer import OutputLayer 
+from layers.output_layer import OutputLayer
+from layers.softmax_YZZ.syzz_classification_layer import SYZZClassificationLayer
+from layers.softmax_YZZ.syzz_hebbian_layer import SYZZHebbianLayer
+from layers.softmax_YZZ.syzz_input_layer import SYZZInputLayer
 
 
-
-class SigmoidHebbianNetwork(Network):
+class SYZZNetwork(Network):
     """
     CLASS
     Defining the base hebbian network
@@ -60,9 +57,9 @@ class SigmoidHebbianNetwork(Network):
         self.lr: float = args.lr
 
         # Setting up layers of the network
-        input_layer: InputLayer = SigmoidInputLayer()
-        hebbian_layer: HiddenLayer = SigmoidHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
-        classification_layer: OutputLayer = SigmoidClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
+        input_layer: InputLayer = SYZZInputLayer()
+        hebbian_layer: HiddenLayer = SYZZHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
+        classification_layer: OutputLayer = SYZZClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
         
         self.add_module("Input", input_layer)
         self.add_module("Hebbian", hebbian_layer)
@@ -79,14 +76,13 @@ class SigmoidHebbianNetwork(Network):
         @return
             output: returns the data after passing it throw the network
         """
+        # Get layers of network
         hebbian_layer = self.get_module("Hebbian")
         classification_layer = self.get_module("Classification")
 
-        if input.dtype != torch.float32:
-            input = input.float().to(self.device)
-
-        data_input = input.to(self.device)
-        post_hebbian_value = hebbian_layer(data_input)
-        output = classification_layer(post_hebbian_value, clamped_output)
+        # Feedforward data input into network
+        input = input.to(self.device)
+        input = hebbian_layer(input)
+        output = classification_layer(input, clamped_output)
 
         return output

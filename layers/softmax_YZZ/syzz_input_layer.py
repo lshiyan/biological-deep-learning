@@ -6,7 +6,7 @@ from layers.input_layer import InputLayer
 from typing import IO, List
 
 
-class SoftmaxInputLayer(InputLayer):
+class SYZZInputLayer(InputLayer):
     """
     Class defining how the input dataset will be processed before feeding it to the network
     

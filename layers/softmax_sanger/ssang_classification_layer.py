@@ -3,7 +3,7 @@ import torch.nn as nn
 from layers.output_layer import OutputLayer
 
 
-class SoftmaxClassificationLayer(OutputLayer):
+class SSangClassificationLayer(OutputLayer):
     """
     CLASS
     Defining the functionality of the base classification layer

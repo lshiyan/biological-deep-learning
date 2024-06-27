@@ -1,10 +1,16 @@
 from experiments.cpu_experiment import CPUExperiment
 
-from models.YZZ_hebbian_network import YYZHebbianNetwork
-from models.base_hebbian_network import BaseHebbianNetwork
-from models.hopfield_hebbian_network import HopfieldHebbianNetwork
-from models.sigmoid_hebbian_network import SigmoidHebbianNetwork
-from models.softmax_hebbian_network import SoftmaxHebbianNetwork
+from models.hopfield_sanger_network import HSangNetwork
+from models.hopfield_sigmoid_network import HSigNetwork
+from models.hopfield_YZZ_network import HYZZNetwork
+
+from models.relu_sanger_network import RSangNetwork
+from models.relu_sigmoid_network import RSigNetwork
+from models.relu_YZZ_network import RYZZNetwork
+
+from models.softmax_sanger_network import SSangNetwork
+from models.softmax_sigmoid_network import SSigNetwork
+from models.softmax_YZZ_network import SYZZNetwork
 
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
@@ -13,11 +19,7 @@ from utils.experiment_timer import *
 from utils.experiment_stats import *
 
 # Create log
-base_results_log = configure_logger('Base Result Log', './results/base_results.log')
-ortho_results_log = configure_logger('Ortho Result Log', './results/ortho_results.log')
-sigmoid_results_log = configure_logger('Sigmoid Result Log', './results/sigmoid_results.log')
-softmax_results_log = configure_logger('Softmax Result Log', './results/softmax_results.log')
-hopfield_results_log = configure_logger('Hopfield Result Log', './results/hopfield_results.log')
+results_log = configure_logger('Base Result Log', './results/results.log')
 
 # Get arguments
 ARGS = parse_arguments()
@@ -72,46 +74,10 @@ lambda_test = []
 #     ortho_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Test Acc: avg = {ortho_avg_test}, var = {ortho_var_test} || Train Acc: avg = {ortho_avg_train}, var = {ortho_var_train}")
 
 
-# Base Model Experiment
-base_model = BaseHebbianNetwork(ARGS)
-base_experiment = CPUExperiment(base_model, ARGS, f'cpu-base-{ARGS.heb_lamb}')
-base_test_acc, base_train_acc = base_experiment.run()
-base_experiment.cleanup()
+# Hopfield Sanger Model Experiment
+hsang_model = HSangNetwork(ARGS)
+hsang_experiment = CPUExperiment(hsang_model, ARGS, f'cpu-hsang-{ARGS.heb_lamb}')
+hsang_test_acc, hsang_train_acc = hsang_experiment.run()
+hsang_experiment.cleanup()
 
-base_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {base_test_acc} || Train Acc: avg = {base_train_acc}")
-
-
-# YZZ Model Experiment
-ortho_model = YYZHebbianNetwork(ARGS)
-ortho_experiment = CPUExperiment(ortho_model, ARGS, f'cpu-YZZ-{ARGS.heb_lamb}')
-ortho_test_acc, ortho_train_acc = ortho_experiment.run()
-ortho_experiment.cleanup()
-
-ortho_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {ortho_test_acc} || Train Acc: avg = {ortho_train_acc}")
-
-
-# Sigmoid Model Experiment
-sigmoid_model = SigmoidHebbianNetwork(ARGS)
-sigmoid_experiment = CPUExperiment(sigmoid_model, ARGS, f'cpu-sigmoid-{ARGS.heb_lamb}')
-sigmoid_test_acc, sigmoid_train_acc = sigmoid_experiment.run()
-sigmoid_experiment.cleanup()
-
-sigmoid_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {sigmoid_test_acc} || Train Acc: avg = {sigmoid_train_acc}")
-
-
-# Softmax Model Experiment
-softmax_model = SoftmaxHebbianNetwork(ARGS)
-softmax_experiment = CPUExperiment(softmax_model, ARGS, f'cpu-softmax-{ARGS.heb_lamb}')
-softmax_test_acc, softmax_train_acc = softmax_experiment.run()
-softmax_experiment.cleanup()
-
-softmax_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {softmax_test_acc} || Train Acc: avg = {softmax_train_acc}")
-
-
-# Hopfield Model Experiment
-hopfield_model = HopfieldHebbianNetwork(ARGS)
-hopfield_experiment = CPUExperiment(hopfield_model, ARGS, f'cpu-hopfield-{ARGS.heb_lamb}')
-hopfield_test_acc, hopfield_train_acc = hopfield_experiment.run()
-hopfield_experiment.cleanup()
-
-hopfield_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {hopfield_test_acc} || Train Acc: avg = {hopfield_train_acc}")
+results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {hsang_test_acc} || Train Acc: avg = {hsang_train_acc}")
