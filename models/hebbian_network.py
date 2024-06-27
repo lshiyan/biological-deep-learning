@@ -7,6 +7,7 @@ from layers.base.hebbian_layer import HebbianLayer
 from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
 from layers.output_layer import OutputLayer
+from utils.experiment_constants import FunctionTypes, LateralInhibitions, LearningRules
 
 
 class HebbianNetwork(Network):
@@ -44,22 +45,44 @@ class HebbianNetwork(Network):
         self.output_dim: int = args.output_dim
 
         # Hebbian layer hyperparameters stored in dictionary
+        inhibition_mapping = {member.value.upper(): member for member in LateralInhibitions}
+        learning_rule_mapping = {member.value.upper(): member for member in LearningRules}
+        function_type_mapping = {member.value.upper(): member for member in FunctionTypes}
+        
         self.heb_param: dict[str:float] = {
             "lamb": args.heb_lamb,
             "eps": args.heb_eps,
-            "gam": args.heb_gam
+            "gam": args.heb_gam,
+            "inhib": inhibition_mapping[args.inhibition_rule.upper()],
+            "learn": learning_rule_mapping[args.learning_rule.upper()],
+            "func": function_type_mapping[args.function_type.upper()]
         }
 
         # Classification layer hyperparameters stored in dictionary
-        self.cla_param: dict[:] = {}
+        self.cla_param: dict[:] = {
+            "in_1": args.include_first
+        }
 
         # Shared hyperparameters
         self.lr: float = args.lr
 
         # Setting up layers of the network
         input_layer: InputLayer = DataSetupLayer()
-        hebbian_layer: HiddenLayer = HebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
-        classification_layer: OutputLayer = ClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
+        hebbian_layer: HiddenLayer = HebbianLayer(self.input_dim, 
+                                                  self.heb_dim, 
+                                                  self.device, 
+                                                  self.heb_param["lamb"], 
+                                                  self.lr, 
+                                                  self.heb_param["gam"], 
+                                                  self.heb_param["eps"],
+                                                  self.heb_param["inhib"],
+                                                  self.heb_param["learn"],
+                                                  self.heb_param["func"])
+        classification_layer: OutputLayer = ClassificationLayer(self.heb_dim, 
+                                                                self.output_dim, 
+                                                                self.device, 
+                                                                self.lr,
+                                                                self.cla_param["in_1"])
         
         self.add_module("Input", input_layer)
         self.add_module("Hidden", hebbian_layer)

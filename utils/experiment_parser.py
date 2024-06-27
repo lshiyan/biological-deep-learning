@@ -13,7 +13,7 @@ def parse_arguments(args_list: List = None) -> argparse.Namespace:
     # Argument parser
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
 
-    # Basic configurations.
+    # Basic configurations
     parser.add_argument('--is_training', type=bool, default=True, help='status')
     parser.add_argument('--data_name', type=str, default="MNIST")
 
@@ -36,13 +36,15 @@ def parse_arguments(args_list: List = None) -> argparse.Namespace:
     parser.add_argument('--heb_lamb', type=float, default=15)
     parser.add_argument('--heb_gam', type=float, default=0.99)
     parser.add_argument('--heb_eps', type=float, default=0.01)
+    parser.add_argument('--learning_rule', type=str, default='Sanger')
+    parser.add_argument('--inhibition_rule', type=str, default='Relu')
+    parser.add_argument('--function_type', type=str, default='Linear')
 
     # Classification layer hyperparameters
-
+    parser.add_argument('--include_first', type=bool, default=True)
+    
     # Shared hyperparameters
     parser.add_argument("--lr", type=float, default=0.005)
-
-
 
     # Experiment parameters
     parser.add_argument("--batch_size", type=int, default=1)

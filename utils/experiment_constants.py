@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum
 
 class LearningRules(Enum):
     """
@@ -6,9 +6,9 @@ class LearningRules(Enum):
     Defines learning rules constants
     @instance attr.
     """
-    HEBBIAN_LEARNING_RULE = auto()
-    SANGER_LEARNING_RULE = auto()
-    FULLY_ORTHOGONAL_LEARNING_RULE = auto()
+    HEBBIAN_LEARNING_RULE = 'HEBBIAN'
+    SANGER_LEARNING_RULE = 'SANGER'
+    FULLY_ORTHOGONAL_LEARNING_RULE = 'ORTHOGONAL'
     
     
 class LateralInhibitions(Enum):
@@ -17,9 +17,9 @@ class LateralInhibitions(Enum):
     Defines lateral inhibition constants
     @instance attr.
     """
-    RELU_INHIBITION = auto()
-    SOFTMAX_INHIBITION = auto()
-    HOPFIELD_INHIBITION = auto()
+    RELU_INHIBITION = 'RELU'
+    SOFTMAX_INHIBITION = 'SOFTMAX'
+    HOPFIELD_INHIBITION = 'HOPFIELD'
 
 
 class FunctionTypes(Enum):
@@ -28,7 +28,6 @@ class FunctionTypes(Enum):
     Defines function types constants
     @instance attr.
     """
-    LINEAR = auto()
-    SIGMOID = auto()
-    
+    LINEAR = 'LINEAR'
+    SIGMOID = 'SIGMOID'
     
