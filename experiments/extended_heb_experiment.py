@@ -7,6 +7,7 @@ import torch
 from torch.nn.functional import one_hot
 from torch.utils.data import DataLoader, TensorDataset
 from torch import linalg as LA
+import torch.nn as nn
 
 # Custom defined model imports
 from interfaces.experiment import Experiment
@@ -104,7 +105,51 @@ class EHebExperiment(Experiment):
             return total_error / len(data_loader.dataset)
 
             
+    
+    
+    def compute_reconstruction_cosine_difference(self, data_loader: DataLoader) -> float:
 
+        # First, I set the model to evaluation mode
+        self.model.eval()
+
+        # Now, I initialize the total error to be zero
+        total_error = 0.0
+
+        # Define the Cosine Similarity operation
+        cos = nn.CosineSimilarity(dim=1, eps=1e-6)
+
+        # Now, I disable the gradient calculation
+        with torch.no_grad():
+
+            # Loop through each batch in data loader
+
+            for batch in data_loader:
+
+                input, _ = batch
+
+                inputs = inputs.to(self.ARGS.device).float()    # Move input to device 
+
+                # The next step is to reconstruct the input from the hidden activation using the Hebbian Layer weights
+                hidden_activations = self.model.get_module("Hebbian")(inputs)
+
+                # Getting transpose weight
+                W_transpose = self.model.get_module("Hebbian").fc.weights.T
+
+                # reconstructed input using hidden activations
+                reconstructed_input = torch.matmul(hidden_activations, W_transpose)
+
+                # Compute the cosine similarity
+                cos_error = cos(inputs, reconstructed_input)
+
+                # Convert to a scalar by taking the mean
+                scalar_cos_error = cos_error.mean()
+
+                # Increment total error
+                total_error += scalar_cos_error 
+        
+        
+            # Now, I return the average reconstruction norm difference error
+            return total_error / len(data_loader.dataset)
 
 
 
