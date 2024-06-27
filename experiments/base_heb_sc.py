@@ -1,1 +1,0 @@
-# TODO: to be done when strong compute gets back on
