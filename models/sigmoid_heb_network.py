@@ -1,13 +1,13 @@
 import argparse
 import torch
 from layers.input_layer import InputLayer
-from layers.orthogonal.ortho_heb_layer import OrthoHebLayer
-from layers.orthogonal.ortho_class_layer import OrthoClassifierLayer
-from layers.layer import NetworkLayer
-from models.network import Network 
+from layers.sigmoid.sigmoid_heb_layer import SigmoidHebLayer
+from layers.classifier_layer import ClassifierLayer
+from interfaces.layer import NetworkLayer
+from interfaces.network import Network 
 
 
-class OrthoHebNetwork(Network):
+class SigmoidHebNetwork(Network):
     """
     CLASS
     Defining the base hebbian network
@@ -16,7 +16,7 @@ class OrthoHebNetwork(Network):
             device_id (int) = id of the gpu that the model will be running in
         OWN ATTR.
             input_dim (int) = number of inputs
-            heb_dim (int) = number of neurons in hebbian layer
+            heb_dim (int) = number of neurons in hebbina layer
             output_dimension (int) = number of output neurons
             heb_param (dict {str:float}) = dictionary with all the hyperparameters for the hebbian layer
                 - lr (float) = learning rate of hebbian layer
@@ -56,8 +56,8 @@ class OrthoHebNetwork(Network):
 
         # Setting up layers of the network
         input_layer: NetworkLayer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
-        hebbian_layer: NetworkLayer = OrthoHebLayer(self.input_dim, self.heb_dim, self.device_id, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
-        classification_layer: NetworkLayer = OrthoClassifierLayer(self.heb_dim, self.output_dim, self.device_id, self.lr)
+        hebbian_layer: NetworkLayer = SigmoidHebLayer(self.input_dim, self.heb_dim, self.device_id, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
+        classification_layer: NetworkLayer = ClassifierLayer(self.heb_dim, self.output_dim, self.device_id, self.lr)
         
         self.add_module("Input Layer", input_layer)
         self.add_module("Hebbian Layer", hebbian_layer)

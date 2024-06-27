@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from numpy import outer
 import numpy as np
-from layers.layer import NetworkLayer
+from interfaces.layer import NetworkLayer
 
 
 class OrthoHebLayer(NetworkLayer):

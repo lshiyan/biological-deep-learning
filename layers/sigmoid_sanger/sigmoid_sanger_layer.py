@@ -7,10 +7,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from numpy import outer
 import numpy as np
-from layers.layer import NetworkLayer
+from interfaces.layer import NetworkLayer
 
 
-class HebbianLayer(NetworkLayer):
+class SigmoidSangerLayer(NetworkLayer):
     """
     CLASS
     Defining the functionality of the hebbian layer
@@ -150,45 +150,22 @@ class HebbianLayer(NetworkLayer):
         @return
             None
         """
-        # STEP 1: Extract and prepare input and output vectors to be 'x' and 'y' respectively
         x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device_id)
         x.requires_grad_(False)
         y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device_id)
         y.requires_grad_(False)
         
-        # STEP 2: Calculate the Outer product of 'x' and 'y'
-        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy()))  # Move tensors to CPU before calling outer
-
-        # Move back to GPU
-        outer_prod = outer_prod.to(self.device_id)
-        # Here, the outer product of the output (y) and input (x) vectors is computed and then moved back to the GPU
-
-
-        # STEP 3: Retrieve and Prepare Initial Weights
+        sigmoid = nn.Sigmoid()
+        
+        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device_id)
         initial_weight: torch.Tensor = torch.transpose(self.fc.weight.clone().detach().to(self.device_id), 0, 1)
-
-        # Ensure id_tensor and exponential_average are on the same device as the others
         self.id_tensor = self.id_tensor.to(self.device_id)
         self.exponential_average = self.exponential_average.to(self.device_id)
-        # Here, I move the id_tensor and exponential_average tensors to the same device as the other tensors to ensure compatibility in calculations.
-
-
-        # STEP 4: Sanger's Rule
         A: torch.Tensor = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
         A = A * (y.unsqueeze(1))
-
-        # STEP 5: Compute weight update
         delta_weight: torch.Tensor = self.alpha * (outer_prod - A)
-
-    # STEP 7: Update the weights
-        self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
-        # The weights of the fully connected layer are updated by adding delta_weight. 
-        # The updated weights are wrapped in nn.Parameter with requires_grad=False to ensure they do not track gradients.
-
-
-    # STEP 8: Update the exponential average
+        self.fc.weight = nn.Parameter(self.fc.weight + delta_weight * sigmoid(self.fc.weight) * sigmoid(1 - self.fc.weight), requires_grad=False)
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
-        # The exponential average of the output activations is updated using a moving average formula with decay factor self.gamma.
     
 
     def update_bias(self, output: torch.Tensor) -> None:
@@ -270,7 +247,7 @@ class HebbianLayer(NetworkLayer):
         # output = self.norm_inhibition(input)
         # output = self.gaussian_inhibition(input)
         self.update_weights(input_copy, output)
-        #self.update_bias(input)
+        # self.update_bias(input)
         self.weight_decay()
         return output
     

@@ -2,7 +2,7 @@ from abc import ABC
 import torch
 import torch.nn as nn
 
-from layers.layer import NetworkLayer
+from interfaces.layer import NetworkLayer
 
 
 class Network(nn.Module, ABC):
@@ -18,12 +18,12 @@ class Network(nn.Module, ABC):
         """
         CONSTRUCTOR METHOD
         @attr.
-            device_id: device to which calculations will be made
+            device: device to which calculations will be made
         @return
             None
         """
         super().__init__()
-        self.device_id = device
+        self.device = device
 
 
     def get_module(self, name: str) -> NetworkLayer:
@@ -51,8 +51,8 @@ class Network(nn.Module, ABC):
         @return
             None
         """
-        for module in self.children():
-            module.visualize_weights(path, num, use)
+        for name, module in self.named_children():
+            module.visualize_weights(path, num, use, name)
 
 
     def active_weights(self, beta: float) -> dict[str:int]:

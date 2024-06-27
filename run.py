@@ -18,11 +18,11 @@ arguments = ['--is_training=True',
             '--heb_lamb=15', 
             '--heb_gam=0.99',
             '--heb_eps=0.01', 
-            '--epochs=10', 
+            '--epochs=1', 
             '--test_epochs=1', 
             '--lr=0.005',  
             '--batch_size=1',
-            '--device_id=cpu',
+            '--device=cpu',
             '--local_machine=True' ]
 
 # Construct the command

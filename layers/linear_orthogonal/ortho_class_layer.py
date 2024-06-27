@@ -4,10 +4,10 @@ import matplotlib
 import numpy as np
 import torch
 import torch.nn as nn
-from layers.layer import NetworkLayer
+from interfaces.layer import NetworkLayer
 
 
-class ClassifierLayer(NetworkLayer):
+class OrthoClassifierLayer(NetworkLayer):
     """
     CLASS
     Defining the functionality of the classification layer
@@ -31,7 +31,7 @@ class ClassifierLayer(NetworkLayer):
             input_dimension: number of inputs into the layer
             output_dimension: number of outputs from layer
             device_id: the device that the module will be running on
-            lamb: lambda hyperparameter for lateral inhibition
+            lamb: lambda hyperparameter for latteral inhibition
             class_lr: how fast model learns at each iteration
             eps: to avoid division by 0
 
@@ -75,7 +75,7 @@ class ClassifierLayer(NetworkLayer):
         self.fc.weight = nn.Parameter(A/weight_maxes.unsqueeze(1), requires_grad=False)
 
         # Zero out the first column of weights -> this is to prevent the first weight from learning everything
-        self.fc.weight[:, 0] = 0
+        # self.fc.weight[:, 0] = 0
         
 
     def update_bias(self, output: torch.Tensor) -> None:

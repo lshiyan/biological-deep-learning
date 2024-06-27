@@ -7,8 +7,8 @@ from torch.nn.functional import one_hot
 from torch.utils.data import DataLoader
 
 # Custom defined model imports
-from experiments.experiment import Experiment
-from models.hebbian_network import HebbianNetwork
+from interfaces.experiment import Experiment
+from models.base_hebbian_network import BaseHebbianNetwork
 
 # Utils imports
 from utils.experiment_logger import *
@@ -17,7 +17,7 @@ from utils.experiment_timer import *
 
 
 
-class BaseHebCPU(Experiment):
+class CPUExperiment(Experiment):
     """
     CLASS
     Experiment for base hebbian model on cpu
@@ -40,7 +40,7 @@ class BaseHebCPU(Experiment):
         DEBUG_LOG: debugging
         EXP_LOG: logging of experiment process
     """
-    def __init__(self, model: HebbianNetwork, args: argparse.Namespace, name: str) -> None:
+    def __init__(self, model: BaseHebbianNetwork, args: argparse.Namespace, name: str) -> None:
         """
         CONTRUCTOR METHOD
 
@@ -79,7 +79,7 @@ class BaseHebCPU(Experiment):
         # Loop through training batches
         for inputs, labels in train_data_loader:   
             # Move input and targets to device
-            inputs, labels = inputs.to(self.ARGS.device_id).float(), one_hot(labels, 10).squeeze().to(self.ARGS.device_id).float()
+            inputs, labels = inputs.to(self.ARGS.device).float(), one_hot(labels, 10).squeeze().to(self.ARGS.device).float()
             # EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
             
             # Forward pass
@@ -129,7 +129,7 @@ class BaseHebCPU(Experiment):
             # Loop thorugh testing batches
             for inputs, labels in test_data_loader:
                 # Move input and targets to device
-                inputs, labels = inputs.to(self.ARGS.device_id), labels.to(self.ARGS.device_id)
+                inputs, labels = inputs.to(self.ARGS.device), labels.to(self.ARGS.device)
                 # EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
                 
                 # Inference

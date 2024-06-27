@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 # Custom defined model imports
-from models.network import Network
+from interfaces.network import Network
 
 # Utils imports
 from utils.experiment_logger import *
@@ -55,7 +55,7 @@ class Experiment(ABC):
             None
         """
         # Model and parameters
-        self.model: Network = model.to(args.device_id).float()
+        self.model: Network = model.to(args.device).float()
         self.ARGS: argparse.Namespace = args
         
         # Timers
@@ -72,21 +72,21 @@ class Experiment(ABC):
         
         if not os.path.exists(self.RESULT_PATH):
             os.makedirs(self.RESULT_PATH, exist_ok=True)
-            os.makedirs(f"{self.RESULT_PATH}/classification", exist_ok=True)
-            os.makedirs(f"{self.RESULT_PATH}/hebbian", exist_ok=True)
+            os.makedirs(f"{self.RESULT_PATH}/Classification", exist_ok=True)
+            os.makedirs(f"{self.RESULT_PATH}/Hebbian", exist_ok=True)
             print(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
-            print(f"Experiment '{self.EXP_NAME}/classification' result folder created successfully.")
-            print(f"Experiment '{self.EXP_NAME}/hebbian' result folder created successfully.")
+            print(f"Experiment '{self.EXP_NAME}/Classification' result folder created successfully.")
+            print(f"Experiment '{self.EXP_NAME}/Hebbian' result folder created successfully.")
         else:
             try:
                 shutil.rmtree(self.RESULT_PATH)
                 print(f"Removed {self.RESULT_PATH}.")
                 os.makedirs(self.RESULT_PATH, exist_ok=True)
-                os.makedirs(f"{self.RESULT_PATH}/classification", exist_ok=True)
-                os.makedirs(f"{self.RESULT_PATH}/hebbian", exist_ok=True)
+                os.makedirs(f"{self.RESULT_PATH}/Classification", exist_ok=True)
+                os.makedirs(f"{self.RESULT_PATH}/Hebbian", exist_ok=True)
                 print(f"Experiment {self.EXP_NAME} result folder re-created successfully.")
-                print(f"Experiment '{self.EXP_NAME}/classification' result folder re-created successfully.")
-                print(f"Experiment '{self.EXP_NAME}/hebbian' result folder re-created successfully.")
+                print(f"Experiment '{self.EXP_NAME}/Classification' result folder re-created successfully.")
+                print(f"Experiment '{self.EXP_NAME}/Hebbian' result folder re-created successfully.")
             except OSError as e:
                 print(f"Error: {e.strerror}")
         
@@ -134,7 +134,7 @@ class Experiment(ABC):
         self.START_TIME = time.time()
         self.EXP_LOG.info("Start of experiment.")
         
-        torch.device(self.ARGS.device_id) # NOTE: Should this line be here or used where we create the experiment itself
+        torch.device(self.ARGS.device) # NOTE: Should this line be here or used where we create the experiment itself
         self.PRINT_LOG.info(f"local_machine: {self.ARGS.local_machine}.")
         
         # Logging training parameters
@@ -152,12 +152,12 @@ class Experiment(ABC):
         self.EXP_LOG.info("Completed logging of experiment parameters.")
         
         # Training dataset
-        train_data_set: TensorDataset = self.model.get_module("Input Layer").setup_data('train')
+        train_data_set: TensorDataset = self.model.get_module("Input").setup_data('train')
         train_data_loader: DataLoader = DataLoader(train_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
 
         # Testing dataset
-        test_data_set: TensorDataset = self.model.get_module("Input Layer").setup_data('test')
+        test_data_set: TensorDataset = self.model.get_module("Input").setup_data('test')
         test_data_loader: DataLoader = DataLoader(test_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         

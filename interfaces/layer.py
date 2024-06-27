@@ -1,4 +1,8 @@
-from abc import ABC, abstractmethod
+from abc import ABC
+import math
+import matplotlib
+from matplotlib import pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -7,36 +11,33 @@ class NetworkLayer (nn.Module, ABC):
     """
     INTERFACE
     Single layer of the ANN -> Every layer of the interface must implement interface
-    This will help with the support of multiple hidden layers inside the network
     
     @instance attr.
         input_dimension (int): number of inputs into the layer
         output_dimension (int): number of outputs from layer
-        device_id (str): the device that the module will be running on
-        alpha (float): how fast model learns at each iteration
-        fc (nn.Linear): function to apply linear transformation to incoming data
+        device (str): the device that the module will be running on
+        lr (float): how fast model learns at each iteration
+        fc (nn.Linear): fully connected layer using linear transformation
     """
     def __init__(self, input_dimension: int, 
                  output_dimension: int, 
-                 device_id: str,
+                 device: str,
                  learning_rate: float = 0.005) -> None:
         """
         CONSTRUCTOR METHOD
         @param
             input_dimension: number of inputs into the layer
             output_dimension: number of outputs from layer
-            device_id: device to which matrices will be sent
-            lamb: lambda hyperparameter for latteral inhibition
+            device: device to which matrices will be sent
             learning_rate: how fast model learns at each iteration
-            eps: to avoid division by 0
         @return
             None
         """
         super ().__init__()
         self.input_dimension: int = input_dimension
         self.output_dimension: int = output_dimension
-        self.device_id: str = device_id
-        self.alpha: float = learning_rate
+        self.device: str = device
+        self.lr: float = learning_rate
         self.fc: nn.Linear = nn.Linear(self.input_dimension, self.output_dimension, bias=True)
         
         # Setup linear activation
@@ -130,7 +131,7 @@ class NetworkLayer (nn.Module, ABC):
         raise NotImplementedError("This method is not implemented.")
 
 
-    def visualize_weights(self, result_path: str, num: int, use: str) -> None:
+    def visualize_weights(self, result_path: str, num: int, use: str, name: str) -> None:
         """
         METHOD
         Vizualize the weight/features learned by neurons in this layer using a heatmap
@@ -138,10 +139,47 @@ class NetworkLayer (nn.Module, ABC):
             result_path: path to folder where results will be printed
             num: integer representing certain property (for file name creation purposes)
             use: the use that called this method (for file name creation purposes)
+            name: name to be used for folder/file
         @return
             None
         """
-        raise NotImplementedError("This method is not implemented.")
+        # Name of saved plot
+        plot_name: str = f'/{name}/{name}layerweights-{num}-{use}.png'
+        
+        # Find value for row and column
+        row: int = 0
+        col: int = 0
+
+        root: int = int(math.sqrt(self.output_dimension))
+        for i in range(root, 0, -1):
+            if self.output_dimension % i == 0:
+                row = min(i, self.output_dimension // i)
+                col = max(i, self.output_dimension // i)
+                break
+        
+        # Get the weights and create heatmap
+        weight: nn.parameter.Parameter = self.fc.weight
+        fig: matplotlib.figure.Figure = None
+        axes: np.ndarray = None
+        fig, axes = plt.subplots(row, col, figsize=(16, 16))
+        for ele in range(row*col):  
+            random_feature_selector: torch.Tensor = weight[ele]
+            # Move tensor to CPU, convert to NumPy array for visualization
+            heatmap: torch.Tensor = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))),
+                                                int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
+
+            ax = axes[ele // col, ele % col]
+            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+            fig.colorbar(im, ax=ax)
+            ax.set_title(f'Weight {ele}')
+            
+            # Move the tensor back to the GPU if needed
+            random_feature_selector = random_feature_selector.to(self.device)
+        
+        file_path: str = result_path + plot_name
+        plt.tight_layout()
+        plt.savefig(file_path)
+        plt.close()
     
     
     def active_weights(self, beta: float) -> int:
@@ -153,4 +191,6 @@ class NetworkLayer (nn.Module, ABC):
         @return
             number of active weights
         """
-        raise NotImplementedError("This method is not implemented.")
+        weights: nn.parameter.Parameter = self.fc.weight
+        active: torch.Tensor = torch.where(weights > beta, weights, 0.0)
+        return active.nonzero().size(0)
