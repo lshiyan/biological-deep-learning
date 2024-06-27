@@ -148,7 +148,7 @@ class HiddenLayer(NetworkLayer, ABC):
     #################################################################################################
     # Different Weight Updates Methods
     #################################################################################################
-    def _linear_sanger_rule(self, input: torch.Tensor, output: torch.Tensor):
+    def _linear_sanger_rule(self, input: torch.Tensor, output: torch.Tensor) -> None:
         """
         METHOD
         Update weights using Sanger's Rules.
@@ -176,6 +176,42 @@ class HiddenLayer(NetworkLayer, ABC):
 
         # Compute change in weights
         delta_weight: torch.Tensor = self.lr * (outer_prod - A)
+
+        # Update the weights
+        self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
+
+        # Update exponential averages
+        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+
+
+    def _orthogonal_rule(self, input: torch.Tensor, output: torch.Tensor) -> None:
+        """
+        METHOD
+        Update weights using Fully Orthogonal Rule.
+        @param
+            input: the inputs into the layer
+            output: the output of the layer
+        @return
+            None
+        """
+        # Copy both input and output to be used in Sanger's Rule
+        x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
+        x.requires_grad_(False)
+        y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device)
+        y.requires_grad_(False)
+        
+        # Calculate outer product of output and input
+        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
+
+        # Retrieve initial weights
+        initial_weight: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+
+        # Calculate Fully Orthogonal Rule
+        ytw = torch.matmul(y.unsqueeze(0), initial_weight).to(self.device)
+        norm_term = torch.outer(y.squeeze(0), ytw.squeeze(0)).to(self.device)
+
+        # Compute change in weights
+        delta_weight: torch.Tensor = self.lr * (outer_prod - norm_term)
 
         # Update the weights
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
