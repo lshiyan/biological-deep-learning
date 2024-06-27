@@ -147,9 +147,20 @@ class EHebExperiment(Experiment):
                 # Increment total error
                 total_error += scalar_cos_error 
         
-        
+
             # Now, I return the average reconstruction norm difference error
             return total_error / len(data_loader.dataset)
+
+
+
+    def reinitialize_classification_weights(self):
+
+        classification_layer = self.model.get_module("Classification")
+
+        # After retrieving the classification layer, I apply Xavier uniform initialization to the weights
+        # This is done to have a brand new classification weight for my classification layer
+        classification_layer.fc.weight.data = nn.init.xavier_uniform_(classification_layer.fc.weight.data)
+        classification_layer.fc.bias.data = nn.init.zeros_(classification_layer.fc.bias.data)               # Honestly migth not be necessary, but done just in case 
 
 
 
