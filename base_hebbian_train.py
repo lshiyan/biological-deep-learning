@@ -16,7 +16,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, TensorDataset
 
 # Custom defined model imports
-from models.base_hebbian_network import HebbianNetwork # Model import
+from models.relu_sanger_network import HebbianNetwork # Model import
 
 # Utils imports
 from utils.experiment_logger import *

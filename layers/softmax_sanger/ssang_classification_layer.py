@@ -3,7 +3,7 @@ import torch.nn as nn
 from layers.output_layer import OutputLayer
 
 
-class BaseClassificationLayer(OutputLayer):
+class SSangClassificationLayer(OutputLayer):
     """
     CLASS
     Defining the functionality of the base classification layer
@@ -34,7 +34,7 @@ class BaseClassificationLayer(OutputLayer):
         super().__init__(input_dimension, output_dimension, device, learning_rate)    
     
 
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None, include_first: bool = True) -> None:
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None, include_first: bool = False) -> None:
         """
         METHOD
         Defines the way the weights will be updated at each iteration of the training.
@@ -69,7 +69,7 @@ class BaseClassificationLayer(OutputLayer):
         self.fc.weight = nn.Parameter(weights/weight_maxes.unsqueeze(1), requires_grad=False)
 
         # Zero out the first column of weights -> this is to prevent the first weight from learning everything
-        if include_first: self.fc.weight[:, 0] = 0
+        if not include_first: self.fc.weight[:, 0] = 0
         
 
     def update_bias(self, output: torch.Tensor) -> None:
@@ -106,10 +106,10 @@ class BaseClassificationLayer(OutputLayer):
         softmax: nn.Softmax = nn.Softmax(dim=1)
         input_copy: torch.Tensor = input.clone()
         input = self.fc(input)
-        self.update_weights(input_copy, input, clamped_output)
+        self.update_weights(input_copy, input, clamped_output, include_first=True)
         # self.update_bias(input)
-        input = softmax(input)
-        return input
+        output = softmax(input)
+        return output
     
     
     def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -123,5 +123,5 @@ class BaseClassificationLayer(OutputLayer):
         """
         softmax = nn.Softmax(dim=1)
         input = self.fc(input)
-        input = softmax(input)
-        return input
+        output = softmax(input)
+        return output

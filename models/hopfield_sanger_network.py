@@ -1,15 +1,15 @@
 import argparse
 import torch
-from layers.base.base_input_layer import BaseInputLayer
-from layers.base.base_hebbian_layer import BaseHebbianLayer
-from layers.base.base_classification_layer import BaseClassificationLayer
 from interfaces.network import Network
 from layers.hidden_layer import HiddenLayer
+from layers.hopfield_sanger.hsang_classification_layer import HSangClassificationLayer
+from layers.hopfield_sanger.hsang_hebbian_layer import HSangHebbianLayer
+from layers.hopfield_sanger.hsang_input_layer import HSangInputLayer
 from layers.input_layer import InputLayer
-from layers.output_layer import OutputLayer 
+from layers.output_layer import OutputLayer
 
 
-class BaseHebbianNetwork(Network):
+class HSangNetwork(Network):
     """
     CLASS
     Defining the base hebbian network
@@ -57,9 +57,9 @@ class BaseHebbianNetwork(Network):
         self.lr: float = args.lr
 
         # Setting up layers of the network
-        input_layer: InputLayer = BaseInputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
-        hebbian_layer: HiddenLayer = BaseHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
-        classification_layer: OutputLayer = BaseClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
+        input_layer: InputLayer = HSangInputLayer()
+        hebbian_layer: HiddenLayer = HSangHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
+        classification_layer: OutputLayer = HSangClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
         
         self.add_module("Input", input_layer)
         self.add_module("Hebbian", hebbian_layer)

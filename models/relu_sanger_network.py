@@ -1,22 +1,24 @@
 import argparse
 import torch
+from interfaces.network import Network
+from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
-from layers.orthogonal.ortho_heb_layer import OrthoHebLayer
-from layers.orthogonal.ortho_class_layer import OrthoClassifierLayer
-from layers.layer import NetworkLayer
-from models.network import Network 
+from layers.output_layer import OutputLayer
+from layers.relu_sanger.rsang_classification_layer import RSangClassificationLayer
+from layers.relu_sanger.rsang_hebbian_layer import RSangHebbianLayer
+from layers.relu_sanger.rsang_input_layer import RSangInputLayer 
 
 
-class OrthoHebNetwork(Network):
+class RSangNetwork(Network):
     """
     CLASS
     Defining the base hebbian network
     @instance attr.
         PARENT ATTR.
-            device_id (int) = id of the gpu that the model will be running in
+            device (int) = id of the gpu that the model will be running in
         OWN ATTR.
             input_dim (int) = number of inputs
-            heb_dim (int) = number of neurons in hebbian layer
+            heb_dim (int) = number of neurons in hebbina layer
             output_dimension (int) = number of output neurons
             heb_param (dict {str:float}) = dictionary with all the hyperparameters for the hebbian layer
                 - lr (float) = learning rate of hebbian layer
@@ -34,7 +36,7 @@ class OrthoHebNetwork(Network):
         @return
             None
         """
-        super().__init__(args.device_id)
+        super().__init__(args.device)
 
         # Dimension of each layer
         self.input_dim: int = args.input_dim
@@ -55,13 +57,13 @@ class OrthoHebNetwork(Network):
         self.lr: float = args.lr
 
         # Setting up layers of the network
-        input_layer: NetworkLayer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
-        hebbian_layer: NetworkLayer = OrthoHebLayer(self.input_dim, self.heb_dim, self.device_id, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
-        classification_layer: NetworkLayer = OrthoClassifierLayer(self.heb_dim, self.output_dim, self.device_id, self.lr)
+        input_layer: InputLayer = RSangInputLayer()
+        hebbian_layer: HiddenLayer = RSangHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
+        classification_layer: OutputLayer = RSangClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
         
-        self.add_module("Input Layer", input_layer)
-        self.add_module("Hebbian Layer", hebbian_layer)
-        self.add_module("Classification Layer", classification_layer)
+        self.add_module("Input", input_layer)
+        self.add_module("Hebbian", hebbian_layer)
+        self.add_module("Classification", classification_layer)
 
 
     def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
@@ -74,14 +76,13 @@ class OrthoHebNetwork(Network):
         @return
             output: returns the data after passing it throw the network
         """
-        hebbian_layer = self.get_module("Hebbian Layer")
-        classification_layer = self.get_module("Classification Layer")
+        # Get layers of network
+        hebbian_layer = self.get_module("Hebbian")
+        classification_layer = self.get_module("Classification")
 
-        if input.dtype != torch.float32:
-            input = input.float().to(self.device_id)
-
-        data_input = input.to(self.device_id)
-        post_hebbian_value = hebbian_layer(data_input)
-        output = classification_layer(post_hebbian_value, clamped_output)
+        # Feedforward data input into network
+        input = input.to(self.device)
+        input = hebbian_layer(input)
+        output = classification_layer(input, clamped_output)
 
         return output

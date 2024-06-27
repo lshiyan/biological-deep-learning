@@ -1,14 +1,28 @@
 # Built-in imports
 import time
+from typing import Tuple, Type
 
 # Pytorch imports
 import torch
 from torch.nn.functional import one_hot
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 
 # Custom defined model imports
 from interfaces.experiment import Experiment
-from models.base_hebbian_network import BaseHebbianNetwork
+from interfaces.network import Network
+from layers.input_layer import InputLayer
+
+from layers.hopfield_sanger.hsang_input_layer import HSangInputLayer
+from layers.hopfield_sigmoid.hsig_input_layer import HSigInputLayer
+from layers.hopfield_YZZ.hyzz_input_layer import HYZZInputLayer
+
+from layers.relu_sanger.rsang_input_layer import RSangInputLayer
+from layers.relu_sigmoid.rsig_input_layer import RSigInputLayer
+from layers.relu_YZZ.ryzz_input_layer import RYZZInputLayer
+
+from layers.softmax_sanger.ssang_input_layer import SSangInputLayer
+from layers.softmax_sigmoid.ssig_input_layer import SSigInputLayer
+from layers.softmax_YZZ.syzz_input_layer import SYZZInputLayer
 
 # Utils imports
 from utils.experiment_logger import *
@@ -40,7 +54,7 @@ class CPUExperiment(Experiment):
         DEBUG_LOG: debugging
         EXP_LOG: logging of experiment process
     """
-    def __init__(self, model: BaseHebbianNetwork, args: argparse.Namespace, name: str) -> None:
+    def __init__(self, model: Network, args: argparse.Namespace, name: str) -> None:
         """
         CONTRUCTOR METHOD
 
@@ -162,3 +176,82 @@ class CPUExperiment(Experiment):
         if set_name == 'train': self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Train Accuracy: {final_accuracy}')
         
         return final_accuracy
+    
+    
+    def run(self) -> Tuple[float, float]:
+        """
+        METHOD
+        Runs the experiment
+        @param
+            None
+        @return
+            (test_acc, train_acc): tuple of final testing and training accuracies
+        """
+        # Start timer
+        self.START_TIME = time.time()
+        self.EXP_LOG.info("Start of experiment.")
+        
+        torch.device(self.ARGS.device) # NOTE: Should this line be here or used where we create the experiment itself
+        self.PRINT_LOG.info(f"local_machine: {self.ARGS.local_machine}.")
+        
+        # Logging training parameters
+        self.EXP_LOG.info("Started logging of experiment parameters.")
+        self.PARAM_LOG.info(f"Input Dimension: {self.ARGS.input_dim}")
+        self.PARAM_LOG.info(f"Hebbian Layer Dimension: {self.ARGS.heb_dim}")
+        self.PARAM_LOG.info(f"Outout Dimension: {self.ARGS.output_dim}")
+        self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.ARGS.heb_lamb}")
+        self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.ARGS.heb_gam}")
+        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.ARGS.heb_eps}")
+        self.PARAM_LOG.info(f"Network Learning Rate: {self.ARGS.lr}")
+        self.PARAM_LOG.info(f"Number of Epochs: {self.ARGS.epochs}")
+        self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
+        
+        self.EXP_LOG.info("Completed logging of experiment parameters.")
+        
+        # Get input layer class of model
+        input_layer: InputLayer = self.model.get_module("Input")
+        input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
+        
+        # Training dataset
+        train_data_set: TensorDataset = input_class.setup_data(self.ARGS.train_data, self.ARGS.train_label, self.ARGS.train_filename, 'train', 60000)
+        train_data_loader: DataLoader = DataLoader(train_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
+
+        # Testing dataset
+        test_data_set: TensorDataset = input_class.setup_data(self.ARGS.test_data, self.ARGS.test_label, self.ARGS.test_filename, 'test', 10000)
+        test_data_loader: DataLoader = DataLoader(test_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
+        
+        self.EXP_LOG.info("Started training and testing loops.")
+        
+        for epoch in range(0, self.ARGS.epochs):
+            # Testing accuracy
+            self.testing(test_data_loader, 'test', epoch, visualize=True)
+            
+            # Training accuracy
+            self.testing(train_data_loader, 'train', epoch, visualize=True)
+            
+            # Training
+            self.training(train_data_loader, epoch, visualize=True)
+        
+        self.EXP_LOG.info("Completed training of model.")        
+        self.model.visualize_weights(self.RESULT_PATH, self.ARGS.epochs, 'final')
+        self.EXP_LOG.info("Visualize weights of model after training.")
+        test_acc = self.testing(test_data_loader, 'test', self.ARGS.epochs, visualize=True)
+        train_acc = self.testing(train_data_loader, 'train', self.ARGS.epochs, visualize=True)
+        self.EXP_LOG.info("Completed final testing methods.")
+        self.PARAM_LOG.info(f"Training accuracy of model after training for {self.ARGS.epochs} epochs: {train_acc}")
+        self.PARAM_LOG.info(f"Testing accuracy of model after training for {self.ARGS.epochs} epochs: {test_acc}")
+        
+        # End timer
+        self.END_TIME = time.time()
+        self.DURATION = self.END_TIME - self.START_TIME
+        self.EXP_LOG.info(f"The experiment took {time_to_str(self.DURATION)} to be completed.")
+        self.PARAM_LOG.info(f"End time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.END_TIME))}")
+        self.PARAM_LOG.info(f"Runtime of experiment: {time_to_str(self.DURATION)}")
+        self.PARAM_LOG.info(f"Train time of experiment: {time_to_str(self.TRAIN_TIME)}")
+        self.PARAM_LOG.info(f"Test time (test acc) of experiment: {time_to_str(self.TEST_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Test time (train acc) of experiment: {time_to_str(self.TRAIN_ACC_TIME)}")
+        self.EXP_LOG.info("The experiment has been completed.")
+        
+        return (test_acc, train_acc)
