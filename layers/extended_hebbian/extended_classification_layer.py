@@ -107,7 +107,6 @@ class EHebClassificationLayer(OutputLayer):
         input_copy: torch.Tensor = input.clone()
         input = self.fc(input)
         self.update_weights(input_copy, input, clamped_output, include_first=False)
-        # self.update_bias(input)
         output = softmax(input)
         return output
     
