@@ -3,6 +3,7 @@ from experiments.cpu_experiment import CPUExperiment
 from models.YZZ_hebbian_network import YYZHebbianNetwork
 from models.base_hebbian_network import BaseHebbianNetwork
 from models.sigmoid_hebbian_network import SigmoidHebbianNetwork
+from models.softmax_hebbian_network import SoftmaxHebbianNetwork
 
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
@@ -12,8 +13,9 @@ from utils.experiment_stats import *
 
 # Create log
 # base_results_log = configure_logger('Base Result Log', './results/base_results.log')
-ortho_results_log = configure_logger('Ortho Result Log', './results/ortho_results.log')
+# ortho_results_log = configure_logger('Ortho Result Log', './results/ortho_results.log')
 # sigmoid_results_log = configure_logger('Sigmoid Result Log', './results/sigmoid_results.log')
+softmax_results_log = configure_logger('Softmax Result Log', './results/softmax_results.log')
 
 # Get arguments
 ARGS = parse_arguments()
@@ -77,13 +79,13 @@ lambda_test = []
 # base_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {base_test_acc} || Train Acc: avg = {base_train_acc}")
 
 
-# YZZ Model Experiment
-ortho_model = YYZHebbianNetwork(ARGS)
-ortho_experiment = CPUExperiment(ortho_model, ARGS, f'cpu-YZZ-{ARGS.heb_lamb}')
-ortho_test_acc, ortho_train_acc = ortho_experiment.run()
-ortho_experiment.cleanup()
+# # YZZ Model Experiment
+# ortho_model = YYZHebbianNetwork(ARGS)
+# ortho_experiment = CPUExperiment(ortho_model, ARGS, f'cpu-YZZ-{ARGS.heb_lamb}')
+# ortho_test_acc, ortho_train_acc = ortho_experiment.run()
+# ortho_experiment.cleanup()
 
-ortho_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {ortho_test_acc} || Train Acc: avg = {ortho_train_acc}")
+# ortho_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {ortho_test_acc} || Train Acc: avg = {ortho_train_acc}")
 
 
 # # Sigmoid Model Experiment
@@ -93,3 +95,12 @@ ortho_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test
 # sigmoid_experiment.cleanup()
 
 # sigmoid_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {sigmoid_test_acc} || Train Acc: avg = {sigmoid_train_acc}")
+
+
+# Softmax Model Experiment
+softmax_model = SoftmaxHebbianNetwork(ARGS)
+softmax_experiment = CPUExperiment(softmax_model, ARGS, f'cpu-softmax-{ARGS.heb_lamb}')
+softmax_test_acc, softmax_train_acc = softmax_experiment.run()
+softmax_experiment.cleanup()
+
+softmax_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {softmax_test_acc} || Train Acc: avg = {softmax_train_acc}")

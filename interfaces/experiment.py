@@ -15,6 +15,7 @@ from interfaces.network import Network
 from layers.base.base_input_layer import BaseInputLayer
 from layers.YZZ.YZZ_input_layer import YZZInputLayer
 from layers.sigmoid.sigmoid_input_layer import SigmoidInputLayer
+from layers.softmax.softmax_input_layer import SoftmaxInputLayer
 
 # Utils imports
 from layers.input_layer import InputLayer
