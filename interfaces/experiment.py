@@ -4,7 +4,7 @@ import shutil
 import time
 from abc import ABC
 import argparse
-from typing import Tuple, List
+from typing import Tuple, List, Type
 
 # Pytorch imports
 import torch
@@ -12,8 +12,12 @@ from torch.utils.data import DataLoader, TensorDataset
 
 # Custom defined model imports
 from interfaces.network import Network
+from layers.base.base_input_layer import BaseInputLayer
+from layers.YZZ.YZZ_input_layer import YZZInputLayer
+from layers.sigmoid.sigmoid_input_layer import SigmoidInputLayer
 
 # Utils imports
+from layers.input_layer import InputLayer
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -151,13 +155,17 @@ class Experiment(ABC):
         
         self.EXP_LOG.info("Completed logging of experiment parameters.")
         
+        # Get input layer class of model
+        input_layer: InputLayer = self.model.get_module("Input")
+        input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
+        
         # Training dataset
-        train_data_set: TensorDataset = self.model.get_module("Input").setup_data('train')
+        train_data_set: TensorDataset = input_class.setup_data(self.ARGS.train_data, self.ARGS.train_label, self.ARGS.train_filename, 'train', 60000)
         train_data_loader: DataLoader = DataLoader(train_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
 
         # Testing dataset
-        test_data_set: TensorDataset = self.model.get_module("Input").setup_data('test')
+        test_data_set: TensorDataset = input_class.setup_data(self.ARGS.test_data, self.ARGS.test_label, self.ARGS.test_filename, 'test', 10000)
         test_data_loader: DataLoader = DataLoader(test_data_set, batch_size=self.ARGS.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         

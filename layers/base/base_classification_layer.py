@@ -69,7 +69,7 @@ class BaseClassificationLayer(OutputLayer):
         self.fc.weight = nn.Parameter(weights/weight_maxes.unsqueeze(1), requires_grad=False)
 
         # Zero out the first column of weights -> this is to prevent the first weight from learning everything
-        if include_first: self.fc.weight[:, 0] = 0
+        if not include_first: self.fc.weight[:, 0] = 0
         
 
     def update_bias(self, output: torch.Tensor) -> None:

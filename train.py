@@ -1,7 +1,8 @@
 from experiments.cpu_experiment import CPUExperiment
+
 from models.YZZ_hebbian_network import YYZHebbianNetwork
 from models.base_hebbian_network import BaseHebbianNetwork
-# from models.sigmoid_heb_network import SigmoidHebNetwork
+from models.sigmoid_hebbian_network import SigmoidHebbianNetwork
 
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
@@ -67,6 +68,7 @@ lambda_test = []
 #     ortho_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Test Acc: avg = {ortho_avg_test}, var = {ortho_var_test} || Train Acc: avg = {ortho_avg_train}, var = {ortho_var_train}")
 
 
+# # Base Model Experiment
 # base_model = BaseHebbianNetwork(ARGS)
 # base_experiment = CPUExperiment(base_model, ARGS, f'cpu-base-{ARGS.heb_lamb}')
 # base_test_acc, base_train_acc = base_experiment.run()
@@ -75,18 +77,19 @@ lambda_test = []
 # base_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {base_test_acc} || Train Acc: avg = {base_train_acc}")
 
 
+# YZZ Model Experiment
 ortho_model = YYZHebbianNetwork(ARGS)
-ortho_experiment = CPUExperiment(ortho_model, ARGS, f'cpu-base-{ARGS.heb_lamb}')
+ortho_experiment = CPUExperiment(ortho_model, ARGS, f'cpu-YZZ-{ARGS.heb_lamb}')
 ortho_test_acc, ortho_train_acc = ortho_experiment.run()
 ortho_experiment.cleanup()
 
 ortho_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {ortho_test_acc} || Train Acc: avg = {ortho_train_acc}")
 
 
-# sigmoid_model = SigmoidHebNetwork(ARGS)
-# sigmoid_experiment = BaseHebCPU(sigmoid_model, ARGS, f'cpu-sigmoid-{ARGS.heb_lamb}')
+# # Sigmoid Model Experiment
+# sigmoid_model = SigmoidHebbianNetwork(ARGS)
+# sigmoid_experiment = CPUExperiment(sigmoid_model, ARGS, f'cpu-sigmoid-{ARGS.heb_lamb}')
 # sigmoid_test_acc, sigmoid_train_acc = sigmoid_experiment.run()
 # sigmoid_experiment.cleanup()
 
 # sigmoid_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {sigmoid_test_acc} || Train Acc: avg = {sigmoid_train_acc}")
-

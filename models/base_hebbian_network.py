@@ -57,7 +57,7 @@ class BaseHebbianNetwork(Network):
         self.lr: float = args.lr
 
         # Setting up layers of the network
-        input_layer: InputLayer = BaseInputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
+        input_layer: InputLayer = BaseInputLayer()
         hebbian_layer: HiddenLayer = BaseHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
         classification_layer: OutputLayer = BaseClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
         

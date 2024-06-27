@@ -3,7 +3,7 @@ import torch.nn as nn
 from layers.output_layer import OutputLayer
 
 
-class YZZClassificationLayer(OutputLayer):
+class SigmoidClassificationLayer(OutputLayer):
     """
     CLASS
     Defining the functionality of the base classification layer
@@ -34,7 +34,7 @@ class YZZClassificationLayer(OutputLayer):
         super().__init__(input_dimension, output_dimension, device, learning_rate)    
     
 
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None, include_first: bool = True) -> None:
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None, include_first: bool = False) -> None:
         """
         METHOD
         Defines the way the weights will be updated at each iteration of the training.
@@ -93,7 +93,7 @@ class YZZClassificationLayer(OutputLayer):
         self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
     
 
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, include_first: bool = True) -> torch.Tensor:
+    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network when training
@@ -101,12 +101,12 @@ class YZZClassificationLayer(OutputLayer):
             input: input data into the layer
             clamped_output: one-hot encode of true labels
         @return
-            output: returns the data after passing it throw the layer
+            input: returns the data after passing it throw the layer
         """
         softmax: nn.Softmax = nn.Softmax(dim=1)
         input_copy: torch.Tensor = input.clone()
         input = self.fc(input)
-        self.update_weights(input_copy, input, clamped_output, include_first = True)
+        self.update_weights(input_copy, input, clamped_output, include_first=True)
         # self.update_bias(input)
         output = softmax(input)
         return output

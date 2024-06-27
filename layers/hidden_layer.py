@@ -220,6 +220,34 @@ class HiddenLayer(NetworkLayer, ABC):
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
 
 
+    def _sigmoid_sanger_rule(self, input: torch.Tensor, output: torch.Tensor) -> None:
+        """
+        METHOD
+        Update weights using Sanger's Rule.
+        @param
+            input: the inputs into the layer
+            output: the output of the layer
+        @return
+            None
+        """
+        x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
+        x.requires_grad_(False)
+        y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device)
+        y.requires_grad_(False)
+        
+        sigmoid = nn.Sigmoid()
+        
+        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
+        initial_weight: torch.Tensor = torch.transpose(self.fc.weight.clone().detach().to(self.device), 0, 1)
+        self.id_tensor = self.id_tensor.to(self.device)
+        self.exponential_average = self.exponential_average.to(self.device)
+        A: torch.Tensor = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y)
+        A = A * (y.unsqueeze(1))
+        delta_weight: torch.Tensor = self.lr * (outer_prod - A)
+        self.fc.weight = nn.Parameter(self.fc.weight + delta_weight * sigmoid(self.fc.weight) * sigmoid(1 - self.fc.weight), requires_grad=False)
+        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+
+
 
     #################################################################################################
     # Activations and weight/bias updates that will be called for train/eval forward

@@ -22,54 +22,30 @@ class YZZInputLayer(InputLayer):
             test_filename (str) = test data (img + label) filename (.csv)
         OWN ATTR.
     """
-    def __init__(self, train_data: str, 
-                 train_label: str, 
-                 train_filename: str, 
-                 test_data: str, 
-                 test_label: str, 
-                 test_filename: str) -> None:
+    def __init__(self) -> None:
         """
-        Constructor method
+        CONSTRUCTOR METHOD
         @param
-            train_data: train data filename (.ubyte)
-            train_label: train label filename (.ubyte)
-            train_filename: train data (img + label) filename (.csv)
-            test_data: test data filename (.ubyte)
-            test_label: test label filename (.ubyte)
-            test_filename: test data (img + label) filename (.csv)
+            None
         @return
             None
         """
-        super().__init__(train_data, train_label, train_filename, test_data, test_label, test_filename)
+        super().__init__()
 
     
-    def setup_data(self, data_type: str = 'train'):
+    @staticmethod
+    def setup_data(data: str, label: str, filename: str, data_type: str, size: int) -> TensorDataset:
         """
         METHOD
         Function to setup requested dataset
         @param
+            data: data filename
+            label: label filename
+            filename: data (img + label) filename
             data_type: which dataset to setup
         @return
             tensor dataset containing (data, label)
         """
-        filename: str = None
-        data: str = None
-        label: str = None
-        size: int = None
-        
-        # Which dataset to setup
-        if data_type == 'train':
-            filename = self.train_filename
-            data = self.train_data
-            label = self.train_label
-            size = 60000
-        
-        elif data_type == 'test':
-            filename = self.test_filename
-            data = self.test_data
-            label = self.test_label
-            size = 10000
-        
         # Converting to .csv file if needed
         if not os.path.exists(filename):
             InputLayer.convert(data, label, filename, size, 28)
@@ -83,8 +59,8 @@ class YZZInputLayer(InputLayer):
         return TensorDataset(data_tensor, labels)
         
 
-    @classmethod
-    def convert(cls, img_file: str, 
+    @staticmethod
+    def convert(img_file: str, 
                 label_file: str, 
                 out_file: str, 
                 data_size: int, 

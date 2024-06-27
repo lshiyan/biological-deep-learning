@@ -1,19 +1,24 @@
 import argparse
 import torch
+
+from layers.sigmoid.sigmoid_input_layer import SigmoidInputLayer
+from layers.sigmoid.sigmoid_hebbian_layer import SigmoidHebbianLayer
+from layers.sigmoid.sigmoid_classification_layer import SigmoidClassificationLayer
+
+from interfaces.network import Network
+from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
-from layers.sigmoid.sigmoid_heb_layer import SigmoidHebLayer
-from layers.classifier_layer import ClassifierLayer
-from interfaces.layer import NetworkLayer
-from interfaces.network import Network 
+from layers.output_layer import OutputLayer 
 
 
-class SigmoidHebNetwork(Network):
+
+class SigmoidHebbianNetwork(Network):
     """
     CLASS
     Defining the base hebbian network
     @instance attr.
         PARENT ATTR.
-            device_id (int) = id of the gpu that the model will be running in
+            device (int) = id of the gpu that the model will be running in
         OWN ATTR.
             input_dim (int) = number of inputs
             heb_dim (int) = number of neurons in hebbina layer
@@ -34,7 +39,7 @@ class SigmoidHebNetwork(Network):
         @return
             None
         """
-        super().__init__(args.device_id)
+        super().__init__(args.device)
 
         # Dimension of each layer
         self.input_dim: int = args.input_dim
@@ -55,13 +60,13 @@ class SigmoidHebNetwork(Network):
         self.lr: float = args.lr
 
         # Setting up layers of the network
-        input_layer: NetworkLayer = InputLayer(args.train_data, args.train_label, args.train_filename, args.test_data, args.test_label, args.test_filename)
-        hebbian_layer: NetworkLayer = SigmoidHebLayer(self.input_dim, self.heb_dim, self.device_id, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
-        classification_layer: NetworkLayer = ClassifierLayer(self.heb_dim, self.output_dim, self.device_id, self.lr)
+        input_layer: InputLayer = SigmoidInputLayer()
+        hebbian_layer: HiddenLayer = SigmoidHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
+        classification_layer: OutputLayer = SigmoidClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
         
-        self.add_module("Input Layer", input_layer)
-        self.add_module("Hebbian Layer", hebbian_layer)
-        self.add_module("Classification Layer", classification_layer)
+        self.add_module("Input", input_layer)
+        self.add_module("Hebbian", hebbian_layer)
+        self.add_module("Classification", classification_layer)
 
 
     def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
@@ -74,13 +79,13 @@ class SigmoidHebNetwork(Network):
         @return
             output: returns the data after passing it throw the network
         """
-        hebbian_layer = self.get_module("Hebbian Layer")
-        classification_layer = self.get_module("Classification Layer")
+        hebbian_layer = self.get_module("Hebbian")
+        classification_layer = self.get_module("Classification")
 
         if input.dtype != torch.float32:
-            input = input.float().to(self.device_id)
+            input = input.float().to(self.device)
 
-        data_input = input.to(self.device_id)
+        data_input = input.to(self.device)
         post_hebbian_value = hebbian_layer(data_input)
         output = classification_layer(post_hebbian_value, clamped_output)
 

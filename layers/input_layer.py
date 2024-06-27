@@ -1,4 +1,5 @@
 from interfaces.layer import NetworkLayer
+from torch.utils.data import TensorDataset
 
 
 class InputLayer(NetworkLayer):
@@ -17,38 +18,26 @@ class InputLayer(NetworkLayer):
             test_label (str) = test label filename
             test_filename (str) = test data (img + label) filename
     """
-    def __init__(self, train_data: str, 
-                 train_label: str, 
-                 train_filename: str, 
-                 test_data: str, 
-                 test_label: str, 
-                 test_filename: str) -> None:
+    def __init__(self) -> None:
         """
-        Constructor method
+        CONSTRUCTOR METHOD
         @param
-            train_data: train data filename
-            train_label: train label filename
-            train_filename: train data (img + label) filename
-            test_data: test data filename
-            test_label: test label filename
-            test_filename: test data (img + label) filename
+            None
         @return
             None
         """
         super().__init__(0, 0, 0)
-        self.train_data: str = train_data
-        self.train_label: str = train_label
-        self.train_filename: str = train_filename
-        self.test_data: str = test_data
-        self.test_label: str = test_label
-        self.test_filename: str = test_filename
 
 
-    def setup_data(self, data_type: str):
+    @staticmethod
+    def setup_data(data: str, label: str, filename: str, data_type: str) -> TensorDataset:
         """
         METHOD
         Function to setup requested dataset
         @param
+            data: data filename
+            label: label filename
+            filename: data (img + label) filename
             data_type: which dataset to setup (train/test)
         @return
             tensor dataset containing (data, label)
@@ -56,8 +45,8 @@ class InputLayer(NetworkLayer):
         raise NotImplementedError("This method has yet to be implemented.")
         
 
-    @classmethod
-    def convert(cls, img_file: str, 
+    @staticmethod
+    def convert(img_file: str, 
                 label_file: str, 
                 out_file: str, 
                 data_size: int) -> None:
