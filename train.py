@@ -26,6 +26,30 @@ ARGS = parse_arguments()
 
 # Experiments setup
 lambda_test = []
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # lambda_test = [1, 5, 10, 15]
 # lambda_test = [15]
 
@@ -75,9 +99,9 @@ lambda_test = []
 
 
 # Hopfield Sanger Model Experiment
-hsang_model = HSangNetwork(ARGS)
-hsang_experiment = CPUExperiment(hsang_model, ARGS, f'cpu-hsang-{ARGS.heb_lamb}')
-hsang_test_acc, hsang_train_acc = hsang_experiment.run()
-hsang_experiment.cleanup()
+# hsang_model = HSangNetwork(ARGS)
+# hsang_experiment = CPUExperiment(hsang_model, ARGS, f'cpu-hsang-{ARGS.heb_lamb}')
+# hsang_test_acc, hsang_train_acc = hsang_experiment.run()
+# hsang_experiment.cleanup()
 
-results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {hsang_test_acc} || Train Acc: avg = {hsang_train_acc}")
+# results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {hsang_test_acc} || Train Acc: avg = {hsang_train_acc}")
