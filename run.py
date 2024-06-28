@@ -28,12 +28,12 @@ arguments = [
             '--inhibition_rule=relu',
             '--function_type=linear',
             # Classification layer hyperparameters
-            '--include_first=True',
+            '--include_first=False',
              # Shared hyperparameters
             '--lr=0.005',
             # Experiment parameters
             '--batch_size=1',
-            '--epochs=1', 
+            '--epochs=10', 
             '--test_epochs=1',
             '--device=cpu',
             '--local_machine=True' ]

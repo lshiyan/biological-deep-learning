@@ -80,7 +80,7 @@ class Experiment(ABC):
                 shutil.rmtree(self.RESULT_PATH)
                 print(f"Removed {self.RESULT_PATH}.")
                 os.makedirs(self.RESULT_PATH, exist_ok=True)
-                os.makedirs(f"{self.RESULT_PATH}/Outputn", exist_ok=True)
+                os.makedirs(f"{self.RESULT_PATH}/Output", exist_ok=True)
                 os.makedirs(f"{self.RESULT_PATH}/Hidden", exist_ok=True)
                 print(f"Experiment {self.EXP_NAME} result folder re-created successfully.")
                 print(f"Experiment '{self.EXP_NAME}/Output' result folder re-created successfully.")

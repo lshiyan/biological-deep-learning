@@ -16,58 +16,48 @@ ARGS = parse_arguments()
 
 # Experiments setup
 lambda_test = []
-# lambda_test = [1, 5, 10, 15]
-# lambda_test = [15]
+lambda_testing = [1]
 
-# for num in range(1,16):
-#     lambda_test.append(1/num)
-#     lambda_test.append(num)
+for num in range(1,16):
+    lambda_test.append(1/num)
+    lambda_test.append(num)
     
-# lambda_test.sort()
+lambda_test.sort()
 
-# for l in lambda_test:
-#     ARGS.heb_lamb = l
-#     base_test_acc_list = []
-#     base_train_acc_list = []
+for l in lambda_testing:
+    # Set lambda parameter
+    ARGS.heb_lamb = l
     
-#     ortho_test_acc_list = []
-#     ortho_train_acc_list = []
+    # Get list of accuracies
+    test_acc_list = []
+    train_acc_list = []
     
-#     for num in range(0, 30):
-#         # Base model training
-#         base_model = HebbianNetwork(ARGS)
-#         base_experiment = BaseHebCPU(base_model, ARGS, f'cpu-base-{l}-{num}')
-#         base_test_acc, base_train_acc = base_experiment.run()
-#         base_test_acc_list.append(base_test_acc)
-#         base_train_acc_list.append(base_train_acc)
-#         base_experiment.cleanup()
-    
-#         ortho_model = OrthoHebNetwork(ARGS)
-#         ortho_exp = BaseHebCPU(ortho_model, ARGS, f'cpu-ortho-{l}-{num}')
-#         ortho_test_acc, ortho_train_acc = ortho_exp.run()
-#         ortho_exp.cleanup()
-    
-#     # Stats for base model
-#     base_avg_test = average(base_test_acc_list)
-#     base_var_test = variance(base_test_acc_list)
-#     base_avg_train = average(base_train_acc_list)
-#     base_var_train = variance(base_train_acc_list)
-    
-#     base_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Test Acc: avg = {base_avg_test}, var = {base_var_test} || Train Acc: avg = {base_avg_train}, var = {base_var_train}")
-    
-#     # Stats for ortho model
-#     ortho_avg_test = average(ortho_test_acc_list)
-#     ortho_var_test = variance(ortho_test_acc_list)
-#     ortho_avg_train = average(ortho_train_acc_list)
-#     ortho_var_train = variance(ortho_train_acc_list)
-    
-#     ortho_results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Test Acc: avg = {ortho_avg_test}, var = {ortho_var_test} || Train Acc: avg = {ortho_avg_train}, var = {ortho_var_train}")
+    # Run a certain number of experiments per lambda
+    for num in range(0, 30):
+        # Model training/testing
+        hebbian_model = HebbianNetwork(ARGS)
+        hebbian_experiment = CPUExperiment(hebbian_model, ARGS, f'cpu-hebbian-{ARGS.heb_lamb}-{num}')
+        hebbian_test_acc, hebbian_train_acc = hebbian_experiment.run()
+        hebbian_experiment.cleanup()
+        
+        test_acc_list.append(hebbian_test_acc)
+        train_acc_list.append(hebbian_train_acc)
 
-
-# Hebbian Model Experiment
-hebbian_model = HebbianNetwork(ARGS)
-hebbian_experiment = CPUExperiment(hebbian_model, ARGS, f'cpu-hebbian-{ARGS.heb_lamb}')
-hebbian_test_acc, hebbian_train_acc = hebbian_experiment.run()
-hebbian_experiment.cleanup()
-
-results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: {hebbian_test_acc} || Train Acc: avg = {hebbian_train_acc}")
+    # Calculate means
+    test_mean = average(test_acc_list)
+    train_mean = average(train_acc_list)
+    
+    # Calculate variances
+    test_var = variance(test_acc_list)
+    train_var = variance(train_acc_list)
+    
+    # Calculate minimum means differences
+    test_min_diff = min_diff(test_acc_list)
+    train_min_diff = min_diff(train_acc_list)
+    
+    # Calculate minimum runs
+    test_min_runs = min_sample(test_var, test_min_diff)
+    train_min_runs = min_sample(train_var, train_min_diff)
+    
+    results_log.info(f"Learning Rule: {ARGS.learning_rule} || Inhibition: {ARGS.inhibition_rule} || Function Type: {ARGS.function_type} || Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Test Acc: avg = {test_mean} var = {test_var} || Train Acc: avg = {train_mean} var = {train_var}")
+    results_log.info(f"Minimum number of runs for test: {test_min_runs} || Minimum number of runs for train: {train_min_runs}")

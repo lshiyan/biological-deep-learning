@@ -144,6 +144,8 @@ class HiddenLayer(NetworkLayer, ABC):
         return output
 
     
+    # def _norm_ TODO: normalization inhibition thingy
+    
     
     #################################################################################################
     # Different Weight Updates Methods
