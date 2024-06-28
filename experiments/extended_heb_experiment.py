@@ -73,7 +73,7 @@ class EHebExperiment(Experiment):
 
             for batch in data_loader:
 
-                input, _ = batch
+                inputs, _ = batch
 
                 inputs = inputs.to(self.ARGS.device).float()    # Move input to device 
 
@@ -125,7 +125,7 @@ class EHebExperiment(Experiment):
 
             for batch in data_loader:
 
-                input, _ = batch
+                inputs, _ = batch
 
                 inputs = inputs.to(self.ARGS.device).float()    # Move input to device 
 
@@ -218,11 +218,11 @@ class EHebExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         test_start: float = time.time()
-        self.EXP_LOG.info("Started 'testing_accuracy' function.")
+        self.EXP_LOG.info("Started 'testing_accuracy' function, which will test accuracy")
 
         # Epoch and batch set up
         test_batches_per_epoch = len(test_data_loader)
-        self.EXP_LOG.info(f"This testing batch is epoch #{epoch} with {test_batches_per_epoch} batches of size {self.ARGS.batch_size} in this epoch.")
+        self.EXP_LOG.info(f"ACCURACY: This testing batch is epoch #{epoch} with {test_batches_per_epoch} batches of size {self.ARGS.batch_size} in this epoch.")
         
         # Set the model to evaluation mode - important for layers with different training / inference behaviour
         self.model.eval()
@@ -271,6 +271,184 @@ class EHebExperiment(Experiment):
         if set_name == 'train': self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Train Accuracy: {final_accuracy}')
         
         return final_accuracy
+    
+
+
+
+    def reconstruction_testing_norm_difference(self, test_data_loader: DataLoader, set_name: str, epoch: int, visualize: bool = True) -> float:
+        """
+        METHOD
+        Test model for reconstruction error and uses norm difference as the error measure
+        @param
+            test_data_loader: dataloader containing the testing dataset
+            set_name: name of set for logging purposes (test/train)
+            epoch: epoch number of training iteration that is being tested on
+            visualize: if the weights of model are willing to be visualized
+        @return
+            accuracy: float value between [0, 1] to show accuracy model got on test
+        """
+        #test_start: float = time.time()
+        self.EXP_LOG.info("Started 'reconstruction_testing_norm_difference' function.")
+
+        # Epoch and batch set up
+        test_batches_per_epoch = len(test_data_loader)
+        self.EXP_LOG.info(f"RECONSTRUCTION-NORM-ERROR: This testing batch is epoch #{epoch} with {test_batches_per_epoch} batches of size {self.ARGS.batch_size} in this epoch.")
+        
+        # Set the model to evaluation mode - important for layers with different training / inference behaviour
+        self.model.eval()
+        self.EXP_LOG.info("Set the model to testing mode.")
+
+        # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode 
+        total_error: float = 0.0
+
+        with torch.no_grad():
+            total: int = len(test_data_loader.dataset)
+
+
+            # Loop through each batch in data loader
+
+            for batch in test_data_loader:
+
+                inputs, _ = batch
+
+                inputs = inputs.to(self.ARGS.device).float()    # Move input to device 
+
+                # The next step is to reconstruct the input from the hidden activation using the Hebbian Layer weights
+                hidden_activations = self.model.get_module("Hebbian")(inputs)
+
+                # Getting transpose weight
+                W_transpose = self.model.get_module("Hebbian").fc.weights.T
+
+                # reconstructed input using hidden activations
+                reconstructed_input = torch.matmul(hidden_activations, W_transpose)
+
+                # Calcuate the L2 norm, this is to normalize the data
+                norm_reconstructed = LA.vector_norm(reconstructed_input, ord=2)
+                norm_input = LA.vector_norm(inputs, ord=2)
+
+
+                # Calculate the norm difference as specified by prof
+                    # This should mimic: (|| (x_tilt / ||x_tilt|| ) - (x / ||x||) || )^2
+
+                curr_error = LA.vector_norm( (reconstructed_input / norm_reconstructed)  -  (inputs / norm_input)  ) 
+
+                curr_error_squared = torch.pow(curr_error, exp=2)
+        
+                # Increment total error
+                total_error += curr_error_squared 
+
+            final_average_norm_error = total_error/total
+                
+        # test_end = time.time()
+        # testing_time = test_end - test_start
+
+        #if set_name == 'test': self.TEST_ACC_TIME += testing_time
+        #if set_name == 'train': self.TRAIN_ACC_TIME += testing_time
+        
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, f'{set_name.lower()}_acc')
+        
+        self.EXP_LOG.info(f"RECONSTRUCTION-NORM-ERROR: Completed testing with an averaged norm error of {final_average_norm_error}")
+        self.EXP_LOG.info("Completed 'reconstruction_testing_norm_difference' function.")
+        # self.EXP_LOG.info(f"Testing ({set_name.lower()} acc) of epoch #{epoch} took {time_to_str(testing_time)}.")
+
+        if set_name == 'test': self.TEST_LOG.info(f'Epoch Number: {epoch} || Reconstruction-Norm-Error: {final_average_norm_error}')
+        if set_name == 'train': self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Reconstruction-Norm-Error: {final_average_norm_error}')
+        
+        return final_average_norm_error
+    
+
+    def reconstruction_testing_cosine_difference(self, test_data_loader: DataLoader, set_name: str, epoch: int, visualize: bool = True) -> float:
+        """
+        METHOD
+        Test model for reconstruction error and uses norm difference as the error measure
+        @param
+            test_data_loader: dataloader containing the testing dataset
+            set_name: name of set for logging purposes (test/train)
+            epoch: epoch number of training iteration that is being tested on
+            visualize: if the weights of model are willing to be visualized
+        @return
+            accuracy: float value between [0, 1] to show accuracy model got on test
+        """
+        #test_start: float = time.time()
+        self.EXP_LOG.info("Started 'reconstruction_testing_cosine_difference' function.")
+
+        # Epoch and batch set up
+        test_batches_per_epoch = len(test_data_loader)
+        self.EXP_LOG.info(f"RECONSTRUCTION-COSINE-ERROR: This testing batch is epoch #{epoch} with {test_batches_per_epoch} batches of size {self.ARGS.batch_size} in this epoch.")
+        
+        # Set the model to evaluation mode - important for layers with different training / inference behaviour
+        self.model.eval()
+        self.EXP_LOG.info("Set the model to testing mode.")
+
+        # Now, I initialize the total error to be zero
+        total_error: float = 0.0
+
+        # Define the Cosine Similarity operation
+        cos = nn.CosineSimilarity(dim=1, eps=1e-6)
+
+        # Now, I disable the gradient calculation
+        with torch.no_grad():
+            total: int = len(test_data_loader.dataset)
+
+            # Loop through each batch in data loader
+
+            for batch in test_data_loader:
+
+                inputs, _ = batch
+
+                inputs = inputs.to(self.ARGS.device).float()    # Move input to device 
+
+                # The next step is to reconstruct the input from the hidden activation using the Hebbian Layer weights
+                hidden_activations = self.model.get_module("Hebbian")(inputs)
+
+                # Getting transpose weight
+                W_transpose = self.model.get_module("Hebbian").fc.weights.T
+
+                # reconstructed input using hidden activations
+                reconstructed_input = torch.matmul(hidden_activations, W_transpose)
+
+                # Compute the cosine similarity
+                cos_error = cos(inputs, reconstructed_input)
+
+                # Convert to a scalar by taking the mean
+                scalar_cos_error = cos_error.mean()
+
+                # Increment total error
+                total_error += scalar_cos_error 
+
+            final_average_norm_error = total_error/total
+                
+        # test_end = time.time()
+        # testing_time = test_end - test_start
+
+        #if set_name == 'test': self.TEST_ACC_TIME += testing_time
+        #if set_name == 'train': self.TRAIN_ACC_TIME += testing_time
+        
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, f'{set_name.lower()}_acc')
+        
+        self.EXP_LOG.info(f"RECONSTRUCTION-COSINE-ERROR:: Completed testing with an averaged norm error of {final_average_norm_error}")
+        self.EXP_LOG.info("Completed 'reconstruction_testing_cosine_difference' function.")
+        # self.EXP_LOG.info(f"Testing ({set_name.lower()} acc) of epoch #{epoch} took {time_to_str(testing_time)}.")
+
+        if set_name == 'test': self.TEST_LOG.info(f'Epoch Number: {epoch} || Reconstruction-Cosine-Error: {final_average_norm_error}')
+        if set_name == 'train': self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Reconstruction-Cosine-Error: {final_average_norm_error}')
+        
+        return final_average_norm_error
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -317,7 +495,7 @@ class EHebExperiment(Experiment):
                                                                                'train', 
                                                                                60000, 
                                                                                in_distribution = True)
-        train_data_loader_in_distritubion: DataLoader = DataLoader(train_data_set_in_distribution, 
+        train_data_loader_in_distribution: DataLoader = DataLoader(train_data_set_in_distribution, 
                                                                    batch_size=self.ARGS.batch_size, 
                                                                    shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader - IN DISTRIBUTION")
@@ -328,7 +506,7 @@ class EHebExperiment(Experiment):
                                                                                    'train', 
                                                                                    60000, 
                                                                                    in_distribution = False)
-        train_data_loader_out_of_distritubion: DataLoader = DataLoader(train_data_set_out_of_distribution, 
+        train_data_loader_out_of_distribution: DataLoader = DataLoader(train_data_set_out_of_distribution, 
                                                                        batch_size=self.ARGS.batch_size, 
                                                                        shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader - OUT OF DISTRIBUTION")
@@ -364,23 +542,50 @@ class EHebExperiment(Experiment):
             # EVERYTHING HERE IS FOR IN DISTRIBUTION
             # Testing accuracy
             self.testing(test_data_loader_in_distribution, 'test', epoch, visualize=True)
+
+            # Reconstruction norm difference
+            self.reconstruction_testing_norm_difference(test_data_loader_in_distribution, 'train', epoch, visualize=True)
+
+            # Reconstruction cosine difference
+            self.reconstruction_testing_cosine_difference(test_data_loader_in_distribution, 'train', epoch, visualize=True)
             
             # Training accuracy
-            self.testing(train_data_loader_in_distritubion, 'train', epoch, visualize=True)
-            
+            self.testing(train_data_loader_in_distribution, 'train', epoch, visualize=True)
+
+            # Reconstruction norm difference
+            self.reconstruction_testing_norm_difference(train_data_loader_in_distribution, 'train', epoch, visualize=True)
+
+            # Reconstruction cosine difference
+            self.reconstruction_testing_cosine_difference(train_data_loader_in_distribution, 'train', epoch, visualize=True)
+        
             # Training
-            self.training(train_data_loader_in_distritubion, epoch, visualize=True, in_distribution=True)
+            self.training(train_data_loader_in_distribution, epoch, visualize=True, in_distribution=True)
+
+
+
 
 
             # EVERYTHING HERE IS FOR OUT OF DISTRIBUTION
             # Testing accuracy
             self.testing(test_data_loader_out_of_distribution, 'test', epoch, visualize=True)
+
+            # Reconstruction norm difference
+            self.reconstruction_testing_norm_difference(test_data_loader_out_of_distribution, 'train', epoch, visualize=True)
+
+            # Reconstruction cosine difference
+            self.reconstruction_testing_cosine_difference(test_data_loader_out_of_distribution, 'train', epoch, visualize=True)
             
             # Training accuracy
-            self.testing(train_data_loader_out_of_distritubion, 'train', epoch, visualize=True)
+            self.testing(train_data_loader_out_of_distribution, 'train', epoch, visualize=True)
+
+            # Reconstruction norm difference
+            self.reconstruction_testing_norm_difference(train_data_loader_out_of_distribution, 'train', epoch, visualize=True)
+
+            # Reconstruction cosine difference
+            self.reconstruction_testing_cosine_difference(train_data_loader_out_of_distribution, 'train', epoch, visualize=True)
             
             # Training
-            self.training(train_data_loader_out_of_distritubion, epoch, visualize=True, in_distribution=False)
+            self.training(train_data_loader_out_of_distribution, epoch, visualize=True, in_distribution=False)
 
             
 
