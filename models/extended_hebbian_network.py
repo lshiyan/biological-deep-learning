@@ -61,7 +61,9 @@ class EHebNetwork(Network):
 
         # Setting up layers of the network
         input_layer: InputLayer = EHebInputLayer()
-        hebbian_layer: HiddenLayer = EHebHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"])
+        hebbian_layer: HiddenLayer = EHebHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"], frozen = False)
+        # Here, I set hebbian layer to not be frozen. This can change in the future. 
+
         classification_layer: OutputLayer = EHebClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
         
         self.add_module("Input", input_layer)
@@ -80,12 +82,21 @@ class EHebNetwork(Network):
             output: returns the data after passing it throw the network
         """
 
-    
+        
         hebbian_layer = self.get_module("Hebbian")
         classification_layer = self.get_module("Classification")
 
         if input.dtype != torch.float32:
             input = input.float().to(self.device)
+
+
+        # I should freeze my hebbian weights as long as either one of the two cases below applies, otherwise, I unfreeze it
+            # 1. I am not training on in-distribution data
+            # 2. I am physically freezing my weights
+        if (in_distribution == False) or (is_frozen == True):
+            hebbian_layer.set_frozen()
+        else:
+            hebbian_layer.set_active()
 
         data_input = input.to(self.device)
         post_hebbian_value = hebbian_layer(data_input)

@@ -28,7 +28,8 @@ class EHebHebbianLayer(HiddenLayer):
                  lamb: float = 1, 
                  learning_rate: float = 0.005, 
                  gamma: float = 0.99, 
-                 eps: float = 0.01) -> None:
+                 eps: float = 0.01,
+                 frozen:bool = False) -> None:
         """
         CONSTRUCTOR METHOD
         @param
@@ -38,10 +39,24 @@ class EHebHebbianLayer(HiddenLayer):
             learning_rate: how fast model learns at each iteration
             gamma: affects exponentialaverages updates
             eps: affects weight decay updates
+            frozen: determines if current layer is frozen or not
         @return
             None
         """
         super().__init__(input_dimension, output_dimension, device, learning_rate, lamb, gamma, eps)
+        self.frozen = frozen
+
+    def set_frozen(self) -> None:
+        """
+        This method sets the layer into frozen mode
+        """
+        self.frozen = True
+
+    def set_active(self) -> None:
+        """
+        This method sets the layer into frozen mode
+        """
+        self.frozen = False
 
     
     def inhibition(self, input: torch.Tensor) -> torch.Tensor:
@@ -156,7 +171,7 @@ class EHebHebbianLayer(HiddenLayer):
             # if this is not in_distribution, then I will be evaluating my model and hence I should not evaluate
 
             # Also, I will be training the weights IFF the layer is NOT frozen
-        if in_distribution and (is_frozen == False):
+        if (in_distribution == True) and (is_frozen == False):
             self.update_weights(input_copy, output)
             self.weight_decay()
 
