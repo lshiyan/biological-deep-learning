@@ -1,6 +1,7 @@
 from abc import ABC
 import math
 import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
 import torch
