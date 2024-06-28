@@ -628,10 +628,31 @@ class EHebExperiment(Experiment):
 
 
 
+        # End timer
+        self.END_TIME = time.time()
+        self.DURATION = self.END_TIME - self.START_TIME
+        self.EXP_LOG.info(f"The experiment took {time_to_str(self.DURATION)} to be completed.")
+        self.PARAM_LOG.info(f"End time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.END_TIME))}")
+        self.PARAM_LOG.info(f"Runtime of experiment: {time_to_str(self.DURATION)}")
+        self.PARAM_LOG.info(f"Train time of experiment: {time_to_str(self.TRAIN_TIME)}")
+        self.PARAM_LOG.info(f"Test time (test acc) of experiment: {time_to_str(self.TEST_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Test time (train acc) of experiment: {time_to_str(self.TRAIN_ACC_TIME)}")
+        self.EXP_LOG.info("The experiment has been completed.")
 
 
-
-
+        return (test_acc_in_distribution,
+                test_reconstruct_norm_difference_in_distribution,
+                test_reconstruct_cosine_difference_in_distribution,
+                train_acc_in_distribution,
+                train_reconstruct_norm_difference_in_distribution,
+                train_reconstruct_cosine_difference_in_distribution,
+                test_acc_out_of_distribution,
+                test_reconstruct_norm_difference_out_of_distribution,
+                test_reconstruct_cosine_difference_out_of_distribution,
+                train_acc_out_of_distribution,
+                train_reconstruct_norm_difference_out_of_distribution,
+                train_reconstruct_cosine_difference_out_of_distribution
+                )
 
 
 
