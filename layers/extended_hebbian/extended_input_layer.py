@@ -23,12 +23,6 @@ class EHebInputLayer(InputLayer):
         OWN ATTR.
     """
     def __init__(self, 
-                 train_data: str,
-                 train_label: str,
-                 train_filename: str,
-                 test_data: str,
-                 test_label: str,
-                 test_filename: str,
                  out_distribution_train_data: str,
                  out_distribution_train_label: str,
                  out_distribution_train_filename: str,

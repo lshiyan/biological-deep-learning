@@ -1,4 +1,5 @@
 from experiments.cpu_experiment import CPUExperiment
+from experiments.extended_heb_experiment import EHebExperiment
 
 from models.hopfield_sanger_network import HSangNetwork
 from models.hopfield_sigmoid_network import HSigNetwork
@@ -11,6 +12,8 @@ from models.relu_YZZ_network import RYZZNetwork
 from models.softmax_sanger_network import SSangNetwork
 from models.softmax_sigmoid_network import SSigNetwork
 from models.softmax_YZZ_network import SYZZNetwork
+
+from models.extended_hebbian_network import EHebNetwork
 
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
@@ -27,9 +30,38 @@ ARGS = parse_arguments()
 # Experiments setup
 lambda_test = []
 
+#####################################################
+# --------------- EHeb Experiment ------------------
+#####################################################
+lambda_test = [1]
 
+for lambda_val in lambda_test:
+    ARGS.heb_lamb = lambda_val
 
+    # Initialize the model and experiment
+    model = EHebNetwork(ARGS)
+    experiment = EHebExperiment(model, ARGS, f"EHeb_experiment_lamb_{lambda_val}")
 
+    (
+        test_acc_in_distribution,
+        test_reconstruct_norm_difference_in_distribution,
+        test_reconstruct_cosine_difference_in_distribution,
+        train_acc_in_distribution,
+        train_reconstruct_norm_difference_in_distribution,
+        train_reconstruct_cosine_difference_in_distribution,
+        test_acc_out_of_distribution,
+        test_reconstruct_norm_difference_out_of_distribution,
+        test_reconstruct_cosine_difference_out_of_distribution,
+        train_acc_out_of_distribution,
+        train_reconstruct_norm_difference_out_of_distribution,
+        train_reconstruct_cosine_difference_out_of_distribution,
+        FROZEN_LAYER_test_acc_in_distribution,
+        FROZEN_LAYER_train_acc_in_distribution,
+        FROZNE_LAYER_test_acc_out_of_distribution,
+        FROZEN_LAYER_train_acc_out_of_distribution
+    ) = experiment.run()
+
+                
 
 
 
