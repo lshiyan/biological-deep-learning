@@ -369,7 +369,7 @@ class EHebExperiment(Experiment):
             self.testing(train_data_loader_in_distritubion, 'train', epoch, visualize=True)
             
             # Training
-            self.training(train_data_loader_in_distritubion, epoch, visualize=True)
+            self.training(train_data_loader_in_distritubion, epoch, visualize=True, in_distribution=True)
 
 
             # EVERYTHING HERE IS FOR OUT OF DISTRIBUTION
@@ -380,7 +380,7 @@ class EHebExperiment(Experiment):
             self.testing(train_data_loader_out_of_distritubion, 'train', epoch, visualize=True)
             
             # Training
-            self.training(train_data_loader_out_of_distritubion, epoch, visualize=True)
+            self.training(train_data_loader_out_of_distritubion, epoch, visualize=True, in_distribution=False)
 
             
 
