@@ -275,11 +275,59 @@ class EHebExperiment(Experiment):
 
 
 
+    def run(self) -> Tuple[float, float]:
+        """
+        METHOD
+        Runs the experiment
+        @param
+            None
+        @return
+            (test_acc, train_acc): tuple of final testing and training accuracies
+        """
+
+        # Start timer
+        self.START_TIME = time.time()
+        self.EXP_LOG.info("Start of experiment.")
+        
+        torch.device(self.ARGS.device) # NOTE: Should this line be here or used where we create the experiment itself
+        self.PRINT_LOG.info(f"local_machine: {self.ARGS.local_machine}.")
+        
+        # Logging training parameters
+        self.EXP_LOG.info("Started logging of experiment parameters.")
+        self.PARAM_LOG.info(f"Input Dimension: {self.ARGS.input_dim}")
+        self.PARAM_LOG.info(f"Hebbian Layer Dimension: {self.ARGS.heb_dim}")
+        self.PARAM_LOG.info(f"Outout Dimension: {self.ARGS.output_dim}")
+        self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.ARGS.heb_lamb}")
+        self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.ARGS.heb_gam}")
+        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.ARGS.heb_eps}")
+        self.PARAM_LOG.info(f"Network Learning Rate: {self.ARGS.lr}")
+        self.PARAM_LOG.info(f"Number of Epochs: {self.ARGS.epochs}")
+        self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
+        
+        self.EXP_LOG.info("Completed logging of experiment parameters.")
 
 
+        # Get input layer class of model
+        input_layer: InputLayer = self.model.get_module("Input")
+        input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
 
+        # Training dataset, BOTH in distribution and OUT of distribution
+        train_data_set_in_distribution: TensorDataset = input_class.setup_data(self.ARGS.train_data, self.ARGS.train_label, self.ARGS.train_filename, 'train', 60000, in_distribution = True)
+        train_data_loader_in_distritubion: DataLoader = DataLoader(train_data_set_in_distribution, batch_size=self.ARGS.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for training dataset and dataloader - IN DISTRIBUTION")
 
+        train_data_set_out_of_distribution: TensorDataset = input_class.setup_data(self.ARGS.out_distribution_train_data, self.ARGS.out_distribution_train_label, self.ARGS.out_distribution_train_filename, 'train', 60000, in_distribution = False)
+        train_data_loader_out_of_distritubion: DataLoader = DataLoader(train_data_set_out_of_distribution, batch_size=self.ARGS.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for training dataset and dataloader - OUT OF DISTRIBUTION")
 
+        # Testing dataset, BOTH in distribution and OUT of distribution
+        test_data_set_in_distribution: TensorDataset = input_class.setup_data(self.ARGS.test_data, self.ARGS.test_label, self.ARGS.test_filename, 'test', 10000, in_distribution = True)
+        test_data_loader_in_distribution: DataLoader = DataLoader(test_data_set_in_distribution, batch_size=self.ARGS.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
+
+        test_data_set_out_distribution: TensorDataset = input_class.setup_data(self.ARGS.out_distribution_test_data, self.ARGS.out_distribution_test_label, self.ARGS.out_distribution_test_filename, 'test', 10000, in_distribution = False)
+        test_data_loader_out_distribution: DataLoader = DataLoader(test_data_set_out_distribution, batch_size=self.ARGS.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
 
 

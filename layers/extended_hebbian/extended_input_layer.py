@@ -22,7 +22,20 @@ class EHebInputLayer(InputLayer):
             test_filename (str) = test data (img + label) filename (.csv)
         OWN ATTR.
     """
-    def __init__(self) -> None:
+    def __init__(self, 
+                 train_data: str,
+                 train_label: str,
+                 train_filename: str,
+                 test_data: str,
+                 test_label: str,
+                 test_filename: str,
+                 out_distribution_train_data: str,
+                 out_distribution_train_label: str,
+                 out_distribution_train_filename: str,
+                 out_distribution_test_data: str,
+                 out_distribution_test_label: str,
+                 out_distribution_test_filename: str
+                 ) -> None:
         """
         CONSTRUCTOR METHOD
         @param
@@ -32,9 +45,23 @@ class EHebInputLayer(InputLayer):
         """
         super().__init__()
 
+#        self.train_data = train_data
+#        self.train_label = train_label
+#        self.train_filename = train_filename
+#        self.test_data = test_data
+#        self.test_label = test_label
+#        self.test_filename = test_filename
+
+        self.out_distribution_train_data = out_distribution_train_data
+        self.out_distribution_train_label = out_distribution_train_label
+        self.out_distribution_train_filename = out_distribution_train_filename
+        self.out_distribution_test_data = out_distribution_test_data
+        self.out_distribution_test_label = out_distribution_test_label
+        self.out_distribution_test_filename = out_distribution_test_filename
+
     
     @staticmethod
-    def setup_data(data: str, label: str, filename: str, data_type: str, size: int) -> TensorDataset:
+    def setup_data(self, ata: str, label: str, filename: str, data_type: str, size: int, in_distribution: bool) -> TensorDataset:
         """
         METHOD
         Function to setup requested dataset
@@ -43,9 +70,52 @@ class EHebInputLayer(InputLayer):
             label: label filename
             filename: data (img + label) filename
             data_type: which dataset to setup
+            in_distribution: boolean indicating whether or not I have in distribution training
         @return
             tensor dataset containing (data, label)
         """
+
+
+        # Initialize for future dataset initialization
+        filename: str = None
+        data: str = None
+        label: str = None
+        size: int = None
+
+        # Here, I decide which datatype I want to set up 
+
+        if data_type == 'train':
+
+            if in_distribution == True:
+
+                filename = self.train_filename
+                data = self.train_data
+                label = self.train_label
+                size = 60000
+            
+            else: # out of distribution
+
+                filename = self.out_distribution_train_filename
+                data = self.out_distribution_train_data
+                label = self.out_distribution_train_label
+
+        elif data_type == 'test': # EVALUATION
+
+            if in_distribution == True:
+
+                filename = self.test_filename
+                data = self.test_data
+                label = self.test_label
+                size = 10000
+            
+            else: # out of distribution
+
+                filename = self.out_distribution_test_filename
+                data = self.out_distribution_test_data
+                label = self.out_distribution_test_label
+                size = 10000
+
+
         # Converting to .csv file if needed
         if not os.path.exists(filename):
             InputLayer.convert(data, label, filename, size, 28)
