@@ -589,9 +589,42 @@ class EHebExperiment(Experiment):
 
             
 
+        self.EXP_LOG.info("Completed training of model.")        
+        self.model.visualize_weights(self.RESULT_PATH, self.ARGS.epochs, 'final')
+        self.EXP_LOG.info("Visualize weights of model after training.")
+
+        # EVERYTHING HERE IS FOR IN DISTRIBUTION
+        test_acc_in_distribution = self.testing(test_data_loader_in_distribution, 'test', self.ARGS.epochs, visualize=True)
+        test_reconstruct_norm_difference_in_distribution = self.reconstruction_testing_norm_difference(test_data_loader_in_distribution, 'train', epoch, visualize=True)
+        test_reconstruct_cosine_difference_in_distribution = self.reconstruction_testing_cosine_difference(test_data_loader_in_distribution, 'train', epoch, visualize=True)
+
+        train_acc_in_distribution = self.testing(train_data_loader_in_distribution, 'train', self.ARGS.epochs, visualize=True)
+        train_reconstruct_norm_difference_in_distribution = self.reconstruction_testing_norm_difference(train_data_loader_in_distribution, 'train', epoch, visualize=True)
+        train_reconstruct_cosine_difference_in_distribution = self.reconstruction_testing_cosine_difference(train_data_loader_in_distribution, 'train', epoch, visualize=True)
+        self.EXP_LOG.info("Completed final testing methods.")
+        self.PARAM_LOG.info(f"IN-DISTRIBUTION: Training accuracy of model after training for {self.ARGS.epochs} epochs: {train_acc_in_distribution}")
+        self.PARAM_LOG.info(f"IN-DISTRIBUTION: Training average of reconstruction norm loss of model after training for {self.ARGS.epochs} epochs: {train_reconstruct_norm_difference_in_distribution}")
+        self.PARAM_LOG.info(f"IN-DISTRIBUTION: Training average of reconstruction cosine loss of model after training for {self.ARGS.epochs} epochs: {train_reconstruct_cosine_difference_in_distribution}")
+        self.PARAM_LOG.info(f"IN-DISTRIBUTION: Testing accuracy of model after training for {self.ARGS.epochs} epochs: {test_acc_in_distribution}")
+        self.PARAM_LOG.info(f"IN-DISTRIBUTION: Testing average of reconstruction norm loss of model after training for {self.ARGS.epochs} epochs: {test_reconstruct_norm_difference_in_distribution}")
+        self.PARAM_LOG.info(f"IN-DISTRIBUTION: Testing average of reconstruction cosine loss of model after training for {self.ARGS.epochs} epochs: {test_reconstruct_cosine_difference_in_distribution}")
 
 
+        # EVERYTHING HERE IS FOR OUT OF DISTRIBUTION
+        test_acc_out_of_distribution = self.testing(test_data_loader_out_of_distribution, 'test', self.ARGS.epochs, visualize=True)
+        test_reconstruct_norm_difference_out_of_distribution = self.reconstruction_testing_norm_difference(test_data_loader_out_of_distribution, 'train', epoch, visualize=True)
+        test_reconstruct_cosine_difference_out_of_distribution = self.reconstruction_testing_cosine_difference(test_data_loader_out_of_distribution, 'train', epoch, visualize=True)
 
+        train_acc_out_of_distribution = self.testing(train_data_loader_out_of_distribution, 'train', self.ARGS.epochs, visualize=True)
+        train_reconstruct_norm_difference_out_of_distribution = self.reconstruction_testing_norm_difference(train_data_loader_out_of_distribution, 'train', epoch, visualize=True)
+        train_reconstruct_cosine_difference_out_of_distribution = self.reconstruction_testing_cosine_difference(train_data_loader_out_of_distribution, 'train', epoch, visualize=True)
+        self.EXP_LOG.info("Completed final testing methods.")
+        self.PARAM_LOG.info(f"OUT-OF-DISTRIBUTION: Training accuracy of model after training for {self.ARGS.epochs} epochs: {train_acc_out_of_distribution}")
+        self.PARAM_LOG.info(f"OUT-OF-DISTRIBUTION: Training average of reconstruction norm loss of model after training for {self.ARGS.epochs} epochs: {train_reconstruct_norm_difference_out_of_distribution}")
+        self.PARAM_LOG.info(f"OUT-OF-DISTRIBUTION: Training average of reconstruction cosine loss of model after training for {self.ARGS.epochs} epochs: {train_reconstruct_cosine_difference_out_of_distribution}")
+        self.PARAM_LOG.info(f"OUT-OF-DISTRIBUTION: Testing accuracy of model after training for {self.ARGS.epochs} epochs: {test_acc_out_of_distribution}")
+        self.PARAM_LOG.info(f"OUT-OF-DISTRIBUTION: Testing average of reconstruction norm loss of model after training for {self.ARGS.epochs} epochs: {test_reconstruct_norm_difference_out_of_distribution}")
+        self.PARAM_LOG.info(f"OUT-OF-DISTRIBUTION: Testing average of reconstruction cosine loss of model after training for {self.ARGS.epochs} epochs: {test_reconstruct_cosine_difference_out_of_distribution}")
 
 
 
