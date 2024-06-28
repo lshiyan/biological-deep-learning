@@ -49,7 +49,8 @@ class InputLayer(NetworkLayer):
     def convert(img_file: str, 
                 label_file: str, 
                 out_file: str, 
-                data_size: int) -> None:
+                data_size: int, 
+                img_size: int) -> None:
         """
         CLASS METHOD
         Convert data file into more usable format

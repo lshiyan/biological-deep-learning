@@ -493,8 +493,7 @@ class EHebExperiment(Experiment):
                                                                                self.ARGS.train_label, 
                                                                                self.ARGS.train_filename, 
                                                                                'train', 
-                                                                               60000, 
-                                                                               in_distribution = True)
+                                                                               60000)
         train_data_loader_in_distribution: DataLoader = DataLoader(train_data_set_in_distribution, 
                                                                    batch_size=self.ARGS.batch_size, 
                                                                    shuffle=True)
@@ -511,8 +510,7 @@ class EHebExperiment(Experiment):
                                                                               self.ARGS.test_label, 
                                                                               self.ARGS.test_filename, 
                                                                               'test', 
-                                                                              10000, 
-                                                                              in_distribution = True)
+                                                                              10000)
         test_data_loader_in_distribution: DataLoader = DataLoader(test_data_set_in_distribution, 
                                                                   batch_size=self.ARGS.batch_size, 
                                                                   shuffle=True)

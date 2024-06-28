@@ -116,7 +116,7 @@ class EHebInputLayer(InputLayer):
         return labels
     
     @staticmethod
-    def setup_data(self, ata: str, label: str, filename: str, data_type: str, size: int, in_distribution: bool) -> TensorDataset:
+    def setup_data(data: str, label: str, filename: str, data_type: str, size: int) -> TensorDataset:
         """
         METHOD
         Function to setup requested dataset
@@ -125,52 +125,9 @@ class EHebInputLayer(InputLayer):
             label: label filename
             filename: data (img + label) filename
             data_type: which dataset to setup
-            in_distribution: boolean indicating whether or not I have in distribution training
         @return
             tensor dataset containing (data, label)
         """
-
-
-        # Initialize for future dataset initialization
-        filename: str = None
-        data: str = None
-        label: str = None
-        size: int = None
-
-        # Here, I decide which datatype I want to set up 
-
-        if data_type == 'train':
-
-            if in_distribution == True:
-
-                filename = self.train_filename
-                data = self.train_data
-                label = self.train_label
-                size = 60000
-            
-            else: # out of distribution - so EMNIST
-
-                filename = self.out_distribution_train_filename
-                data = self.out_distribution_train_data
-                label = self.out_distribution_train_label
-
-        elif data_type == 'test': # EVALUATION
-
-            if in_distribution == True:
-
-                filename = self.test_filename
-                data = self.test_data
-                label = self.test_label
-                size = 10000
-            
-            else: # out of distribution - so EMNIST
-
-                filename = self.out_distribution_test_filename
-                data = self.out_distribution_test_data
-                label = self.out_distribution_test_label
-                size = 10000
-
-
         # Converting to .csv file if needed
         if not os.path.exists(filename):
             InputLayer.convert(data, label, filename, size, 28)
