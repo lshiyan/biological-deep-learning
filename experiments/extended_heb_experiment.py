@@ -521,7 +521,7 @@ class EHebExperiment(Experiment):
         test_data_loader_in_distribution: DataLoader = DataLoader(test_data_set_in_distribution, 
                                                                   batch_size=self.ARGS.batch_size, 
                                                                   shuffle=True)
-        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
+        self.EXP_LOG.info("Completed setup for testing dataset and dataloader - IN DISTRIBUTION.")
 
         test_data_set_out_of_distribution: TensorDataset = input_class.setup_data(self.ARGS.out_distribution_test_data, 
                                                                                self.ARGS.out_distribution_test_label, 
@@ -532,7 +532,7 @@ class EHebExperiment(Experiment):
         test_data_loader_out_of_distribution: DataLoader = DataLoader(test_data_set_out_of_distribution, 
                                                                    batch_size=self.ARGS.batch_size, 
                                                                    shuffle=True)
-        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
+        self.EXP_LOG.info("Completed setup for testing dataset and dataloader - OUT OF DISTRIBUTION.")
 
 
         self.EXP_LOG.info("Started training and testing loops.")
@@ -592,6 +592,18 @@ class EHebExperiment(Experiment):
         self.EXP_LOG.info("Completed training of model.")        
         self.model.visualize_weights(self.RESULT_PATH, self.ARGS.epochs, 'final')
         self.EXP_LOG.info("Visualize weights of model after training.")
+
+
+
+        # NOW, WITH A FULLY TRAINED MODEL, I WILL IMPLEMENT THE SECOND TEST -> WHICH IS TO TRAIN WITH A FROZEN input-to-hebbian weight and reinitialized hebbian-to-classification weight
+            # The goal is to evaluate how well the network can adapt to new classification tasks after freezing the learned input-to-hidden weights and reinitializing the hidden-to-output weights.
+
+        # First, I reinitialize the classification weights
+        self.reinitialize_classification_weights()
+
+
+
+
 
         # EVERYTHING HERE IS FOR IN DISTRIBUTION
         test_acc_in_distribution = self.testing(test_data_loader_in_distribution, 'test', self.ARGS.epochs, visualize=True)
