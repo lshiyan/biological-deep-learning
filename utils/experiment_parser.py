@@ -59,6 +59,7 @@ def parse_arguments(args_list: List = None) -> argparse.Namespace:
     parser.add_argument("--test_epochs", type=int, default=1)
     parser.add_argument("--device", type=str, default='cpu')
     parser.add_argument("--local_machine", type=bool, default=True)
+    parser.add_argument("--experiment_type", type=str, default='base')
 
     # Parse arguments into Namespace
     args: argparse.Namespace = parser.parse_args() if args_list == None else parser.parse_args(args_list)

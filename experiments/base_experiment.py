@@ -21,7 +21,7 @@ from utils.experiment_timer import *
 
 
 
-class CPUExperiment(Experiment):
+class BaseExperiment(Experiment):
     """
     CLASS
     Experiment for base hebbian model on cpu
