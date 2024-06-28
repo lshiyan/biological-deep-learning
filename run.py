@@ -25,11 +25,11 @@ arguments = ['--is_training=True',
             '--device=cpu',
             '--local_machine=True',
             '--extended_testing_mode=True',
-            "--out_distribution_train_data=data/emnist/train-images.idx3-ubyte",
-            "--out_distribution_train_label=data/emnist/train-labels.idx1-ubyte",
+            "--out_distribution_train_data=data/emnist/emnist-bymerge-train-images-idx3-ubyte",
+            "--out_distribution_train_label=data/emnist/emnist-bymerge-train-labels-idx1-ubyte",
             "--out_distribution_train_filename=data/emnist/emnist_train.csv",
-            "--out_distribution_test_data=data/emnist/t10k-images.idx3-ubyte",
-            "--out_distribution_test_label=data/emnist/t10k-labels.idx1-ubyte",
+            "--out_distribution_test_data=data/emnist/emnist-bymerge-test-images-idx3-ubyte",
+            "--out_distribution_test_label=data/emnist/emnist-bymerge-test-labels-idx1-ubyte",
             "--out_distribution_test_filename=data/emnist/emnist_test.csv"]
 
 # Construct the command
