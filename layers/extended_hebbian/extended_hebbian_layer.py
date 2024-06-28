@@ -134,7 +134,7 @@ class EHebHebbianLayer(HiddenLayer):
         This is because if it is EMNIST, then I will not be updating weights
     
     '''
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, in_distribution: bool = True) -> torch.Tensor:
+    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, in_distribution: bool = True, is_frozen: bool = False) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network when training
@@ -154,7 +154,9 @@ class EHebHebbianLayer(HiddenLayer):
         # So 
             # if this is in_distribution, then I am actively training the input - to - hebbian layer weights
             # if this is not in_distribution, then I will be evaluating my model and hence I should not evaluate
-        if in_distribution:
+
+            # Also, I will be training the weights IFF the layer is NOT frozen
+        if in_distribution and (is_frozen == False):
             self.update_weights(input_copy, output)
             self.weight_decay()
 

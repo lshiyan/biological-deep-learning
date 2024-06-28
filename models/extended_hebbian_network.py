@@ -69,7 +69,7 @@ class EHebNetwork(Network):
         self.add_module("Classification", classification_layer)
 
 
-    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, in_distribution:bool = True, is_frozen: bool = False) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network
@@ -79,6 +79,8 @@ class EHebNetwork(Network):
         @return
             output: returns the data after passing it throw the network
         """
+
+    
         hebbian_layer = self.get_module("Hebbian")
         classification_layer = self.get_module("Classification")
 

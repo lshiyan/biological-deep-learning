@@ -164,7 +164,7 @@ class EHebExperiment(Experiment):
 
 
 
-    def training(self, train_data_loader: DataLoader, epoch: int, visualize: bool = True, in_distribution: bool = True) -> None:
+    def training(self, train_data_loader: DataLoader, epoch: int, visualize: bool = True, in_distribution: bool = True, is_frozen: bool = False) -> None:
         """
         METHOD
         Training model for 1 epoch
@@ -193,7 +193,7 @@ class EHebExperiment(Experiment):
             inputs, labels = inputs.to(self.ARGS.device).float(), one_hot(labels, 10).squeeze().to(self.ARGS.device).float()
             
             # Forward pass
-            self.model(inputs, clamped_output=labels, in_distribution=in_distribution)
+            self.model(inputs, clamped_output=labels, in_distribution=in_distribution, is_frozen = is_frozen)
         
         train_end: float = time.time()
         training_time: float = train_end - train_start
@@ -559,7 +559,7 @@ class EHebExperiment(Experiment):
             self.reconstruction_testing_cosine_difference(train_data_loader_in_distribution, 'train', epoch, visualize=True)
         
             # Training
-            self.training(train_data_loader_in_distribution, epoch, visualize=True, in_distribution=True)
+            self.training(train_data_loader_in_distribution, epoch, visualize=True, in_distribution=True, is_frozen=False)
 
 
 
@@ -585,24 +585,13 @@ class EHebExperiment(Experiment):
             self.reconstruction_testing_cosine_difference(train_data_loader_out_of_distribution, 'train', epoch, visualize=True)
             
             # Training
-            self.training(train_data_loader_out_of_distribution, epoch, visualize=True, in_distribution=False)
+            self.training(train_data_loader_out_of_distribution, epoch, visualize=True, in_distribution=False, is_frozen=False)
 
             
 
         self.EXP_LOG.info("Completed training of model.")        
         self.model.visualize_weights(self.RESULT_PATH, self.ARGS.epochs, 'final')
         self.EXP_LOG.info("Visualize weights of model after training.")
-
-
-
-        # NOW, WITH A FULLY TRAINED MODEL, I WILL IMPLEMENT THE SECOND TEST -> WHICH IS TO TRAIN WITH A FROZEN input-to-hebbian weight and reinitialized hebbian-to-classification weight
-            # The goal is to evaluate how well the network can adapt to new classification tasks after freezing the learned input-to-hidden weights and reinitializing the hidden-to-output weights.
-
-        # First, I reinitialize the classification weights
-        self.reinitialize_classification_weights()
-
-
-
 
 
         # EVERYTHING HERE IS FOR IN DISTRIBUTION
@@ -640,6 +629,54 @@ class EHebExperiment(Experiment):
 
 
 
+
+        self.EXP_LOG.info("Now, FROZEN LAYER TEST")      
+        # NOW, WITH A FULLY TRAINED MODEL, I WILL IMPLEMENT THE SECOND TEST -> WHICH IS TO TRAIN WITH A FROZEN input-to-hebbian weight and reinitialized hebbian-to-classification weight
+            # The goal is to evaluate how well the network can adapt to new classification tasks after freezing the learned input-to-hidden weights and reinitializing the hidden-to-output weights.
+
+        # First, I reinitialize the classification weights
+        self.reinitialize_classification_weights()
+
+        for epoch in range(0, self.ARGS.epochs):
+
+            # EVERYTHING HERE IS FOR IN DISTRIBUTION
+            # Testing accuracy
+            self.testing(test_data_loader_in_distribution, 'test', epoch, visualize=True)
+            # Training accuracy
+            self.testing(train_data_loader_in_distribution, 'train', epoch, visualize=True)
+            # Training
+            self.training(train_data_loader_in_distribution, epoch, visualize=True, in_distribution=True, is_frozen=True)
+
+
+            # EVERYTHING HERE IS FOR OUT OF DISTRIBUTION
+            # Testing accuracy
+            self.testing(test_data_loader_out_of_distribution, 'test', epoch, visualize=True)
+            # Training accuracy
+            self.testing(train_data_loader_out_of_distribution, 'train', epoch, visualize=True)
+            # Training
+            self.training(train_data_loader_out_of_distribution, epoch, visualize=True, in_distribution=False, is_frozen=True)
+
+
+        # EVERYTHING HERE IS FOR IN DISTRIBUTION
+        FROZEN_LAYER_test_acc_in_distribution = self.testing(test_data_loader_in_distribution, 'test', self.ARGS.epochs, visualize=True)
+        FROZEN_LAYER_train_acc_in_distribution = self.testing(train_data_loader_in_distribution, 'train', self.ARGS.epochs, visualize=True)
+
+        self.EXP_LOG.info("Completed final testing methods.")
+        self.PARAM_LOG.info(f"IN-DISTRIBUTION-FROZEN-LAYER: Training accuracy of model after training for {self.ARGS.epochs} epochs: {FROZEN_LAYER_train_acc_in_distribution}")
+        self.PARAM_LOG.info(f"IN-DISTRIBUTION-FROZEN-LAYER: Testing accuracy of model after training for {self.ARGS.epochs} epochs: {FROZEN_LAYER_test_acc_in_distribution}")
+
+
+        # EVERYTHING HERE IS FOR OUT OF DISTRIBUTION
+        FROZNE_LAYER_test_acc_out_of_distribution = self.testing(test_data_loader_out_of_distribution, 'test', self.ARGS.epochs, visualize=True)
+        FROZEN_LAYER_train_acc_out_of_distribution = self.testing(train_data_loader_out_of_distribution, 'train', self.ARGS.epochs, visualize=True)
+
+        self.EXP_LOG.info("Completed final testing methods FOR FROZEN TEST")
+        self.PARAM_LOG.info(f"OUT-OF-DISTRIBUTION: Training accuracy of model after training for {self.ARGS.epochs} epochs: {FROZNE_LAYER_test_acc_out_of_distribution}")
+        self.PARAM_LOG.info(f"OUT-OF-DISTRIBUTION: Testing accuracy of model after training for {self.ARGS.epochs} epochs: {FROZEN_LAYER_train_acc_out_of_distribution}")
+
+
+
+
         # End timer
         self.END_TIME = time.time()
         self.DURATION = self.END_TIME - self.START_TIME
@@ -663,7 +700,11 @@ class EHebExperiment(Experiment):
                 test_reconstruct_cosine_difference_out_of_distribution,
                 train_acc_out_of_distribution,
                 train_reconstruct_norm_difference_out_of_distribution,
-                train_reconstruct_cosine_difference_out_of_distribution
+                train_reconstruct_cosine_difference_out_of_distribution,
+                FROZEN_LAYER_test_acc_in_distribution,
+                FROZEN_LAYER_train_acc_in_distribution,
+                FROZNE_LAYER_test_acc_out_of_distribution,
+                FROZEN_LAYER_train_acc_out_of_distribution
                 )
 
 
