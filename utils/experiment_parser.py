@@ -43,13 +43,23 @@ def parse_arguments(args_list: List = None) -> argparse.Namespace:
     parser.add_argument("--lr", type=float, default=0.005)
 
 
-
     # Experiment parameters
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--test_epochs", type=int, default=1)
     parser.add_argument("--device", type=str, default='cpu')
     parser.add_argument("--local_machine", type=bool, default=True)
+
+
+    # Out-of-distribution dataset parameters
+    parser.add_argument('--out_distribution_train_data', type=str, help='Path to out-of-distribution training data')
+    parser.add_argument('--out_distribution_train_label', type=str, help='Path to out-of-distribution training labels')
+    parser.add_argument('--out_distribution_train_filename', type=str, help='Path to out-of-distribution training CSV file')
+    parser.add_argument('--out_distribution_test_data', type=str, help='Path to out-of-distribution test data')
+    parser.add_argument('--out_distribution_test_label', type=str, help='Path to out-of-distribution test labels')
+    parser.add_argument('--out_distribution_test_filename', type=str, help='Path to out-of-distribution test CSV file')
+
+
 
     # Parse arguments into Namespace
     args: argparse.Namespace = parser.parse_args() if args_list == None else parser.parse_args(args_list)

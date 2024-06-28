@@ -23,7 +23,14 @@ arguments = ['--is_training=True',
             '--lr=0.005',  
             '--batch_size=1',
             '--device=cpu',
-            '--local_machine=True' ]
+            '--local_machine=True',
+            '--extended_testing_mode=True',
+            "--out_distribution_train_data=data/emnist/train-images.idx3-ubyte",
+            "--out_distribution_train_label=data/emnist/train-labels.idx1-ubyte",
+            "--out_distribution_train_filename=data/emnist/emnist_train.csv",
+            "--out_distribution_test_data=data/emnist/t10k-images.idx3-ubyte",
+            "--out_distribution_test_label=data/emnist/t10k-labels.idx1-ubyte",
+            "--out_distribution_test_filename=data/emnist/emnist_test.csv"]
 
 # Construct the command
 command = ['python', script_name] + arguments
