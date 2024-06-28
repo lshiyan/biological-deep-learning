@@ -89,7 +89,7 @@ class HebbianNetwork(Network):
         self.add_module("Output", classification_layer)
 
 
-    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, reconstruct: bool = False, freeze: bool = False) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network
@@ -103,9 +103,13 @@ class HebbianNetwork(Network):
         hebbian_layer = self.get_module("Hidden")
         classification_layer = self.get_module("Output")
 
-        # Feedforward data input into network
-        input = input.to(self.device)
-        input = hebbian_layer(input)
-        output = classification_layer(input, clamped_output)
-
+        if not reconstruct:
+            input = input.to(self.device)
+            input = hebbian_layer(input, freeze)
+            output = classification_layer(input, clamped_output) 
+        elif reconstruct:
+            input = input.to(self.device)
+            output = hebbian_layer(input)
+        
         return output
+            

@@ -90,7 +90,7 @@ class NetworkLayer (nn.Module, ABC):
         raise NotImplementedError("This method is not implemented.")
     
 
-    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, freeze: bool = False) -> torch.Tensor:
         """
         METHOD
         Defines how input data flows throw the network
@@ -100,7 +100,7 @@ class NetworkLayer (nn.Module, ABC):
         @return
             input: returns the data after passing it throw the layer
         """
-        if self.training:
+        if self.training and not freeze:
             input = self._train_forward(input, clamped_output)
         else:
             input = self._eval_forward(input)

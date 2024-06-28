@@ -1,8 +1,9 @@
+from abc import ABC
 import torch
 from interfaces.layer import NetworkLayer
 
 
-class OutputLayer(NetworkLayer):
+class OutputLayer(NetworkLayer, ABC):
     """
     INTERFACE
     Output layer in ANN -> All output layers should implement this class

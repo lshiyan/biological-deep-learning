@@ -42,7 +42,7 @@ class DataSetupLayer(InputLayer):
         """
         # Converting to .csv file if needed
         if not os.path.exists(filename):
-            InputLayer.convert(data, label, filename, size, 28)
+            DataSetupLayer.convert(data, label, filename, size, 28)
          
         # Setup dataset   
         data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')

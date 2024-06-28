@@ -5,11 +5,15 @@
 __pycache__/
 *.pyc
 
-#Virtual env
-fundamental_virtual_env/
-
 #Tests
 tests/
 
 #Results
 results/
+
+#Data
+data/
+
+#Run and train files
+run.py
+train.py

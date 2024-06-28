@@ -22,10 +22,17 @@ def parse_arguments(args_list: List = None) -> argparse.Namespace:
     parser.add_argument('--train_label', type=str, default="data/mnist/train-labels.idx1-ubyte")
     parser.add_argument('--test_data', type=str, default="data/mnist/t10k-images.idx3-ubyte")
     parser.add_argument('--test_label', type=str, default="data/mnist/t10k-labels.idx1-ubyte")
+    
+    parser.add_argument('--e_train_data', type=str, default="data/e_mnist/train-images.idx3-ubyte")
+    parser.add_argument('--e_train_label', type=str, default="data/e_mnist/train-labels.idx1-ubyte")
+    parser.add_argument('--e_test_data', type=str, default="data/e_mnist/test-images.idx3-ubyte")
+    parser.add_argument('--e_test_label', type=str, default="data/e_mnist/test-labels.idx1-ubyte")
 
     # CSV files generated
     parser.add_argument('--train_filename', type=str, default="data/mnist/mnist_train.csv")
     parser.add_argument('--test_filename', type=str, default="data/mnist/mnist_test.csv")
+    parser.add_argument('--e_train_filename', type=str, default="data/e_mnist/e_mnist_train.csv")
+    parser.add_argument('--e_test_filename', type=str, default="data/e_mnist/e_mnist_test.csv")
 
     # Dimension of each layer
     parser.add_argument('--input_dim', type=int, default=784)

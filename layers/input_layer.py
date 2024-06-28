@@ -1,8 +1,9 @@
+from abc import ABC
 from interfaces.layer import NetworkLayer
 from torch.utils.data import TensorDataset
 
 
-class InputLayer(NetworkLayer):
+class InputLayer(NetworkLayer, ABC):
     """
     INTERFACE
     Input layer in ANN -> All input layers should implement this class
@@ -24,7 +25,7 @@ class InputLayer(NetworkLayer):
 
 
     @staticmethod
-    def setup_data(data: str, label: str, filename: str, data_type: str) -> TensorDataset:
+    def setup_data(data: str, label: str, filename: str, data_type: str, size: int) -> TensorDataset:
         """
         METHOD
         Function to setup requested dataset
@@ -33,6 +34,7 @@ class InputLayer(NetworkLayer):
             label: label filename
             filename: data (img + label) filename
             data_type: which dataset to setup (train/test)
+            size: size of dataset
         @return
             tensor dataset containing (data, label)
         """
@@ -43,7 +45,8 @@ class InputLayer(NetworkLayer):
     def convert(img_file: str, 
                 label_file: str, 
                 out_file: str, 
-                data_size: int) -> None:
+                data_size: int,
+                img_size: int) -> None:
         """
         CLASS METHOD
         Convert data file into more usable format
