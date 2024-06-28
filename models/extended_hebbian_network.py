@@ -59,12 +59,35 @@ class EHebNetwork(Network):
         # Shared hyperparameters
         self.lr: float = args.lr
 
+        # Extended Datasets
+        self.out_distribution_train_data = args.out_distribution_train_data
+        self.out_distribution_train_label = args.out_distribution_train_label
+        self.out_distribution_train_filename = args.out_distribution_train_filename
+        self.out_distribution_test_data = args.out_distribution_test_data
+        self.out_distribution_test_label = args.out_distribution_test_label
+        self.out_distribution_test_filename = args.out_distribution_test_filename
+
         # Setting up layers of the network
-        input_layer: InputLayer = EHebInputLayer()
-        hebbian_layer: HiddenLayer = EHebHebbianLayer(self.input_dim, self.heb_dim, self.device, self.heb_param["lamb"], self.lr, self.heb_param["gam"], self.heb_param["eps"], frozen = False)
+        input_layer: InputLayer = EHebInputLayer(self.out_distribution_train_data,
+                                                 self.out_distribution_train_label,
+                                                 self.out_distribution_train_filename,
+                                                 self.out_distribution_test_data,
+                                                 self.out_distribution_test_label,
+                                                 self.out_distribution_test_filename)
+        hebbian_layer: HiddenLayer = EHebHebbianLayer(self.input_dim, 
+                                                      self.heb_dim, 
+                                                      self.device, 
+                                                      self.heb_param["lamb"], 
+                                                      self.lr, 
+                                                      self.heb_param["gam"], 
+                                                      self.heb_param["eps"], 
+                                                      frozen = False)
         # Here, I set hebbian layer to not be frozen. This can change in the future. 
 
-        classification_layer: OutputLayer = EHebClassificationLayer(self.heb_dim, self.output_dim, self.device, self.lr)
+        classification_layer: OutputLayer = EHebClassificationLayer(self.heb_dim, 
+                                                                    self.output_dim, 
+                                                                    self.device, 
+                                                                    self.lr)
         
         self.add_module("Input", input_layer)
         self.add_module("Hebbian", hebbian_layer)

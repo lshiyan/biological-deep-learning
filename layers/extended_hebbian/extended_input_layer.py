@@ -56,9 +56,6 @@ class EHebInputLayer(InputLayer):
         self.out_distribution_test_label = out_distribution_test_label
         self.out_distribution_test_filename = out_distribution_test_filename
 
-        # set up EMNIST data 
-        self.setup_emnist_data()
-
 
     def setup_emnist_data(self, data_type: str) -> TensorDataset:
         """
