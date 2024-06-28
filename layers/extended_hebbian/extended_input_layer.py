@@ -4,6 +4,9 @@ import os
 import pandas as pd
 from layers.input_layer import InputLayer
 from typing import IO, List
+import numpy as np
+import random
+
 
 
 class EHebInputLayer(InputLayer):
@@ -53,6 +56,67 @@ class EHebInputLayer(InputLayer):
         self.out_distribution_test_label = out_distribution_test_label
         self.out_distribution_test_filename = out_distribution_test_filename
 
+        # set up EMNIST data 
+        self.setup_emnist_data()
+
+
+    def setup_emnist_data(self, data_type: str) -> TensorDataset:
+        """
+        METHOD
+        Function to get EMNIST dataset with 10 randomly selected classes as TensorDataset
+        @param
+            data_type: 'train' or 'test' to indicate which dataset to load
+        @return
+            TensorDataset containing (data_tensor, labels)
+        """
+        if data_type == 'train':
+            data_path = self.out_distribution_train_data
+            label_path = self.out_distribution_train_label
+        elif data_type == 'test':
+            data_path = self.out_distribution_test_data
+            label_path = self.out_distribution_test_label
+        else:
+            raise ValueError("data_type should be 'train' or 'test'")
+
+        # Load data and labels
+        data = self.load_data(data_path, 28)
+        labels = self.load_labels(label_path)
+
+        # Filter only letters from the EMNIST dataset
+        letter_indices = np.where(labels >= 10)[0]
+        data = data[letter_indices]
+        labels = labels[letter_indices]
+
+        # Randomly select 10 letter classes
+        unique_labels = np.unique(labels)
+        random.seed(42)  # For reproducibility
+        selected_labels = random.sample(list(unique_labels), 10)
+
+        # Filter the dataset for the selected labels
+        selected_indices = np.where(np.isin(labels, selected_labels))[0]
+        selected_data = data[selected_indices]
+        selected_labels = labels[selected_indices]
+
+        # Convert to tensor and normalize
+        data_tensor = torch.tensor(selected_data, dtype=torch.float32) / 255.0
+        label_tensor = torch.tensor(selected_labels, dtype=torch.long)
+
+        return TensorDataset(data_tensor, label_tensor)
+
+    def load_data(self, file_path, img_size):
+        # Load image data from .ubyte file
+        with open(file_path, 'rb') as f:
+            f.read(16)  # Skip header
+            data = np.frombuffer(f.read(), dtype=np.uint8)
+            data = data.reshape(-1, img_size * img_size)
+        return data
+
+    def load_labels(self, file_path):
+        # Load labels from .ubyte file
+        with open(file_path, 'rb') as f:
+            f.read(8)  # Skip header
+            labels = np.frombuffer(f.read(), dtype=np.uint8)
+        return labels
     
     @staticmethod
     def setup_data(self, ata: str, label: str, filename: str, data_type: str, size: int, in_distribution: bool) -> TensorDataset:
@@ -87,7 +151,7 @@ class EHebInputLayer(InputLayer):
                 label = self.train_label
                 size = 60000
             
-            else: # out of distribution
+            else: # out of distribution - so EMNIST
 
                 filename = self.out_distribution_train_filename
                 data = self.out_distribution_train_data
@@ -102,7 +166,7 @@ class EHebInputLayer(InputLayer):
                 label = self.test_label
                 size = 10000
             
-            else: # out of distribution
+            else: # out of distribution - so EMNIST
 
                 filename = self.out_distribution_test_filename
                 data = self.out_distribution_test_data

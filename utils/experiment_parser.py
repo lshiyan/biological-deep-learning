@@ -60,7 +60,6 @@ def parse_arguments(args_list: List = None) -> argparse.Namespace:
     parser.add_argument('--out_distribution_test_filename', type=str, help='Path to out-of-distribution test CSV file')
 
 
-
     # Parse arguments into Namespace
     args: argparse.Namespace = parser.parse_args() if args_list == None else parser.parse_args(args_list)
 

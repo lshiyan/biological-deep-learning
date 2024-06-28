@@ -89,7 +89,6 @@ class EHebNetwork(Network):
         if input.dtype != torch.float32:
             input = input.float().to(self.device)
 
-
         # I should freeze my hebbian weights as long as either one of the two cases below applies, otherwise, I unfreeze it
             # 1. I am not training on in-distribution data
             # 2. I am physically freezing my weights

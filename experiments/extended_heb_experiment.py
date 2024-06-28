@@ -500,12 +500,7 @@ class EHebExperiment(Experiment):
                                                                    shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader - IN DISTRIBUTION")
 
-        train_data_set_out_of_distribution: TensorDataset = input_class.setup_data(self.ARGS.out_distribution_train_data, 
-                                                                                   self.ARGS.out_distribution_train_label, 
-                                                                                   self.ARGS.out_distribution_train_filename, 
-                                                                                   'train', 
-                                                                                   60000, 
-                                                                                   in_distribution = False)
+        train_data_set_out_of_distribution: TensorDataset = input_class.setup_emnist_data('train')
         train_data_loader_out_of_distribution: DataLoader = DataLoader(train_data_set_out_of_distribution, 
                                                                        batch_size=self.ARGS.batch_size, 
                                                                        shuffle=True)
@@ -523,12 +518,7 @@ class EHebExperiment(Experiment):
                                                                   shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader - IN DISTRIBUTION.")
 
-        test_data_set_out_of_distribution: TensorDataset = input_class.setup_data(self.ARGS.out_distribution_test_data, 
-                                                                               self.ARGS.out_distribution_test_label, 
-                                                                               self.ARGS.out_distribution_test_filename, 
-                                                                               'test', 
-                                                                               10000, 
-                                                                               in_distribution = False)
+        test_data_set_out_of_distribution: TensorDataset = input_class.setup_emnist_data('test')
         test_data_loader_out_of_distribution: DataLoader = DataLoader(test_data_set_out_of_distribution, 
                                                                    batch_size=self.ARGS.batch_size, 
                                                                    shuffle=True)
