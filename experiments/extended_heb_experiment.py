@@ -164,7 +164,7 @@ class EHebExperiment(Experiment):
 
 
 
-    def training(self, train_data_loader: DataLoader, epoch: int, visualize: bool = True) -> None:
+    def training(self, train_data_loader: DataLoader, epoch: int, visualize: bool = True, in_distribution: bool = True) -> None:
         """
         METHOD
         Training model for 1 epoch
@@ -172,6 +172,7 @@ class EHebExperiment(Experiment):
             train_data_loader: dataloader with the training data
             epoch : training epoch current training loop is at
             visualize: if the weights of model are willing to be visualized
+            in_distribution: if it is currently training in distribution
         @return
             None
         """
@@ -190,11 +191,9 @@ class EHebExperiment(Experiment):
         for inputs, labels in train_data_loader:   
             # Move input and targets to device
             inputs, labels = inputs.to(self.ARGS.device).float(), one_hot(labels, 10).squeeze().to(self.ARGS.device).float()
-            # EXP_LOG.info(f"EPOCH [{epoch}] - data to device")
             
             # Forward pass
-            self.model(inputs, clamped_output=labels)
-            # EXP_LOG.info(f"EPOCH [{epoch}] - forward pass")
+            self.model(inputs, clamped_output=labels, in_distribution=in_distribution)
         
         train_end: float = time.time()
         training_time: float = train_end - train_start
@@ -312,28 +311,78 @@ class EHebExperiment(Experiment):
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
 
         # Training dataset, BOTH in distribution and OUT of distribution
-        train_data_set_in_distribution: TensorDataset = input_class.setup_data(self.ARGS.train_data, self.ARGS.train_label, self.ARGS.train_filename, 'train', 60000, in_distribution = True)
-        train_data_loader_in_distritubion: DataLoader = DataLoader(train_data_set_in_distribution, batch_size=self.ARGS.batch_size, shuffle=True)
+        train_data_set_in_distribution: TensorDataset = input_class.setup_data(self.ARGS.train_data, 
+                                                                               self.ARGS.train_label, 
+                                                                               self.ARGS.train_filename, 
+                                                                               'train', 
+                                                                               60000, 
+                                                                               in_distribution = True)
+        train_data_loader_in_distritubion: DataLoader = DataLoader(train_data_set_in_distribution, 
+                                                                   batch_size=self.ARGS.batch_size, 
+                                                                   shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader - IN DISTRIBUTION")
 
-        train_data_set_out_of_distribution: TensorDataset = input_class.setup_data(self.ARGS.out_distribution_train_data, self.ARGS.out_distribution_train_label, self.ARGS.out_distribution_train_filename, 'train', 60000, in_distribution = False)
-        train_data_loader_out_of_distritubion: DataLoader = DataLoader(train_data_set_out_of_distribution, batch_size=self.ARGS.batch_size, shuffle=True)
+        train_data_set_out_of_distribution: TensorDataset = input_class.setup_data(self.ARGS.out_distribution_train_data, 
+                                                                                   self.ARGS.out_distribution_train_label, 
+                                                                                   self.ARGS.out_distribution_train_filename, 
+                                                                                   'train', 
+                                                                                   60000, 
+                                                                                   in_distribution = False)
+        train_data_loader_out_of_distritubion: DataLoader = DataLoader(train_data_set_out_of_distribution, 
+                                                                       batch_size=self.ARGS.batch_size, 
+                                                                       shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader - OUT OF DISTRIBUTION")
 
         # Testing dataset, BOTH in distribution and OUT of distribution
-        test_data_set_in_distribution: TensorDataset = input_class.setup_data(self.ARGS.test_data, self.ARGS.test_label, self.ARGS.test_filename, 'test', 10000, in_distribution = True)
-        test_data_loader_in_distribution: DataLoader = DataLoader(test_data_set_in_distribution, batch_size=self.ARGS.batch_size, shuffle=True)
+        test_data_set_in_distribution: TensorDataset = input_class.setup_data(self.ARGS.test_data, 
+                                                                              self.ARGS.test_label, 
+                                                                              self.ARGS.test_filename, 
+                                                                              'test', 
+                                                                              10000, 
+                                                                              in_distribution = True)
+        test_data_loader_in_distribution: DataLoader = DataLoader(test_data_set_in_distribution, 
+                                                                  batch_size=self.ARGS.batch_size, 
+                                                                  shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
-        test_data_set_out_distribution: TensorDataset = input_class.setup_data(self.ARGS.out_distribution_test_data, self.ARGS.out_distribution_test_label, self.ARGS.out_distribution_test_filename, 'test', 10000, in_distribution = False)
-        test_data_loader_out_distribution: DataLoader = DataLoader(test_data_set_out_distribution, batch_size=self.ARGS.batch_size, shuffle=True)
+        test_data_set_out_of_distribution: TensorDataset = input_class.setup_data(self.ARGS.out_distribution_test_data, 
+                                                                               self.ARGS.out_distribution_test_label, 
+                                                                               self.ARGS.out_distribution_test_filename, 
+                                                                               'test', 
+                                                                               10000, 
+                                                                               in_distribution = False)
+        test_data_loader_out_of_distribution: DataLoader = DataLoader(test_data_set_out_of_distribution, 
+                                                                   batch_size=self.ARGS.batch_size, 
+                                                                   shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
 
+        self.EXP_LOG.info("Started training and testing loops.")
+        
+        for epoch in range(0, self.ARGS.epochs):
+
+            # EVERYTHING HERE IS FOR IN DISTRIBUTION
+            # Testing accuracy
+            self.testing(test_data_loader_in_distribution, 'test', epoch, visualize=True)
+            
+            # Training accuracy
+            self.testing(train_data_loader_in_distritubion, 'train', epoch, visualize=True)
+            
+            # Training
+            self.training(train_data_loader_in_distritubion, epoch, visualize=True)
 
 
+            # EVERYTHING HERE IS FOR OUT OF DISTRIBUTION
+            # Testing accuracy
+            self.testing(test_data_loader_out_of_distribution, 'test', epoch, visualize=True)
+            
+            # Training accuracy
+            self.testing(train_data_loader_out_of_distritubion, 'train', epoch, visualize=True)
+            
+            # Training
+            self.training(train_data_loader_out_of_distritubion, epoch, visualize=True)
 
-
+            
 
 
 

@@ -134,13 +134,14 @@ class EHebHebbianLayer(HiddenLayer):
         This is because if it is EMNIST, then I will not be updating weights
     
     '''
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, is_mnist: bool = True) -> torch.Tensor:
+    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, in_distribution: bool = True) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network when training
         @param
             input: input data into the layer
             clamped_output: *NOT USED*
+            in_distribution: a boolean indicating either I am training in distribution
         @return
             output: returns the data after passing it throw the layer
         """
@@ -151,9 +152,9 @@ class EHebHebbianLayer(HiddenLayer):
         output = self.inhibition(input)
 
         # So 
-            # if this is MNIST, then I am actively training the input - to - hebbian layer weights
-            # if this is not MNIST, then I will be evaluating my model and hence I should not evaluate
-        if is_mnist:
+            # if this is in_distribution, then I am actively training the input - to - hebbian layer weights
+            # if this is not in_distribution, then I will be evaluating my model and hence I should not evaluate
+        if in_distribution:
             self.update_weights(input_copy, output)
             self.weight_decay()
 
