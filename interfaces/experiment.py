@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from interfaces.network import Network
 
 # Utils imports
+from utils.experiment_constants import ExperimentTypes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -20,31 +21,34 @@ from utils.experiment_timer import *
 class Experiment(ABC):
     """
     INTERFACE
-    Experiment for training and testing NN models with custom parameters -> all experiments must implement interface
-    This will help with creating and running different types of experiments
-    
+    Defines a base for different experiments -> Every experiment must implement interface
     @instance attr.
-        model: model used in experiment
-        ARGS: arguments for experiment
-        START_TIME: start time of experiment
-        END_TIMER: end of experiment
-        DURATION: duration of experiment
-        TRAIN_TIME: training time
-        TEST_ACC_TIME: testing time
-        TRAIN_ACC_TIME: testing time
-        EXP_NAME: experiment name
-        RESULT_PATH: where result files will be created
-        PRINT_LOG: print log
-        TEST_LOG: log with all test accuracy results
-        TRAIN_LOG: log with all trainning accuracy results
-        PARAM_LOG: parameter log for experiment
-        DEBUG_LOG: debugging
-        EXP_LOG: logging of experiment process
+        model (Network): model used in experiment
+        batch_size (int): size of each batch of data
+        epochs (int): number of epochs to train
+        test_epochs (int): interval at which testing will be done
+        device (str): device that will be used for CUDA
+        local_machine (bool): where code is ran
+        experiment_type (ExperimentTypes): what type of experiment to be ran
+        
+        START_TIME (int): start time of experiment
+        END_TIMER (int): end of experiment
+        DURATION (int): duration of experiment
+        TRAIN_TIME (int): training time
+        TEST_ACC_TIME (int): testing time
+        TRAIN_ACC_TIME (int): testing time
+        EXP_NAME (str): experiment name
+        RESULT_PATH (str): where result files will be created
+        PRINT_LOG (logging.Logger): print log
+        TEST_LOG (logging.Logger): log with all test accuracy results
+        TRAIN_LOG (logging.Logger): log with all trainning accuracy results
+        PARAM_LOG (logging.Logger): parameter log for experiment
+        DEBUG_LOG (logging.Logger): debugging
+        EXP_LOG (logging.Logger): logging of experiment process
     """
     def __init__(self, model: Network, args: argparse.Namespace, name: str) -> None:
         """
         CONTRUCTOR METHOD
-
         @param
             model: model to be trained and tested in experiment
             args: all arguments passed for experiment
@@ -52,9 +56,16 @@ class Experiment(ABC):
         @return
             None
         """
-        # Model and parameters
+        experiment_mapping = {member.value.upper(): member for member in ExperimentTypes}
+        
+        # Experiment parameters
         self.model: Network = model.to(args.device).float()
-        self.ARGS: argparse.Namespace = args
+        self.batch_size: int = args.batch_size
+        self.epochs: int = args.epochs
+        self.test_epochs: int = args.test_epochs
+        self.device: str = args.device
+        self.local_machine: bool = args.local_machine
+        self.experiment_type: ExperimentTypes = experiment_mapping[args.experiment_type.upper()]
         
         # Timers
         self.START_TIME: float = None
@@ -119,7 +130,7 @@ class Experiment(ABC):
         raise NotImplementedError("This method was not implemented.")
     
     
-    def run(self) -> Tuple[float, float]:
+    def run(self) -> Tuple[float, ...]:
         raise NotImplementedError("This method was not implemented.")
         
     

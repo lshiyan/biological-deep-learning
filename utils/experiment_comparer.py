@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, TensorDataset
 def compare_dataloaders(loader1:DataLoader, loader2:DataLoader) -> bool:
     """
     FUNCTION
-    Compare 2 dataloaders
+    Compares 2 dataloaders
     @param
         loader1: a DataLoader
         loader2: a DataLoader
@@ -26,7 +26,7 @@ def compare_dataloaders(loader1:DataLoader, loader2:DataLoader) -> bool:
 
 def compare_datasets(dataset1: TensorDataset, dataset2: TensorDataset) -> bool:
     """
-    Method to compare 2 datasets
+    Method to compares 2 datasets
     @param
         dataset1 = a TensorDataset
         dataset2 = a TensorDataset

@@ -4,7 +4,7 @@ from typing import List
 def parse_arguments(args_list: List = None) -> argparse.Namespace:
     """
     FUNCTION
-    Parse arguments giving on command line and return arguments
+    Parses arguments given on command line and returns arguments
     @param
         args_list: if calling function from script and using list as command line simulation
     @return

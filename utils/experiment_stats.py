@@ -23,7 +23,7 @@ def variance(numbers: List[float], sample: bool = True) -> float:
     @return
         variance of list
     """
-    if len(numbers) == 0: return 0
+    if len(numbers) in [0, 1]: return 0
     
     mean: float = average(numbers)
     squared_diffs: float = [(x - mean) ** 2 for x in numbers]
@@ -49,13 +49,11 @@ def min_diff(means: List[float]) -> float:
     prev: float = None
     
     for mean in sorted_means:
-        if prev == None:
-            prev = mean
-            pass
+        diff: float = 0
         
-        diff: float = mean - prev
+        if prev != None: diff = mean - prev
         
-        if diff < smallest_diff:
+        if 0 < diff < smallest_diff:
             smallest_diff = diff
         
         prev = mean
@@ -73,4 +71,5 @@ def min_sample(var: float, mean_diff: float) -> int:
     @return
         minimum number of samples
     """
-    return math.ceil((var ** 2) / (mean_diff ** 2))
+    
+    return math.ceil((var ** 2) / (mean_diff ** 2)) if mean_diff != 0 else 0

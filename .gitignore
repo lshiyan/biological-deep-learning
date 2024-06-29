@@ -15,5 +15,5 @@ results/
 data/
 
 #Run and train files
-run.py
-train.py
+#run.py
+#train.py

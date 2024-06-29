@@ -7,27 +7,28 @@ from layers.base.hebbian_layer import HebbianLayer
 from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
 from layers.output_layer import OutputLayer
-from utils.experiment_constants import FunctionTypes, LateralInhibitions, LearningRules
+from utils.experiment_constants import FunctionTypes, LateralInhibitions, LayerNames, LearningRules
 
 
 class HebbianNetwork(Network):
     """
     CLASS
-    Defining the base hebbian network
+    Defines the base hebbian network
     @instance attr.
         PARENT ATTR.
             device (int) = id of the gpu that the model will be running in
         OWN ATTR.
-            input_dim (int) = number of inputs
-            heb_dim (int) = number of neurons in hebbina layer
-            output_dimension (int) = number of output neurons
-            heb_param (dict {str:float}) = dictionary with all the hyperparameters for the hebbian layer
-                - lr (float) = learning rate of hebbian layer
-                - lamb (float) = hyperparameter for lateral neuron inhibition
-                - gam (float) = factor to decay learning rate of hebbian layer
-                - eps (float) = small value to avoid 0 division
-            cla_param (dict {str:float}) = dictionary with all the hyperparameters for the classification layer
-            lr (float) = learning rate of classification layer
+            input_dim (int): number of inputs
+            heb_dim (int): number of neurons in hebbina layer
+            output_dimension (int): number of output neurons
+            heb_param (dict {str:float}): dictionary with all the hyperparameters for the hebbian layer
+                - lr (float): learning rate of hebbian layer
+                - lamb (float): hyperparameter for lateral neuron inhibition
+                - gam (float): factor to decay learning rate of hebbian layer
+                - eps (float): small value to avoid 0 division
+            cla_param (dict {str:float}): dictionary with all the hyperparameters for the classification layer
+                - in_1 (bool): wether to include first neuron in classification layer
+            lr (float): learning rate of classification layer
     """
     def __init__(self, args: argparse.Namespace) -> None:
         """
@@ -45,11 +46,11 @@ class HebbianNetwork(Network):
         self.output_dim: int = args.output_dim
 
         # Hebbian layer hyperparameters stored in dictionary
-        inhibition_mapping = {member.value.upper(): member for member in LateralInhibitions}
-        learning_rule_mapping = {member.value.upper(): member for member in LearningRules}
-        function_type_mapping = {member.value.upper(): member for member in FunctionTypes}
+        inhibition_mapping: dict[str:LateralInhibitions] = {member.value.upper(): member for member in LateralInhibitions}
+        learning_rule_mapping: dict[str:LearningRules] = {member.value.upper(): member for member in LearningRules}
+        function_type_mapping: dict[str:FunctionTypes] = {member.value.upper(): member for member in FunctionTypes}
         
-        self.heb_param: dict[str:float] = {
+        self.heb_param: dict[str:'Any'] = {
             "lamb": args.heb_lamb,
             "eps": args.heb_eps,
             "gam": args.heb_gam,
@@ -59,7 +60,7 @@ class HebbianNetwork(Network):
         }
 
         # Classification layer hyperparameters stored in dictionary
-        self.cla_param: dict[:] = {
+        self.cla_param: dict[str:'Any'] = {
             "in_1": args.include_first
         }
 
@@ -84,9 +85,9 @@ class HebbianNetwork(Network):
                                                                 self.lr,
                                                                 self.cla_param["in_1"])
         
-        self.add_module("Input", input_layer)
-        self.add_module("Hidden", hebbian_layer)
-        self.add_module("Output", classification_layer)
+        self.add_module(LayerNames.INPUT.name, input_layer)
+        self.add_module(LayerNames.HIDDEN.name, hebbian_layer)
+        self.add_module(LayerNames.OUTPUT.name, classification_layer)
 
 
     def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, reconstruct: bool = False, freeze: bool = False) -> torch.Tensor:
@@ -96,12 +97,14 @@ class HebbianNetwork(Network):
         @param
             input: input data into the network
             clamped_output: one-hot encode of true labels
+            reconstruct: wether to use reconstruction for this model
+            freeze: wether to freeze the hebbian layer during training
         @return
             output: returns the data after passing it throw the network
         """
         # Get layers of network
-        hebbian_layer = self.get_module("Hidden")
-        classification_layer = self.get_module("Output")
+        hebbian_layer = self.get_module(LayerNames.HIDDEN)
+        classification_layer = self.get_module(LayerNames.OUTPUT)
 
         if not reconstruct:
             input = input.to(self.device)

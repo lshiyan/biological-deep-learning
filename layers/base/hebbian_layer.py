@@ -7,12 +7,12 @@ from utils.experiment_constants import *
 class HebbianLayer(HiddenLayer):
     """
     CLASS
-    Defining the functionality of the base hebbian layer
+    Defines the functionality of the base hebbian layer
     @instance attr.
         NetworkLayer ATTR.
             input_dimension (int): number of inputs into the layer
             output_dimension (int): number of outputs from layer
-            device (str): the device that the module will be running on
+            device (str): device that will be used for CUDA
             lr (float): how fast model learns at each iteration
             fc (nn.Linear): fully connected layer using linear transformation
         HiddenLayer ATTR.
@@ -26,7 +26,8 @@ class HebbianLayer(HiddenLayer):
             learning_rule (LearningRules): which learning rule to use
             function_type (FunctionTypes): which function type should the weight updates follow
     """
-    def __init__(self, input_dimension: int, 
+    def __init__(self, 
+                 input_dimension: int, 
                  output_dimension: int, 
                  device: str, 
                  lamb: float = 1, 
@@ -35,12 +36,14 @@ class HebbianLayer(HiddenLayer):
                  eps: float = 0.01,
                  inhibition_rule: LateralInhibitions = LateralInhibitions.RELU_INHIBITION, 
                  learning_rule: LearningRules = LearningRules.SANGER_LEARNING_RULE,
-                 function_type: FunctionTypes = FunctionTypes.LINEAR) -> None:
+                 function_type: FunctionTypes = FunctionTypes.LINEAR
+                 ) -> None:
         """
         CONSTRUCTOR METHOD
         @param
             input_dimension: number of inputs into the layer
             output_dimension: number of outputs from layer
+            device: device that will be used for CUDA
             lamb: lambda hyperparameter for lateral inhibition
             learning_rate: how fast model learns at each iteration
             gamma: affects exponentialaverages updates
@@ -52,18 +55,17 @@ class HebbianLayer(HiddenLayer):
             None
         """
         super().__init__(input_dimension, output_dimension, device, learning_rate, lamb, gamma, eps)
-        self.inhibition_rule = inhibition_rule
-        self.learning_rule = learning_rule
-        self.function_type = function_type
+        self.inhibition_rule: LateralInhibitions = inhibition_rule
+        self.learning_rule: LearningRules = learning_rule
+        self.function_type: FunctionTypes = function_type
 
     
     def inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Lateral inhibition using defined rule.
+        Calculates lateral inhibition using defined rule.
         @param
             input: the inputs into the layer
-            output: the output of the layer
         @return
             inputs after inhibition
         """
@@ -73,6 +75,12 @@ class HebbianLayer(HiddenLayer):
             return self._softmax_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.HOPFIELD_INHIBITION:
             return self._exp_inhibition(input)
+        elif self.inhibition_rule == LateralInhibitions.WTA_INHIBITION:
+            return self._wta_inhibition(input)
+        elif self.inhibition_rule == LateralInhibitions.GAUSSIAN_INHIBITION:
+            return self._gaussian_inhibition(input)
+        elif self.inhibition_rule == LateralInhibitions.NORM_INHIBITION:
+            return self._norm_inhibition(input)
     
     
     def update_weights(self, input: torch.Tensor, output: torch.Tensor) -> None:
@@ -101,7 +109,7 @@ class HebbianLayer(HiddenLayer):
             function_derivative = self._sigmoid_function()
             
         # Weight Update
-        delta_weight: torch.Tensor = calculated_rule * function_derivative
+        delta_weight: torch.Tensor = self.lr * calculated_rule * function_derivative
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
         
 
@@ -119,11 +127,11 @@ class HebbianLayer(HiddenLayer):
             None
         """
         y: torch.Tensor = output.clone().detach().squeeze()
-        exponential_bias = torch.exp(-1*self.fc.bias) # Apply exponential decay to biases
+        exponential_bias = torch.exp(-1 * self.fc.bias)
 
         # Compute bias update scaled by output probabilities.
         A: torch.Tensor = torch.mul(exponential_bias, y) - 1
-        A = self.fc.bias + self.alpha * A
+        A = self.fc.bias + self.lr * A
 
         # Normalize biases to maintain stability. (Divide by max bias value)
         bias_maxes: float = torch.max(A, dim=0).values
@@ -171,30 +179,32 @@ class HebbianLayer(HiddenLayer):
             input: input data into the layer
             clamped_output: *NOT USED*
         @return
-            output: returns the data after passing it throw the layer
+            output: returns the data after passing it through the layer
         """
         # Copy input -> calculate output -> update weights -> return output
         input_copy = input.clone().to(self.device).float()
-        input = input.to(self.device)
-        input = self.fc(input)
-        output = self.inhibition(input)
-        self.update_weights(input_copy, output)
+        initial_input = input.clone().to(self.device).float()
+        
+        input_copy = self.fc(input_copy)
+        output = self.inhibition(input_copy)
+        self.update_weights(initial_input, output)
         #self.update_bias(input)
         self.weight_decay()
+        
         return output
     
 
     def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Define how an input data flows throw the network when testing
+        Define how an input data flows through the network when testing
         @param
             input: input data into the layer
         @return
             output: returns the data after passing it throw the layer
         """
         # Copy input -> calculate output -> return output
-        input = input.to(self.device)
-        input = self.fc(input)
-        output = self.inhibition(input)
+        input_copy = input.clone().to(self.device).float()
+        input_copy = self.fc(input_copy)
+        output = self.inhibition(input_copy)
         return output

@@ -20,6 +20,9 @@ class LateralInhibitions(Enum):
     RELU_INHIBITION = 'RELU'
     SOFTMAX_INHIBITION = 'SOFTMAX'
     HOPFIELD_INHIBITION = 'HOPFIELD'
+    WTA_INHIBITION = 'WTA'
+    GAUSSIAN_INHIBITION = 'GAUSSIAN'
+    NORM_INHIBITION = 'NORM'
 
 
 class FunctionTypes(Enum):
@@ -31,3 +34,28 @@ class FunctionTypes(Enum):
     LINEAR = 'LINEAR'
     SIGMOID = 'SIGMOID'
     
+
+class LayerNames(Enum):
+    """
+    ENUM CLASS
+    Defines names of layers of modules
+    @instance attr.
+    """
+    INPUT = 'INPUT'
+    HIDDEN = 'HIDDEN'
+    OUTPUT = 'OUTPUT'
+    
+
+class ExperimentTypes(Enum):
+    """
+    ENUM CLASS
+    Defines types of experiment to be ran
+    @instance attr.
+    """
+    BASE = 'BASE'
+    GENERALIZATION = 'GENERALIZATION'
+    
+    
+class Purposes(Enum):
+    TRAIN_ACCURACY = 'TRAIN'
+    TEST_ACCURACY = 'TEST'

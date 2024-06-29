@@ -12,12 +12,12 @@ class HiddenLayer(NetworkLayer, ABC):
     #################################################################################################
     """
     INTERFACE
-    Hidden layer in ANN -> All hidden layers should implement this class
+    Defines a single hidden layer in ANN -> Every hidden layer should implement this class
     @instance attr.
         PARENT ATTR.
             input_dimension (int): number of inputs into the layer
             output_dimension (int): number of outputs from layer
-            device (str): the device that the module will be running on
+            device (str): device that will be used for CUDA
             lr (float): how fast model learns at each iteration
             fc (nn.Linear): fully connected layer using linear transformation
         OWN ATTR.
@@ -27,20 +27,23 @@ class HiddenLayer(NetworkLayer, ABC):
             eps (float): to avoid division by 0
             id_tensor (torch.Tensor): id tensor of layer
     """
-    def __init__(self, input_dimension: int, 
+    def __init__(self, 
+                 input_dimension: int, 
                  output_dimension: int, 
                  device: str,
                  learning_rate: float = 0.005,
                  lamb: float = 1,
                  gamma: float = 0.99, 
-                 eps: float = 0.01) -> None:
+                 eps: float = 0.01
+                 ) -> None:
         """
         CONSTRUCTOR METHOD
         @param
             input_dimension: number of inputs into the layer
             output_dimension: number of outputs from layer
-            lamb: lambda hyperparameter for lateral inhibition
+            device: device that will be used for CUDA
             learning_rate: how fast model learns at each iteration
+            lamb: lambda hyperparameter for lateral inhibition
             gamma: affects exponentialaverages updates
             eps: affects weight decay updates
         @return
@@ -67,11 +70,16 @@ class HiddenLayer(NetworkLayer, ABC):
         @return
             output: activation after lateral inhibition
         """
+        # Get ReLU activation function
         relu: nn.ReLU = nn.ReLU()
-        input: torch.Tensor = relu(input)
-        max_ele: int = torch.max(input).item()
-        input = torch.pow(input, self.lamb)
-        output: torch.Tensor =  input / abs(max_ele) ** self.lamb
+        
+        # Compute ReLU and lateral inhibition
+        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
+        input_copy = relu(input_copy)
+        max_ele: int = torch.max(input_copy).item()
+        input_copy = torch.pow(input_copy, self.lamb)
+        output: torch.Tensor =  (input_copy / abs(max_ele) ** self.lamb).to(self.device)
+        
         return output
     
     
@@ -84,67 +92,88 @@ class HiddenLayer(NetworkLayer, ABC):
         @return
             output: activation after lateral inhibition
         """
-        output: torch.Tensor = F.softmax(input, dim=-1)
+        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
+        output: torch.Tensor = F.softmax(input_copy, dim=-1).to(self.device)
         return output
     
     
     def _exp_inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Calculates exponential (Hopfield Networks) lateral inhibition
+        Calculates exponential (Modern Hopfield) lateral inhibition
         @param
             input: input to layer
         @return
             output: activation after lateral inhibition
         """
-        max_ele: int = torch.max(input).item()
-        output: torch.Tensor = F.softmax((input - max_ele)*self.lamb, dim=-1)
+        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
+        max_ele: int = torch.max(input_copy).item()
+        output: torch.Tensor = F.softmax((input_copy - max_ele) * self.lamb, dim=-1).to(self.device)
         return output
     
         
     def _wta_inhibition(self, input:torch.Tensor, top_k: int = 1) -> torch.Tensor:
         """
         METHOD
-        Calculates winner-takes-all lateral inhibition
+        Calculates k-winners-takes-all lateral inhibition
         @param
             input: input to layer
-            top_k: 
+            top_k: number of "winner"
         @return
             output: activation after lateral inhibition
         """
         # NOTE: this function does not work as of yet
-        # Step 1: Flatten the tensor to apply top-k
-        flattened_input = input.flatten()
+        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
+        
+        flattened_input: torch.Tensor = input_copy.flatten()
 
-        # Step 2: Get the top-k values and their indices
         topk_values, _ = torch.topk(flattened_input, top_k)
         threshold = topk_values[-1]
 
-        # Step 3: Apply the threshold to keep only the top-k values
         output: torch.Tensor = torch.where(input >= threshold, input, torch.tensor(0.0, device=input.device))
 
         return output
 
     
-    def _gaussian_inhibition(self, input: torch.Tensor, sigma=1.0) -> torch.Tensor:
+    def _gaussian_inhibition(self, input: torch.Tensor, sigma: float = 1.0) -> torch.Tensor:
         """
         METHOD
         Calculates gaussian lateral inhibition
         @param
             input: input to layer
+            sigma: 
         @return
             output: activation after lateral inhibition
         """
         # NOTE: this does not work as of yet
+        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         size: int = int(2 * sigma + 1)
         kernel: torch.Tensor = torch.tensor([torch.exp(-(i - size // 2) ** 2 / (2 * sigma ** 2)) for i in range(size)])
         kernel = kernel / torch.sum(kernel)
 
-        output: torch.Tensor = F.conv1d(input.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
+        output: torch.Tensor = F.conv1d(input_copy.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
         return output
 
     
-    # def _norm_ TODO: normalization inhibition thingy
+    def _norm_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates devisive normalization lateral inhibition
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        # Get ReLU activation function
+        relu: nn.ReLU = nn.ReLU()
+        
+        # Compute ReLU and lateral inhibition
+        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
+        input_copy = relu(input_copy)
+        sum: float = input_copy.sum()
+        output: torch.Tensor =  (input_copy / sum).to(self.device)
+        
+        return output
     
     
     #################################################################################################
@@ -153,9 +182,9 @@ class HiddenLayer(NetworkLayer, ABC):
     def _hebbian_rule(self, input: torch.Tensor, output: torch.Tensor) -> None:
         """
         METHOD
-        Compute Hebbian Leanring Rule.
+        Computes Hebbian Leanring Rule.
         @param
-            input: the inputs into the layer
+            input: the input of the layer
             output: the output of the layer
         @return
             
@@ -170,7 +199,7 @@ class HiddenLayer(NetworkLayer, ABC):
         outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
 
         # Calculate Hebbian Learning Rule
-        computed_rule: torch.Tensor = self.lr * outer_prod
+        computed_rule: torch.Tensor = outer_prod.to(self.device)
 
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
@@ -181,7 +210,7 @@ class HiddenLayer(NetworkLayer, ABC):
     def _sanger_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Compute Sanger's Rules.
+        Computes Sanger's Rules.
         @param
             input: the inputs into the layer
             output: the output of the layer
@@ -203,7 +232,7 @@ class HiddenLayer(NetworkLayer, ABC):
         # Calculate Sanger's Rule
         A: torch.Tensor = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y).to(self.device)
         A = A * (y.unsqueeze(1))
-        computed_rule: torch.Tensor = self.lr * (outer_prod - A)
+        computed_rule: torch.Tensor = (outer_prod - A).to(self.device)
 
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
@@ -238,7 +267,7 @@ class HiddenLayer(NetworkLayer, ABC):
         norm_term = torch.outer(y.squeeze(0), ytw.squeeze(0)).to(self.device)
 
         # Compute change in weights
-        computed_rule: torch.Tensor = self.lr * (outer_prod - norm_term)
+        computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
 
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
@@ -250,14 +279,14 @@ class HiddenLayer(NetworkLayer, ABC):
     #################################################################################################
     # Different function Types for Wegiht Updates
     #################################################################################################
-    def _linear_function(self) -> int:
+    def _linear_function(self) -> float:
         """
         METHOD
         Defines weight updates when using linear funciton
         @param
             None
         @return
-            1: straight line multiplication
+            derivative: slope constant (derivative relative to linear rule always = 1)
         """
         return 1
     
@@ -283,40 +312,14 @@ class HiddenLayer(NetworkLayer, ABC):
     # Activations and weight/bias updates that will be called for train/eval forward
     #################################################################################################
     def inhibition(self, input: torch.Tensor) -> torch.Tensor:
-        """
-        METHOD
-        Choice of inhibition to be used.
-        @param
-            input: the inputs into the layer
-            output: the output of the layer
-        @return
-            inputs after inhibition
-        """
         raise NotImplementedError("This method has yet to be implemented.")
 
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
-        """
-        METHOD
-        Update weights using a certain rule.
-        @param
-            input: the inputs into the layer
-            output: the output of the layer
-        @return
-            None
-        """
         raise NotImplementedError("This method has yet to be implemented.")
     
 
     def update_bias(self, output: torch.Tensor) -> None:
-        """
-        METHOD
-        Defines the way the biases will be updated at each iteration of the training
-        @param
-            output: The output tensor of the layer.
-        @return
-            None
-        """
         raise NotImplementedError("This method has yet to be implemented.")
     
     
@@ -325,25 +328,8 @@ class HiddenLayer(NetworkLayer, ABC):
     # Training/Evaluation during forward pass
     #################################################################################################
     def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
-        """
-        METHOD
-        Defines how an input data flows throw the network when training
-        @param
-            input: input data into the layer
-            clamped_output: *NOT USED*
-        @return
-            output: returns the data after passing it throw the layer
-        """
         raise NotImplementedError("This method has yet to be implemented.")
     
 
     def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
-        """
-        METHOD
-        Define how an input data flows throw the network when testing
-        @param
-            input: input data into the layer
-        @return
-            output: returns the data after passing it throw the layer
-        """
         raise NotImplementedError("This method has yet to be implemented.")

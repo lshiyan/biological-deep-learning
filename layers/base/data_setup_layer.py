@@ -8,8 +8,8 @@ from typing import IO, List
 
 class DataSetupLayer(InputLayer):
     """
-    Class defining how the input dataset will be processed before feeding it to the network
-    
+    CLASS
+    Defines how the input dataset will be processed before feeding it to the base network
     @instance attr.
         NetworkLayer ATTR.
             * Not used for this layer *
@@ -28,7 +28,7 @@ class DataSetupLayer(InputLayer):
 
     
     @staticmethod
-    def setup_data(data: str, label: str, filename: str, data_type: str, size: int) -> TensorDataset:
+    def setup_data(data: str, label: str, filename: str, size: int) -> TensorDataset:
         """
         STATIC METHOD
         Function to setup requested dataset
@@ -36,7 +36,7 @@ class DataSetupLayer(InputLayer):
             data: data filename
             label: label filename
             filename: data (img + label) filename
-            data_type: which dataset to setup
+            size: number of data
         @return
             tensor dataset containing (data, label)
         """
@@ -87,12 +87,12 @@ class DataSetupLayer(InputLayer):
         labels.read(8)
         
         # Create a 2D list of images where each image is a 1D list where the first element is the label
-        img_size = img_size**2
+        img_area: int = img_size ** 2
         images: List[List[int]] = []
 
         for _ in range(data_size):
             image: List[int] = [int.from_bytes(labels.read(1), byteorder='big')]
-            for _ in range(img_size):
+            for _ in range(img_area):
                 image.append(int.from_bytes(imgs.read(1), byteorder='big'))
             images.append(image)
 
