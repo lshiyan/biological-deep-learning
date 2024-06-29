@@ -47,7 +47,6 @@ class ClassificationLayer(OutputLayer):
             input: The input tensor to the layer before any transformation.
             output: The output tensor of the layer before applying softmax.
             clamped_output: one-hot encode of true labels
-            include_first: determine if first neuron is included in classification
         @return
             None
         """
