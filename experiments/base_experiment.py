@@ -23,13 +23,9 @@ from utils.experiment_timer import *
 
 
 class BaseExperiment(Experiment):
-    ################################################################################################
-    # Constructor Method
-    ################################################################################################
     """
     CLASS
     Experiment for base training and testing of model
-    
     @instance attr.
         Experiment ATTR.
             model (Network): model used in experiment
@@ -62,10 +58,12 @@ class BaseExperiment(Experiment):
             test_label (str): path to test label
             test_fname (str): path to test filename
     """
+    ################################################################################################
+    # Constructor Method
+    ################################################################################################
     def __init__(self, model: Network, args: argparse.Namespace, name: str) -> None:
         """
         CONTRUCTOR METHOD
-
         @param
             model: model to be trained and tested in experiment
             args: all arguments passed for experiment
@@ -117,7 +115,7 @@ class BaseExperiment(Experiment):
         # Loop through training batches
         for inputs, labels in train_data_loader:   
             # Move input and targets to device
-            inputs, labels = inputs.to(self.device).float(), one_hot(labels, 10).squeeze().to(self.device).float()
+            inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
             
             # Forward pass
             self.model(inputs, clamped_output=labels)
@@ -145,7 +143,7 @@ class BaseExperiment(Experiment):
             test_data_loader: dataloader containing the testing dataset
             purpose: name of set for logging purposes (test/train)
             epoch: epoch number of training iteration that is being tested on
-             sname: dataset name
+            sname: dataset name
         @return
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
@@ -212,7 +210,6 @@ class BaseExperiment(Experiment):
         Train model for 1 epoch
         @param
             train_data_loader: dataloader containing the training dataset
-            purpose: name of set for logging purposes (test/train)
             epoch: epoch number of training iteration that is being tested on
             sname: dataset name
             phase: which part of experiment -> which training to do
@@ -269,6 +266,7 @@ class BaseExperiment(Experiment):
         # Logging training parameters
         self.EXP_LOG.info("Started logging of experiment parameters.")
         self.PARAM_LOG.info(f"Experiment Type: {self.experiment_type.value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Device: {self.device.upper()}")
         self.PARAM_LOG.info(f"Input Dimension: {self.model.input_dim}")
         self.PARAM_LOG.info(f"Hebbian Layer Dimension: {self.model.heb_dim}")
         self.PARAM_LOG.info(f"Outout Dimension: {self.model.output_dim}")
@@ -313,9 +311,13 @@ class BaseExperiment(Experiment):
         self.EXP_LOG.info("Completed training of model.")        
         self.model.visualize_weights(self.RESULT_PATH, self.epochs, 'final')
         self.EXP_LOG.info("Visualize weights of model after training.")
+        
+        # Final testing of model
         test_acc = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.BASE)
         train_acc = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.BASE)
         self.EXP_LOG.info("Completed final testing methods.")
+        
+        # Logging final parameters of experiment
         self.PARAM_LOG.info(f"Training accuracy of model after training for {self.epochs} epochs: {train_acc}")
         self.PARAM_LOG.info(f"Testing accuracy of model after training for {self.epochs} epochs: {test_acc}")
         

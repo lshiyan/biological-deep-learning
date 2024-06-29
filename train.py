@@ -1,5 +1,6 @@
 from experiments.base_experiment import BaseExperiment
 
+from experiments.generalization_experiment import GeneralizationExperiment
 from models.hebbian_network import HebbianNetwork
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
@@ -32,7 +33,12 @@ for l in lambda_testing:
     for num in range(0, 1):
         # Base model training
         model = HebbianNetwork(ARGS)
-        experiment = BaseExperiment(model, ARGS, f'{ARGS.device}-{ARGS.experiment_type.lower()}-{l}-{num}')
+        
+        if ARGS.experiment_type.lower() == 'base':
+            experiment = BaseExperiment(model, ARGS, f'{ARGS.device}-{ARGS.experiment_type.lower()}-{l}-{num}')
+        elif ARGS.experiment_type.lower() == 'generalization':
+            experiment = GeneralizationExperiment(model, ARGS, f'{ARGS.device}-{ARGS.experiment_type.lower()}-{l}-{num}')
+        
         test_acc, train_acc = experiment.run()
         experiment.cleanup()
         

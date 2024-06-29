@@ -44,7 +44,7 @@ arguments = [
             '--test_epochs=1',
             '--device=cpu',
             '--local_machine=True',
-            '--experiment_type=base'
+            '--experiment_type=generalization'
             ]
 
 # Construct the command
