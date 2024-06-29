@@ -29,7 +29,7 @@ for l in lambda_testing:
     train_acc_list = []
 
     
-    for num in range(0, 3):
+    for num in range(0, 1):
         # Base model training
         model = HebbianNetwork(ARGS)
         experiment = BaseExperiment(model, ARGS, f'{ARGS.device}-{ARGS.experiment_type.lower()}-{l}-{num}')

@@ -57,5 +57,32 @@ class ExperimentTypes(Enum):
     
     
 class Purposes(Enum):
+    """
+    ENUM CLASS
+    Defines purposes for loggin/file creation purposes
+    @instance attr.
+    """
     TRAIN_ACCURACY = 'TRAIN'
     TEST_ACCURACY = 'TEST'
+    
+
+class DataSetNames(Enum):
+    """
+    ENUM CLASS
+    Defines name of dataset used
+    @instance attr.
+    """
+    MNIST = 'MNIST'
+    E_MNIST = 'E_MNIST'
+    FASHING_MNIST = ' FASHION_MNIST'
+    
+    
+class ExperimentPhases(Enum):
+    """
+    ENUM CLASS
+    Defines name of dataset used
+    @instance attr.
+    """
+    BASE = 'BASE'
+    RECONSTRUCTION = 'RECONSTRUCTION'
+    FREEZING_WEIGHTS = 'FREEZING_WEIGHTS'

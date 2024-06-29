@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from interfaces.network import Network
 
 # Utils imports
-from utils.experiment_constants import ExperimentTypes
+from utils.experiment_constants import DataSetNames, ExperimentPhases, ExperimentTypes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -31,12 +31,12 @@ class Experiment(ABC):
         local_machine (bool): where code is ran
         experiment_type (ExperimentTypes): what type of experiment to be ran
         
-        START_TIME (int): start time of experiment
-        END_TIMER (int): end of experiment
-        DURATION (int): duration of experiment
-        TRAIN_TIME (int): training time
-        TEST_ACC_TIME (int): testing time
-        TRAIN_ACC_TIME (int): testing time
+        START_TIME (float): start time of experiment
+        END_TIMER (float): end of experiment
+        DURATION (float): duration of experiment
+        TRAIN_TIME (float): training time
+        TEST_ACC_TIME (float): testing time
+        TRAIN_ACC_TIME (float): testing time
         EXP_NAME (str): experiment name
         RESULT_PATH (str): where result files will be created
         PRINT_LOG (logging.Logger): print log
@@ -122,11 +122,22 @@ class Experiment(ABC):
         self.EXP_LOG.info(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
 
     
-    def training(self, train_data_loader: DataLoader, epoch: int, visualize: bool = True) -> None:
+    def _training(self, 
+                  train_data_loader: DataLoader, 
+                  epoch: int, sname: DataSetNames, 
+                  phase: ExperimentPhases, 
+                  visualize: bool = True
+                  ) -> None:
         raise NotImplementedError("This method was not implemented.")
     
     
-    def testing(self, test_data_loader: DataLoader, set_name: str, epoch: int, visualize: bool = True) -> float:
+    def _testing(self, 
+                 test_data_loader: DataLoader, 
+                 set_name: str, 
+                 epoch: int, 
+                 sname: DataSetNames, 
+                 phase: ExperimentPhases
+                 ) -> Tuple[float, ...]:
         raise NotImplementedError("This method was not implemented.")
     
     
