@@ -282,6 +282,11 @@ class GeneralizationExperiment(Experiment):
             # Move input and targets to device
             inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
             
+            
+            self.PRINT_LOG.info(f"Labels: {labels}")
+            self.PRINT_LOG.info(f"Output dim: {self.model.output_dim}")
+            
+            
             # Forward pass
             self.model(inputs, clamped_output=labels, freeze=True)
         

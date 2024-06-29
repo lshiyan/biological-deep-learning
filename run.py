@@ -22,7 +22,7 @@ arguments = [
             "--train_filename=data/mnist/mnist_train.csv",
             "--test_filename=data/mnist/mnist_test.csv",
             "--e_train_filename=data/e_mnist/e_mnist_train.csv",
-            "--e_test_filename=data/e_mnist/e_mnist_test.csv"
+            "--e_test_filename=data/e_mnist/e_mnist_test.csv",
             # Dimension of each layer
             '--input_dim=784', 
             '--heb_dim=64', 
@@ -40,11 +40,11 @@ arguments = [
             '--lr=0.005',
             # Experiment parameters
             '--batch_size=1',
-            '--epochs=2', 
+            '--epochs=1', 
             '--test_epochs=1',
             '--device=cpu',
             '--local_machine=True',
-            '--experiment_type=generalization'
+            '--experiment_type=base'
             ]
 
 # Construct the command

@@ -118,13 +118,29 @@ class NetworkLayer (nn.Module, ABC):
         # Find value for row and column
         row: int = 0
         col: int = 0
-
-        root: int = int(math.sqrt(self.output_dimension))
-        for i in range(root, 0, -1):
-            if self.output_dimension % i == 0:
-                row = min(i, self.output_dimension // i)
-                col = max(i, self.output_dimension // i)
-                break
+        n: int = self.output_dimension
+        
+        root: int = int(math.sqrt(n))
+        min_product: int = float('inf')
+        
+        for i in range(1, root + 1):
+            if n % i == 0:
+                factor1 = i
+                factor2 = n // i
+                
+                if factor1 * factor2 >= n and factor1 * factor2 <= min_product:
+                    min_product = factor1 * factor2
+                    row = min(factor1, factor2)
+                    col = max(factor1, factor2)
+            else:
+                factor1 = i
+                factor2 = math.ceil(n / i)
+                
+                if factor1 * factor2 >= n and factor1 * factor2 <= min_product:
+                    min_product = factor1 * factor2
+                    row = min(factor1, factor2)
+                    col = max(factor1, factor2)
+                
         
         # Get the weights and create heatmap
         weight: nn.parameter.Parameter = self.fc.weight
