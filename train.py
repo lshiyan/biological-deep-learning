@@ -45,5 +45,5 @@ for l in lambda_testing:
     avg_train = average(train_acc_list)
     var_train = variance(train_acc_list)
     
-    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Inhibition: {ARGS.inhibition_rule} || Learning Rule: {ARGS.learning_rule} || Function Type: {ARGS.function_type} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
+    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.function_type.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
     
