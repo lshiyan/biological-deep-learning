@@ -7,9 +7,7 @@ from interfaces.layer import NetworkLayer
 
 
 class HiddenLayer(NetworkLayer, ABC):
-    #################################################################################################
-    # Constructor Method
-    #################################################################################################
+
     """
     INTERFACE
     Defines a single hidden layer in ANN -> Every hidden layer should implement this class
@@ -27,6 +25,10 @@ class HiddenLayer(NetworkLayer, ABC):
             eps (float): to avoid division by 0
             id_tensor (torch.Tensor): id tensor of layer
     """
+
+    #################################################################################################
+    # Constructor Method
+    #################################################################################################
     def __init__(self, 
                  input_dimension: int, 
                  output_dimension: int, 
@@ -210,12 +212,12 @@ class HiddenLayer(NetworkLayer, ABC):
     def _sanger_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Computes Sanger's Rules.
+        Computes Hebbian Leanring Rule -> this is the vanilla hebbian learning rule
         @param
-            input: the inputs into the layer
+            input: the input of the layer
             output: the output of the layer
         @return
-            
+            computed_rule: this is the delta_weight value
         """
         # Copy both input and output to be used in Sanger's Rule
         x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
