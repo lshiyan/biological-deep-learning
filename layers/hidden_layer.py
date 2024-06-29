@@ -212,7 +212,7 @@ class HiddenLayer(NetworkLayer, ABC):
     def _sanger_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Computes Hebbian Leanring Rule -> this is the vanilla hebbian learning rule
+        Computes Sanger's Rule
         @param
             input: the input of the layer
             output: the output of the layer
