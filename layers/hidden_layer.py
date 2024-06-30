@@ -137,7 +137,7 @@ class HiddenLayer(NetworkLayer, ABC):
         return output
 
     
-    def _gaussian_inhibition(self, input: torch.Tensor, sigma: float = 1.0) -> torch.Tensor:
+#    def _gaussian_inhibition(self, input: torch.Tensor, sigma: float = 1.0) -> torch.Tensor:
         """
         METHOD
         Calculates gaussian lateral inhibition
@@ -155,7 +155,51 @@ class HiddenLayer(NetworkLayer, ABC):
 
         output: torch.Tensor = F.conv1d(input_copy.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
         return output
+    
+    def gaussian_inhibition(self, input: torch.Tensor, sigma=None) -> torch.Tensor:
+        """
+        Calculates Gaussian lateral inhibition
+        @param
+            input: input to layer
+            sigma: standard deviation for the Gaussian kernel
+        @return
+            output: activation after lateral inhibition
+        """
+        # Use the instance sigma if not provided
+        if sigma is None:
+            sigma = self.sigma
 
+        # Ensure sigma is a scalar
+        if isinstance(sigma, torch.Tensor):
+            if sigma.numel() > 1:
+                raise ValueError("sigma should be a scalar or a single-element tensor.")
+            sigma = sigma.item()
+        
+        # Handle 2D Gaussian kernel
+        size: int = int(2 * sigma + 1)
+        coords = torch.arange(size, dtype=torch.float32) - size // 2
+        grid = coords.view(-1, 1) ** 2 + coords.view(1, -1) ** 2
+
+        grid = -0.5 * grid / (sigma ** 2)
+        max_value = torch.max(grid)
+        grid = grid - max_value  # Shift values to avoid overflow
+        kernel = torch.exp(grid)
+        kernel = kernel / torch.sum(kernel)
+
+        # Apply 2D Gaussian filter
+        kernel = kernel.view(1, 1, size, size)  # Reshape for 2D convolution
+        input = input.unsqueeze(1)  # Add channel dimension
+        output = F.conv2d(input, kernel, padding=size//2)
+        output = output.squeeze(1)  # Remove channel dimension
+
+        # Check for NaNs in the output
+        if output.isnan().any():
+            print("NaNs detected in gaussian_inhibition output")
+            output = torch.nan_to_num(output)
+
+        print(output)
+
+        return output
     
     def _norm_inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """

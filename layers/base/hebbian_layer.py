@@ -68,7 +68,7 @@ class HebbianLayer(HiddenLayer):
             input: the inputs into the layer
         @return
             inputs after inhibition
-        """
+        
         if self.inhibition_rule == LateralInhibitions.RELU_INHIBITION:
             return self._relu_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.SOFTMAX_INHIBITION:
@@ -81,7 +81,9 @@ class HebbianLayer(HiddenLayer):
             return self._gaussian_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.NORM_INHIBITION:
             return self._norm_inhibition(input)
-    
+        """
+        return self._gaussian_inhibition(input)
+
     
     def update_weights(self, input: torch.Tensor, output: torch.Tensor) -> None:
         """
