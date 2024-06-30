@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from interfaces.network import Network
 
 # Utils imports
-from utils.experiment_constants import DataSetNames, ExperimentPhases, ExperimentTypes
+from utils.experiment_constants import DataSetNames, ExperimentPhases, ExperimentTypes, Purposes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -124,7 +124,8 @@ class Experiment(ABC):
     
     def _training(self, 
                   train_data_loader: DataLoader, 
-                  epoch: int, sname: DataSetNames, 
+                  epoch: int, 
+                  dname: str, 
                   phase: ExperimentPhases, 
                   visualize: bool = True
                   ) -> None:
@@ -133,9 +134,9 @@ class Experiment(ABC):
     
     def _testing(self, 
                  test_data_loader: DataLoader, 
-                 set_name: str, 
+                 purpose: Purposes, 
                  epoch: int, 
-                 sname: DataSetNames, 
+                 dname: str, 
                  phase: ExperimentPhases
                  ) -> Tuple[float, ...]:
         raise NotImplementedError("This method was not implemented.")

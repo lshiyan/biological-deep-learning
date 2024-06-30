@@ -14,8 +14,8 @@ def parse_arguments(args_list: List = None) -> argparse.Namespace:
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
 
     # Basic configurations
-    parser.add_argument('--is_training', type=bool, default=True, help='status')
     parser.add_argument('--data_name', type=str, default="MNIST")
+    parser.add_argument('--e_data_name', type=str, default="E_MNIST")
 
     # Data Factory
     parser.add_argument('--train_data', type=str, default="data/mnist/train-images.idx3-ubyte")

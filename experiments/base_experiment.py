@@ -15,7 +15,7 @@ from layers.input_layer import InputLayer
 from layers.base.data_setup_layer import DataSetupLayer
 
 # Utils imports
-from utils.experiment_constants import DataSetNames, ExperimentPhases, LayerNames, Purposes
+from utils.experiment_constants import ExperimentPhases, LayerNames, Purposes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -51,6 +51,7 @@ class BaseExperiment(Experiment):
             DEBUG_LOG (logging.Logger): debugging
             EXP_LOG (logging.Logger): logging of experiment process
         OWN ATTR.
+            data_name (str): name of dataset
             train_data (str): path to train data
             train_label (str): path to train label
             train_fname (str): path to train filename
@@ -72,6 +73,7 @@ class BaseExperiment(Experiment):
             None
         """
         super().__init__(model, args, name)
+        self.data_name: str = args.data_name
         self.train_data: str = args.train_data
         self.train_label: str = args.train_label
         self.train_fname: str = args.train_filename
@@ -87,7 +89,7 @@ class BaseExperiment(Experiment):
     def _base_train(self, 
                     train_data_loader: DataLoader, 
                     epoch: int, 
-                    sname: DataSetNames, 
+                    dname: str, 
                     visualize: bool = True
                     ) -> None:
         """
@@ -101,8 +103,10 @@ class BaseExperiment(Experiment):
         @return
             None
         """
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning')
+        
         train_start: float = time.time()
-        self.EXP_LOG.info(f"Started 'base_train' function with {sname.value.lower().capitalize()}.")
+        self.EXP_LOG.info(f"Started 'base_train' function with {dname.upper()}.")
 
         # Epoch and batch set up
         train_batches_per_epoch: int = len(train_data_loader)
@@ -123,8 +127,6 @@ class BaseExperiment(Experiment):
         train_end: float = time.time()
         training_time: float = train_end - train_start
         self.TRAIN_TIME += training_time
-        
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning')
             
         self.EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(training_time)}.")
         self.EXP_LOG.info("Completed 'base_train' function.")
@@ -134,7 +136,7 @@ class BaseExperiment(Experiment):
                    test_data_loader: DataLoader, 
                    purpose: Purposes, 
                    epoch: int, 
-                   sname: DataSetNames
+                   dname: str
                    ) -> float:
         """
         METHOD
@@ -148,7 +150,7 @@ class BaseExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         test_start: float = time.time()
-        self.EXP_LOG.info(f"Started 'base_test' function with {sname.value.lower().capitalize()}.")
+        self.EXP_LOG.info(f"Started 'base_test' function with {dname.upper()}.")
 
         # Epoch and batch set up
         test_batches_per_epoch = len(test_data_loader)
@@ -188,8 +190,8 @@ class BaseExperiment(Experiment):
         self.EXP_LOG.info("Completed 'base_test' function.")
         self.EXP_LOG.info(f"Testing ({purpose.value.lower()} acc) of epoch #{epoch} took {time_to_str(testing_time)}.")
 
-        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Epoch Number: {epoch} || Dataset: {sname.value.lower().capitalize()} || Test Accuracy: {final_accuracy}')
-        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Dataset: {sname.value.lower().capitalize()} || Train Accuracy: {final_accuracy}')
+        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Epoch Number: {epoch} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
+        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
         
         return final_accuracy
     
@@ -201,7 +203,7 @@ class BaseExperiment(Experiment):
     def _training(self, 
                   train_data_loader: DataLoader, 
                   epoch: int, 
-                  sname: DataSetNames, 
+                  dname: str, 
                   phase: ExperimentPhases, 
                   visualize: bool = True
                   ) -> None:
@@ -211,20 +213,20 @@ class BaseExperiment(Experiment):
         @param
             train_data_loader: dataloader containing the training dataset
             epoch: epoch number of training iteration that is being tested on
-            sname: dataset name
+            dname: dataset name
             phase: which part of experiment -> which training to do
         @return
             None
         """
         if phase == ExperimentPhases.BASE:
-            self._base_train(train_data_loader, epoch, sname, visualize)
+            self._base_train(train_data_loader, epoch, dname, visualize)
           
         
     def _testing(self, 
                  test_data_loader: DataLoader, 
                  purpose: Purposes, 
                  epoch: int, 
-                 sname: DataSetNames, 
+                 dname: str, 
                  phase: ExperimentPhases
                  ) -> Tuple[float, ...]:
         """
@@ -234,13 +236,13 @@ class BaseExperiment(Experiment):
             test_data_loader: dataloader containing the testing dataset
             purpose: name of set for logging purposes (test/train)
             epoch: epoch number of training iteration that is being tested on
-            sname: dataset name
+            dname: dataset name
             phase: which part of experiment -> which test to do
         @return
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         if phase == ExperimentPhases.BASE:
-            return self._base_test(test_data_loader, purpose, epoch, sname)
+            return self._base_test(test_data_loader, purpose, epoch, dname)
     
 
 
@@ -260,7 +262,7 @@ class BaseExperiment(Experiment):
         self.START_TIME = time.time()
         self.EXP_LOG.info("Start of experiment.")
         
-        torch.device(self.device) # NOTE: Should this line be here or used where we create the experiment itself
+        torch.device(self.device)
         self.PRINT_LOG.info(f"local_machine: {self.local_machine}.")
         
         # Logging training parameters
@@ -300,21 +302,21 @@ class BaseExperiment(Experiment):
         
         for epoch in range(0, self.epochs):
             # Testing accuracy
-            self._testing(test_data_loader, Purposes.TEST_ACCURACY, epoch, DataSetNames.MNIST, ExperimentPhases.BASE)
+            self._testing(test_data_loader, Purposes.TEST_ACCURACY, epoch, self.data_name, ExperimentPhases.BASE)
             
             # Training accuracy
-            self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, DataSetNames.MNIST, ExperimentPhases.BASE)
+            self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, self.data_name, ExperimentPhases.BASE)
             
             # Training
-            self._training(train_data_loader, epoch, DataSetNames.MNIST, ExperimentPhases.BASE)
+            self._training(train_data_loader, epoch, self.data_name, ExperimentPhases.BASE)
         
         self.EXP_LOG.info("Completed training of model.")        
         self.model.visualize_weights(self.RESULT_PATH, self.epochs, 'final')
         self.EXP_LOG.info("Visualize weights of model after training.")
         
         # Final testing of model
-        test_acc = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.BASE)
-        train_acc = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.BASE)
+        test_acc = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, self.data_name, ExperimentPhases.BASE)
+        train_acc = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, self.data_name, ExperimentPhases.BASE)
         self.EXP_LOG.info("Completed final testing methods.")
         
         # Logging final parameters of experiment
@@ -327,9 +329,9 @@ class BaseExperiment(Experiment):
         self.EXP_LOG.info(f"The experiment took {time_to_str(self.DURATION)} to be completed.")
         self.PARAM_LOG.info(f"End time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.END_TIME))}")
         self.PARAM_LOG.info(f"Runtime of experiment: {time_to_str(self.DURATION)}")
-        self.PARAM_LOG.info(f"Train time of experiment: {time_to_str(self.TRAIN_TIME)}")
-        self.PARAM_LOG.info(f"Test time (test acc) of experiment: {time_to_str(self.TEST_ACC_TIME)}")
-        self.PARAM_LOG.info(f"Test time (train acc) of experiment: {time_to_str(self.TRAIN_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Total train time of experiment: {time_to_str(self.TRAIN_TIME)}")
+        self.PARAM_LOG.info(f"Total test time (test acc) of experiment: {time_to_str(self.TEST_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Total test time (train acc) of experiment: {time_to_str(self.TRAIN_ACC_TIME)}")
         self.EXP_LOG.info("The experiment has been completed.")
         
         return (test_acc, train_acc)

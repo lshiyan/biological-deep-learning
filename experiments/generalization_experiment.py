@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, TensorDataset
 # Custom defined model imports
 from interfaces.experiment import Experiment
 from interfaces.network import Network
-from layers.input_layer import InputLayer
+from layers.input_layer import InputLayer, NamedTensorDataset
 
 from layers.base.data_setup_layer import DataSetupLayer
 
@@ -88,6 +88,7 @@ class GeneralizationExperiment(Experiment):
             None
         """
         super().__init__(model, args, name)
+        self.data_name: str = args.data_name
         self.train_data: str = args.train_data
         self.train_label: str = args.train_label
         self.train_fname: str = args.train_filename
@@ -95,6 +96,7 @@ class GeneralizationExperiment(Experiment):
         self.test_label: str = args.test_label
         self.test_fname: str = args.test_filename
         
+        self.e_data_name: str = args.e_data_name
         self.e_train_data: str = args.e_train_data
         self.e_train_label: str = args.e_train_label
         self.e_train_fname: str = args.e_train_filename
@@ -117,7 +119,7 @@ class GeneralizationExperiment(Experiment):
     def _reconstruct_train(self, 
                            train_data_loader: DataLoader, 
                            epoch: int, 
-                           sname: DataSetNames, 
+                           dname: str, 
                            visualize: bool = True
                            ) -> None:
         """
@@ -131,14 +133,16 @@ class GeneralizationExperiment(Experiment):
         @return
             None
         """
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'rec_learning')
+        
         train_start: float = time.time()
-        self.EXP_LOG.info(f"Started 'reconstruct_train' function with {sname.value.lower().capitalize()}.")
+        self.EXP_LOG.info(f"Started 'reconstruct_train' function with {dname.upper()}.")
 
         # Epoch and batch set up
         train_batches_per_epoch: int = len(train_data_loader)
         self.EXP_LOG.info(f"This training batch is epoch #{epoch} with {train_batches_per_epoch} batches of size {self.batch_size} in this epoch.")
 
-        # Set the model to training mode - important for layers with different training / inference behaviour
+        # Set the model to training mode
         self.model.train()
         self.EXP_LOG.info("Set the model to training mode.")
 
@@ -154,8 +158,6 @@ class GeneralizationExperiment(Experiment):
         training_time: float = train_end - train_start
         self.TRAIN_TIME += training_time
         self.REC_TRAIN_TIME += training_time
-        
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'rec_learning')
             
         self.EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(training_time)}.")
         self.EXP_LOG.info("Completed 'reconstruct_train' function.")
@@ -165,7 +167,7 @@ class GeneralizationExperiment(Experiment):
                           test_data_loader: DataLoader, 
                           purpose: Purposes, 
                           epoch: int, 
-                          sname: DataSetNames
+                          dname: str
                           ) -> Tuple[float, float]:
         """
         METHOD
@@ -179,7 +181,7 @@ class GeneralizationExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         test_start: float = time.time()
-        self.EXP_LOG.info(f"Started 'reconstruct_test' function with {sname.value.lower().capitalize()}.")
+        self.EXP_LOG.info(f"Started 'reconstruct_test' function with {dname.upper()}.")
 
         # Epoch and batch set up
         test_batches_per_epoch = len(test_data_loader)
@@ -239,8 +241,8 @@ class GeneralizationExperiment(Experiment):
         self.EXP_LOG.info("Completed 'reconstruct_test' function.")
         self.EXP_LOG.info(f"Reconstruction Testing ({purpose.value.lower()} acc) of epoch #{epoch} took {time_to_str(testing_time)}.")
 
-        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Epoch Number: {epoch} || Dataset: {sname.value.lower().capitalize()} || Test Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
-        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Dataset: {sname.value.lower().capitalize()} || Train Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
+        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Epoch Number: {epoch} || Dataset: {dname.upper()} || Test Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
+        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Dataset: {dname.upper()} || Train Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
         
         return (cos_error, norm_error)
     
@@ -252,7 +254,7 @@ class GeneralizationExperiment(Experiment):
     def _freeze_train(self, 
                       train_data_loader: DataLoader, 
                       epoch: int, 
-                      sname: DataSetNames, 
+                      dname: str, 
                       visualize: bool = True
                       ) -> None:
         """
@@ -267,7 +269,7 @@ class GeneralizationExperiment(Experiment):
             None
         """
         train_start: float = time.time()
-        self.EXP_LOG.info(f"Started 'freeze_train' function with {sname.value.lower().capitalize()}.")
+        self.EXP_LOG.info(f"Started 'freeze_train' function with {dname.upper()}.")
 
         # Epoch and batch set up
         train_batches_per_epoch: int = len(train_data_loader)
@@ -300,7 +302,7 @@ class GeneralizationExperiment(Experiment):
                      test_data_loader: DataLoader, 
                      purpose: Purposes, 
                      epoch: int, 
-                     sname: DataSetNames
+                     dname: str
                      ) -> float:
         """
         METHOD
@@ -314,7 +316,7 @@ class GeneralizationExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         test_start: float = time.time()
-        self.EXP_LOG.info(f"Started 'freeze_test' function with {sname.value.lower().capitalize()}.")
+        self.EXP_LOG.info(f"Started 'freeze_test' function with {dname.upper()}.")
 
         # Epoch and batch set up
         test_batches_per_epoch = len(test_data_loader)
@@ -358,8 +360,8 @@ class GeneralizationExperiment(Experiment):
         self.EXP_LOG.info("Completed 'freeze_test' function.")
         self.EXP_LOG.info(f"Testing (freeze {purpose.value.lower()} acc) of epoch #{epoch} took {time_to_str(testing_time)}.")
 
-        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Epoch Number: {epoch} || Dataset: {sname.value.lower().capitalize()} || Freeze Test Accuracy: {final_accuracy}')
-        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Dataset: {sname.value.lower().capitalize()} || Freeze Train Accuracy: {final_accuracy}')
+        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Epoch Number: {epoch} || Dataset: {dname.upper()} || Freeze Test Accuracy: {final_accuracy}')
+        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Epoch Number: {epoch} || Dataset: {dname.upper()} || Freeze Train Accuracy: {final_accuracy}')
         
         return final_accuracy
     
@@ -371,7 +373,7 @@ class GeneralizationExperiment(Experiment):
     def _training(self, 
                   train_data_loader: DataLoader, 
                   epoch: int, 
-                  sname: DataSetNames, 
+                  dname: str, 
                   phase: ExperimentPhases, 
                   visualize: bool = True
                   ) -> None:
@@ -387,16 +389,16 @@ class GeneralizationExperiment(Experiment):
             None
         """
         if phase == ExperimentPhases.RECONSTRUCTION:
-            self._reconstruct_train(train_data_loader, epoch, sname, visualize)
+            self._reconstruct_train(train_data_loader, epoch, dname, visualize)
         elif phase == ExperimentPhases.FREEZING_WEIGHTS:
-            self._freeze_train(train_data_loader, epoch, sname, visualize)
+            self._freeze_train(train_data_loader, epoch, dname, visualize)
     
     
     def _testing(self, 
                  test_data_loader: DataLoader, 
                  purpose: Purposes, 
                  epoch: int, 
-                 sname: DataSetNames, 
+                 dname: str, 
                  phase: ExperimentPhases
                  ) -> Tuple[float, ...]:
         """
@@ -412,9 +414,9 @@ class GeneralizationExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         if phase == ExperimentPhases.RECONSTRUCTION:
-            return self._reconstruct_test(test_data_loader, purpose, epoch, sname)
+            return self._reconstruct_test(test_data_loader, purpose, epoch, dname)
         elif phase == ExperimentPhases.FREEZING_WEIGHTS:
-            return self._freeze_test(test_data_loader, purpose, epoch, sname)
+            return self._freeze_test(test_data_loader, purpose, epoch, dname)
     
     
     
@@ -461,22 +463,22 @@ class GeneralizationExperiment(Experiment):
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
         # Training dataset
-        train_data_set: TensorDataset = input_class.setup_data(self.train_data, self.train_label, self.train_fname, 60000)
+        train_data_set: NamedTensorDataset = input_class.setup_data(self.data_name, self.train_data, self.train_label, self.train_fname, 60000)
         train_data_loader: DataLoader = DataLoader(train_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
 
         # Testing dataset
-        test_data_set: TensorDataset = input_class.setup_data(self.test_data, self.test_label, self.test_fname, 10000)
+        test_data_set: NamedTensorDataset = input_class.setup_data(self.data_name, self.test_data, self.test_label, self.test_fname, 10000)
         test_data_loader: DataLoader = DataLoader(test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         
         # Extented training dataset
-        e_train_data_set: TensorDataset = input_class.setup_data(self.e_train_data, self.e_train_label, self.e_train_fname, 60000)
+        e_train_data_set: NamedTensorDataset = input_class.setup_data(self.e_data_name, self.e_train_data, self.e_train_label, self.e_train_fname, 60000)
         e_train_data_loader: DataLoader = DataLoader(e_train_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-training dataset and dataloader.")
         
         # Extended testing dataset
-        e_test_data_set: TensorDataset = input_class.setup_data(self.e_test_data, self.e_test_label, self.e_test_fname, 10000)
+        e_test_data_set: NamedTensorDataset = input_class.setup_data(self.e_data_name, self.e_test_data, self.e_test_label, self.e_test_fname, 10000)
         e_test_data_loader: DataLoader = DataLoader(e_test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-testing dataset and dataloader.")
         
