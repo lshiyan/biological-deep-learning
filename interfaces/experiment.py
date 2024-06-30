@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from interfaces.network import Network
 
 # Utils imports
-from utils.experiment_constants import DataSetNames, ExperimentPhases, ExperimentTypes, Purposes
+from utils.experiment_constants import ExperimentPhases, ExperimentTypes, Purposes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *

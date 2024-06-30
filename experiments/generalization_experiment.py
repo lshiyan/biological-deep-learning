@@ -12,12 +12,12 @@ from torch.utils.data import DataLoader, TensorDataset
 # Custom defined model imports
 from interfaces.experiment import Experiment
 from interfaces.network import Network
-from layers.input_layer import InputLayer, NamedTensorDataset
+from layers.input_layer import InputLayer
 
 from layers.base.data_setup_layer import DataSetupLayer
 
 # Utils imports
-from utils.experiment_constants import DataSetNames, ExperimentPhases, LayerNames, Purposes
+from utils.experiment_constants import ExperimentPhases, LayerNames, Purposes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -463,22 +463,22 @@ class GeneralizationExperiment(Experiment):
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
         # Training dataset
-        train_data_set: NamedTensorDataset = input_class.setup_data(self.data_name, self.train_data, self.train_label, self.train_fname, 60000)
+        train_data_set: TensorDataset = input_class.setup_data(self.train_data, self.train_label, self.train_fname, 60000)
         train_data_loader: DataLoader = DataLoader(train_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
 
         # Testing dataset
-        test_data_set: NamedTensorDataset = input_class.setup_data(self.data_name, self.test_data, self.test_label, self.test_fname, 10000)
+        test_data_set: TensorDataset = input_class.setup_data(self.test_data, self.test_label, self.test_fname, 10000)
         test_data_loader: DataLoader = DataLoader(test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         
         # Extented training dataset
-        e_train_data_set: NamedTensorDataset = input_class.setup_data(self.e_data_name, self.e_train_data, self.e_train_label, self.e_train_fname, 60000)
+        e_train_data_set: TensorDataset = input_class.setup_data(self.e_train_data, self.e_train_label, self.e_train_fname, 60000)
         e_train_data_loader: DataLoader = DataLoader(e_train_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-training dataset and dataloader.")
         
         # Extended testing dataset
-        e_test_data_set: NamedTensorDataset = input_class.setup_data(self.e_data_name, self.e_test_data, self.e_test_label, self.e_test_fname, 10000)
+        e_test_data_set: TensorDataset = input_class.setup_data(self.e_test_data, self.e_test_label, self.e_test_fname, 10000)
         e_test_data_loader: DataLoader = DataLoader(e_test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-testing dataset and dataloader.")
         
@@ -488,28 +488,28 @@ class GeneralizationExperiment(Experiment):
         # Reconstruction -> Hebbian layer training and testing
         for epoch in range(0, self.epochs):
             # Testing accuracy
-            self._testing(test_data_loader, Purposes.TEST_ACCURACY, epoch, DataSetNames.MNIST, ExperimentPhases.RECONSTRUCTION)
-            self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, epoch, DataSetNames.E_MNIST, ExperimentPhases.RECONSTRUCTION)
+            self._testing(test_data_loader, Purposes.TEST_ACCURACY, epoch, self.data_name, ExperimentPhases.RECONSTRUCTION)
+            self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, epoch, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
             
             # Training accuracy
-            self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, DataSetNames.MNIST, ExperimentPhases.RECONSTRUCTION)
-            self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, epoch, DataSetNames.E_MNIST, ExperimentPhases.RECONSTRUCTION)
+            self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, self.data_name, ExperimentPhases.RECONSTRUCTION)
+            self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, epoch, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
             
             # Training
-            self._training(train_data_loader, epoch, DataSetNames.MNIST, ExperimentPhases.RECONSTRUCTION)
+            self._training(train_data_loader, epoch, self.data_name, ExperimentPhases.RECONSTRUCTION)
         
         # Freezing weights -> training classification    
         for epoch in range(0, self.epochs):
             # Testing accuracy
-            self._testing(test_data_loader, Purposes.TEST_ACCURACY, epoch, DataSetNames.MNIST, ExperimentPhases.FREEZING_WEIGHTS)
-            self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, epoch, DataSetNames.E_MNIST, ExperimentPhases.FREEZING_WEIGHTS)
+            self._testing(test_data_loader, Purposes.TEST_ACCURACY, epoch, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
+            self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, epoch, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
             
             # Training accuracy
-            self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, DataSetNames.MNIST, ExperimentPhases.FREEZING_WEIGHTS)
-            self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, epoch, DataSetNames.E_MNIST, ExperimentPhases.FREEZING_WEIGHTS)
+            self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
+            self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, epoch, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
             
             # Training
-            self._training(e_train_data_loader, epoch, DataSetNames.MNIST, ExperimentPhases.FREEZING_WEIGHTS)
+            self._training(e_train_data_loader, epoch, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
             
         
         self.EXP_LOG.info("Completed training of model.")        
@@ -517,26 +517,27 @@ class GeneralizationExperiment(Experiment):
         self.EXP_LOG.info("Visualize weights of model after training.")
         
         # Final testing of model
-        test_acc_mnist = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.FREEZING_WEIGHTS)
-        train_acc_mnist = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.FREEZING_WEIGHTS)
-        test_acc_emnist = self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.E_MNIST, ExperimentPhases.FREEZING_WEIGHTS)
-        train_acc_emnist = self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.E_MNIST, ExperimentPhases.FREEZING_WEIGHTS)
-        rec_cos_test_mnist, rec_norm_test_mnist = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.RECONSTRUCTION)
-        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.E_MNIST, ExperimentPhases.RECONSTRUCTION)
-        rec_cos_train_mnist, rec_norm_train_mnist = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.RECONSTRUCTION)
-        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.E_MNIST, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_test_mnist, rec_norm_test_mnist = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, self.data_name, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, self.epochs, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_train_mnist, rec_norm_train_mnist = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, self.data_name, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
+        
+        freeze_test_acc_mnist = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
+        freeze_train_acc_mnist = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
+        freeze_test_acc_emnist = self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, self.epochs, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
+        freeze_train_acc_emnist = self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
         self.EXP_LOG.info("Completed final testing methods.")
         
         # Logging final parameters of experiment 
-        self.PARAM_LOG.info(f"Training accuracy of model after training for {self.epochs} epochs: {train_acc_mnist} (MNIST)")
-        self.PARAM_LOG.info(f"Testing accuracy of model after training for {self.epochs} epochs: {test_acc_mnist} (MNIST)")
-        self.PARAM_LOG.info(f"Training accuracy of model after training for {self.epochs} epochs: {train_acc_emnist} (E-MNIST)")
-        self.PARAM_LOG.info(f"Testing accuracy of model after training for {self.epochs} epochs: {test_acc_emnist} (E-MNIST)")
-        
         self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_mnist}, norm = {rec_norm_train_mnist} (MNIST)")
         self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs:  cos ={rec_cos_test_mnist}, norm = {rec_norm_test_mnist} (MNIST)")
         self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_emnist}, norm = {rec_norm_train_emnist} (E-MNIST)")
         self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_test_emnist}, norm = {rec_norm_test_emnist} (E-MNIST)")
+        
+        self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_mnist} (MNIST)")
+        self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_mnist} (MNIST)")
+        self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_emnist} (E-MNIST)")
+        self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_emnist} (E-MNIST)")
         
         # End timer
         self.END_TIME = time.time()
@@ -556,10 +557,10 @@ class GeneralizationExperiment(Experiment):
         self.EXP_LOG.info("The experiment has been completed.")
         
         return (
-            train_acc_mnist, 
-            test_acc_mnist, 
-            train_acc_emnist, 
-            test_acc_emnist, 
+            freeze_train_acc_mnist, 
+            freeze_test_acc_mnist, 
+            freeze_train_acc_emnist, 
+            freeze_test_acc_emnist, 
             rec_cos_train_mnist, 
             rec_norm_train_mnist, 
             rec_cos_test_mnist, 
