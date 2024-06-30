@@ -173,7 +173,8 @@ class BaseExperiment(Experiment):
         @param
             test_data_loader: dataloader containing the testing dataset
             purpose: name of set for logging purposes (test/train)
-            sname: dataset name
+            dname: dataset name
+            last: is it final test
         @return
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
