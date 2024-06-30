@@ -41,7 +41,7 @@ arguments = [
             # Experiment parameters
             '--batch_size=1',
             '--epochs=1', 
-            '--test_epochs=1',
+            '--test_sample=10000',
             '--device=cpu',
             '--local_machine=True',
             '--experiment_type=base'

@@ -26,7 +26,7 @@ class Experiment(ABC):
         model (Network): model used in experiment
         batch_size (int): size of each batch of data
         epochs (int): number of epochs to train
-        test_epochs (int): interval at which testing will be done
+        test_sample (int): interval at which testing will be done
         device (str): device that will be used for CUDA
         local_machine (bool): where code is ran
         experiment_type (ExperimentTypes): what type of experiment to be ran
@@ -62,7 +62,7 @@ class Experiment(ABC):
         self.model: Network = model.to(args.device).float()
         self.batch_size: int = args.batch_size
         self.epochs: int = args.epochs
-        self.test_epochs: int = args.test_epochs
+        self.test_sample: int = args.test_sample
         self.device: str = args.device
         self.local_machine: bool = args.local_machine
         self.experiment_type: ExperimentTypes = experiment_mapping[args.experiment_type.upper()]
