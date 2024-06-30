@@ -114,28 +114,27 @@ class HiddenLayer(NetworkLayer, ABC):
         return output
     
         
-    def _wta_inhibition(self, input:torch.Tensor, top_k: int = 1) -> torch.Tensor:
+    def _wta_inhibition(self, input: torch.Tensor, threshold: float) -> torch.Tensor:
         """
         METHOD
-        Calculates k-winners-takes-all lateral inhibition
+        Calculates Winner-Takes-All (WTA) lateral inhibition
         @param
             input: input to layer
-            top_k: number of "winner"
+            threshold: threshold value for WTA
         @return
             output: activation after lateral inhibition
         """
-        # NOTE: this function does not work as of yet
+        # Clone and detach the input tensor to avoid in-place operations
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         
-        flattened_input: torch.Tensor = input_copy.flatten()
-
-        topk_values, _ = torch.topk(flattened_input, top_k)
-        threshold = topk_values[-1]
-
-        output: torch.Tensor = torch.where(input >= threshold, input, torch.tensor(0.0, device=input.device))
-
+        # Apply the threshold
+        mask = (input_copy >= threshold).float()
+        
+        # Element-wise multiplication to keep values above the threshold
+        output: torch.Tensor = input_copy * mask
+        
         return output
-
+    
     
 #    def _gaussian_inhibition(self, input: torch.Tensor, sigma: float = 1.0) -> torch.Tensor:
         """
@@ -156,7 +155,7 @@ class HiddenLayer(NetworkLayer, ABC):
         output: torch.Tensor = F.conv1d(input_copy.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
         return output
     
-    def gaussian_inhibition(self, input: torch.Tensor, sigma=None) -> torch.Tensor:
+    def _gaussian_inhibition(self, input: torch.Tensor, sigma=1.0) -> torch.Tensor:
         """
         Calculates Gaussian lateral inhibition
         @param
