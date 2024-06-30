@@ -5,6 +5,9 @@
 __pycache__/
 *.pyc
 
+#VSCode settings
+.vscode/
+
 #Tests
 tests/
 
@@ -15,5 +18,5 @@ results/
 data/
 
 #Run and train files
-#run.py
-#train.py
+run.py
+train.py
