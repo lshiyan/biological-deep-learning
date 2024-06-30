@@ -123,7 +123,7 @@ class NetworkLayer (nn.Module, ABC):
         root: int = int(math.sqrt(n))
         min_product: int = float('inf')
         
-        for i in range(1, root + 1):
+        for i in range(2, root + 1):
             if n % i == 0:
                 factor1 = i
                 factor2 = n // i
@@ -140,25 +140,28 @@ class NetworkLayer (nn.Module, ABC):
                     min_product = factor1 * factor2
                     row = min(factor1, factor2)
                     col = max(factor1, factor2)
-                
         
         # Get the weights and create heatmap
         weight: nn.parameter.Parameter = self.fc.weight
         fig: matplotlib.figure.Figure = None
         axes: np.ndarray = None
         fig, axes = plt.subplots(row, col, figsize=(16, 16))
-        for ele in range(row*col):  
-            random_feature_selector: torch.Tensor = weight[ele]
-            # Move tensor to CPU, convert to NumPy array for visualization
-            heatmap: torch.Tensor = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))), int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
+        for ele in range(row * col): 
+            if ele < self.output_dimension:
+                random_feature_selector: torch.Tensor = weight[ele]
+                # Move tensor to CPU, convert to NumPy array for visualization
+                heatmap: torch.Tensor = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))), int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
 
-            ax = axes[ele // col, ele % col]
-            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
-            fig.colorbar(im, ax=ax)
-            ax.set_title(f'Weight {ele}')
-            
-            # Move the tensor back to the GPU if needed
-            random_feature_selector = random_feature_selector.to(self.device)
+                ax = axes[ele // col, ele % col]
+                im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+                fig.colorbar(im, ax=ax)
+                ax.set_title(f'Weight {ele}')
+                
+                # Move the tensor back to the GPU if needed
+                random_feature_selector = random_feature_selector.to(self.device)
+            else:
+                ax = axes[ele // col, ele % col]
+                ax.axis('off')
         
         file_path: str = result_path + plot_name
         plt.tight_layout()

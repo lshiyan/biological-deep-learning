@@ -282,11 +282,6 @@ class GeneralizationExperiment(Experiment):
             # Move input and targets to device
             inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
             
-            
-            self.PRINT_LOG.info(f"Labels: {labels}")
-            self.PRINT_LOG.info(f"Output dim: {self.model.output_dim}")
-            
-            
             # Forward pass
             self.model(inputs, clamped_output=labels, freeze=True)
         
@@ -417,9 +412,9 @@ class GeneralizationExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         if phase == ExperimentPhases.RECONSTRUCTION:
-            self._reconstruct_test(test_data_loader, purpose, epoch, sname)
+            return self._reconstruct_test(test_data_loader, purpose, epoch, sname)
         elif phase == ExperimentPhases.FREEZING_WEIGHTS:
-            self._freeze_test(test_data_loader, purpose, epoch, sname)
+            return self._freeze_test(test_data_loader, purpose, epoch, sname)
     
     
     
@@ -520,14 +515,14 @@ class GeneralizationExperiment(Experiment):
         self.EXP_LOG.info("Visualize weights of model after training.")
         
         # Final testing of model
-        test_acc_mnist = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.MNIST)
-        train_acc_mnist = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.MNIST)
-        test_acc_emnist = self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.E_MNIST)
-        train_acc_emnist = self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.E_MNIST)
-        rec_cos_test_mnist, rec_norm_test_mnist = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.MNIST)
-        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.E_MNIST)
-        rec_cos_train_mnist, rec_norm_train_mnist = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.MNIST)
-        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.E_MNIST)
+        test_acc_mnist = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.FREEZING_WEIGHTS)
+        train_acc_mnist = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.FREEZING_WEIGHTS)
+        test_acc_emnist = self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.E_MNIST, ExperimentPhases.FREEZING_WEIGHTS)
+        train_acc_emnist = self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.E_MNIST, ExperimentPhases.FREEZING_WEIGHTS)
+        rec_cos_test_mnist, rec_norm_test_mnist = self._testing(test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(e_test_data_loader, Purposes.TEST_ACCURACY, self.epochs, DataSetNames.E_MNIST, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_train_mnist, rec_norm_train_mnist = self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.MNIST, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(e_train_data_loader, Purposes.TRAIN_ACCURACY, self.epochs, DataSetNames.E_MNIST, ExperimentPhases.RECONSTRUCTION)
         self.EXP_LOG.info("Completed final testing methods.")
         
         # Logging final parameters of experiment 
