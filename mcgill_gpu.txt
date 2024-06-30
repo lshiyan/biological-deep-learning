@@ -1,0 +1,5 @@
+ssh pzheng3@gpu-teach-01.cs.mcgill.ca
+ssh pzheng3@gpu-teach-02.cs.mcgill.ca
+ssh pzheng3@open-gpu-1.cs.mcgill.ca
+ssh pzheng3@open-gpu-32.cs.mcgill.ca
+nvidia-smi
