@@ -4,5 +4,10 @@ ssh pzheng3@open-gpu-1.cs.mcgill.ca
 ssh pzheng3@open-gpu-32.cs.mcgill.ca
 nvidia-smi
 source neuroai/bin/activate
-.\neuroai\Scripts\activate
+neuroai_venv\Scripts\activate
 deactivate
+
+torch
+trochvision
+pandas
+matplotlib
