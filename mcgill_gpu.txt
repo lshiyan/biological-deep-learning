@@ -3,7 +3,7 @@ ssh pzheng3@gpu-teach-02.cs.mcgill.ca
 ssh pzheng3@open-gpu-1.cs.mcgill.ca
 ssh pzheng3@open-gpu-32.cs.mcgill.ca
 nvidia-smi
-source neuroai/bin/activate
+source neuroai_venv/bin/activate
 neuroai_venv\Scripts\activate
 deactivate
 
@@ -11,3 +11,7 @@ torch
 trochvision
 pandas
 matplotlib
+
+venv neuroai_venv
+tests
+results
