@@ -112,9 +112,28 @@ class HiddenLayer(NetworkLayer, ABC):
         max_ele: int = torch.max(input_copy).item()
         output: torch.Tensor = F.softmax((input_copy - max_ele) * self.lamb, dim=-1).to(self.device)
         return output
-    
+
+
+    def _wta_inhibition(self, input: torch.Tensor, threshold: float) -> torch.Tensor:
+        """
+        METHOD
+        Applies Winner-Takes-All (WTA) lateral inhibition
+        @param
+            input: input tensor to the layer
+            threshold: threshold value to determine active neurons
+        @return
+            output: tensor after applying WTA lateral inhibition
+        """
+        # Clone and detach the input tensor to avoid in-place operations
+        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         
-    def _wta_inhibition(self, input:torch.Tensor, top_k: int = 1) -> torch.Tensor:
+        # Apply the threshold using torch.where to create the mask
+        output: torch.Tensor = torch.where(input_copy > threshold, input_copy, torch.tensor(0.0, device=self.device))
+                # The result is that only elements in input_copy greater than threshold are kept, and the rest are set to 0.
+        return output
+
+        
+#    def _wta_inhibition(self, input:torch.Tensor, top_k: int = 1) -> torch.Tensor:
         """
         METHOD
         Calculates k-winners-takes-all lateral inhibition
