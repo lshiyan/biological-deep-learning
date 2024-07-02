@@ -215,7 +215,6 @@ class GeneralizationExperiment(Experiment):
                           test_data_loader: DataLoader, 
                           purpose: Purposes,  
                           dname: str,
-                          last: bool = False
                           ) -> Tuple[float, float]:
         """
         METHOD
@@ -224,7 +223,6 @@ class GeneralizationExperiment(Experiment):
             test_data_loader: dataloader containing the testing dataset
             purpose: name of set for logging purposes (test/train)
             dname: dataset name
-            last: is it final test
         @return
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
@@ -289,10 +287,9 @@ class GeneralizationExperiment(Experiment):
         self.EXP_LOG.info("Completed 'reconstruct_test' function.")
         self.EXP_LOG.info(f"Reconstruction Testing ({purpose.value.lower()} acc) of sample #{self.REC_SAMPLES} took {time_to_str(testing_time)}.")
 
-        if not last:
-            if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
-            if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
-            
+        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
+        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
+        
         return (cos_error, norm_error)
     
     
@@ -359,7 +356,6 @@ class GeneralizationExperiment(Experiment):
                      test_data_loader: DataLoader, 
                      purpose: Purposes,  
                      dname: str,
-                     last: bool = False
                      ) -> float:
         """
         METHOD
@@ -368,7 +364,6 @@ class GeneralizationExperiment(Experiment):
             test_data_loader: dataloader containing the testing dataset
             purpose: name of set for logging purposes (test/train)
             dname: dataset name
-            last: is it final test
         @return
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
@@ -417,10 +412,9 @@ class GeneralizationExperiment(Experiment):
         self.EXP_LOG.info("Completed 'freeze_test' function.")
         self.EXP_LOG.info(f"Testing (freeze {purpose.value.lower()} acc) of sample #{self.FREEZE_SAMPLES} took {time_to_str(testing_time)}.")
 
-        if not last:
-            if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Test Accuracy: {final_accuracy}')
-            if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Train Accuracy: {final_accuracy}')
-            
+        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Test Accuracy: {final_accuracy}')
+        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Train Accuracy: {final_accuracy}')
+        
         return final_accuracy
     
     
@@ -457,7 +451,6 @@ class GeneralizationExperiment(Experiment):
                  purpose: Purposes, 
                  dname: str, 
                  phase: ExperimentPhases,
-                 last: bool = False
                  ) -> Tuple[float, ...]:
         """
         METHOD
@@ -471,9 +464,9 @@ class GeneralizationExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         if phase == ExperimentPhases.RECONSTRUCTION:
-            return self._reconstruct_test(test_data_loader, purpose, dname, last)
+            return self._reconstruct_test(test_data_loader, purpose, dname)
         elif phase == ExperimentPhases.FREEZING_WEIGHTS:
-            return self._freeze_test(test_data_loader, purpose, dname, last)
+            return self._freeze_test(test_data_loader, purpose, dname)
     
     
     
@@ -530,15 +523,15 @@ class GeneralizationExperiment(Experiment):
         self.EXP_LOG.info("Visualize weights of model after training.")
         
         # Final testing of model
-        rec_cos_test_mnist, rec_norm_test_mnist = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION, last=True)
-        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION, last=True)
-        rec_cos_train_mnist, rec_norm_train_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION, last=True)
-        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION, last=True)
+        rec_cos_test_mnist, rec_norm_test_mnist = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_train_mnist, rec_norm_train_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
+        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
         
-        freeze_test_acc_mnist = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS, last=True)
-        freeze_train_acc_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS, last=True)
-        freeze_test_acc_emnist = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS, last=True)
-        freeze_train_acc_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS, last=True)
+        freeze_test_acc_mnist = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
+        freeze_train_acc_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
+        freeze_test_acc_emnist = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
+        freeze_train_acc_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
         self.EXP_LOG.info("Completed final testing methods.")
         
         # Logging final parameters of experiment 

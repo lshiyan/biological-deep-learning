@@ -165,7 +165,6 @@ class BaseExperiment(Experiment):
                    test_data_loader: DataLoader, 
                    purpose: Purposes,  
                    dname: str,
-                   last: bool = False
                    ) -> float:
         """
         METHOD
@@ -219,10 +218,9 @@ class BaseExperiment(Experiment):
         self.EXP_LOG.info("Completed 'base_test' function.")
         self.EXP_LOG.info(f"Testing ({purpose.value.lower()} acc) of sample #{self.SAMPLES} took {time_to_str(testing_time)}.")
         
-        if not last:
-            if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
-            if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
-            
+        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
+        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
+        
         return final_accuracy
     
         
@@ -257,7 +255,6 @@ class BaseExperiment(Experiment):
                  purpose: Purposes, 
                  dname: str, 
                  phase: ExperimentPhases,
-                 last: bool = False
                  ) -> Tuple[float, ...]:
         """
         METHOD
@@ -271,7 +268,7 @@ class BaseExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         if phase == ExperimentPhases.BASE:
-            return self._base_test(test_data_loader, purpose, dname, last)
+            return self._base_test(test_data_loader, purpose, dname)
     
 
 
@@ -323,8 +320,8 @@ class BaseExperiment(Experiment):
         self.EXP_LOG.info("Visualize weights of model after training.")
         
         # Final testing of model
-        test_acc = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.BASE, last=True)
-        train_acc = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE, last=True)
+        test_acc = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.BASE)
+        train_acc = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE)
         self.EXP_LOG.info("Completed final testing methods.")
         
         # Logging final parameters of experiment

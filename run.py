@@ -26,7 +26,7 @@ arguments = [
             # Dimension of each layer
             '--input_dim=784', 
             '--heb_dim=64', 
-            '--output_dim=47',
+            '--output_dim=10',
             # Hebbian layer hyperparameters  
             '--heb_lamb=15', 
             '--heb_gam=0.99',
@@ -41,10 +41,10 @@ arguments = [
             # Experiment parameters
             '--batch_size=1',
             '--epochs=1', 
-            '--test_sample=10000',
+            '--test_sample=100',
             '--device=cpu',
             '--local_machine=True',
-            '--experiment_type=generalization'
+            '--experiment_type=base'
             ]
 
 # Construct the command

@@ -16,7 +16,7 @@ ARGS = parse_arguments()
 
 # Experiments setup
 lambda_test = []
-lambda_testing = [1]
+lambda_testing = [15]
 
 for num in range(1, 16):
     lambda_test.append(num)
