@@ -5,11 +5,17 @@
 __pycache__/
 *.pyc
 
-#Virtual env
-fundamental_virtual_env/
+#VSCode settings
+.vscode/
 
 #Tests
-#tests/
+tests/
 
 #Results
-#results/
+results/
+
+#Data
+#data/
+
+#Virtual env
+neuroai_venv/

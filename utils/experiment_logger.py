@@ -1,22 +1,16 @@
 import logging
 
 
-#########################################################################
-# CONSTANTS
-#########################################################################
 DEFAULT_LEVEL = logging.INFO
 DEFAULT_FORMAT = logging.Formatter('%(asctime)s || %(levelname)-10s || %(lineno)-4d || %(funcName)-15s || %(message)s')
 DEFAULT_FILE = 'error.log'
-DEFAULT_NAME = "Error Log"
+DEFAULT_NAME = 'Error Log'
 
 
-#########################################################################
-# Logging functions
-#########################################################################
 def configure_logger(name: str, file: str, level: int = DEFAULT_LEVEL, format: str = DEFAULT_FORMAT) -> logging.Logger:
     """
     FUNCTION
-    Create a logger to log information
+    Creates a logger to log information
     @param
         name: name of logger
         file: path to file
