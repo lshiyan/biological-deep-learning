@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Optional
 
 import torch
 from interfaces.layer import NetworkLayer
@@ -38,10 +39,10 @@ class InputLayer(NetworkLayer, ABC):
     # List of all methods from NetworkLayer that are not needed for this layer
     # TODO: find a better way to implement the logic of having an input processing layer that still extends the layer.NetworkLayer interface
     def create_id_tensors(self): pass
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None): pass
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None): pass
     def update_bias(self, output: torch.Tensor): pass
-    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, freeze: bool = False): pass
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None): pass
+    def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None, freeze: bool = False): pass
+    def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None): pass
     def _eval_forward(self, input: torch.Tensor): pass
     def visualize_weights(self, result_path: str, num: int, use: str, fname: str): pass
     def active_weights(self, beta: float): pass

@@ -95,7 +95,7 @@ for l in lambda_testing:
         avg_train_e = average(train_acc_e_list)
         var_train_e = variance(train_acc_e_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.function_type.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_e}, var = {var_test_e} || Train Acc: avg = {avg_train_e}, var = {var_train_e}")
+        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.function_type.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_e}, var = {var_test_e} || Train Acc: avg = {avg_train_e}, var = {var_train_e}") # type: ignore
         
         avg_test_cos = average(test_acc_list)
         var_test_cos = variance(test_acc_list)
@@ -109,7 +109,7 @@ for l in lambda_testing:
         avg_train_cos_e = average(train_acc_list)
         var_train_cos_e = variance(train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.function_type.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos_e}, var = {var_test_cos_e} || Cos-Sim Train Acc: avg = {avg_train_cos_e}, var = {var_train_cos_e}")
+        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.function_type.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos_e}, var = {var_test_cos_e} || Cos-Sim Train Acc: avg = {avg_train_cos_e}, var = {var_train_cos_e}") # type: ignore
         
         avg_test_norm = average(test_acc_list)
         var_test_norm = variance(test_acc_list)
@@ -123,7 +123,7 @@ for l in lambda_testing:
         avg_train_norm_e = average(train_acc_list)
         var_train_norm_e = variance(train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.function_type.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm_e}, var = {var_test_norm_e} || Norm Train Acc: avg = {avg_train_norm_e}, var = {var_train_norm_e}")
+        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.function_type.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm_e}, var = {var_test_norm_e} || Norm Train Acc: avg = {avg_train_norm_e}, var = {var_train_norm_e}") # type: ignore
         
         
         

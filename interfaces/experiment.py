@@ -3,7 +3,8 @@ import os
 import shutil
 from abc import ABC
 import argparse
-from typing import Tuple, List
+import time
+from typing import Optional, Tuple, List, Union
 
 # Pytorch imports
 from torch.utils.data import DataLoader
@@ -68,9 +69,9 @@ class Experiment(ABC):
         self.experiment_type: ExperimentTypes = experiment_mapping[args.experiment_type.upper()]
         
         # Timers
-        self.START_TIME: float = None
-        self.END_TIMER: float = None
-        self.DURATION: float = None
+        self.START_TIME: Optional[float] = None
+        self.END_TIMER: Optional[float] = None
+        self.DURATION: Optional[float] = None
         self.TRAIN_TIME: float = 0
         self.TEST_ACC_TIME: float = 0
         self.TRAIN_ACC_TIME: float = 0
@@ -138,14 +139,74 @@ class Experiment(ABC):
                  epoch: int, 
                  dname: str, 
                  phase: ExperimentPhases
-                 ) -> Tuple[float, ...]:
+                 ) -> Union[float, Tuple[float, ...]]:
         raise NotImplementedError("This method was not implemented.")
+    
+    
+    def _start_log(self) -> None:
+        self.START_TIME = time.time()
+        self.EXP_LOG.info("Start of experiment.")
+        self.PRINT_LOG.info(f"local_machine: {self.local_machine}.")
+    
+    
+    def _end_log(self) -> None:
+        self.END_TIME = time.time()
+        self.DURATION = self.END_TIME - self.START_TIME # type: ignore
+        self.EXP_LOG.info(f"The experiment took {time_to_str(self.DURATION)} to be completed.") # type: ignore
+        self.EXP_LOG.info("The experiment has been completed.")
+    
+    
+    def _param_start_log(self) -> None:
+        raise NotImplementedError("The method has not been implemented yet.")
+    
+    
+    def _param_end_log(self) -> None:
+        raise NotImplementedError("The method has not been implemented yet.")
+    
+    
+    def _experiment(self) -> None:
+        raise NotImplementedError("The method has not been implemented yet.")
+    
+    
+    def _experiment_log(self) -> None:
+        raise NotImplementedError("The method has not been implemented yet.")
+    
+    
+    def _final_test(self) -> Tuple[float, ...]:
+        raise NotImplementedError("The method has not been implemented yet.")
+    
+    
+    def _final_test_log(self, results) -> None:
+        raise NotImplementedError("The method has not been implemented yet.")
     
     
     def run(self) -> Tuple[float, ...]:
-        raise NotImplementedError("This method was not implemented.")
+        """
+        METHOD
+        Runs the experiment
+        @param
+            None
+        @return
+            results: tuple of all testing results
+        """
+        # Start logging
+        self._start_log()
+        self._param_start_log()
         
-    
+        # Training and Testing
+        self._experiment()
+        results = self._final_test()
+        
+        # Logging final parameters of experiment
+        self._final_test_log(results)
+        
+        # End logging
+        self._end_log()
+        self._param_end_log()
+        
+        return results
+        
+        
     def cleanup(self) -> None:
         """
         METHOD

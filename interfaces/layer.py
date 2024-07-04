@@ -1,5 +1,6 @@
 from abc import ABC
 import math
+from typing import Optional
 import matplotlib
 import matplotlib.figure
 matplotlib.use('Agg')
@@ -41,11 +42,11 @@ class NetworkLayer (nn.Module, ABC):
         self.output_dimension: int = output_dimension
         self.device: str = device
         self.lr: float = learning_rate
-        self.fc: nn.Linear = nn.Linear(self.input_dimension, self.output_dimension, bias=True)
+        self.fc: nn.Linear = nn.Linear(self.input_dimension, self.output_dimension, bias=False) # NOTE: bias is set to false for now
         
         # Setup linear activation
         for param in self.fc.parameters():
-            torch.nn.init.uniform_(param, a=0.0, b=1.0)
+            torch.nn.init.uniform_(param, a=0.0, b=1.0) # NOTE: what if we all start at 0
             param.requires_grad_(False)
 
 
@@ -60,13 +61,13 @@ class NetworkLayer (nn.Module, ABC):
         """
         id_tensor: torch.Tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
         for i in range(0, self.output_dimension):
-            identity: torch.tensor = torch.eye(i+1)
+            identity: torch.Tensor = torch.eye(i+1)
             padded_identity: torch.Tensor = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, self.output_dimension - i-1))
             id_tensor[i] = padded_identity
         return id_tensor
     
 
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> None:
         raise NotImplementedError("This method is not implemented.")
 
 
@@ -74,7 +75,7 @@ class NetworkLayer (nn.Module, ABC):
         raise NotImplementedError("This method is not implemented.")
     
 
-    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, freeze: bool = False) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None, freeze: bool = False) -> torch.Tensor:
         """
         METHOD
         Defines how input data flows throw the network
@@ -92,7 +93,7 @@ class NetworkLayer (nn.Module, ABC):
         return input
 
 
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+    def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
         raise NotImplementedError("This method is not implemented.")
     
 
@@ -121,7 +122,7 @@ class NetworkLayer (nn.Module, ABC):
         n: int = self.output_dimension
         
         root: int = int(math.sqrt(n))
-        min_product: int = float('inf')
+        min_product: int = n ** 2
         
         for i in range(2, root + 1):
             if n % i == 0:
@@ -142,9 +143,9 @@ class NetworkLayer (nn.Module, ABC):
                     col = max(factor1, factor2)
         
         # Get the weights and create heatmap
-        weight: nn.parameter.Parameter = self.fc.weight
-        fig: matplotlib.figure.Figure = None
-        axes: np.ndarray = None
+        weight: torch.Tensor = self.fc.weight
+        fig: matplotlib.figure.Figure
+        axes: np.ndarray
         fig, axes = plt.subplots(row, col, figsize=(16, 16))
         for ele in range(row * col): 
             if ele < self.output_dimension:
@@ -178,6 +179,6 @@ class NetworkLayer (nn.Module, ABC):
         @return
             number of active weights
         """
-        weights: nn.parameter.Parameter = self.fc.weight
+        weights: torch.Tensor = self.fc.weight
         active: torch.Tensor = torch.where(weights > beta, weights, 0.0)
         return active.nonzero().size(0)

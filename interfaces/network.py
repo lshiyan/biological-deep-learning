@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Optional
 import torch
 import torch.nn as nn
 
@@ -25,7 +26,7 @@ class Network(nn.Module, ABC):
         self.device = device
 
 
-    def get_module(self, lname: LayerNames) -> NetworkLayer:
+    def get_module(self, lname: LayerNames) -> NetworkLayer: # type: ignore
         """
         METHOD
         Returns layer with given name
@@ -36,7 +37,9 @@ class Network(nn.Module, ABC):
         """
         for layer_name, layer in self.named_children():       
             if lname.name.upper() == layer_name.upper():
-                return layer
+                return layer # type: ignore
+            else:
+                raise NameError(f"There are no layer with {lname}.")
 
 
     def visualize_weights(self, path: str, num: int, use: str) -> None:
@@ -54,7 +57,7 @@ class Network(nn.Module, ABC):
             module.visualize_weights(path, num, use, name.lower())
 
 
-    def active_weights(self, beta: float) -> dict[str:int]:
+    def active_weights(self, beta: float) -> dict[str, int]:
         """
         METHOD
         Returns number of active feature selectors
@@ -63,7 +66,7 @@ class Network(nn.Module, ABC):
         @return
             module_active_weights: dictionary {str:int}
         """
-        module_active_weights: dict[str:int] = {}
+        module_active_weights: dict[str, int] = {}
         
         for name, module in self.name_children():
             module_active_weights[name.lower()] = module.active_weights(beta)
@@ -71,5 +74,5 @@ class Network(nn.Module, ABC):
         return module_active_weights
 
 
-    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor: 
+    def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor: 
         raise NotImplementedError("This method is not implemented.")

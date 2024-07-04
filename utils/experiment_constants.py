@@ -25,7 +25,7 @@ class LateralInhibitions(Enum):
     NORM_INHIBITION = 'NORM'
 
 
-class FunctionTypes(Enum):
+class WeightGrowth(Enum):
     """
     ENUM CLASS
     Defines function types constants

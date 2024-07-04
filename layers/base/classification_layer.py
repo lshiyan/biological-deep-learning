@@ -1,3 +1,4 @@
+from typing import Optional
 import torch
 import torch.nn as nn
 from layers.output_layer import OutputLayer
@@ -39,7 +40,7 @@ class ClassificationLayer(OutputLayer):
         self.include_first: bool = include_first
         
 
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> None:
         """
         METHOD
         Defines the way the weights will be updated at each iteration of the training.
@@ -54,7 +55,7 @@ class ClassificationLayer(OutputLayer):
         u: torch.Tensor = output.clone().detach().squeeze().to(self.device)
         x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
         y: torch.Tensor = torch.softmax(u, dim=-1).to(self.device)
-        A: torch.Tensor = None
+        A: torch.Tensor
 
         if clamped_output != None:
             outer_prod: torch.Tensor = torch.outer(clamped_output - y, x)
@@ -95,7 +96,7 @@ class ClassificationLayer(OutputLayer):
         self.fc.bias = nn.Parameter(A / bias_maxes.item(), requires_grad=False)
     
 
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+    def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network when training

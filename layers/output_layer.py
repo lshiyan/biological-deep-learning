@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Optional
 import torch
 from interfaces.layer import NetworkLayer
 
@@ -35,7 +36,7 @@ class OutputLayer(NetworkLayer, ABC):
         super().__init__(input_dimension, output_dimension, device, learning_rate)
     
 
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> None:
         raise NotImplementedError("This method has yet to be implemented.")
         
 
@@ -43,7 +44,7 @@ class OutputLayer(NetworkLayer, ABC):
         raise NotImplementedError("This method has yet to be implemented.")
     
 
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+    def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
         raise NotImplementedError("This method has yet to be implemented.")
     
     

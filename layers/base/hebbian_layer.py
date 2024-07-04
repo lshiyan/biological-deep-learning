@@ -1,3 +1,4 @@
+from typing import Optional
 import torch
 import torch.nn as nn
 from layers.hidden_layer import HiddenLayer
@@ -34,9 +35,10 @@ class HebbianLayer(HiddenLayer):
                  learning_rate: float = 0.005, 
                  gamma: float = 0.99, 
                  eps: float = 0.01,
+                 sigmoid_k: float = 1,
                  inhibition_rule: LateralInhibitions = LateralInhibitions.RELU_INHIBITION, 
                  learning_rule: LearningRules = LearningRules.SANGER_LEARNING_RULE,
-                 function_type: FunctionTypes = FunctionTypes.LINEAR
+                 weight_growth: WeightGrowth = WeightGrowth.LINEAR
                  ) -> None:
         """
         CONSTRUCTOR METHOD
@@ -50,14 +52,14 @@ class HebbianLayer(HiddenLayer):
             eps: affects weight decay updates
             inhibition_rule (LateralInhibitions): which inhibition to be used
             learning_rule (LearningRules): which learning rule to use
-            function_type (FunctionTypes): which function type should the weight updates follow
+            weight_growth (WeightGrowth): which function type should the weight updates follow
         @return
             None
         """
-        super().__init__(input_dimension, output_dimension, device, learning_rate, lamb, gamma, eps)
+        super().__init__(input_dimension, output_dimension, device, learning_rate, lamb, gamma, eps, sigmoid_k)
         self.inhibition_rule: LateralInhibitions = inhibition_rule
         self.learning_rule: LearningRules = learning_rule
-        self.function_type: FunctionTypes = function_type
+        self.weight_growth: WeightGrowth = weight_growth
 
     
     def inhibition(self, input: torch.Tensor) -> torch.Tensor:
@@ -81,6 +83,8 @@ class HebbianLayer(HiddenLayer):
             return self._gaussian_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.NORM_INHIBITION:
             return self._norm_inhibition(input)
+        else:
+            raise NameError("Unknown inhibition rule.")
     
     
     def update_weights(self, input: torch.Tensor, output: torch.Tensor) -> None:
@@ -93,8 +97,8 @@ class HebbianLayer(HiddenLayer):
         @return
             None
         """
-        calculated_rule: torch.Tensor = None
-        function_derivative: torch.Tensor = None
+        calculated_rule: torch.Tensor
+        function_derivative: torch.Tensor
         
         if self.learning_rule == LearningRules.HEBBIAN_LEARNING_RULE:
             calculated_rule = self._hebbian_rule(input, output)
@@ -103,13 +107,14 @@ class HebbianLayer(HiddenLayer):
         elif self.learning_rule == LearningRules.FULLY_ORTHOGONAL_LEARNING_RULE:
             calculated_rule = self._fully_orthogonal_rule(input, output)
         
-        if self.function_type == FunctionTypes.LINEAR:
+        if self.weight_growth == WeightGrowth.LINEAR:
             function_derivative = self._linear_function()
-        elif self.function_type == FunctionTypes.SIGMOID:
+        elif self.weight_growth == WeightGrowth.SIGMOID:
             function_derivative = self._sigmoid_function()
             
         # Weight Update
-        delta_weight: torch.Tensor = self.lr * calculated_rule * function_derivative
+        print(f"LR: {self.lr}, Rule: {calculated_rule}, Derivative: {function_derivative}")
+        delta_weight: torch.Tensor = self.lr * torch.matmul(calculated_rule, function_derivative)
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
         
 
@@ -134,7 +139,7 @@ class HebbianLayer(HiddenLayer):
         A = self.fc.bias + self.lr * A
 
         # Normalize biases to maintain stability. (Divide by max bias value)
-        bias_maxes: float = torch.max(A, dim=0).values
+        bias_maxes: torch.Tensor = torch.max(A, dim=0).values
         self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
         
 
@@ -171,7 +176,7 @@ class HebbianLayer(HiddenLayer):
             print("NAN WEIGHT")
     
 
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+    def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network when training

@@ -1,4 +1,6 @@
 import argparse
+from enum import Enum
+from typing import Optional, Union
 import torch
 from interfaces.network import Network
 from layers.base.classification_layer import ClassificationLayer
@@ -7,7 +9,7 @@ from layers.base.hebbian_layer import HebbianLayer
 from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
 from layers.output_layer import OutputLayer
-from utils.experiment_constants import FunctionTypes, LateralInhibitions, LayerNames, LearningRules
+from utils.experiment_constants import LateralInhibitions, LayerNames, LearningRules, WeightGrowth
 
 
 class HebbianNetwork(Network):
@@ -46,21 +48,22 @@ class HebbianNetwork(Network):
         self.output_dim: int = args.output_dim
 
         # Hebbian layer hyperparameters stored in dictionary
-        inhibition_mapping: dict[str:LateralInhibitions] = {member.value.upper(): member for member in LateralInhibitions}
-        learning_rule_mapping: dict[str:LearningRules] = {member.value.upper(): member for member in LearningRules}
-        function_type_mapping: dict[str:FunctionTypes] = {member.value.upper(): member for member in FunctionTypes}
+        inhibition_mapping: dict[str, LateralInhibitions] = {member.value.upper(): member for member in LateralInhibitions}
+        learning_rule_mapping: dict[str, LearningRules] = {member.value.upper(): member for member in LearningRules}
+        weight_growth_mapping: dict[str, WeightGrowth] = {member.value.upper(): member for member in WeightGrowth}
         
-        self.heb_param: dict[str:'Any'] = {
+        self.heb_param: dict[str, Union[float, Enum]] = {
             "lamb": args.heb_lamb,
             "eps": args.heb_eps,
             "gam": args.heb_gam,
             "inhib": inhibition_mapping[args.inhibition_rule.upper()],
             "learn": learning_rule_mapping[args.learning_rule.upper()],
-            "func": function_type_mapping[args.function_type.upper()]
+            "growth": weight_growth_mapping[args.weight_growth.upper()],
+            "sig_k": args.sigmoid_k
         }
 
         # Classification layer hyperparameters stored in dictionary
-        self.cla_param: dict[str:'Any'] = {
+        self.cla_param: dict[str, Union[float, Enum]] = {
             "in_1": args.include_first
         }
 
@@ -72,25 +75,26 @@ class HebbianNetwork(Network):
         hebbian_layer: HiddenLayer = HebbianLayer(self.input_dim, 
                                                   self.heb_dim, 
                                                   self.device, 
-                                                  self.heb_param["lamb"], 
+                                                  self.heb_param["lamb"],  # type: ignore
                                                   self.lr, 
-                                                  self.heb_param["gam"], 
-                                                  self.heb_param["eps"],
-                                                  self.heb_param["inhib"],
-                                                  self.heb_param["learn"],
-                                                  self.heb_param["func"])
+                                                  self.heb_param["gam"],  # type: ignore
+                                                  self.heb_param["eps"], # type: ignore
+                                                  self.heb_param["inhib"], # type: ignore
+                                                  self.heb_param["learn"], # type: ignore
+                                                  self.heb_param["growth"], # type: ignore
+                                                  self.heb_param["sig_k"]) # type: ignore
         classification_layer: OutputLayer = ClassificationLayer(self.heb_dim, 
                                                                 self.output_dim, 
                                                                 self.device, 
                                                                 self.lr,
-                                                                self.cla_param["in_1"])
+                                                                self.cla_param["in_1"]) # type: ignore
         
         self.add_module(LayerNames.INPUT.name, input_layer)
         self.add_module(LayerNames.HIDDEN.name, hebbian_layer)
         self.add_module(LayerNames.OUTPUT.name, classification_layer)
 
 
-    def forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None, reconstruct: bool = False, freeze: bool = False) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None, reconstruct: bool = False, freeze: bool = False) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network

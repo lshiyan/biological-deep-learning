@@ -54,9 +54,9 @@ class DataSetupLayer(InputLayer):
         
 
     @staticmethod
-    def convert(img_file: str, 
-                label_file: str, 
-                out_file: str, 
+    def convert(img_file_path: str, 
+                label_file_path: str, 
+                out_file_path: str, 
                 data_size: int, 
                 img_size: int) -> None:
         """
@@ -73,9 +73,9 @@ class DataSetupLayer(InputLayer):
         """    
         # Get absolute path of all the necessary files (img, label, out)
         project_root: str = os.getcwd()
-        img_file: str = os.path.join(project_root, img_file)
-        label_file: str = os.path.join(project_root, label_file)
-        out_file: str = os.path.join(project_root, out_file)
+        img_file: str = os.path.join(project_root, img_file_path)
+        label_file: str = os.path.join(project_root, label_file_path)
+        out_file: str = os.path.join(project_root, out_file_path)
 
         # Open all necessary files
         imgs: IO = open(img_file, "rb")

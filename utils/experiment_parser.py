@@ -1,7 +1,7 @@
 import argparse
-from typing import List
+from typing import List, Optional
 
-def parse_arguments(args_list: List = None) -> argparse.Namespace:
+def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     """
     FUNCTION
     Parses arguments given on command line and returns arguments
@@ -45,7 +45,8 @@ def parse_arguments(args_list: List = None) -> argparse.Namespace:
     parser.add_argument('--heb_eps', type=float, default=0.01)
     parser.add_argument('--learning_rule', type=str, default='Sanger')
     parser.add_argument('--inhibition_rule', type=str, default='Relu')
-    parser.add_argument('--function_type', type=str, default='Linear')
+    parser.add_argument('--weight_growth', type=str, default='Linear')
+    parser.add_argument('--sigmoid_k', type=float, default=1)
 
     # Classification layer hyperparameters
     parser.add_argument('--include_first', type=bool, default=True)

@@ -1,4 +1,6 @@
 from abc import ABC
+import logging
+from typing import Optional
 from numpy import outer
 import torch
 import torch.nn as nn
@@ -7,7 +9,6 @@ from interfaces.layer import NetworkLayer
 
 
 class HiddenLayer(NetworkLayer, ABC):
-
     """
     INTERFACE
     Defines a single hidden layer in ANN -> Every hidden layer should implement this class
@@ -20,10 +21,12 @@ class HiddenLayer(NetworkLayer, ABC):
             fc (nn.Linear): fully connected layer using linear transformation
         OWN ATTR.
             exponential_average (torch.Tensor): 0 tensor to keep track of exponential averages
+            id_tensor (torch.Tensor): id tensor of layer
             gamma (float): decay factor -> factor to decay learning rate
             lamb (float): lambda hyperparameter for lateral inhibition
             eps (float): to avoid division by 0
-            id_tensor (torch.Tensor): id tensor of layer
+            sigmoid_k (float): constant for sigmoid wieght growth updates
+            
     """
 
     #################################################################################################
@@ -36,7 +39,8 @@ class HiddenLayer(NetworkLayer, ABC):
                  learning_rate: float = 0.005,
                  lamb: float = 1,
                  gamma: float = 0.99, 
-                 eps: float = 0.01
+                 eps: float = 0.01,
+                 sigmoid_k: float = 1
                  ) -> None:
         """
         CONSTRUCTOR METHOD
@@ -48,6 +52,7 @@ class HiddenLayer(NetworkLayer, ABC):
             lamb: lambda hyperparameter for lateral inhibition
             gamma: affects exponentialaverages updates
             eps: affects weight decay updates
+            sigmoid_k : constant for sigmoid wieght growth updates
         @return
             None
         """
@@ -55,6 +60,7 @@ class HiddenLayer(NetworkLayer, ABC):
         self.gamma: float = gamma
         self.lamb: float = lamb
         self.eps: float = eps
+        self.sigmoid_k: float = sigmoid_k
         self.exponential_average: torch.Tensor = torch.zeros(self.output_dimension).to(self.device)
         self.id_tensor: torch.Tensor = self.create_id_tensors().to(self.device)
 
@@ -78,7 +84,7 @@ class HiddenLayer(NetworkLayer, ABC):
         # Compute ReLU and lateral inhibition
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         input_copy = relu(input_copy)
-        max_ele: int = torch.max(input_copy).item()
+        max_ele: float = torch.max(input_copy).item()
         input_copy = torch.pow(input_copy, self.lamb)
         output: torch.Tensor =  (input_copy / abs(max_ele) ** self.lamb).to(self.device)
         
@@ -109,7 +115,7 @@ class HiddenLayer(NetworkLayer, ABC):
             output: activation after lateral inhibition
         """
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
-        max_ele: int = torch.max(input_copy).item()
+        max_ele: float = torch.max(input_copy).item()
         output: torch.Tensor = F.softmax((input_copy - max_ele) * self.lamb, dim=-1).to(self.device)
         return output
     
@@ -150,7 +156,7 @@ class HiddenLayer(NetworkLayer, ABC):
         # NOTE: this does not work as of yet
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         size: int = int(2 * sigma + 1)
-        kernel: torch.Tensor = torch.tensor([torch.exp(-(i - size // 2) ** 2 / (2 * sigma ** 2)) for i in range(size)])
+        kernel: torch.Tensor = torch.tensor([torch.exp(torch.Tensor(-(i - size // 2) ** 2 / (2 * sigma ** 2))) for i in range(size)])
         kernel = kernel / torch.sum(kernel)
 
         output: torch.Tensor = F.conv1d(input_copy.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
@@ -172,7 +178,7 @@ class HiddenLayer(NetworkLayer, ABC):
         # Compute ReLU and lateral inhibition
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         input_copy = relu(input_copy)
-        sum: float = input_copy.sum()
+        sum: torch.Tensor = input_copy.sum()
         output: torch.Tensor =  (input_copy / sum).to(self.device)
         
         return output
@@ -181,7 +187,7 @@ class HiddenLayer(NetworkLayer, ABC):
     #################################################################################################
     # Different Weight Updates Methods
     #################################################################################################
-    def _hebbian_rule(self, input: torch.Tensor, output: torch.Tensor) -> None:
+    def _hebbian_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
         """
         METHOD
         Computes Hebbian Leanring Rule.
@@ -242,7 +248,7 @@ class HiddenLayer(NetworkLayer, ABC):
         return computed_rule
 
 
-    def _fully_orthogonal_rule(self, input: torch.Tensor, output: torch.Tensor) -> None:
+    def _fully_orthogonal_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
         """
         METHOD
         Update weights using Fully Orthogonal Rule.
@@ -279,9 +285,9 @@ class HiddenLayer(NetworkLayer, ABC):
 
 
     #################################################################################################
-    # Different function Types for Wegiht Updates
+    # Different Weights Growth for Wegiht Updates
     #################################################################################################
-    def _linear_function(self) -> float:
+    def _linear_function(self) -> torch.Tensor:
         """
         METHOD
         Defines weight updates when using linear funciton
@@ -290,7 +296,7 @@ class HiddenLayer(NetworkLayer, ABC):
         @return
             derivative: slope constant (derivative relative to linear rule always = 1)
         """
-        return 1
+        return torch.Tensor(1)
     
     
     def _sigmoid_function(self) -> torch.Tensor:
@@ -302,10 +308,12 @@ class HiddenLayer(NetworkLayer, ABC):
         @return
             derivative: sigmoid derivative of current weights
         """
-        sigmoid: nn.Sigmoid = nn.Sigmoid()
-        current_weights: nn.Parameter = self.fc.weight.clone().detach().to(self.device)
-        sigmoid_weights: torch.Tensor = sigmoid(current_weights)
-        derivative: torch.Tensor = sigmoid_weights * (1 - sigmoid_weights)
+        printlog = logging.getLogger("Print Log")
+        current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+        derivative: torch.Tensor = torch.matmul(current_weights, (torch.tensor(self.sigmoid_k) - current_weights))
+        printlog.info(derivative)
+        derivative: torch.Tensor = (1 / self.sigmoid_k) * derivative
+        printlog.info(derivative)
         return derivative
         
         
@@ -317,7 +325,7 @@ class HiddenLayer(NetworkLayer, ABC):
         raise NotImplementedError("This method has yet to be implemented.")
 
 
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor = None) -> None:
+    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> None:
         raise NotImplementedError("This method has yet to be implemented.")
     
 
@@ -329,7 +337,7 @@ class HiddenLayer(NetworkLayer, ABC):
     #################################################################################################
     # Training/Evaluation during forward pass
     #################################################################################################
-    def _train_forward(self, input: torch.Tensor, clamped_output: torch.Tensor = None) -> torch.Tensor:
+    def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
         raise NotImplementedError("This method has yet to be implemented.")
     
 
