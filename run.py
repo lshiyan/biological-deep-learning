@@ -42,7 +42,6 @@ arguments = [
             # Experiment parameters
             '--batch_size=1',
             '--epochs=1', 
-            '--test_sample=100',
             '--device=cpu',
             '--local_machine=True',
             '--experiment_type=base'

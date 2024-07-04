@@ -1,4 +1,5 @@
 from typing import Optional
+import warnings
 import torch
 import torch.nn as nn
 from layers.hidden_layer import HiddenLayer
@@ -70,7 +71,7 @@ class HebbianLayer(HiddenLayer):
             input: the inputs into the layer
         @return
             inputs after inhibition
-        """
+        """ 
         if self.inhibition_rule == LateralInhibitions.RELU_INHIBITION:
             return self._relu_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.SOFTMAX_INHIBITION:
@@ -113,7 +114,8 @@ class HebbianLayer(HiddenLayer):
             function_derivative = self._sigmoid_function()
             
         # Weight Update
-        print(f"LR: {self.lr}, Rule: {calculated_rule}, Derivative: {function_derivative}")
+        warnings.warn(f"Rule size: {calculated_rule.size()}", Warning)
+        warnings.warn(f"Derivative size: {function_derivative.size()}", Warning)
         delta_weight: torch.Tensor = self.lr * torch.matmul(calculated_rule, function_derivative)
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
         

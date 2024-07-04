@@ -57,7 +57,6 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     # Experiment parameters
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=5)
-    parser.add_argument("--test_sample", type=int, default=100)
     parser.add_argument("--device", type=str, default='cpu')
     parser.add_argument("--local_machine", type=bool, default=True)
     parser.add_argument("--experiment_type", type=str, default='base')

@@ -139,7 +139,7 @@ class BaseExperiment(Experiment):
         # Loop through training batches
         for inputs, labels in train_data_loader:
             # Test model at intervals of samples seen
-            if self.SAMPLES % self.test_sample == 0:
+            if self.check_test(self.SAMPLES):
                 self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.BASE)
                 self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE)
 

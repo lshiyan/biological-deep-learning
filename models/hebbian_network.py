@@ -79,10 +79,10 @@ class HebbianNetwork(Network):
                                                   self.lr, 
                                                   self.heb_param["gam"],  # type: ignore
                                                   self.heb_param["eps"], # type: ignore
+                                                  self.heb_param["sig_k"], # type: ignore
                                                   self.heb_param["inhib"], # type: ignore
                                                   self.heb_param["learn"], # type: ignore
-                                                  self.heb_param["growth"], # type: ignore
-                                                  self.heb_param["sig_k"]) # type: ignore
+                                                  self.heb_param["growth"]) # type: ignore
         classification_layer: OutputLayer = ClassificationLayer(self.heb_dim, 
                                                                 self.output_dim, 
                                                                 self.device, 

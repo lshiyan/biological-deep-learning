@@ -1,6 +1,7 @@
 from abc import ABC
 import logging
 from typing import Optional
+import warnings
 from numpy import outer
 import torch
 import torch.nn as nn
@@ -308,12 +309,10 @@ class HiddenLayer(NetworkLayer, ABC):
         @return
             derivative: sigmoid derivative of current weights
         """
-        printlog = logging.getLogger("Print Log")
         current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        derivative: torch.Tensor = torch.matmul(current_weights, (torch.tensor(self.sigmoid_k) - current_weights))
-        printlog.info(derivative)
+        derivative: torch.Tensor = torch.tensor(self.sigmoid_k) - current_weights
+        derivative = torch.matmul(current_weights.T, derivative)
         derivative: torch.Tensor = (1 / self.sigmoid_k) * derivative
-        printlog.info(derivative)
         return derivative
         
         

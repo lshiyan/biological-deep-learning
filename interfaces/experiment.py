@@ -63,7 +63,7 @@ class Experiment(ABC):
         self.model: Network = model.to(args.device).float()
         self.batch_size: int = args.batch_size
         self.epochs: int = args.epochs
-        self.test_sample: int = args.test_sample
+        self.test_sample: int = 0
         self.device: str = args.device
         self.local_machine: bool = args.local_machine
         self.experiment_type: ExperimentTypes = experiment_mapping[args.experiment_type.upper()]
@@ -218,3 +218,24 @@ class Experiment(ABC):
         """
         for logger in self.loggers:
             close_logger(logger)
+            
+    
+    def check_test(self, samples_seen: int) -> bool:
+        """
+        METHOD
+        Check if testing should be done
+        @param
+            sample_seen: number of samples seen during training
+        @Return
+            True/False
+        """
+        if self.test_sample == samples_seen:
+            if self.test_sample == 0:
+                self.test_sample = 1
+            else:
+                self.test_sample *= 3
+            return True
+        else:
+            return False
+        
+        

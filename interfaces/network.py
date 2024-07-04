@@ -1,5 +1,6 @@
 from abc import ABC
 from typing import Optional
+import warnings
 import torch
 import torch.nn as nn
 
@@ -35,11 +36,10 @@ class Network(nn.Module, ABC):
         @return
             layer: layer of the network with searched name
         """
-        for layer_name, layer in self.named_children():       
+        for layer_name, layer in self.named_children():      
             if lname.name.upper() == layer_name.upper():
                 return layer # type: ignore
-            else:
-                raise NameError(f"There are no layer with {lname}.")
+        raise NameError(f"There are no layer named {lname.name.upper()}.")
 
 
     def visualize_weights(self, path: str, num: int, use: str) -> None:
