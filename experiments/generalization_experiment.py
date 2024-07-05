@@ -23,6 +23,7 @@ from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
 
+import random
 
 
 class GeneralizationExperiment(Experiment):
@@ -142,14 +143,21 @@ class GeneralizationExperiment(Experiment):
         self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         
+        # Select random letter classes
+        letter_labels = list(range(26))
+        selected_classes = random.sample(letter_labels, 10)
+        self.DEBUG_LOG.info(f"the selected classes for this time is: {selected_classes}")
+
         # Extented training dataset
         self.e_train_data_set: TensorDataset = input_class.setup_data(self.e_train_data, self.e_train_label, self.e_train_fname, 60000)
-        self.e_train_data_loader: DataLoader = DataLoader(self.e_train_data_set, batch_size=self.batch_size, shuffle=True)
+        filtered_train_dataset = DataSetupLayer.filter_emnist_letters(self.e_train_data_set, selected_classes)
+        self.e_train_data_loader: DataLoader = DataLoader(filtered_train_dataset, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-training dataset and dataloader.")
         
         # Extended testing dataset
         self.e_test_data_set: TensorDataset = input_class.setup_data(self.e_test_data, self.e_test_label, self.e_test_fname, 10000)
-        self.e_test_data_loader: DataLoader = DataLoader(self.e_test_data_set, batch_size=self.batch_size, shuffle=True)
+        filtered_test_dataset = DataSetupLayer.filter_emnist_letters(self.e_test_data_set, selected_classes)
+        self.e_test_data_loader: DataLoader = DataLoader(filtered_test_dataset, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-testing dataset and dataloader.")
         
     

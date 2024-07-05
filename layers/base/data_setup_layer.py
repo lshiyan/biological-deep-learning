@@ -4,6 +4,13 @@ import os
 import pandas as pd
 from layers.input_layer import InputLayer
 from typing import IO, List
+import random
+
+import logging
+
+# Setup logging configuration
+logging.basicConfig(filename='emnist_letters.log', level=logging.INFO, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class DataSetupLayer(InputLayer):
@@ -51,6 +58,30 @@ class DataSetupLayer(InputLayer):
         data_tensor /= 255
         
         return TensorDataset(data_tensor, labels)
+    
+    @staticmethod
+    def filter_emnist_letters(tensor_dataset: TensorDataset, selected_classes: list):
+        """
+        Function to filter EMNIST dataset to include only the specified letter classes
+        @param
+            tensor_dataset: original TensorDataset containing EMNIST data and labels
+            selected_classes: list of letter classes to include
+        @return
+            filtered TensorDataset containing only data for the specified letter classes
+        """
+        data_tensor, labels = tensor_dataset.tensors
+        
+        # Log the selected classes
+        selected_letters = [chr(65 + cls) for cls in selected_classes]  # Convert to corresponding uppercase letters
+        logging.info(f"Selected letter classes: {selected_letters}")
+
+        # Filter the dataset to include only the selected classes
+        selected_indices = [i for i, label in enumerate(labels) if label in selected_classes]
+        filtered_data = data_tensor[selected_indices]
+        filtered_labels = labels[selected_indices]
+        
+        return TensorDataset(filtered_data, filtered_labels)
+
         
 
     @staticmethod
