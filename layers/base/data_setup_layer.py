@@ -77,10 +77,14 @@ class DataSetupLayer(InputLayer):
 
         # Filter the dataset to include only the selected classes
         selected_indices = [i for i, label in enumerate(labels) if label in selected_classes]
+        if not selected_indices:
+            logging.warning("No data found for the selected classes.")
+        
         filtered_data = data_tensor[selected_indices]
         filtered_labels = labels[selected_indices]
         
         return TensorDataset(filtered_data, filtered_labels)
+
 
         
 
