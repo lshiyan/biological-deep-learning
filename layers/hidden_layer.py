@@ -297,7 +297,7 @@ class HiddenLayer(NetworkLayer, ABC):
         @return
             derivative: slope constant (derivative relative to linear rule always = 1)
         """
-        return torch.Tensor(1)
+        return torch.eye(self.fc.weight.size(1))
     
     
     def _sigmoid_function(self) -> torch.Tensor:
