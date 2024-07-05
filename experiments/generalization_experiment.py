@@ -1,6 +1,6 @@
 # Built-in imports
 import time
-from typing import Tuple, Type
+from typing import Tuple, Type, Union
 
 # Pytorch imports
 import torch
@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 # Custom defined model imports
 from interfaces.experiment import Experiment
+from interfaces.layer import NetworkLayer
 from interfaces.network import Network
 from layers.input_layer import InputLayer
 
@@ -128,7 +129,7 @@ class GeneralizationExperiment(Experiment):
         self.FREEZE_SAMPLES: int = 0
         
         # Get input layer class of model
-        input_layer: InputLayer = self.model.get_module(LayerNames.INPUT)
+        input_layer: NetworkLayer = self.model.get_module(LayerNames.INPUT)
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
         # Training dataset
@@ -185,7 +186,7 @@ class GeneralizationExperiment(Experiment):
         # Loop through training batches
         for inputs, labels in train_data_loader:  
             # Test model at intervals of samples seen
-            if self.REC_SAMPLES % self.test_sample == 0:
+            if self.check_test(self.REC_SAMPLES):
                 self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
                 self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
                 self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
@@ -247,7 +248,7 @@ class GeneralizationExperiment(Experiment):
         with torch.no_grad():
             total_norm_error: float = 0
             total_cos_error: float = 0
-            total: int = len(test_data_loader.dataset)
+            total: int = len(test_data_loader)
 
             # Loop thorugh testing batches
             for inputs, labels in test_data_loader:
@@ -326,7 +327,7 @@ class GeneralizationExperiment(Experiment):
         # Loop through training batches
         for inputs, labels in train_data_loader: 
             # Test model at intervals of samples seen
-            if self.FREEZE_SAMPLES % self.test_sample == 0:
+            if self.check_test(self.FREEZE_SAMPLES):
                 self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
                 self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
                 self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
@@ -383,7 +384,7 @@ class GeneralizationExperiment(Experiment):
 
         with torch.no_grad():
             correct: int = 0
-            total: int = len(test_data_loader.dataset)
+            total: int = len(test_data_loader)
 
             # Loop thorugh testing batches
             for inputs, labels in test_data_loader:
@@ -451,7 +452,7 @@ class GeneralizationExperiment(Experiment):
                  purpose: Purposes, 
                  dname: str, 
                  phase: ExperimentPhases,
-                 ) -> Tuple[float, ...]:
+                 ) -> Union[float, Tuple[float, ...]]:
         """
         METHOD
         Test model with test dataset and determine its accuracy
@@ -467,30 +468,17 @@ class GeneralizationExperiment(Experiment):
             return self._reconstruct_test(test_data_loader, purpose, dname)
         elif phase == ExperimentPhases.FREEZING_WEIGHTS:
             return self._freeze_test(test_data_loader, purpose, dname)
+        else:
+            raise NameError(f"Invalid phase {phase}.")
     
     
     
     ################################################################################################
-    # Running Experiment
+    # Loggings
     ################################################################################################
-    def run(self) -> Tuple[float, ...]:
-        """
-        METHOD
-        Runs the experiment
-        @param
-            None
-        @return
-            (...): tuple of final testing and training accuracies
-        """
-        # Start timer
-        self.START_TIME = time.time()
-        self.EXP_LOG.info("Start of experiment.")
-        
-        torch.device(self.device)
-        self.PRINT_LOG.info(f"local_machine: {self.local_machine}.")
-        
-        # Logging training parameters
+    def _param_start_log(self):
         self.EXP_LOG.info("Started logging of experiment parameters.")
+        
         self.PARAM_LOG.info(f"Experiment Type: {self.experiment_type.value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Device: {self.device.upper()}")
         self.PARAM_LOG.info(f"Input Dimension: {self.model.input_dim}")
@@ -501,12 +489,61 @@ class GeneralizationExperiment(Experiment):
         self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_param["eps"]}")
         self.PARAM_LOG.info(f"Learning Rule: {self.model.heb_param["learn"].value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Inhibition Rule: {self.model.heb_param["inhib"].value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Function Type: {self.model.heb_param["func"].value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Function Type: {self.model.heb_param["growth"].value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Network Learning Rate: {self.model.lr}")
         self.PARAM_LOG.info(f"Number of Epochs: {self.epochs}")
         self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
         
         self.EXP_LOG.info("Completed logging of experiment parameters.")
+    
+    
+    def _param_end_log(self):
+        self.PARAM_LOG.info(f"End time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.END_TIME))}")
+        self.PARAM_LOG.info(f"Runtime of experiment: {time_to_str(self.DURATION if self.DURATION != None else 0)}")
+        self.PARAM_LOG.info(f"Total train time of experiment: {time_to_str(self.TRAIN_TIME)}")
+        self.PARAM_LOG.info(f"Reconstruction train time of experiment: {time_to_str(self.REC_TRAIN_TIME)}")
+        self.PARAM_LOG.info(f"Freeze train time of experiment: {time_to_str(self.FREEZE_TRAIN_TIME)}")
+        self.PARAM_LOG.info(f"Total test time (test acc) of experiment: {time_to_str(self.TEST_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Reconstruction test time (test acc) of experiment: {time_to_str(self.REC_TEST_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Freeze test time (test acc) of experiment: {time_to_str(self.FREEZE_TEST_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Total test time (train acc) of experiment: {time_to_str(self.TRAIN_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Reconstruction test time (train acc) of experiment: {time_to_str(self.REC_TRAIN_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Freeze test time (train acc) of experiment: {time_to_str(self.FREEZE_TRAIN_ACC_TIME)}")
+    
+    
+    def _final_test_log(self, results) -> None:
+        rec_cos_train_mnist = results[4]
+        rec_cos_test_mnist = results[6]
+        rec_cos_train_emnist = results[8]
+        rec_cos_test_emnist = results[10]
+        
+        rec_norm_train_mnist = results[5]
+        rec_norm_test_mnist = results[7]
+        rec_norm_train_emnist = results[9]
+        rec_norm_test_emnist = results[11]
+        
+        freeze_train_acc_mnist = results[0]
+        freeze_test_acc_mnist = results[1]
+        freeze_train_acc_emnist = results[2]
+        freeze_test_acc_emnist = results[3]
+        
+        self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_mnist}, norm = {rec_norm_train_mnist} ({self.data_name})")
+        self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs:  cos = {rec_cos_test_mnist}, norm = {rec_norm_test_mnist} ({self.data_name})")
+        self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_emnist}, norm = {rec_norm_train_emnist} ({self.e_data_name})")
+        self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_test_emnist}, norm = {rec_norm_test_emnist} ({self.e_data_name})")
+        
+        self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_mnist} ({self.data_name})")
+        self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_mnist} ({self.data_name})")
+        self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_emnist} ({self.e_data_name})")
+        self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_emnist} ({self.e_data_name})")
+    
+    
+    
+    ################################################################################################
+    # Running Experiment
+    ################################################################################################
+    def _experiment(self) -> None:
+        torch.device(self.device)
         
         self.EXP_LOG.info("Started training and testing loops.")
         
@@ -522,45 +559,18 @@ class GeneralizationExperiment(Experiment):
         self.model.visualize_weights(self.RESULT_PATH, self.epochs, 'final')
         self.EXP_LOG.info("Visualize weights of model after training.")
         
-        # Final testing of model
-        rec_cos_test_mnist, rec_norm_test_mnist = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
-        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
-        rec_cos_train_mnist, rec_norm_train_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
-        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
+    
+    def _final_test(self) -> Tuple[float, ...]:
+        rec_cos_test_mnist, rec_norm_test_mnist = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
+        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
+        rec_cos_train_mnist, rec_norm_train_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
+        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
         
-        freeze_test_acc_mnist = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
-        freeze_train_acc_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
-        freeze_test_acc_emnist = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
-        freeze_train_acc_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
+        freeze_test_acc_mnist: float = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
+        freeze_train_acc_mnist: float = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
+        freeze_test_acc_emnist: float = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
+        freeze_train_acc_emnist: float = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
         self.EXP_LOG.info("Completed final testing methods.")
-        
-        # Logging final parameters of experiment 
-        self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_mnist}, norm = {rec_norm_train_mnist} ({self.data_name})")
-        self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs:  cos = {rec_cos_test_mnist}, norm = {rec_norm_test_mnist} ({self.data_name})")
-        self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_emnist}, norm = {rec_norm_train_emnist} ({self.e_data_name})")
-        self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_test_emnist}, norm = {rec_norm_test_emnist} ({self.e_data_name})")
-        
-        self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_mnist} ({self.data_name})")
-        self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_mnist} ({self.data_name})")
-        self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_emnist} ({self.e_data_name})")
-        self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_emnist} ({self.e_data_name})")
-        
-        # End timer
-        self.END_TIME = time.time()
-        self.DURATION = self.END_TIME - self.START_TIME
-        self.EXP_LOG.info(f"The experiment took {time_to_str(self.DURATION)} to be completed.")
-        self.PARAM_LOG.info(f"End time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.END_TIME))}")
-        self.PARAM_LOG.info(f"Runtime of experiment: {time_to_str(self.DURATION)}")
-        self.PARAM_LOG.info(f"Total train time of experiment: {time_to_str(self.TRAIN_TIME)}")
-        self.PARAM_LOG.info(f"Reconstruction train time of experiment: {time_to_str(self.REC_TRAIN_TIME)}")
-        self.PARAM_LOG.info(f"Freeze train time of experiment: {time_to_str(self.FREEZE_TRAIN_TIME)}")
-        self.PARAM_LOG.info(f"Total test time (test acc) of experiment: {time_to_str(self.TEST_ACC_TIME)}")
-        self.PARAM_LOG.info(f"Reconstruction test time (test acc) of experiment: {time_to_str(self.REC_TEST_ACC_TIME)}")
-        self.PARAM_LOG.info(f"Freeze test time (test acc) of experiment: {time_to_str(self.FREEZE_TEST_ACC_TIME)}")
-        self.PARAM_LOG.info(f"Total test time (train acc) of experiment: {time_to_str(self.TRAIN_ACC_TIME)}")
-        self.PARAM_LOG.info(f"Reconstruction test time (train acc) of experiment: {time_to_str(self.REC_TRAIN_ACC_TIME)}")
-        self.PARAM_LOG.info(f"Freeze test time (train acc) of experiment: {time_to_str(self.FREEZE_TRAIN_ACC_TIME)}")
-        self.EXP_LOG.info("The experiment has been completed.")
         
         return (
             freeze_train_acc_mnist, 
@@ -576,3 +586,4 @@ class GeneralizationExperiment(Experiment):
             rec_cos_test_emnist, 
             rec_norm_test_emnist
         )
+        
