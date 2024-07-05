@@ -166,6 +166,7 @@ class BaseExperiment(Experiment):
                    test_data_loader: DataLoader, 
                    purpose: Purposes,  
                    dname: str,
+                   visualize: bool = True,
                    ) -> float:
         """
         METHOD
@@ -222,6 +223,8 @@ class BaseExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
         
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower())
+        
         return final_accuracy
     
         
@@ -256,6 +259,7 @@ class BaseExperiment(Experiment):
                  purpose: Purposes, 
                  dname: str, 
                  phase: ExperimentPhases,
+                 visualize: bool = True,
                  ) -> float:
         """
         METHOD
@@ -269,7 +273,7 @@ class BaseExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         if phase == ExperimentPhases.BASE:
-            return self._base_test(test_data_loader, purpose, dname)
+            return self._base_test(test_data_loader, purpose, dname, visualize)
         else:
             return 0
     
@@ -332,8 +336,8 @@ class BaseExperiment(Experiment):
         
     
     def _final_test(self) -> Tuple[float, ...]:
-        test_acc: float = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.BASE)
-        train_acc: float = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE)
+        test_acc: float = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.BASE, visualize=False)
+        train_acc: float = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE, visualize=False)
         self.EXP_LOG.info("Completed final testing methods.")
         return (test_acc, train_acc)
     

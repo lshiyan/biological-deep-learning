@@ -33,7 +33,7 @@ arguments = [
             '--heb_eps=0.01',
             '--learning_rule=sanger',
             '--inhibition_rule=relu',
-            '--weight_growth=linear',
+            '--weight_growth=sigmoid',
             '--sigmoid_k=1',
             # Classification layer hyperparameters
             '--include_first=False',

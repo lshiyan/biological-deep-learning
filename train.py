@@ -24,7 +24,7 @@ for num in range(1, 16):
 
 lambda_test.sort()
 
-for l in lambda_test:
+for l in lambda_testing:
     ARGS.heb_lamb = l
     
     test_acc_list = []

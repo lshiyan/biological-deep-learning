@@ -297,7 +297,7 @@ class HiddenLayer(NetworkLayer, ABC):
         @return
             derivative: slope constant (derivative relative to linear rule always = 1)
         """
-        return torch.eye(self.fc.weight.size(1))
+        return torch.ones(self.fc.weight.shape)
     
     
     def _sigmoid_function(self) -> torch.Tensor:
@@ -310,9 +310,10 @@ class HiddenLayer(NetworkLayer, ABC):
             derivative: sigmoid derivative of current weights
         """
         current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        derivative: torch.Tensor = torch.tensor(self.sigmoid_k) - current_weights
-        derivative = torch.matmul(current_weights.T, derivative)
-        derivative: torch.Tensor = (1 / self.sigmoid_k) * derivative
+        sigmoid_k_tensor: torch.Tensor = torch.full(self.fc.weight.shape, self.sigmoid_k)
+        derivative: torch.Tensor = sigmoid_k_tensor - current_weights
+        derivative = current_weights * derivative
+        derivative = (1 / self.sigmoid_k) * derivative
         return derivative
         
         

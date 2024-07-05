@@ -114,7 +114,8 @@ class HebbianLayer(HiddenLayer):
             function_derivative = self._sigmoid_function()
             
         # Weight Update
-        delta_weight: torch.Tensor = self.lr * torch.matmul(calculated_rule, function_derivative)
+        lr_tensor: torch.Tensor = torch.full(self.fc.weight.shape, self.lr)
+        delta_weight: torch.Tensor = lr_tensor * calculated_rule * function_derivative
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
         
 
