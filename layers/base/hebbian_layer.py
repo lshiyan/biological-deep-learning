@@ -26,7 +26,7 @@ class HebbianLayer(HiddenLayer):
         OWN ATTR.
             inhibition_rule (LateralInhibitions): which inhibition to be used
             learning_rule (LearningRules): which learning rule to use
-            function_type (FunctionTypes): which function type should the weight updates follow
+            weight_growth (WeightGrowth): which function type should the weight updates follow
     """
     def __init__(self, 
                  input_dimension: int, 
@@ -194,8 +194,8 @@ class HebbianLayer(HiddenLayer):
         input_copy = self.fc(input_copy)
         output = self.inhibition(input_copy)
         self.update_weights(initial_input, output)
-        #self.update_bias(input)
-        self.weight_decay()
+        # self.update_bias(input)
+        if self.weight_growth == WeightGrowth.LINEAR: self.weight_decay()
         
         return output
     
