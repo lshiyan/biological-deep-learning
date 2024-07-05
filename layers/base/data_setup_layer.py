@@ -69,18 +69,21 @@ class DataSetupLayer(InputLayer):
         @return
             filtered TensorDataset containing only data for the specified letter classes
         """
+
+        # STEP 1 -> I extracts the data and labels tensors
         data_tensor, labels = tensor_dataset.tensors
         
-        # Log the selected classes
+        # STEP 2 ->  I convert the class indices (0-25) to their corresponding uppercase letters (A-Z) using the ASCII value of ‘A’ (this is all done so I can log my letter for debug purposes)
         selected_letters = [chr(65 + cls) for cls in selected_classes]  # Convert to corresponding uppercase letters
-        logging.info(f"Selected letter classes: {selected_letters}")
+        logging.info(f"Selected letter classes: {selected_letters}")    # Log this stuff
 
         # Filter the dataset to include only the selected classes
         selected_indices = [i for i, label in enumerate(labels) if label in selected_classes]
-        if not selected_indices:
-            logging.warning("No data found for the selected classes.")
-        
+
+        # STEP 3 ->  I create a new tensor filtered_data containing only the data points whose indices are in selected_indices
         filtered_data = data_tensor[selected_indices]
+
+        # STEP 4 -> Similarly, I create a new tensor filtered_labels containing only the labels whose indices are in selected_indices.
         filtered_labels = labels[selected_indices]
         
         return TensorDataset(filtered_data, filtered_labels)
