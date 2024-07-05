@@ -24,7 +24,7 @@ for num in range(1, 16):
 
 lambda_test.sort()
 
-for l in lambda_testing:
+for l in lambda_test:
     ARGS.heb_lamb = l
     
     test_acc_list = []
@@ -42,7 +42,7 @@ for l in lambda_testing:
     rec_norm_test_e_list = []
     rec_norm_train_e_list = []
     
-    for num in range(0, 1):
+    for num in range(0, 5):
         # Base model training
         model = HebbianNetwork(ARGS)
         

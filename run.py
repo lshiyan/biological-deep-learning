@@ -31,9 +31,9 @@ arguments = [
             '--heb_lamb=15', 
             '--heb_gam=0.99',
             '--heb_eps=0.01',
-            '--learning_rule=sanger',
+            '--learning_rule=orthogonal',
             '--inhibition_rule=relu',
-            '--weight_growth=sigmoid',
+            '--weight_growth=linear',
             '--sigmoid_k=1',
             # Classification layer hyperparameters
             '--include_first=False',
@@ -41,7 +41,7 @@ arguments = [
             '--lr=0.005',
             # Experiment parameters
             '--batch_size=1',
-            '--epochs=1', 
+            '--epochs=5', 
             '--device=cpu',
             '--local_machine=True',
             '--experiment_type=base'
