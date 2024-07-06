@@ -3,6 +3,8 @@ import math
 from typing import Optional
 import matplotlib
 import matplotlib.figure
+
+from utils.experiment_constants import ParamInit
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
@@ -25,7 +27,12 @@ class NetworkLayer (nn.Module, ABC):
                  input_dimension: int, 
                  output_dimension: int, 
                  device: str = 'cpu',
-                 learning_rate: float = 0.005
+                 learning_rate: float = 0.005,
+                 alpha: float = 0,
+                 beta: float = 1,
+                 sigma: float = 1,
+                 mu: float = 0,
+                 init: ParamInit = ParamInit.UNIFORM
                  ) -> None:
         """
         CONSTRUCTOR METHOD
@@ -43,10 +50,21 @@ class NetworkLayer (nn.Module, ABC):
         self.device: str = device
         self.lr: float = learning_rate
         self.fc: nn.Linear = nn.Linear(self.input_dimension, self.output_dimension, bias=False) # NOTE: bias is set to false for now
+        self.alpha: float = alpha
+        self.beta: float = beta
+        self.sigma: float = sigma
+        self.mu: float = mu
+        self.init: ParamInit = init
         
         # Setup linear activation
         for param in self.fc.parameters():
-            torch.nn.init.uniform_(param, a=0.0, b=1.0) # NOTE: what if we all start at 0
+            if self.init == ParamInit.UNIFORM:
+                torch.nn.init.uniform_(param, a=alpha, b=beta)
+            elif self.init == ParamInit.NORMAL:
+                torch.nn.init.normal_(param, mean=mu, std=sigma)
+            else:
+                raise NameError(f"Invalid parameter init {self.init}.")
+            
             param.requires_grad_(False)
 
 
@@ -146,7 +164,7 @@ class NetworkLayer (nn.Module, ABC):
         weight: torch.Tensor = self.fc.weight
         fig: matplotlib.figure.Figure
         axes: np.ndarray
-        fig, axes = plt.subplots(row, col, figsize=(16, 16))
+        fig, axes = plt.subplots(row, col, figsize=(16, 16)) # type: ignore
         for ele in range(row * col): 
             if ele < self.output_dimension:
                 random_feature_selector: torch.Tensor = weight[ele]

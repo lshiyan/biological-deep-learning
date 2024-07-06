@@ -1,12 +1,13 @@
 from abc import ABC
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 import warnings
 from numpy import outer
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from interfaces.layer import NetworkLayer
+from utils.experiment_constants import ParamInit
 
 
 class HiddenLayer(NetworkLayer, ABC):
@@ -38,6 +39,11 @@ class HiddenLayer(NetworkLayer, ABC):
                  output_dimension: int, 
                  device: str,
                  learning_rate: float = 0.005,
+                 alpha: float = 0,
+                 beta: float = 1,
+                 sigma: float = 1,
+                 mu: float = 0,
+                 init: ParamInit = ParamInit.UNIFORM,
                  lamb: float = 1,
                  gamma: float = 0.99, 
                  eps: float = 0.01,
@@ -57,7 +63,15 @@ class HiddenLayer(NetworkLayer, ABC):
         @return
             None
         """
-        super().__init__(input_dimension, output_dimension, device, learning_rate)
+        super().__init__(input_dimension, 
+                         output_dimension, 
+                         device, 
+                         learning_rate, 
+                         alpha, 
+                         beta, 
+                         sigma, 
+                         mu, 
+                         init)
         self.gamma: float = gamma
         self.lamb: float = lamb
         self.eps: float = eps
@@ -316,7 +330,79 @@ class HiddenLayer(NetworkLayer, ABC):
         derivative = (1 / self.sigmoid_k) * derivative
         return derivative
         
+
         
+    #################################################################################################
+    # Different Weights Growth for Wegiht Updates
+    #################################################################################################
+    def _linear_weight_decay(self) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        METHOD
+        Decays the overused weights and increases the underused weights using tanh functions.
+        @param
+            None
+        @return
+            None
+        """
+        tanh: nn.Tanh = nn.Tanh()
+
+        # Gets average of exponential averages
+        average: float = torch.mean(self.exponential_average).item()
+
+        # Gets ratio vs mean
+        norm_exp_avg: torch.Tensor = self.exponential_average / average
+
+        # calculate the growth factors
+        growth_factor_positive: torch.Tensor = self.eps * tanh(-self.eps * (norm_exp_avg - 1)) + 1
+        growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
+
+        # Update the weights depending on growth factor
+        positive_weights = torch.where(self.fc.weight > 0, self.fc.weight, 0.0)
+        negative_weights = torch.where(self.fc.weight < 0, self.fc.weight, 0.0)
+        positive_weights = positive_weights * growth_factor_positive.unsqueeze(1)
+        negative_weights = negative_weights * growth_factor_negative.unsqueeze(1)
+        self.fc.weight = nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
+        
+        return (positive_weights, negative_weights)
+    
+
+    def _sigmoid_weight_decay(self) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        METHOD
+        Decays the overused weights and increases the underused weights using tanh functions.
+        @param
+            None
+        @return
+            None
+        """
+        tanh: nn.Tanh = nn.Tanh()
+
+        # Gets average of exponential averages
+        average: float = torch.mean(self.exponential_average).item()
+
+        # Gets ratio vs mean
+        norm_exp_avg: torch.Tensor = self.exponential_average / average
+
+        # calculate the growth factors
+        growth_factor_positive: torch.Tensor = self.eps * tanh(-self.eps * (norm_exp_avg - 1)) + 1
+        growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
+
+        # Update the weights depending on growth factor
+        positive_weights: torch.Tensor = torch.where(self.fc.weight > 0, self._sigmoid_function(), 0.0)
+        negative_weights = torch.where(self.fc.weight < 0, self._sigmoid_function(), 0.0)
+        positive_weights: torch.Tensor = positive_weights * growth_factor_positive.unsqueeze(1)
+        negative_weights = negative_weights * growth_factor_negative.unsqueeze(1)
+        
+        return (positive_weights, negative_weights)
+        
+
+
+
+
+
+
+
+
 
     #################################################################################################
     # Activations and weight/bias updates that will be called for train/eval forward
@@ -332,8 +418,12 @@ class HiddenLayer(NetworkLayer, ABC):
     def update_bias(self, output: torch.Tensor) -> None:
         raise NotImplementedError("This method has yet to be implemented.")
     
-    
-    
+
+    def weight_decay(self) -> None:
+        raise NotImplementedError("This method has yet to be implemented.")
+
+
+
     #################################################################################################
     # Training/Evaluation during forward pass
     #################################################################################################

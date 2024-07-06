@@ -75,3 +75,15 @@ class ExperimentPhases(Enum):
     BASE = 'BASE'
     RECONSTRUCTION = 'RECONSTRUCTION'
     FREEZING_WEIGHTS = 'FREEZING_WEIGHTS'
+
+
+class ParamInit(Enum):
+    """
+    ENUM CLASS
+    Defines types of fc parameter instantiation
+    @instance attr.
+    """
+    UNIFORM = 'UNIFORM'
+    NORMAL = 'NORMAL'
+    
+     

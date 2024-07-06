@@ -298,7 +298,11 @@ class BaseExperiment(Experiment):
         self.PARAM_LOG.info(f"Inhibition Rule: {self.model.heb_param['inhib'].value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Weight Growth: {self.model.heb_param['growth'].value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Network Learning Rate: {self.model.lr}")
-        self.PARAM_LOG.info(f"Number of Epochs: {self.epochs}")
+        self.PARAM_LOG.info(f"Alpha: {self.model.alpha}")
+        self.PARAM_LOG.info(f"Beta: {self.model.beta}")
+        self.PARAM_LOG.info(f"Sigma: {self.model.sigma}")
+        self.PARAM_LOG.info(f"Mu: {self.model.mu}")
+        self.PARAM_LOG.info(f"Param Init: {self.model.init.value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
         
         self.EXP_LOG.info("Completed logging of experiment parameters.")
@@ -331,7 +335,7 @@ class BaseExperiment(Experiment):
             self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.BASE)
         
         self.EXP_LOG.info("Completed training of model.")        
-        self.model.visualize_weights(self.RESULT_PATH, self.epochs, 'final')
+        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final')
         self.EXP_LOG.info("Visualize weights of model after training.")
         
     

@@ -16,7 +16,7 @@ ARGS = parse_arguments()
 
 # Experiments setup
 lambda_test = []
-lambda_testing = [15]
+lambda_testing = [1]
 
 for num in range(1, 16):
     lambda_test.append(num)
@@ -24,7 +24,7 @@ for num in range(1, 16):
 
 lambda_test.sort()
 
-for l in lambda_test:
+for l in lambda_testing:
     ARGS.heb_lamb = l
     
     test_acc_list = []
@@ -42,7 +42,7 @@ for l in lambda_test:
     rec_norm_test_e_list = []
     rec_norm_train_e_list = []
     
-    for num in range(0, 5):
+    for num in range(0, 1):
         # Base model training
         model = HebbianNetwork(ARGS)
         

@@ -2,6 +2,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 from layers.output_layer import OutputLayer
+from utils.experiment_constants import ParamInit
 
 
 class ClassificationLayer(OutputLayer):
@@ -23,6 +24,11 @@ class ClassificationLayer(OutputLayer):
                  output_dimension: int, 
                  device: str, 
                  learning_rate: float = 0.005,
+                 alpha: float = 0,
+                 beta: float = 1,
+                 sigma: float = 1,
+                 mu: float = 0,
+                 init: ParamInit = ParamInit.UNIFORM,
                  include_first: bool = True
                  ) -> None:
         """
@@ -36,7 +42,7 @@ class ClassificationLayer(OutputLayer):
         @return
             None
         """
-        super().__init__(input_dimension, output_dimension, device, learning_rate)
+        super().__init__(input_dimension, output_dimension, device, learning_rate, alpha, beta, sigma, mu, init)
         self.include_first: bool = include_first
         
 

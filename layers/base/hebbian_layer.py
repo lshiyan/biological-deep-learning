@@ -33,7 +33,12 @@ class HebbianLayer(HiddenLayer):
                  output_dimension: int, 
                  device: str, 
                  lamb: float = 1, 
-                 learning_rate: float = 0.005, 
+                 learning_rate: float = 0.005,
+                 alpha: float = 0,
+                 beta: float = 1,
+                 sigma: float = 1,
+                 mu: float = 0,
+                 init: ParamInit = ParamInit.UNIFORM, 
                  gamma: float = 0.99, 
                  eps: float = 0.01,
                  sigmoid_k: float = 1,
@@ -57,7 +62,19 @@ class HebbianLayer(HiddenLayer):
         @return
             None
         """
-        super().__init__(input_dimension, output_dimension, device, learning_rate, lamb, gamma, eps, sigmoid_k)
+        super().__init__(input_dimension, 
+                         output_dimension, 
+                         device, 
+                         learning_rate, 
+                         alpha, 
+                         beta, 
+                         sigma, 
+                         mu, 
+                         init, 
+                         lamb, 
+                         gamma, 
+                         eps, 
+                         sigmoid_k)
         self.inhibition_rule: LateralInhibitions = inhibition_rule
         self.learning_rule: LearningRules = learning_rule
         self.weight_growth: WeightGrowth = weight_growth
@@ -153,28 +170,18 @@ class HebbianLayer(HiddenLayer):
         @return
             None
         """
-        tanh: nn.Tanh = nn.Tanh()
-
-        # Gets average of exponential averages
-        average: float = torch.mean(self.exponential_average).item()
-
-        # Gets ratio vs mean
-        A: torch.Tensor = self.exponential_average / average
-
-        # calculate the growth factors
-        growth_factor_positive: torch.Tensor = self.eps * tanh(-self.eps * (A - 1)) + 1
-        growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
-
-        # Update the weights depending on growth factor
-        positive_weights = torch.where(self.fc.weight > 0, self.fc.weight, 0.0)
-        negative_weights = torch.where(self.fc.weight < 0, self.fc.weight, 0.0)
-        positive_weights = positive_weights * growth_factor_positive.unsqueeze(1)
-        negative_weights = negative_weights * growth_factor_negative.unsqueeze(1)
-        self.fc.weight = nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
+        if self.weight_growth == WeightGrowth.LINEAR:
+            pos_weights, neg_weights = self._linear_weight_decay()
+        elif self.weight_growth == WeightGrowth.SIGMOID:
+            pos_weights, neg_weights = self._sigmoid_weight_decay()
+        else:
+            raise NameError(f"Invalid weight growth {self.weight_growth}.")
+        
+        self.fc.weight = nn.Parameter(torch.add(pos_weights, neg_weights), requires_grad=False)
         
         # Check if there are any NaN weights
         if (self.fc.weight.isnan().any()):
-            print("NAN WEIGHT")
+            raise ValueError("Weights of the fully connected layer have become NaN.")
     
 
     def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -195,7 +202,7 @@ class HebbianLayer(HiddenLayer):
         output = self.inhibition(input_copy)
         self.update_weights(initial_input, output)
         # self.update_bias(input)
-        if self.weight_growth == WeightGrowth.LINEAR: self.weight_decay()
+        self.weight_decay()
         
         return output
     

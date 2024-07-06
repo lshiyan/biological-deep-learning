@@ -53,6 +53,11 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     
     # Shared hyperparameters
     parser.add_argument("--lr", type=float, default=0.005)
+    parser.add_argument("--alpha", type=float, default=0)
+    parser.add_argument("--beta", type=float, default=1)
+    parser.add_argument("--sigma", type=float, default=1)
+    parser.add_argument("--mu", type=float, default=0)
+    parser.add_argument("--init", type=str, default='uniform')
 
     # Experiment parameters
     parser.add_argument("--batch_size", type=int, default=1)

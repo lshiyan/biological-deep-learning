@@ -9,7 +9,7 @@ from layers.base.hebbian_layer import HebbianLayer
 from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
 from layers.output_layer import OutputLayer
-from utils.experiment_constants import LateralInhibitions, LayerNames, LearningRules, WeightGrowth
+from utils.experiment_constants import LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightGrowth
 
 
 class HebbianNetwork(Network):
@@ -51,6 +51,7 @@ class HebbianNetwork(Network):
         inhibition_mapping: dict[str, LateralInhibitions] = {member.value.upper(): member for member in LateralInhibitions}
         learning_rule_mapping: dict[str, LearningRules] = {member.value.upper(): member for member in LearningRules}
         weight_growth_mapping: dict[str, WeightGrowth] = {member.value.upper(): member for member in WeightGrowth}
+        param_init_mapping: dict[str, ParamInit] = {member.value.upper(): member for member in ParamInit}
         
         self.heb_param: dict[str, Union[float, Enum]] = {
             "lamb": args.heb_lamb,
@@ -69,6 +70,11 @@ class HebbianNetwork(Network):
 
         # Shared hyperparameters
         self.lr: float = args.lr
+        self.alpha: float = args.alpha
+        self.beta: float = args.beta
+        self.sigma: float = args.sigma
+        self.mu: float = args.mu
+        self.init: ParamInit = param_init_mapping[args.init.upper()]
 
         # Setting up layers of the network
         input_layer: InputLayer = DataSetupLayer()
@@ -76,7 +82,12 @@ class HebbianNetwork(Network):
                                                   self.heb_dim, 
                                                   self.device, 
                                                   self.heb_param["lamb"],  # type: ignore
-                                                  self.lr, 
+                                                  self.lr,
+                                                  self.alpha,
+                                                  self.beta,
+                                                  self.sigma,
+                                                  self.mu,
+                                                  self.init, 
                                                   self.heb_param["gam"],  # type: ignore
                                                   self.heb_param["eps"], # type: ignore
                                                   self.heb_param["sig_k"], # type: ignore
@@ -87,6 +98,11 @@ class HebbianNetwork(Network):
                                                                 self.output_dim, 
                                                                 self.device, 
                                                                 self.lr,
+                                                                self.alpha,
+                                                                self.beta,
+                                                                self.sigma,
+                                                                self.mu,
+                                                                self.init,
                                                                 self.cla_param["in_1"]) # type: ignore
         
         self.add_module(LayerNames.INPUT.name, input_layer)

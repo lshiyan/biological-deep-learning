@@ -2,6 +2,7 @@ from abc import ABC
 from typing import Optional
 import torch
 from interfaces.layer import NetworkLayer
+from utils.experiment_constants import ParamInit
 
 
 class OutputLayer(NetworkLayer, ABC):
@@ -21,7 +22,12 @@ class OutputLayer(NetworkLayer, ABC):
                  input_dimension: int,
                  output_dimension: int, 
                  device: str, 
-                 learning_rate: float = 0.005
+                 learning_rate: float = 0.005,
+                 alpha: float = 0,
+                 beta: float = 1,
+                 sigma: float = 1,
+                 mu: float = 0,
+                 init: ParamInit = ParamInit.UNIFORM
                  ) -> None:
         """
         CONSTRUCTOR METHOD
@@ -33,7 +39,7 @@ class OutputLayer(NetworkLayer, ABC):
         @return
             None
         """
-        super().__init__(input_dimension, output_dimension, device, learning_rate)
+        super().__init__(input_dimension, output_dimension, device, learning_rate, alpha, beta, sigma, mu, init)
     
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> None:

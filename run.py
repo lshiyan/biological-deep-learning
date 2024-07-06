@@ -31,7 +31,7 @@ arguments = [
             '--heb_lamb=15', 
             '--heb_gam=0.99',
             '--heb_eps=0.01',
-            '--learning_rule=orthogonal',
+            '--learning_rule=sanger',
             '--inhibition_rule=relu',
             '--weight_growth=linear',
             '--sigmoid_k=1',
@@ -39,9 +39,13 @@ arguments = [
             '--include_first=False',
              # Shared hyperparameters
             '--lr=0.005',
+            '--alpha=0',
+            '--beta=1',
+            '--sigma=1',
+            '--mu=0',
             # Experiment parameters
             '--batch_size=1',
-            '--epochs=5', 
+            '--epochs=1', 
             '--device=cpu',
             '--local_machine=True',
             '--experiment_type=base'
