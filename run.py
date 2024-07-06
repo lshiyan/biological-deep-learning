@@ -43,6 +43,7 @@ arguments = [
             '--beta=1',
             '--sigma=1',
             '--mu=0',
+            '--init=normal'
             # Experiment parameters
             '--batch_size=1',
             '--epochs=1', 
