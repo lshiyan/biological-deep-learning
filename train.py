@@ -16,16 +16,25 @@ ARGS = parse_arguments()
 
 # Experiments setup
 lambda_test = []
-lambda_testing = [1]
+lambda_testing = [15]
+
+lr_test = []
+lr_testing = [0.005]
+
+hid_dim_test = [784]
+hid_dim_testing = [128]
+
 
 for num in range(1, 16):
     lambda_test.append(num)
     lambda_test.append(1/num)
 
-lambda_test.sort()
+for num in range(0, 11):
+    dim = 2 ** num
+    hid_dim_test.append(dim)
 
-for l in lambda_testing:
-    ARGS.heb_lamb = l
+for dim in hid_dim_test:
+    ARGS.heb_dim = dim
     
     test_acc_list = []
     train_acc_list = []
@@ -47,9 +56,9 @@ for l in lambda_testing:
         model = HebbianNetwork(ARGS)
         
         if ARGS.experiment_type.lower() == 'base':
-            experiment = BaseExperiment(model, ARGS, f'{ARGS.device}-{ARGS.experiment_type.lower()}-{l}-{num}')
+            experiment = BaseExperiment(model, ARGS, f'{ARGS.device}-{ARGS.experiment_type.lower()}-{dim}-{num}')
         elif ARGS.experiment_type.lower() == 'generalization':
-            experiment = GeneralizationExperiment(model, ARGS, f'{ARGS.device}-{ARGS.experiment_type.lower()}-{l}-{num}')
+            experiment = GeneralizationExperiment(model, ARGS, f'{ARGS.device}-{ARGS.experiment_type.lower()}-{dim}-{num}')
         
         accuracies = list(experiment.run())
         experiment.cleanup()
@@ -80,7 +89,7 @@ for l in lambda_testing:
         avg_train = average(train_acc_list)
         var_train = variance(train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
+        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
         
     elif ARGS.experiment_type.lower() == 'generalization':
         avg_test = average(test_acc_list)
@@ -88,42 +97,42 @@ for l in lambda_testing:
         avg_train = average(train_acc_list)
         var_train = variance(train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
+        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
         
         avg_test_e = average(test_acc_e_list)
         var_test_e = variance(test_acc_e_list)
         avg_train_e = average(train_acc_e_list)
         var_train_e = variance(train_acc_e_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_e}, var = {var_test_e} || Train Acc: avg = {avg_train_e}, var = {var_train_e}") # type: ignore
+        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_e}, var = {var_test_e} || Train Acc: avg = {avg_train_e}, var = {var_train_e}") # type: ignore
         
         avg_test_cos = average(test_acc_list)
         var_test_cos = variance(test_acc_list)
         avg_train_cos = average(train_acc_list)
         var_train_cos = variance(train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos}, var = {var_test_cos} || Cos-Sim Train Acc: avg = {avg_train_cos}, var = {var_train_cos}")
+        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos}, var = {var_test_cos} || Cos-Sim Train Acc: avg = {avg_train_cos}, var = {var_train_cos}")
         
         avg_test_cos_e = average(test_acc_list)
         var_test_cos_e = variance(test_acc_list)
         avg_train_cos_e = average(train_acc_list)
         var_train_cos_e = variance(train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos_e}, var = {var_test_cos_e} || Cos-Sim Train Acc: avg = {avg_train_cos_e}, var = {var_train_cos_e}") # type: ignore
+        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos_e}, var = {var_test_cos_e} || Cos-Sim Train Acc: avg = {avg_train_cos_e}, var = {var_train_cos_e}") # type: ignore
         
         avg_test_norm = average(test_acc_list)
         var_test_norm = variance(test_acc_list)
         avg_train_norm = average(train_acc_list)
         var_train_norm = variance(train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm}, var = {var_test_norm} || Norm Train Acc: avg = {avg_train_norm}, var = {var_train_norm}")
+        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm}, var = {var_test_norm} || Norm Train Acc: avg = {avg_train_norm}, var = {var_train_norm}")
         
         avg_test_norm_e = average(test_acc_list)
         var_test_norm_e = variance(test_acc_list)
         avg_train_norm_e = average(train_acc_list)
         var_train_norm_e = variance(train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm_e}, var = {var_test_norm_e} || Norm Train Acc: avg = {avg_train_norm_e}, var = {var_train_norm_e}") # type: ignore
+        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm_e}, var = {var_test_norm_e} || Norm Train Acc: avg = {avg_train_norm_e}, var = {var_train_norm_e}") # type: ignore
         
         
         

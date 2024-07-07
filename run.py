@@ -31,19 +31,19 @@ arguments = [
             '--heb_lamb=15', 
             '--heb_gam=0.99',
             '--heb_eps=0.01',
-            '--learning_rule=sanger',
+            '--learning_rule=orthogonal',
             '--inhibition_rule=relu',
             '--weight_growth=linear',
             '--sigmoid_k=1',
             # Classification layer hyperparameters
-            '--include_first=False',
+            '--include_first=True',
              # Shared hyperparameters
-            '--lr=0.005',
+            '--lr=0.05',
             '--alpha=0',
             '--beta=1',
             '--sigma=1',
             '--mu=0',
-            '--init=normal'
+            '--init=uniform',
             # Experiment parameters
             '--batch_size=1',
             '--epochs=1', 

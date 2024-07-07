@@ -128,6 +128,8 @@ class BaseExperiment(Experiment):
             None
         """
         if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning')
+
+        train_epoch_start: float = self.TRAIN_TIME
         
         train_start: float = time.time()
         self.EXP_LOG.info(f"Started 'base_train' function with {dname.upper()}.")
@@ -140,8 +142,15 @@ class BaseExperiment(Experiment):
         for inputs, labels in train_data_loader:
             # Test model at intervals of samples seen
             if self.check_test(self.SAMPLES):
+                # Pause train timer and add to total time
+                train_pause_time: float = time.time()
+                self.TRAIN_TIME += train_pause_time - train_start
+
                 self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.BASE)
                 self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE)
+
+                # Restart train timer
+                train_start = time.time()
 
             # Move input and targets to device
             inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
@@ -155,8 +164,9 @@ class BaseExperiment(Experiment):
             self.SAMPLES += 1
         
         train_end: float = time.time()
-        training_time: float = train_end - train_start
-        self.TRAIN_TIME += training_time
+        self.TRAIN_TIME += train_end - train_start
+        train_epoch_end: float = self.TRAIN_TIME
+        training_time = train_epoch_end - train_epoch_start
             
         self.EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(training_time)}.")
         self.EXP_LOG.info("Completed 'base_train' function.")

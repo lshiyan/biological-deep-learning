@@ -160,16 +160,26 @@ class NetworkLayer (nn.Module, ABC):
                     row = min(factor1, factor2)
                     col = max(factor1, factor2)
         
+        # Calculate size of figure
+        subplot_size = 3  # You can adjust this value to make subplots larger or smaller
+        fig_width = col * subplot_size
+        fig_height = row * subplot_size
+
         # Get the weights and create heatmap
         weight: torch.Tensor = self.fc.weight
         fig: matplotlib.figure.Figure
         axes: np.ndarray
-        fig, axes = plt.subplots(row, col, figsize=(16, 16)) # type: ignore
+        fig, axes = plt.subplots(row, col, figsize=(fig_width, fig_height)) # type: ignore
         for ele in range(row * col): 
             if ele < self.output_dimension:
                 random_feature_selector: torch.Tensor = weight[ele]
                 # Move tensor to CPU, convert to NumPy array for visualization
-                heatmap: torch.Tensor = random_feature_selector.view(int(math.sqrt(self.fc.weight.size(1))), int(math.sqrt(self.fc.weight.size(1)))).cpu().numpy()
+                original_size: int = random_feature_selector.size(0)
+                next_square: int = int(np.ceil(np.sqrt(original_size))) ** 2
+                padding_size: int = next_square - original_size
+                padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size))
+                feature_size = int(np.sqrt(next_square))
+                heatmap: torch.Tensor = padded_weights.view(feature_size, feature_size).cpu().numpy()
 
                 ax = axes[ele // col, ele % col]
                 im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
