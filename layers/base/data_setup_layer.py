@@ -78,7 +78,15 @@ class DataSetupLayer(InputLayer):
         logging.info(f"Selected letter classes: {selected_letters}")    # Log this stuff
 
         # Filter the dataset to include only the selected classes
-        selected_indices = [i for i, label in enumerate(labels) if label in selected_classes]
+        # Initialize an empty list to store the selected indices
+        selected_indices = []
+        
+        # Loop through each label in the dataset
+        for i, label in enumerate(labels):
+            # Check if the current label is in the list of selected classes
+            if label in selected_classes:
+                # If the label is in the selected_classes, add the index to selected_indices
+                selected_indices.append(i)
 
         # STEP 3 ->  I create a new tensor filtered_data containing only the data points whose indices are in selected_indices
         filtered_data = data_tensor[selected_indices]
