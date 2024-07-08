@@ -21,7 +21,7 @@ lambda_testing = [15]
 lr_test = []
 lr_testing = [0.005]
 
-hid_dim_test = [784]
+hid_dim_test = [10, 784]
 hid_dim_testing = [128]
 
 
@@ -29,7 +29,7 @@ for num in range(1, 16):
     lambda_test.append(num)
     lambda_test.append(1/num)
 
-for num in range(0, 11):
+for num in range(1, 11):
     dim = 2 ** num
     hid_dim_test.append(dim)
 
