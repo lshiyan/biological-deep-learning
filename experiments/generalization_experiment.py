@@ -133,6 +133,17 @@ class GeneralizationExperiment(Experiment):
         input_layer: NetworkLayer = self.model.get_module(LayerNames.INPUT)
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
+        #####################################################
+        # --------------- DATASET INFORMATION --------------- 
+        #####################################################
+        # MNIST train: 600000
+        # MNIST test: 10000
+        # Fashion MNIST train: 60000
+        # Fashion MNIST test: 10000
+        # EMNIST-Letter train: 88,800
+        # EMNIST-Letter test: 14,800
+
+        
         # Training dataset
         self.train_data_set: TensorDataset = input_class.setup_data(self.train_data, self.train_label, self.train_fname, 60000)
         self.train_data_loader: DataLoader = DataLoader(self.train_data_set, batch_size=self.batch_size, shuffle=True)
@@ -150,13 +161,13 @@ class GeneralizationExperiment(Experiment):
 
         # Extented training dataset
         self.e_train_data_set: TensorDataset = input_class.setup_data(self.e_train_data, self.e_train_label, self.e_train_fname, 60000)
-        filtered_train_dataset = DataSetupLayer.filter_emnist_letters(self.e_train_data_set, selected_classes)
+        filtered_train_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_train_data_set, selected_classes)
         self.e_train_data_loader: DataLoader = DataLoader(filtered_train_dataset, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-training dataset and dataloader.")
         
         # Extended testing dataset
         self.e_test_data_set: TensorDataset = input_class.setup_data(self.e_test_data, self.e_test_label, self.e_test_fname, 10000)
-        filtered_test_dataset = DataSetupLayer.filter_emnist_letters(self.e_test_data_set, selected_classes)
+        filtered_test_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_test_data_set, selected_classes)
         self.e_test_data_loader: DataLoader = DataLoader(filtered_test_dataset, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-testing dataset and dataloader.")
         
@@ -492,12 +503,12 @@ class GeneralizationExperiment(Experiment):
         self.PARAM_LOG.info(f"Input Dimension: {self.model.input_dim}")
         self.PARAM_LOG.info(f"Hebbian Layer Dimension: {self.model.heb_dim}")
         self.PARAM_LOG.info(f"Outout Dimension: {self.model.output_dim}")
-        self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.model.heb_param["lamb"]}")
-        self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.model.heb_param["gam"]}")
-        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_param["eps"]}")
-        self.PARAM_LOG.info(f"Learning Rule: {self.model.heb_param["learn"].value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Inhibition Rule: {self.model.heb_param["inhib"].value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Function Type: {self.model.heb_param["growth"].value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.model.heb_param['lamb']}")
+        self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.model.heb_param['gam']}")
+        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_param['eps']}")
+        self.PARAM_LOG.info(f"Learning Rule: {self.model.heb_param['learn'].value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Inhibition Rule: {self.model.heb_param['inhib'].value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Function Type: {self.model.heb_param['growth'].value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Network Learning Rate: {self.model.lr}")
         self.PARAM_LOG.info(f"Number of Epochs: {self.epochs}")
         self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")

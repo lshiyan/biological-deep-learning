@@ -41,7 +41,7 @@ arguments = [
             '--lr=0.005',
             # Experiment parameters
             '--batch_size=1',
-            '--epochs=5', 
+            '--epochs=1', 
             '--device=cpu',
             '--local_machine=True',
             '--experiment_type=generalization'

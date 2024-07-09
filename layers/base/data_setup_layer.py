@@ -74,7 +74,7 @@ class DataSetupLayer(InputLayer):
         data_tensor, labels = tensor_dataset.tensors
         
         # STEP 2 ->  I convert the class indices (0-25) to their corresponding uppercase letters (A-Z) using the ASCII value of ‘A’ (this is all done so I can log my letter for debug purposes)
-        selected_letters = [chr(65 + cls) for cls in selected_classes]  # Convert to corresponding uppercase letters
+        selected_letters = [chr(64 + cls) for cls in selected_classes]  # Convert to corresponding uppercase letters
         logging.info(f"Selected letter classes: {selected_letters}")    # Log this stuff
 
         # Filter the dataset to include only the selected classes
