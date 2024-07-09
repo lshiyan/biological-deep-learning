@@ -170,14 +170,17 @@ class HebbianLayer(HiddenLayer):
         @return
             None
         """
+        growth_factor: torch.Tensor
         if self.weight_growth == WeightGrowth.LINEAR:
-            pos_weights, neg_weights = self._linear_weight_decay()
+            growth_factor = self._linear_weight_decay()
         elif self.weight_growth == WeightGrowth.SIGMOID:
             pos_weights, neg_weights = self._sigmoid_weight_decay()
         else:
             raise NameError(f"Invalid weight growth {self.weight_growth}.")
         
-        self.fc.weight = nn.Parameter(torch.add(pos_weights, neg_weights), requires_grad=False)
+        # weight_change: torch.Tensor = self.fc.weight * growth_factor
+        # self.fc.weight = nn.Parameter(torch.add(self.fc.weight, weight_change), requires_grad=False)
+        self.fc.weight = nn.Parameter(self.fc.weight * growth_factor, requires_grad=False)
         
         # Check if there are any NaN weights
         if (self.fc.weight.isnan().any()):

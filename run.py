@@ -38,7 +38,7 @@ arguments = [
             # Classification layer hyperparameters
             '--include_first=True',
              # Shared hyperparameters
-            '--lr=0.05',
+            '--lr=0.005',
             '--alpha=0',
             '--beta=1',
             '--sigma=1',

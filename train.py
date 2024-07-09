@@ -22,7 +22,7 @@ lr_test = []
 lr_testing = [0.005]
 
 hid_dim_test = [10, 784]
-hid_dim_testing = [128]
+hid_dim_testing = [64]
 
 
 for num in range(1, 16):
@@ -33,7 +33,7 @@ for num in range(1, 11):
     dim = 2 ** num
     hid_dim_test.append(dim)
 
-for dim in hid_dim_test:
+for dim in hid_dim_testing:
     ARGS.heb_dim = dim
     
     test_acc_list = []

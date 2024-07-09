@@ -335,7 +335,7 @@ class HiddenLayer(NetworkLayer, ABC):
     #################################################################################################
     # Different Weights Growth for Wegiht Updates
     #################################################################################################
-    def _linear_weight_decay(self) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _linear_weight_decay(self) -> torch.Tensor:
         """
         METHOD
         Decays the overused weights and increases the underused weights using tanh functions.
@@ -351,19 +351,28 @@ class HiddenLayer(NetworkLayer, ABC):
 
         # Gets ratio vs mean
         norm_exp_avg: torch.Tensor = self.exponential_average / average
+        
+        # x: torch.Tensor = -self.eps * (norm_exp_avg - 1)
+        x: torch.Tensor = self.eps * (norm_exp_avg - 1)
+        sech_x: torch.Tensor = 1 / torch.cosh(x)
 
         # calculate the growth factors
-        growth_factor_positive: torch.Tensor = self.eps * tanh(-self.eps * (norm_exp_avg - 1)) + 1
+        growth_factor_positive: torch.Tensor = self.eps * tanh(x) + 1
         growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
-
-        # Update the weights depending on growth factor
-        positive_weights = torch.where(self.fc.weight > 0, self.fc.weight, 0.0)
-        negative_weights = torch.where(self.fc.weight < 0, self.fc.weight, 0.0)
-        positive_weights = positive_weights * growth_factor_positive.unsqueeze(1)
-        negative_weights = negative_weights * growth_factor_negative.unsqueeze(1)
-        self.fc.weight = nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
+        growth_factor_positive = growth_factor_positive.unsqueeze(1)
+        growth_factor_negative = growth_factor_negative.unsqueeze(1)
         
-        return (positive_weights, negative_weights)
+        # cst_term: float = -self.eps * (1 - self.gamma) / average
+        # last_term: torch.Tensor = torch.reciprocal(torch.sinh(x) * torch.cosh(x))
+        # extra_term: torch.Tensor = (1 - self.eps * tanh(x)) ** 2
+        
+        # growth_factor_positive: torch.Tensor = self.fc.weight * cst_term * last_term.unsqueeze(1)
+        # growth_factor_negative: torch.Tensor = self.fc.weight * cst_term * last_term.unsqueeze(1) * extra_term.unsqueeze(1)
+        
+        # Combined growth_factor
+        growth_factor = torch.where(self.fc.weight > 0, growth_factor_positive, growth_factor_negative)
+        
+        return growth_factor
     
 
     def _sigmoid_weight_decay(self) -> Tuple[torch.Tensor, torch.Tensor]:
