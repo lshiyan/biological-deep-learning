@@ -22,6 +22,11 @@ class NetworkLayer (nn.Module, ABC):
         device (str): device that will be used for CUDA
         lr (float): how fast model learns at each iteration
         fc (nn.Linear): fully connected layer using linear transformation
+        alpha (float): lower bound for random unifrom 
+        beta (float): upper bound for random uniform
+        sigma (float): variance for random normal
+        mu (float): mean for random normal
+        init (ParamInit): fc parameter initiation type
     """
     def __init__(self, 
                  input_dimension: int, 
@@ -41,6 +46,11 @@ class NetworkLayer (nn.Module, ABC):
             output_dimension: number of outputs from layer
             device: device that will be used for CUDA
             learning_rate: how fast model learns at each iteration
+            alpha (float): lower bound for random unifrom 
+            beta (float): upper bound for random uniform
+            sigma (float): variance for random normal
+            mu (float): mean for random normal
+            init (ParamInit): fc parameter initiation type
         @return
             None
         """
@@ -56,7 +66,7 @@ class NetworkLayer (nn.Module, ABC):
         self.mu: float = mu
         self.init: ParamInit = init
         
-        # Setup linear activation
+        # Initialize fc layer parameters
         for param in self.fc.parameters():
             if self.init == ParamInit.UNIFORM:
                 torch.nn.init.uniform_(param, a=alpha, b=beta)
@@ -96,19 +106,21 @@ class NetworkLayer (nn.Module, ABC):
     def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None, freeze: bool = False) -> torch.Tensor:
         """
         METHOD
-        Defines how input data flows throw the network
+        Defines how input data flows through the network
         @param
             input: input data into the layer
             clamped_output: one-hot encode of true labels
             freeze: determine if layer is frozen or not
         @return
-            input: returns the data after passing it throw the layer
+            output: returns the data after passing it through the layer
         """
+        input_copy: torch.Tensor = input.clone().detach().float.to(self.device)
+        output: torch.Tensor
         if self.training and not freeze:
-            input = self._train_forward(input, clamped_output)
+            output = self._train_forward(input_copy, clamped_output)
         else:
-            input = self._eval_forward(input)
-        return input
+            output = self._eval_forward(input_copy)
+        return output
 
 
     def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:

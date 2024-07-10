@@ -23,14 +23,20 @@ class HebbianNetwork(Network):
             input_dim (int): number of inputs
             heb_dim (int): number of neurons in hebbina layer
             output_dimension (int): number of output neurons
-            heb_param (dict {str:float}): dictionary with all the hyperparameters for the hebbian layer
-                - lr (float): learning rate of hebbian layer
-                - lamb (float): hyperparameter for lateral neuron inhibition
-                - gam (float): factor to decay learning rate of hebbian layer
-                - eps (float): small value to avoid 0 division
-            cla_param (dict {str:float}): dictionary with all the hyperparameters for the classification layer
-                - in_1 (bool): wether to include first neuron in classification layer
+            lamb (float): hyperparameter for lateral neuron inhibition
+            gam (float): factor to decay learning rate of hebbian layer
+            eps (float): small value to avoid 0 division
+            inhib (LateralInhibition): type of lateral inhibition
+            learn (LearningRules): which learning rule that will be used
+            growth (WeightGrowth): type of weight growth
+            sig_k (float): sigmoid learning constant
+            in_1 (bool): wether to include first neuron in classification layer
             lr (float): learning rate of classification layer
+            alpha (flaot): lower bound for random uniform
+            beta (flaot): upper bound for random uniform
+            sigma (flaot): variance for random normal
+            mu (flaot): mean for random normal
+            init (ParamInit): type of parameter initiation
     """
     def __init__(self, args: argparse.Namespace) -> None:
         """
@@ -53,20 +59,16 @@ class HebbianNetwork(Network):
         weight_growth_mapping: dict[str, WeightGrowth] = {member.value.upper(): member for member in WeightGrowth}
         param_init_mapping: dict[str, ParamInit] = {member.value.upper(): member for member in ParamInit}
         
-        self.heb_param: dict[str, Union[float, Enum]] = {
-            "lamb": args.heb_lamb,
-            "eps": args.heb_eps,
-            "gam": args.heb_gam,
-            "inhib": inhibition_mapping[args.inhibition_rule.upper()],
-            "learn": learning_rule_mapping[args.learning_rule.upper()],
-            "growth": weight_growth_mapping[args.weight_growth.upper()],
-            "sig_k": args.sigmoid_k
-        }
+        self.heb_lamb: float = args.heb_lamb
+        self.heb_eps: float = args.heb_eps
+        self.heb_gam: float = args.heb_gam
+        self.inhib: LateralInhibitions = inhibition_mapping[args.inhibition_rule.upper()]
+        self.learn: LearningRules = learning_rule_mapping[args.learning_rule.upper()]
+        self.growth: WeightGrowth = weight_growth_mapping[args.weight_growth.upper()]
+        self.sig_k: float = args.sigmoid_k
 
         # Classification layer hyperparameters stored in dictionary
-        self.cla_param: dict[str, Union[float, Enum]] = {
-            "in_1": args.include_first
-        }
+        self.include_first = args.include_first
 
         # Shared hyperparameters
         self.lr: float = args.lr
@@ -81,19 +83,19 @@ class HebbianNetwork(Network):
         hebbian_layer: HiddenLayer = HebbianLayer(self.input_dim, 
                                                   self.heb_dim, 
                                                   self.device, 
-                                                  self.heb_param["lamb"],  # type: ignore
+                                                  self.heb_lamb,
                                                   self.lr,
                                                   self.alpha,
                                                   self.beta,
                                                   self.sigma,
                                                   self.mu,
                                                   self.init, 
-                                                  self.heb_param["gam"],  # type: ignore
-                                                  self.heb_param["eps"], # type: ignore
-                                                  self.heb_param["sig_k"], # type: ignore
-                                                  self.heb_param["inhib"], # type: ignore
-                                                  self.heb_param["learn"], # type: ignore
-                                                  self.heb_param["growth"]) # type: ignore
+                                                  self.heb_gam,
+                                                  self.heb_eps,
+                                                  self.sig_k,
+                                                  self.inhib,
+                                                  self.learn,
+                                                  self.growth)
         classification_layer: OutputLayer = ClassificationLayer(self.heb_dim, 
                                                                 self.output_dim, 
                                                                 self.device, 
@@ -103,14 +105,19 @@ class HebbianNetwork(Network):
                                                                 self.sigma,
                                                                 self.mu,
                                                                 self.init,
-                                                                self.cla_param["in_1"]) # type: ignore
+                                                                self.include_first)
         
         self.add_module(LayerNames.INPUT.name, input_layer)
         self.add_module(LayerNames.HIDDEN.name, hebbian_layer)
         self.add_module(LayerNames.OUTPUT.name, classification_layer)
 
 
-    def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None, reconstruct: bool = False, freeze: bool = False) -> torch.Tensor:
+    def forward(self, 
+                input: torch.Tensor, 
+                clamped_output: Optional[torch.Tensor] = None, 
+                reconstruct: bool = False, 
+                freeze: bool = False
+                ) -> torch.Tensor:
         """
         METHOD
         Defines how an input data flows throw the network

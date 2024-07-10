@@ -1,4 +1,5 @@
 # Built-in imports
+from ast import Module
 import time
 from typing import Tuple, Type, Union
 
@@ -6,6 +7,7 @@ from typing import Tuple, Type, Union
 import torch
 from torch import linalg as LA
 import torch.nn as nn
+from torch.nn import Module
 from torch.nn.functional import one_hot
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -129,7 +131,7 @@ class GeneralizationExperiment(Experiment):
         self.FREEZE_SAMPLES: int = 0
         
         # Get input layer class of model
-        input_layer: NetworkLayer = self.model.get_module(LayerNames.INPUT)
+        input_layer: Module = self.model.get_module(LayerNames.INPUT)
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
         # Training dataset
@@ -556,6 +558,9 @@ class GeneralizationExperiment(Experiment):
         for epoch in range(0, self.epochs):
             self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.RECONSTRUCTION)
         
+        # Reset test_sample
+        self.test_sample = 0
+        
         # Freezing weights -> training classification    
         for epoch in range(0, self.epochs):
             self._training(self.e_train_data_loader, epoch, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
@@ -571,15 +576,12 @@ class GeneralizationExperiment(Experiment):
         rec_cos_train_mnist, rec_norm_train_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
         rec_cos_train_emnist, rec_norm_train_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
         
-        freeze_test_acc_mnist: float = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
-        freeze_train_acc_mnist: float = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
         freeze_test_acc_emnist: float = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
         freeze_train_acc_emnist: float = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
+        
         self.EXP_LOG.info("Completed final testing methods.")
         
-        return (
-            freeze_train_acc_mnist, 
-            freeze_test_acc_mnist, 
+        return ( 
             freeze_train_acc_emnist, 
             freeze_test_acc_emnist, 
             rec_cos_train_mnist, 

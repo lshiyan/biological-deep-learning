@@ -3,8 +3,6 @@ from typing import Optional
 import warnings
 import torch
 import torch.nn as nn
-
-from interfaces.layer import NetworkLayer
 from utils.experiment_constants import LayerNames
 
 
@@ -27,7 +25,7 @@ class Network(nn.Module, ABC):
         self.device = device
 
 
-    def get_module(self, lname: LayerNames) -> NetworkLayer: # type: ignore
+    def get_module(self, lname: LayerNames) -> nn.Module:
         """
         METHOD
         Returns layer with given name
@@ -38,7 +36,7 @@ class Network(nn.Module, ABC):
         """
         for layer_name, layer in self.named_children():      
             if lname.name.upper() == layer_name.upper():
-                return layer # type: ignore
+                return layer
         raise NameError(f"There are no layer named {lname.name.upper()}.")
 
 

@@ -4,6 +4,7 @@ from typing import Tuple, Type, Union
 
 # Pytorch imports
 import torch
+from torch.nn import Module
 from torch.nn.functional import one_hot
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -92,7 +93,7 @@ class BaseExperiment(Experiment):
         self.SAMPLES: int = 0
         
         # Get input layer class of model
-        input_layer: NetworkLayer = self.model.get_module(LayerNames.INPUT)
+        input_layer: Module = self.model.get_module(LayerNames.INPUT)
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
         # Training dataset

@@ -41,15 +41,18 @@ for dim in hid_dim_testing:
     test_acc_e_list = []
     train_acc_e_list = []
     
-    rec_cos_test_list = []
-    rec_cost_train_list = []
-    rec_norm_test_list = []
-    rec_norm_train_list = []
+    cos_test_list = []
+    cos_train_list = []
+    norm_test_list = []
+    norm_train_list = []
     
-    rec_cos_test_e_list = []
-    rec_cost_train_e_list = []
-    rec_norm_test_e_list = []
-    rec_norm_train_e_list = []
+    cos_test_e_list = []
+    cos_train_e_list = []
+    norm_test_e_list = []
+    norm_train_e_list = []
+    
+    freeze_train_acc_list = []
+    freeze_test_acc_list = []
     
     for num in range(0, 1):
         # Base model training
@@ -68,20 +71,18 @@ for dim in hid_dim_testing:
             test_acc_list.append(accuracies[1])
         
         elif ARGS.experiment_type.lower() == 'generalization':
-            train_acc_list.append(accuracies[0])
-            test_acc_list.append(accuracies[1])
-            train_acc_e_list.append(accuracies[2])
-            test_acc_e_list.append(accuracies[3])
+            freeze_train_acc_list.append(accuracies[0])
+            freeze_test_acc_list.append(accuracies[1])
             
-            rec_cost_train_list.append(accuracies[4])
-            rec_norm_train_list.append(accuracies[5])
-            rec_cos_test_list.append(accuracies[6])
-            rec_norm_test_list.append(accuracies[7])
+            cos_train_list.append(accuracies[2])
+            norm_train_list.append(accuracies[3])
+            cos_test_list.append(accuracies[4])
+            norm_test_list.append(accuracies[5])
             
-            rec_cost_train_e_list.append(accuracies[8])
-            rec_norm_train_e_list.append(accuracies[9])
-            rec_cos_test_e_list.append(accuracies[10])
-            rec_norm_test_e_list.append(accuracies[11])
+            cos_train_e_list.append(accuracies[6])
+            norm_train_e_list.append(accuracies[7])
+            cos_test_e_list.append(accuracies[8])
+            norm_test_e_list.append(accuracies[9])
             
     if ARGS.experiment_type.lower() == 'base':
         avg_test = average(test_acc_list)
@@ -92,45 +93,38 @@ for dim in hid_dim_testing:
         results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
         
     elif ARGS.experiment_type.lower() == 'generalization':
-        avg_test = average(test_acc_list)
-        var_test = variance(test_acc_list)
-        avg_train = average(train_acc_list)
-        var_train = variance(train_acc_list)
+        avg_test = average(freeze_train_acc_list)
+        var_test = variance(freeze_train_acc_list)
+        avg_train = average(freeze_train_acc_list)
+        var_train = variance(freeze_train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
+        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}") # type: ignore
         
-        avg_test_e = average(test_acc_e_list)
-        var_test_e = variance(test_acc_e_list)
-        avg_train_e = average(train_acc_e_list)
-        var_train_e = variance(train_acc_e_list)
-        
-        results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_e}, var = {var_test_e} || Train Acc: avg = {avg_train_e}, var = {var_train_e}") # type: ignore
-        
-        avg_test_cos = average(test_acc_list)
-        var_test_cos = variance(test_acc_list)
-        avg_train_cos = average(train_acc_list)
-        var_train_cos = variance(train_acc_list)
+        avg_test_cos = average(cos_test_list)
+        var_test_cos = variance(cos_test_list)
+        avg_train_cos = average(cos_train_list)
+        var_train_cos = variance(cos_train_list)
         
         results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos}, var = {var_test_cos} || Cos-Sim Train Acc: avg = {avg_train_cos}, var = {var_train_cos}")
         
-        avg_test_cos_e = average(test_acc_list)
-        var_test_cos_e = variance(test_acc_list)
-        avg_train_cos_e = average(train_acc_list)
-        var_train_cos_e = variance(train_acc_list)
+        avg_test_cos_e = average(cos_test_e_list)
+        var_test_cos_e = variance(cos_test_e_list)
+        avg_train_cos_e = average(cos_train_e_list)
+        var_train_cos_e = variance(cos_train_e_list)
         
         results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos_e}, var = {var_test_cos_e} || Cos-Sim Train Acc: avg = {avg_train_cos_e}, var = {var_train_cos_e}") # type: ignore
         
-        avg_test_norm = average(test_acc_list)
-        var_test_norm = variance(test_acc_list)
-        avg_train_norm = average(train_acc_list)
-        var_train_norm = variance(train_acc_list)
+        avg_test_norm = average(norm_test_list)
+        var_test_norm = variance(norm_test_list)
+        avg_train_norm = average(norm_train_list)
+        var_train_norm = variance(norm_train_list)
         
         results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm}, var = {var_test_norm} || Norm Train Acc: avg = {avg_train_norm}, var = {var_train_norm}")
         
-        avg_test_norm_e = average(test_acc_list)
-        var_test_norm_e = variance(test_acc_list)
-        avg_train_norm_e = average(train_acc_list)
-        var_train_norm_e = variance(train_acc_list)
+        avg_test_norm_e = average(norm_test_e_list)
+        var_test_norm_e = variance(norm_test_e_list)
+        avg_train_norm_e = average(norm_train_e_list)
+        var_train_norm_e = variance(norm_train_e_list)
         
         results_log.info(f"Epoch: {ARGS.epochs} || Hebbian Dim: {dim} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm_e}, var = {var_test_norm_e} || Norm Train Acc: avg = {avg_train_norm_e}, var = {var_train_norm_e}") # type: ignore
         
