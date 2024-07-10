@@ -5,6 +5,8 @@ import torch
 from interfaces.layer import NetworkLayer
 from torch.utils.data import TensorDataset
 
+from utils.experiment_constants import LayerNames
+
 
 class InputLayer(NetworkLayer, ABC):
     """
@@ -24,6 +26,7 @@ class InputLayer(NetworkLayer, ABC):
             None
         """
         super().__init__(0, 0)
+        self.name: LayerNames = LayerNames.INPUT
 
 
     @staticmethod

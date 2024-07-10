@@ -38,7 +38,7 @@ class HebbianNetwork(Network):
             mu (flaot): mean for random normal
             init (ParamInit): type of parameter initiation
     """
-    def __init__(self, args: argparse.Namespace) -> None:
+    def __init__(self, name, args: argparse.Namespace) -> None:
         """
         CONSTRUCTOR METHOD
         @pram
@@ -46,7 +46,7 @@ class HebbianNetwork(Network):
         @return
             None
         """
-        super().__init__(args.device)
+        super().__init__(name, args.device)
 
         # Dimension of each layer
         self.input_dim: int = args.input_dim
@@ -107,9 +107,9 @@ class HebbianNetwork(Network):
                                                                 self.init,
                                                                 self.include_first)
         
-        self.add_module(LayerNames.INPUT.name, input_layer)
-        self.add_module(LayerNames.HIDDEN.name, hebbian_layer)
-        self.add_module(LayerNames.OUTPUT.name, classification_layer)
+        self.add_module(input_layer.name.name, input_layer)
+        self.add_module(hebbian_layer.name.name, hebbian_layer)
+        self.add_module(classification_layer.name.name, classification_layer)
 
 
     def forward(self, 
@@ -135,7 +135,7 @@ class HebbianNetwork(Network):
 
         if not reconstruct:
             input = input.to(self.device)
-            input = hebbian_layer(input)
+            input = hebbian_layer(input, freeze=freeze)
             output = classification_layer(input, clamped_output) 
         elif reconstruct:
             input = input.to(self.device)

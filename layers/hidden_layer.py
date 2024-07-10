@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from interfaces.layer import NetworkLayer
-from utils.experiment_constants import ParamInit
+from utils.experiment_constants import LayerNames, ParamInit
 
 
 class HiddenLayer(NetworkLayer, ABC):
@@ -72,6 +72,7 @@ class HiddenLayer(NetworkLayer, ABC):
                          sigma, 
                          mu, 
                          init)
+        self.name: LayerNames = LayerNames.HIDDEN
         self.gamma: float = gamma
         self.lamb: float = lamb
         self.eps: float = eps

@@ -366,7 +366,7 @@ class GeneralizationExperiment(Experiment):
             # Forward pass
             self.model.train()
             self.EXP_LOG.info("Set the model to training mode.")
-            self.model(inputs, clamped_output=labels, reconstruct=False)
+            self.model(inputs, clamped_output=labels, freeze=True)
      
             # Increment samples seen
             self.FREEZE_SAMPLES += 1
@@ -420,7 +420,7 @@ class GeneralizationExperiment(Experiment):
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 
                 # Inference
-                predictions: torch.Tensor = self.model(inputs, freeze=True)
+                predictions: torch.Tensor = self.model(inputs)
                 
                 # Evaluates performance of model on testing dataset
                 correct += (predictions.argmax(-1) == labels).type(torch.float).sum()

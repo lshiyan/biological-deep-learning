@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Optional
 import torch
 from interfaces.layer import NetworkLayer
-from utils.experiment_constants import ParamInit
+from utils.experiment_constants import LayerNames, ParamInit
 
 
 class OutputLayer(NetworkLayer, ABC):
@@ -40,7 +40,8 @@ class OutputLayer(NetworkLayer, ABC):
             None
         """
         super().__init__(input_dimension, output_dimension, device, learning_rate, alpha, beta, sigma, mu, init)
-    
+        self.name: LayerNames = LayerNames.OUTPUT
+        
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> None:
         raise NotImplementedError("This method has yet to be implemented.")

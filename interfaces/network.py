@@ -11,9 +11,10 @@ class Network(nn.Module, ABC):
     INTERFACE
     Defines an ANN that uses 1 or more NetworkLayers -> Every ANN for experiment must implement interface
     @instance attr.
+        name (str): name of model
         device (str): device to which calculations will be made
     """
-    def __init__(self, device: str) -> None:
+    def __init__(self, name: str, device: str) -> None:
         """
         CONSTRUCTOR METHOD
         @attr.
@@ -22,7 +23,8 @@ class Network(nn.Module, ABC):
             None
         """
         super().__init__()
-        self.device = device
+        self.name: str = name
+        self.device: str = device
 
 
     def get_module(self, lname: LayerNames) -> nn.Module:

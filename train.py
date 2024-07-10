@@ -56,7 +56,7 @@ for dim in hid_dim_testing:
     
     for num in range(0, 1):
         # Base model training
-        model = HebbianNetwork(ARGS)
+        model = HebbianNetwork('Hebbian Network', ARGS)
         
         if ARGS.experiment_type.lower() == 'base':
             experiment = BaseExperiment(model, ARGS, f'{ARGS.device}-{ARGS.experiment_type.lower()}-{dim}-{num}')

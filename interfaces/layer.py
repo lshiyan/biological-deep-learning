@@ -3,8 +3,9 @@ import math
 from typing import Optional
 import matplotlib
 import matplotlib.figure
+from networkx import reconstruct_path
 
-from utils.experiment_constants import ParamInit
+from utils.experiment_constants import LayerNames, ParamInit
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
@@ -55,6 +56,7 @@ class NetworkLayer (nn.Module, ABC):
             None
         """
         super ().__init__()
+        self.name: LayerNames
         self.input_dimension: int = input_dimension
         self.output_dimension: int = output_dimension
         self.device: str = device
