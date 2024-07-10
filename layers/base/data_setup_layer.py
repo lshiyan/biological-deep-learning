@@ -6,13 +6,6 @@ from layers.input_layer import InputLayer
 from typing import IO, List
 import random
 
-import logging
-
-# Setup logging configuration
-logging.basicConfig(filename='emnist_letters.log', level=logging.INFO, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
-
 class DataSetupLayer(InputLayer):
     """
     CLASS
@@ -69,9 +62,6 @@ class DataSetupLayer(InputLayer):
         @return
             filtered TensorDataset containing only data for the specified letter classes
         """
-
-        # STEP 1 -> I extracts the data and labels tensors
-        data_tensor, labels = tensor_dataset.tensors
         
         filtered_data = []
         filtered_label = []
@@ -83,13 +73,8 @@ class DataSetupLayer(InputLayer):
                 filtered_label.append(selected_classes[int(label.item())])
                 filtered_data.append(data)
 
-        # Convert lists to tensors
-        if filtered_data:
-            filtered_data = torch.stack(filtered_data)
-            filtered_label = torch.tensor(filtered_label)
-        else:
-            filtered_data = torch.empty((0,) + data_tensor.shape[1:])
-            filtered_label = torch.empty((0,), dtype=torch.long)
+        filtered_data = torch.stack(filtered_data)
+        filtered_label = torch.tensor(filtered_label)
 
         
         return TensorDataset(filtered_data, filtered_label)

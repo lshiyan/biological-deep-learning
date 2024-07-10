@@ -352,8 +352,8 @@ class HiddenLayer(NetworkLayer, ABC):
         # Gets ratio vs mean
         norm_exp_avg: torch.Tensor = self.exponential_average / average
         
-        # x: torch.Tensor = -self.eps * (norm_exp_avg - 1)
-        x: torch.Tensor = self.eps * (norm_exp_avg - 1)
+        x: torch.Tensor = -self.eps * (norm_exp_avg - 1)
+        # x: torch.Tensor = self.eps * (norm_exp_avg - 1)
         sech_x: torch.Tensor = 1 / torch.cosh(x)
 
         # calculate the growth factors
@@ -375,7 +375,7 @@ class HiddenLayer(NetworkLayer, ABC):
         return growth_factor
     
 
-    def _sigmoid_weight_decay(self) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _sigmoid_weight_decay(self) -> torch.Tensor:
         """
         METHOD
         Decays the overused weights and increases the underused weights using tanh functions.
@@ -385,32 +385,26 @@ class HiddenLayer(NetworkLayer, ABC):
             None
         """
         tanh: nn.Tanh = nn.Tanh()
+        sigmoid: nn.Sigmoid = nn.Sigmoid()
 
         # Gets average of exponential averages
         average: float = torch.mean(self.exponential_average).item()
 
         # Gets ratio vs mean
         norm_exp_avg: torch.Tensor = self.exponential_average / average
+        
+        x: torch.Tensor = -self.eps * (norm_exp_avg - 1)
 
         # calculate the growth factors
-        growth_factor_positive: torch.Tensor = self.eps * tanh(-self.eps * (norm_exp_avg - 1)) + 1
+        growth_factor_positive: torch.Tensor = self.eps * tanh(sigmoid(x)) + 1
         growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
-
-        # Update the weights depending on growth factor
-        positive_weights: torch.Tensor = torch.where(self.fc.weight > 0, self._sigmoid_function(), 0.0)
-        negative_weights = torch.where(self.fc.weight < 0, self._sigmoid_function(), 0.0)
-        positive_weights: torch.Tensor = positive_weights * growth_factor_positive.unsqueeze(1)
-        negative_weights = negative_weights * growth_factor_negative.unsqueeze(1)
+        growth_factor_positive = growth_factor_positive.unsqueeze(1)
+        growth_factor_negative = growth_factor_negative.unsqueeze(1)
         
-        return (positive_weights, negative_weights)
+        growth_factor = torch.where(self.fc.weight > 0, growth_factor_positive, growth_factor_negative)
         
-
-
-
-
-
-
-
+        return growth_factor
+        
 
 
     #################################################################################################

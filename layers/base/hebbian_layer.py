@@ -174,7 +174,7 @@ class HebbianLayer(HiddenLayer):
         if self.weight_growth == WeightGrowth.LINEAR:
             growth_factor = self._linear_weight_decay()
         elif self.weight_growth == WeightGrowth.SIGMOID:
-            pos_weights, neg_weights = self._sigmoid_weight_decay()
+            growth_factor = self._sigmoid_weight_decay()
         else:
             raise NameError(f"Invalid weight growth {self.weight_growth}.")
         

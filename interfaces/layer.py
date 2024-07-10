@@ -117,7 +117,7 @@ class NetworkLayer (nn.Module, ABC):
         @return
             output: returns the data after passing it through the layer
         """
-        input_copy: torch.Tensor = input.clone().detach().float.to(self.device)
+        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         output: torch.Tensor
         if self.training and not freeze:
             output = self._train_forward(input_copy, clamped_output)

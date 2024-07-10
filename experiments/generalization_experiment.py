@@ -159,23 +159,21 @@ class GeneralizationExperiment(Experiment):
         # Select random letter classes
         letter_labels = list(range(1, 27))
         original_class = random.sample(letter_labels, 10)
-        updated_class = [0,1,2,3,4,5,6,7,8,9]
+        updated_class = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         dictionary_classes = dict(zip(original_class, updated_class))
         
         # Convert Dictionary class into letters
         letter_class = [chr(64 + key) for key in original_class]
-        letter_log = dict(zip(updated_class, letter_class))
-
-        self.PARAM_LOG.info(f"Selected classes: {letter_log}")
+        self.letter_log = dict(zip(updated_class, letter_class))
 
         # Extented training dataset
-        self.e_train_data_set: TensorDataset = input_class.setup_data(self.e_train_data, self.e_train_label, self.e_train_fname, 60000)
+        self.e_train_data_set: TensorDataset = input_class.setup_data(self.e_train_data, self.e_train_label, self.e_train_fname, 88800)
         filtered_train_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_train_data_set, dictionary_classes)
         self.e_train_data_loader: DataLoader = DataLoader(filtered_train_dataset, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-training dataset and dataloader.")
         
         # Extended testing dataset
-        self.e_test_data_set: TensorDataset = input_class.setup_data(self.e_test_data, self.e_test_label, self.e_test_fname, 10000)
+        self.e_test_data_set: TensorDataset = input_class.setup_data(self.e_test_data, self.e_test_label, self.e_test_fname, 14800)
         filtered_test_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_test_data_set, dictionary_classes)
         self.e_test_data_loader: DataLoader = DataLoader(filtered_test_dataset, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-testing dataset and dataloader.")
@@ -244,6 +242,7 @@ class GeneralizationExperiment(Experiment):
                           test_data_loader: DataLoader, 
                           purpose: Purposes,  
                           dname: str,
+                          visualize: bool = True,
                           ) -> Tuple[float, float]:
         """
         METHOD
@@ -319,6 +318,8 @@ class GeneralizationExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
         
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES, f'rec_{purpose.name.lower()}')
+        
         return (cos_error, norm_error)
     
     
@@ -383,6 +384,7 @@ class GeneralizationExperiment(Experiment):
                      test_data_loader: DataLoader, 
                      purpose: Purposes,  
                      dname: str,
+                     visualize: bool = True,
                      ) -> float:
         """
         METHOD
@@ -418,7 +420,7 @@ class GeneralizationExperiment(Experiment):
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 
                 # Inference
-                predictions: torch.Tensor = self.model(inputs)
+                predictions: torch.Tensor = self.model(inputs, freeze=True)
                 
                 # Evaluates performance of model on testing dataset
                 correct += (predictions.argmax(-1) == labels).type(torch.float).sum()
@@ -442,9 +444,8 @@ class GeneralizationExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Test Accuracy: {final_accuracy}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Train Accuracy: {final_accuracy}')
         
-        
-        self.model.visualize_weights(self.RESULT_PATH, self.FREEZE_SAMPLES, 'freeze_learning')
 
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, f'freeze_{purpose.name.lower()}')
 
         return final_accuracy
     
@@ -482,6 +483,7 @@ class GeneralizationExperiment(Experiment):
                  purpose: Purposes, 
                  dname: str, 
                  phase: ExperimentPhases,
+                 visualize: bool = True,
                  ) -> Union[float, Tuple[float, ...]]:
         """
         METHOD
@@ -495,9 +497,9 @@ class GeneralizationExperiment(Experiment):
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
         if phase == ExperimentPhases.RECONSTRUCTION:
-            return self._reconstruct_test(test_data_loader, purpose, dname)
+            return self._reconstruct_test(test_data_loader, purpose, dname, visualize)
         elif phase == ExperimentPhases.FREEZING_WEIGHTS:
-            return self._freeze_test(test_data_loader, purpose, dname)
+            return self._freeze_test(test_data_loader, purpose, dname, visualize)
         else:
             raise NameError(f"Invalid phase {phase}.")
     
@@ -514,19 +516,20 @@ class GeneralizationExperiment(Experiment):
         self.PARAM_LOG.info(f"Input Dimension: {self.model.input_dim}")
         self.PARAM_LOG.info(f"Hebbian Layer Dimension: {self.model.heb_dim}")
         self.PARAM_LOG.info(f"Outout Dimension: {self.model.output_dim}")
-        self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.model.heb_param['lamb']}")
-        self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.model.heb_param['gam']}")
-        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_param['eps']}")
-        self.PARAM_LOG.info(f"Hebbian Layer Sigmoid K: {self.model.heb_param["sig_k"]}")
-        self.PARAM_LOG.info(f"Learning Rule: {self.model.heb_param['learn'].value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Inhibition Rule: {self.model.heb_param['inhib'].value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Weight Growth: {self.model.heb_param['growth'].value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.model.heb_lamb}")
+        self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.model.heb_gam}")
+        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_eps}")
+        self.PARAM_LOG.info(f"Hebbian Layer Sigmoid K: {self.model.sig_k}")
+        self.PARAM_LOG.info(f"Learning Rule: {self.model.learn.value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Inhibition Rule: {self.model.inhib.value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Weight Growth: {self.model.growth.value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Network Learning Rate: {self.model.lr}")
         self.PARAM_LOG.info(f"Alpha: {self.model.alpha}")
         self.PARAM_LOG.info(f"Beta: {self.model.beta}")
         self.PARAM_LOG.info(f"Sigma: {self.model.sigma}")
         self.PARAM_LOG.info(f"Mu: {self.model.mu}")
         self.PARAM_LOG.info(f"Param Init: {self.model.init.value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Selected classes: {self.letter_log}")
         self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
         
         self.EXP_LOG.info("Completed logging of experiment parameters.")
