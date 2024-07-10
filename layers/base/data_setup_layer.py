@@ -4,6 +4,13 @@ import os
 import pandas as pd
 from layers.input_layer import InputLayer
 from typing import IO, List
+import random
+
+import logging
+
+# Setup logging configuration
+logging.basicConfig(filename='emnist_letters.log', level=logging.INFO, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class DataSetupLayer(InputLayer):
@@ -51,6 +58,43 @@ class DataSetupLayer(InputLayer):
         data_tensor /= 255
         
         return TensorDataset(data_tensor, labels)
+    
+    @staticmethod
+    def filter_emnist_letters(tensor_dataset: TensorDataset, selected_classes: dict[int, int]):
+        """
+        Function to filter EMNIST dataset to include only the specified letter classes
+        @param
+            tensor_dataset: original TensorDataset containing EMNIST data and labels
+            selected_classes: list of letter classes to include
+        @return
+            filtered TensorDataset containing only data for the specified letter classes
+        """
+
+        # STEP 1 -> I extracts the data and labels tensors
+        data_tensor, labels = tensor_dataset.tensors
+        
+        filtered_data = []
+        filtered_label = []
+
+        # Loop through each label in the dataset
+        for data, label in tensor_dataset:
+
+            if label.item() in selected_classes.keys():
+                filtered_label.append(selected_classes[int(label.item())])
+                filtered_data.append(data)
+
+        # Convert lists to tensors
+        if filtered_data:
+            filtered_data = torch.stack(filtered_data)
+            filtered_label = torch.tensor(filtered_label)
+        else:
+            filtered_data = torch.empty((0,) + data_tensor.shape[1:])
+            filtered_label = torch.empty((0,), dtype=torch.long)
+
+        
+        return TensorDataset(filtered_data, filtered_label)
+
+
         
 
     @staticmethod

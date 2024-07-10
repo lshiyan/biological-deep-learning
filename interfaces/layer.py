@@ -77,6 +77,9 @@ class NetworkLayer (nn.Module, ABC):
             
             param.requires_grad_(False)
 
+        # Frozen or not for the layer
+        self.freeze = False
+
 
     def create_id_tensors(self) -> torch.Tensor:   
         """

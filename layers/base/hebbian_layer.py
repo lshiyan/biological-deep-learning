@@ -79,7 +79,7 @@ class HebbianLayer(HiddenLayer):
         self.learning_rule: LearningRules = learning_rule
         self.weight_growth: WeightGrowth = weight_growth
 
-    
+
     def inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD

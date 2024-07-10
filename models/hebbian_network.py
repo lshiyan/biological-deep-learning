@@ -135,7 +135,7 @@ class HebbianNetwork(Network):
 
         if not reconstruct:
             input = input.to(self.device)
-            input = hebbian_layer(input, freeze)
+            input = hebbian_layer(input)
             output = classification_layer(input, clamped_output) 
         elif reconstruct:
             input = input.to(self.device)

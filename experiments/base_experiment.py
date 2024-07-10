@@ -304,7 +304,7 @@ class BaseExperiment(Experiment):
         self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.model.heb_param['lamb']}")
         self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.model.heb_param['gam']}")
         self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_param['eps']}")
-        self.PARAM_LOG.info(f"Hebbian Layer Sigmoid K: {self.model.heb_param["sig_k"]}")
+        self.PARAM_LOG.info(f"Hebbian Layer Sigmoid K: {self.model.heb_param['sig_k']}")
         self.PARAM_LOG.info(f"Learning Rule: {self.model.heb_param['learn'].value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Inhibition Rule: {self.model.heb_param['inhib'].value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Weight Growth: {self.model.heb_param['growth'].value.lower().capitalize()}")
