@@ -49,6 +49,9 @@ class NetworkLayer (nn.Module, ABC):
             torch.nn.init.uniform_(param, a=0.0, b=1.0) # NOTE: what if we all start at 0
             param.requires_grad_(False)
 
+        # Frozen or not for the layer
+        self.freeze = False
+
 
     def create_id_tensors(self) -> torch.Tensor:   
         """
@@ -86,7 +89,11 @@ class NetworkLayer (nn.Module, ABC):
         @return
             input: returns the data after passing it throw the layer
         """
-        if self.training and not freeze:
+
+        # print(f"training: {self.training}, freeze: {freeze}")
+        # I train model if only training is true and freeze is false
+        if (self.training == True) and (self.freeze == False):
+            # print(f"training: {self.training}, freeze: {freeze}")
             input = self._train_forward(input, clamped_output)
         else:
             input = self._eval_forward(input)

@@ -155,19 +155,26 @@ class GeneralizationExperiment(Experiment):
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         
         # Select random letter classes
-        letter_labels = list(range(26))
-        selected_classes = random.sample(letter_labels, 10)
-        self.DEBUG_LOG.info(f"the selected classes for this time is: {selected_classes}")
+        letter_labels = list(range(1, 27))
+        original_class = random.sample(letter_labels, 10)
+        updated_class = [0,1,2,3,4,5,6,7,8,9]
+        dictionary_classes = dict(zip(original_class, updated_class))
+        
+        # Convert Dictionary class into letters
+        letter_class = [chr(64 + key) for key in original_class]
+        letter_log = dict(zip(updated_class, letter_class))
+
+        self.PARAM_LOG.info(f"Selected classes: {letter_log}")
 
         # Extented training dataset
         self.e_train_data_set: TensorDataset = input_class.setup_data(self.e_train_data, self.e_train_label, self.e_train_fname, 60000)
-        filtered_train_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_train_data_set, selected_classes)
+        filtered_train_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_train_data_set, dictionary_classes)
         self.e_train_data_loader: DataLoader = DataLoader(filtered_train_dataset, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-training dataset and dataloader.")
         
         # Extended testing dataset
         self.e_test_data_set: TensorDataset = input_class.setup_data(self.e_test_data, self.e_test_label, self.e_test_fname, 10000)
-        filtered_test_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_test_data_set, selected_classes)
+        filtered_test_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_test_data_set, dictionary_classes)
         self.e_test_data_loader: DataLoader = DataLoader(filtered_test_dataset, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for e-testing dataset and dataloader.")
         
@@ -347,8 +354,6 @@ class GeneralizationExperiment(Experiment):
         for inputs, labels in train_data_loader: 
             # Test model at intervals of samples seen
             if self.check_test(self.FREEZE_SAMPLES):
-                self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
-                self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS)
                 self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
                 self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
           
@@ -358,8 +363,8 @@ class GeneralizationExperiment(Experiment):
             # Forward pass
             self.model.train()
             self.EXP_LOG.info("Set the model to training mode.")
-            self.model(inputs, clamped_output=labels, freeze=True)
-            
+            self.model(inputs, clamped_output=labels, reconstruct=False)
+     
             # Increment samples seen
             self.FREEZE_SAMPLES += 1
 
@@ -435,6 +440,10 @@ class GeneralizationExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Test Accuracy: {final_accuracy}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Train Accuracy: {final_accuracy}')
         
+        
+        self.model.visualize_weights(self.RESULT_PATH, self.FREEZE_SAMPLES, 'freeze_learning')
+
+
         return final_accuracy
     
     
@@ -531,28 +540,24 @@ class GeneralizationExperiment(Experiment):
     
     
     def _final_test_log(self, results) -> None:
-        rec_cos_train_mnist = results[4]
-        rec_cos_test_mnist = results[6]
-        rec_cos_train_emnist = results[8]
-        rec_cos_test_emnist = results[10]
+        rec_cos_train_mnist = results[2]
+        rec_cos_test_mnist = results[4]
+        rec_cos_train_emnist = results[6]
+        rec_cos_test_emnist = results[8]
         
-        rec_norm_train_mnist = results[5]
-        rec_norm_test_mnist = results[7]
-        rec_norm_train_emnist = results[9]
-        rec_norm_test_emnist = results[11]
+        rec_norm_train_mnist = results[3]
+        rec_norm_test_mnist = results[5]
+        rec_norm_train_emnist = results[7]
+        rec_norm_test_emnist = results[9]
         
-        freeze_train_acc_mnist = results[0]
-        freeze_test_acc_mnist = results[1]
-        freeze_train_acc_emnist = results[2]
-        freeze_test_acc_emnist = results[3]
+        freeze_train_acc_emnist = results[0]
+        freeze_test_acc_emnist = results[1]
         
         self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_mnist}, norm = {rec_norm_train_mnist} ({self.data_name})")
         self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs:  cos = {rec_cos_test_mnist}, norm = {rec_norm_test_mnist} ({self.data_name})")
         self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_emnist}, norm = {rec_norm_train_emnist} ({self.e_data_name})")
         self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_test_emnist}, norm = {rec_norm_test_emnist} ({self.e_data_name})")
         
-        self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_mnist} ({self.data_name})")
-        self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_mnist} ({self.data_name})")
         self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_emnist} ({self.e_data_name})")
         self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_emnist} ({self.e_data_name})")
     
@@ -570,6 +575,13 @@ class GeneralizationExperiment(Experiment):
         for epoch in range(0, self.epochs):
             self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.RECONSTRUCTION)
         
+        # RESET Test samples in between experiments
+        self.test_sample = 0
+
+        # Set hebbian layer to freeze mode
+        self.model.get_module(LayerNames.HIDDEN).freeze = True
+
+
         # Freezing weights -> training classification    
         for epoch in range(0, self.epochs):
             self._training(self.e_train_data_loader, epoch, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
@@ -585,15 +597,11 @@ class GeneralizationExperiment(Experiment):
         rec_cos_train_mnist, rec_norm_train_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
         rec_cos_train_emnist, rec_norm_train_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
         
-        freeze_test_acc_mnist: float = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
-        freeze_train_acc_mnist: float = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
         freeze_test_acc_emnist: float = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
         freeze_train_acc_emnist: float = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
         self.EXP_LOG.info("Completed final testing methods.")
         
         return (
-            freeze_train_acc_mnist, 
-            freeze_test_acc_mnist, 
             freeze_train_acc_emnist, 
             freeze_test_acc_emnist, 
             rec_cos_train_mnist, 

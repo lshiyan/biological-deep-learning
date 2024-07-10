@@ -28,7 +28,7 @@ arguments = [
             '--heb_dim=64', 
             '--output_dim=10',
             # Hebbian layer hyperparameters  
-            '--heb_lamb=0.0625', 
+            '--heb_lamb=15', 
             '--heb_gam=0.99',
             '--heb_eps=0.01',
             '--learning_rule=sanger',

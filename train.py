@@ -59,20 +59,18 @@ for l in lambda_testing:
             test_acc_list.append(accuracies[1])
         
         elif ARGS.experiment_type.lower() == 'generalization':
-            train_acc_list.append(accuracies[0])
-            test_acc_list.append(accuracies[1])
-            train_acc_e_list.append(accuracies[2])
-            test_acc_e_list.append(accuracies[3])
+            train_acc_e_list.append(accuracies[0])
+            test_acc_e_list.append(accuracies[1])
             
-            rec_cost_train_list.append(accuracies[4])
-            rec_norm_train_list.append(accuracies[5])
-            rec_cos_test_list.append(accuracies[6])
-            rec_norm_test_list.append(accuracies[7])
+            rec_cost_train_list.append(accuracies[2])
+            rec_norm_train_list.append(accuracies[3])
+            rec_cos_test_list.append(accuracies[4])
+            rec_norm_test_list.append(accuracies[5])
             
-            rec_cost_train_e_list.append(accuracies[8])
-            rec_norm_train_e_list.append(accuracies[9])
-            rec_cos_test_e_list.append(accuracies[10])
-            rec_norm_test_e_list.append(accuracies[11])
+            rec_cost_train_e_list.append(accuracies[6])
+            rec_norm_train_e_list.append(accuracies[7])
+            rec_cos_test_e_list.append(accuracies[8])
+            rec_norm_test_e_list.append(accuracies[9])
             
     if ARGS.experiment_type.lower() == 'base':
         avg_test = average(test_acc_list)
@@ -83,13 +81,8 @@ for l in lambda_testing:
         results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
         
     elif ARGS.experiment_type.lower() == 'generalization':
-        avg_test = average(test_acc_list)
-        var_test = variance(test_acc_list)
-        avg_train = average(train_acc_list)
-        var_train = variance(train_acc_list)
         
-        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
-        
+        # Freeze EMNIST
         avg_test_e = average(test_acc_e_list)
         var_test_e = variance(test_acc_e_list)
         avg_train_e = average(train_acc_e_list)
@@ -97,31 +90,35 @@ for l in lambda_testing:
         
         results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_e}, var = {var_test_e} || Train Acc: avg = {avg_train_e}, var = {var_train_e}") # type: ignore
         
-        avg_test_cos = average(test_acc_list)
-        var_test_cos = variance(test_acc_list)
-        avg_train_cos = average(train_acc_list)
-        var_train_cos = variance(train_acc_list)
+        # Cos MNIST
+        avg_test_cos = average(rec_cos_test_list)
+        var_test_cos = variance(rec_cos_test_list)
+        avg_train_cos = average(rec_cost_train_list)
+        var_train_cos = variance(rec_cost_train_list)
         
         results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos}, var = {var_test_cos} || Cos-Sim Train Acc: avg = {avg_train_cos}, var = {var_train_cos}")
         
-        avg_test_cos_e = average(test_acc_list)
-        var_test_cos_e = variance(test_acc_list)
-        avg_train_cos_e = average(train_acc_list)
-        var_train_cos_e = variance(train_acc_list)
-        
+        # Cos EMNIST
+        avg_test_cos_e = average(rec_cos_test_e_list)
+        var_test_cos_e = variance(rec_cos_test_e_list)
+        avg_train_cos_e = average(rec_cost_train_e_list)
+        var_train_cos_e = variance(rec_cost_train_e_list)
+
         results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos_e}, var = {var_test_cos_e} || Cos-Sim Train Acc: avg = {avg_train_cos_e}, var = {var_train_cos_e}") # type: ignore
         
-        avg_test_norm = average(test_acc_list)
-        var_test_norm = variance(test_acc_list)
-        avg_train_norm = average(train_acc_list)
-        var_train_norm = variance(train_acc_list)
+        # Norm MNIST
+        avg_test_norm = average(rec_norm_test_list)
+        var_test_norm = variance(rec_norm_test_list)
+        avg_train_norm = average(rec_norm_train_list)
+        var_train_norm = variance(rec_norm_train_list)
         
         results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm}, var = {var_test_norm} || Norm Train Acc: avg = {avg_train_norm}, var = {var_train_norm}")
         
-        avg_test_norm_e = average(test_acc_list)
-        var_test_norm_e = variance(test_acc_list)
-        avg_train_norm_e = average(train_acc_list)
-        var_train_norm_e = variance(train_acc_list)
+        # Norm EMNIST
+        avg_test_norm_e = average(rec_norm_test_list)
+        var_test_norm_e = variance(rec_norm_test_list)
+        avg_train_norm_e = average(rec_norm_train_e_list)
+        var_train_norm_e = variance(rec_norm_train_e_list)
         
         results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.e_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm_e}, var = {var_test_norm_e} || Norm Train Acc: avg = {avg_train_norm_e}, var = {var_train_norm_e}") # type: ignore
         

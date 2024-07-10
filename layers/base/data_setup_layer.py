@@ -60,7 +60,7 @@ class DataSetupLayer(InputLayer):
         return TensorDataset(data_tensor, labels)
     
     @staticmethod
-    def filter_emnist_letters(tensor_dataset: TensorDataset, selected_classes: list):
+    def filter_emnist_letters(tensor_dataset: TensorDataset, selected_classes: dict[int, int]):
         """
         Function to filter EMNIST dataset to include only the specified letter classes
         @param
@@ -73,28 +73,26 @@ class DataSetupLayer(InputLayer):
         # STEP 1 -> I extracts the data and labels tensors
         data_tensor, labels = tensor_dataset.tensors
         
-        # STEP 2 ->  I convert the class indices (0-25) to their corresponding uppercase letters (A-Z) using the ASCII value of ‘A’ (this is all done so I can log my letter for debug purposes)
-        selected_letters = [chr(64 + cls) for cls in selected_classes]  # Convert to corresponding uppercase letters
-        logging.info(f"Selected letter classes: {selected_letters}")    # Log this stuff
+        filtered_data = []
+        filtered_label = []
 
-        # Filter the dataset to include only the selected classes
-        # Initialize an empty list to store the selected indices
-        selected_indices = []
-        
         # Loop through each label in the dataset
-        for i, label in enumerate(labels):
-            # Check if the current label is in the list of selected classes
-            if label in selected_classes:
-                # If the label is in the selected_classes, add the index to selected_indices
-                selected_indices.append(i)
+        for data, label in tensor_dataset:
 
-        # STEP 3 ->  I create a new tensor filtered_data containing only the data points whose indices are in selected_indices
-        filtered_data = data_tensor[selected_indices]
+            if label.item() in selected_classes.keys():
+                filtered_label.append(selected_classes[int(label.item())])
+                filtered_data.append(data)
 
-        # STEP 4 -> Similarly, I create a new tensor filtered_labels containing only the labels whose indices are in selected_indices.
-        filtered_labels = labels[selected_indices]
+        # Convert lists to tensors
+        if filtered_data:
+            filtered_data = torch.stack(filtered_data)
+            filtered_label = torch.tensor(filtered_label)
+        else:
+            filtered_data = torch.empty((0,) + data_tensor.shape[1:])
+            filtered_label = torch.empty((0,), dtype=torch.long)
+
         
-        return TensorDataset(filtered_data, filtered_labels)
+        return TensorDataset(filtered_data, filtered_label)
 
 
         
