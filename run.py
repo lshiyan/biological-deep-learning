@@ -31,13 +31,13 @@ arguments = [
             '--heb_lamb=15', 
             '--heb_gam=0.99',
             '--heb_eps=0.01',
-            '--learning_rule=orthogonal',
+            '--learning_rule=sanger',
             '--inhibition_rule=relu',
             '--weight_growth=linear',
             '--sigmoid_k=1',
             # Classification layer hyperparameters
-            '--include_first=True',
-             # Shared hyperparameters
+            '--include_first=False',
+            # Shared hyperparameters
             '--lr=0.005',
             '--alpha=0',
             '--beta=1',
