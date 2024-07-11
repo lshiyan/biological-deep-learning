@@ -31,10 +31,12 @@ arguments = [
             '--heb_lamb=15', 
             '--heb_gam=0.99',
             '--heb_eps=0.01',
+            '--sigmoid_k=1',
             '--learning_rule=sanger',
             '--inhibition_rule=relu',
-            '--weight_growth=sigmoid',
-            '--sigmoid_k=1',
+            '--weight_growth=linear',
+            '--weight_decay=tanh',
+            '--bias_update=no_bias',
             # Classification layer hyperparameters
             '--include_first=False',
             # Shared hyperparameters
@@ -46,7 +48,7 @@ arguments = [
             '--init=uniform',
             # Experiment parameters
             '--batch_size=1',
-            '--epochs=1', 
+            '--epochs=10', 
             '--device=cpu',
             '--local_machine=True',
             '--experiment_type=base'
@@ -60,4 +62,4 @@ result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
 
 # Print the output
 print("Standard Output:\n", result.stdout)
-print("Standard Error:\n", result.stderr)
+print("Standard Error:\n", result.stderr) 

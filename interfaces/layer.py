@@ -1,6 +1,6 @@
 from abc import ABC
 import math
-from typing import Optional
+from typing import Optional, Tuple
 import matplotlib
 import matplotlib.figure
 from networkx import reconstruct_path
@@ -61,7 +61,8 @@ class NetworkLayer (nn.Module, ABC):
         self.output_dimension: int = output_dimension
         self.device: str = device
         self.lr: float = learning_rate
-        self.fc: nn.Linear = nn.Linear(self.input_dimension, self.output_dimension, bias=False) # NOTE: bias is set to false for now
+        self.fc: nn.Linear = nn.Linear(self.input_dimension, self.output_dimension, bias=True)
+        nn.init.zeros_(self.fc.bias)
         self.alpha: float = alpha
         self.beta: float = beta
         self.sigma: float = sigma
@@ -152,30 +153,9 @@ class NetworkLayer (nn.Module, ABC):
         plot_name: str = f'/{fname}/{fname.lower()}layerweights-{num}-{use}.png'
         
         # Find value for row and column
-        row: int = 0
-        col: int = 0
-        n: int = self.output_dimension
-        
-        root: int = int(math.sqrt(n))
-        min_product: int = n ** 2
-        
-        for i in range(2, root + 1):
-            if n % i == 0:
-                factor1 = i
-                factor2 = n // i
-                
-                if factor1 * factor2 >= n and factor1 * factor2 <= min_product:
-                    min_product = factor1 * factor2
-                    row = min(factor1, factor2)
-                    col = max(factor1, factor2)
-            else:
-                factor1 = i
-                factor2 = math.ceil(n / i)
-                
-                if factor1 * factor2 >= n and factor1 * factor2 <= min_product:
-                    min_product = factor1 * factor2
-                    row = min(factor1, factor2)
-                    col = max(factor1, factor2)
+        row: int
+        col: int
+        row, col = self.row_col(self.output_dimension)
         
         # Calculate size of figure
         subplot_size = 3  # You can adjust this value to make subplots larger or smaller
@@ -195,8 +175,8 @@ class NetworkLayer (nn.Module, ABC):
                 next_square: int = int(np.ceil(np.sqrt(original_size))) ** 2
                 padding_size: int = next_square - original_size
                 padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size))
-                feature_size = int(np.sqrt(next_square))
-                heatmap: torch.Tensor = padded_weights.view(feature_size, feature_size).cpu().numpy()
+                feature_row, feature_col = self.row_col(random_feature_selector.size(0))
+                heatmap: torch.Tensor = padded_weights.view(feature_row, feature_col).cpu().numpy()
 
                 ax = axes[ele // col, ele % col]
                 im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
@@ -227,3 +207,34 @@ class NetworkLayer (nn.Module, ABC):
         weights: torch.Tensor = self.fc.weight
         active: torch.Tensor = torch.where(weights > beta, weights, 0.0)
         return active.nonzero().size(0)
+
+
+    @staticmethod
+    def row_col(num: int) -> Tuple[int, int]:
+        # Find value for row and column
+        row: int = 0
+        col: int = 0
+        
+        root: int = int(math.sqrt(num))
+        min_product: int = num ** 2
+        
+        for i in range(2, root + 1):
+            if num % i == 0:
+                factor1 = i
+                factor2 = num // i
+                
+                if factor1 * factor2 >= num and factor1 * factor2 <= min_product:
+                    min_product = factor1 * factor2
+                    row = min(factor1, factor2)
+                    col = max(factor1, factor2)
+            else:
+                factor1 = i
+                factor2 = math.ceil(num / i)
+                
+                if factor1 * factor2 >= num and factor1 * factor2 <= min_product:
+                    min_product = factor1 * factor2
+                    row = min(factor1, factor2)
+                    col = max(factor1, factor2)
+        
+        
+        return row, col

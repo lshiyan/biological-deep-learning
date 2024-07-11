@@ -9,7 +9,7 @@ from layers.base.hebbian_layer import HebbianLayer
 from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
 from layers.output_layer import OutputLayer
-from utils.experiment_constants import LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightGrowth
+from utils.experiment_constants import BiasUpdate, LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightDecay, WeightGrowth
 
 
 class HebbianNetwork(Network):
@@ -58,14 +58,18 @@ class HebbianNetwork(Network):
         learning_rule_mapping: dict[str, LearningRules] = {member.value.upper(): member for member in LearningRules}
         weight_growth_mapping: dict[str, WeightGrowth] = {member.value.upper(): member for member in WeightGrowth}
         param_init_mapping: dict[str, ParamInit] = {member.value.upper(): member for member in ParamInit}
+        weight_decay_mapping: dict[str, WeightDecay] = {member.value.upper(): member for member in WeightDecay}
+        bias_update_mapping: dict[str, BiasUpdate] = {member.value.upper(): member for member in BiasUpdate}
         
         self.heb_lamb: float = args.heb_lamb
         self.heb_eps: float = args.heb_eps
         self.heb_gam: float = args.heb_gam
+        self.sig_k: float = args.sigmoid_k
         self.inhib: LateralInhibitions = inhibition_mapping[args.inhibition_rule.upper()]
         self.learn: LearningRules = learning_rule_mapping[args.learning_rule.upper()]
         self.growth: WeightGrowth = weight_growth_mapping[args.weight_growth.upper()]
-        self.sig_k: float = args.sigmoid_k
+        self.weight_decay: WeightDecay = weight_decay_mapping[args.weight_decay.upper()]
+        self.bias_update: BiasUpdate = bias_update_mapping[args.bias_update.upper()]
 
         # Classification layer hyperparameters stored in dictionary
         self.include_first = args.include_first
@@ -95,7 +99,9 @@ class HebbianNetwork(Network):
                                                   self.sig_k,
                                                   self.inhib,
                                                   self.learn,
-                                                  self.growth)
+                                                  self.growth,
+                                                  self.weight_decay,
+                                                  self.bias_update)
         classification_layer: OutputLayer = ClassificationLayer(self.heb_dim, 
                                                                 self.output_dim, 
                                                                 self.device, 

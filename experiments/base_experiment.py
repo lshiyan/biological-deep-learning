@@ -158,7 +158,7 @@ class BaseExperiment(Experiment):
             
             # Forward pass
             self.model.train()
-            self.EXP_LOG.info("Set the model to training mode.")
+            # self.EXP_LOG.info("Set the model to training mode.")
             self.model(inputs, clamped_output=labels)
             
             # Increment samples seen

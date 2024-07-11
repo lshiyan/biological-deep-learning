@@ -44,7 +44,9 @@ class HebbianLayer(HiddenLayer):
                  sigmoid_k: float = 1,
                  inhibition_rule: LateralInhibitions = LateralInhibitions.RELU_INHIBITION, 
                  learning_rule: LearningRules = LearningRules.SANGER_LEARNING_RULE,
-                 weight_growth: WeightGrowth = WeightGrowth.LINEAR
+                 weight_growth: WeightGrowth = WeightGrowth.LINEAR,
+                 weight_decay: WeightDecay = WeightDecay.TANH,
+                 bias_update: BiasUpdate = BiasUpdate.NO_BIAS
                  ) -> None:
         """
         CONSTRUCTOR METHOD
@@ -78,6 +80,8 @@ class HebbianLayer(HiddenLayer):
         self.inhibition_rule: LateralInhibitions = inhibition_rule
         self.learning_rule: LearningRules = learning_rule
         self.weight_growth: WeightGrowth = weight_growth
+        self.decay: WeightDecay = weight_decay
+        self.bias_update: BiasUpdate = bias_update
 
 
     def inhibition(self, input: torch.Tensor) -> torch.Tensor:
@@ -149,16 +153,14 @@ class HebbianLayer(HiddenLayer):
         @return
             None
         """
-        y: torch.Tensor = output.clone().detach().squeeze()
-        exponential_bias = torch.exp(-1 * self.fc.bias)
-
-        # Compute bias update scaled by output probabilities.
-        A: torch.Tensor = torch.mul(exponential_bias, y) - 1
-        A = self.fc.bias + self.lr * A
-
-        # Normalize biases to maintain stability. (Divide by max bias value)
-        bias_maxes: torch.Tensor = torch.max(A, dim=0).values
-        self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
+        if self.bias_update == BiasUpdate.NO_BIAS:
+            return
+        elif self.bias_update == BiasUpdate.SIMPLE:
+            self._simple_bias_update(output)
+        elif self.bias_update == BiasUpdate.HEBBIAN:
+            self._hebbian_bias_update(output)
+        else:
+            raise ValueError("Update Bias type invalid.")
         
 
     def weight_decay(self) -> None:
@@ -170,21 +172,28 @@ class HebbianLayer(HiddenLayer):
         @return
             None
         """
-        growth_factor: torch.Tensor
+        # No weight decay
+        if self.decay == WeightDecay.NO_DECAY:
+            return
+
+        # Determine the growth or decay factor
         if self.weight_growth == WeightGrowth.LINEAR:
-            growth_factor = self._linear_weight_decay()
+            factor = self._linear_weight_decay() if self.decay == WeightDecay.TANH else self._simple_linear_weight_decay()
         elif self.weight_growth == WeightGrowth.SIGMOID:
-            growth_factor = self._sigmoid_weight_decay()
+            factor = self._sigmoid_weight_decay() if self.decay == WeightDecay.TANH else self._simple_sigmoid_weight_decay()
         else:
-            raise NameError(f"Invalid weight growth {self.weight_growth}.")
-        
-        # weight_change: torch.Tensor = self.fc.weight * growth_factor
-        # self.fc.weight = nn.Parameter(torch.add(self.fc.weight, weight_change), requires_grad=False)
-        self.fc.weight = nn.Parameter(self.fc.weight * growth_factor, requires_grad=False)
-        
-        # Check if there are any NaN weights
-        if (self.fc.weight.isnan().any()):
-            raise ValueError("Weights of the fully connected layer have become NaN.")
+            raise ValueError(f"Invalid weight growth method: {self.weight_growth}")
+
+        # Apply the decay or growth factor
+        if self.decay == WeightDecay.TANH:
+            updated_weights = self.fc.weight * factor
+        elif self.decay == WeightDecay.SIMPLE:
+            updated_weights = self.fc.weight - factor
+        else:
+            raise ValueError(f"Invalid weight decay method: {self.decay}")
+
+        # Update the weights of the fully connected layer
+        self.fc.weight = nn.Parameter(updated_weights, requires_grad=False)
     
 
     def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -204,8 +213,12 @@ class HebbianLayer(HiddenLayer):
         input_copy = self.fc(input_copy)
         output = self.inhibition(input_copy)
         self.update_weights(initial_input, output)
-        # self.update_bias(input)
+        self.update_bias(output)
         self.weight_decay()
+        
+        # Check if there are any NaN weights
+        if (self.fc.weight.isnan().any()):
+            raise ValueError("Weights of the fully connected layer have become NaN.")
         
         return output
     

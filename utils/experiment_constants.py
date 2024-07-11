@@ -86,4 +86,16 @@ class ParamInit(Enum):
     UNIFORM = 'UNIFORM'
     NORMAL = 'NORMAL'
     
+    
+class WeightDecay(Enum):
+    TANH = 'TANH'
+    SIMPLE = 'SIMPlE'
+    NO_DECAY = 'NO_DECAY'
+    
+    
+class BiasUpdate(Enum):
+    HEBBIAN = 'HEBBIAN'
+    SIMPLE = 'SIMPLE'
+    NO_BIAS = 'NO_BIAS'
+    
      

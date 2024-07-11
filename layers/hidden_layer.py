@@ -350,7 +350,7 @@ class HiddenLayer(NetworkLayer, ABC):
         # x: torch.Tensor = self.eps * (norm_exp_avg - 1)
         sech_x: torch.Tensor = 1 / torch.cosh(x)
 
-        # calculate the growth factors
+        # Calculate the growth factors
         growth_factor_positive: torch.Tensor = self.eps * tanh(x) + 1
         growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
         growth_factor_positive = growth_factor_positive.unsqueeze(1)
@@ -370,6 +370,7 @@ class HiddenLayer(NetworkLayer, ABC):
     
 
     def _sigmoid_weight_decay(self) -> torch.Tensor:
+        # NOTE: currently does not work
         """
         METHOD
         Decays the overused weights and increases the underused weights using tanh functions.
@@ -390,7 +391,7 @@ class HiddenLayer(NetworkLayer, ABC):
         x: torch.Tensor = -self.eps * (norm_exp_avg - 1)
 
         # calculate the growth factors
-        growth_factor_positive: torch.Tensor = self.eps * tanh(sigmoid(x)) + 1
+        growth_factor_positive: torch.Tensor = sigmoid(self.eps * tanh(x) + 1)
         growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
         growth_factor_positive = growth_factor_positive.unsqueeze(1)
         growth_factor_negative = growth_factor_negative.unsqueeze(1)
@@ -398,9 +399,77 @@ class HiddenLayer(NetworkLayer, ABC):
         growth_factor = torch.where(self.fc.weight > 0, growth_factor_positive, growth_factor_negative)
         
         return growth_factor
+    
+    
+    def _simple_linear_weight_decay(self) -> torch.Tensor:
+        # Gets average of exponential averages
+        average: float = torch.mean(self.exponential_average).item()
         
+        # Compute simple weight decay
+        decay_weight: torch.Tensor = self.eps * (self.exponential_average / average - 1)
+        decay_weight = decay_weight.unsqueeze(1)
+        
+        return decay_weight
+    
+    
+    def _simple_sigmoid_weight_decay(self) -> torch.Tensor:
+        # Gets average of exponential averages
+        average: float = torch.mean(self.exponential_average).item()
+        
+        # Compute simple weight decay
+        decay_weight: torch.Tensor = self.eps * (self.exponential_average / average - 1)
+        decay_weight = decay_weight.unsqueeze(1)
+        decay_weight = self._sigmoid_function() * decay_weight
+        
+        return decay_weight
+                
 
 
+    #################################################################################################
+    # Different Weights Growth for Wegiht Updates
+    #################################################################################################
+    def _hebbian_bias_update(self, output:torch.Tensor) -> None:
+        """
+        METHOD
+        Defines the way the biases will be updated at each iteration of the training
+        It updates the biases of the classifier layer using a decay mechanism adjusted by the output probabilities.
+        The method applies an exponential decay to the biases, which is modulated by the output probabilities,
+        and scales the update by the learning rate. 
+        The biases are normalized after the update.
+        @param
+            output: The output tensor of the layer.
+        @return
+            None
+        """
+        y: torch.Tensor = output.clone().detach().squeeze().to(self.device)
+        exponential_bias = torch.exp(-1 * self.fc.bias)
+
+        # Compute bias update scaled by output probabilities.
+        A: torch.Tensor = torch.mul(exponential_bias, y) - 1
+        A = self.fc.bias + self.lr * A
+
+        # Normalize biases to maintain stability. (Divide by max bias value)
+        bias_maxes: torch.Tensor = torch.max(A, dim=0).values
+        self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
+        
+        
+    def _simple_bias_update(self, output: torch.Tensor) -> None:
+        """
+        METHOD
+        Defines a simple bias update rule
+        @param
+            output: output of the current layer
+        @return
+            None
+        """
+        output_copy: torch.Tensor = output.clone().detach().squeeze().to(self.device)
+        
+        avg_output: float = torch.mean(output_copy).item()
+        bias_update: torch.Tensor = self.eps * (output_copy - avg_output)
+        self.fc.bias = nn.Parameter(torch.sub(self.fc.bias, bias_update), requires_grad=False)
+    
+    
+    
     #################################################################################################
     # Activations and weight/bias updates that will be called for train/eval forward
     #################################################################################################
