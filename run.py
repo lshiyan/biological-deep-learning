@@ -49,7 +49,7 @@ arguments = [
             '--epochs=1', 
             '--device=cpu',
             '--local_machine=True',
-            '--experiment_type=generalization'
+            '--experiment_type=base'
             ]
 
 # Construct the command

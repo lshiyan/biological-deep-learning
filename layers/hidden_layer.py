@@ -136,25 +136,18 @@ class HiddenLayer(NetworkLayer, ABC):
         return output
     
         
-    def _wta_inhibition(self, input:torch.Tensor, top_k: int = 1) -> torch.Tensor:
+    def _wta_inhibition(self, input:torch.Tensor, threshold: float = 0.5) -> torch.Tensor:
         """
         METHOD
         Calculates k-winners-takes-all lateral inhibition
         @param
             input: input to layer
-            top_k: number of "winner"
+            threshold: amount to be counted as activated
         @return
             output: activation after lateral inhibition
         """
         # NOTE: this function does not work as of yet
-        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
-        
-        flattened_input: torch.Tensor = input_copy.flatten()
-
-        topk_values, _ = torch.topk(flattened_input, top_k)
-        threshold = topk_values[-1]
-
-        output: torch.Tensor = torch.where(input >= threshold, input, torch.tensor(0.0, device=input.device))
+        output: torch.Tensor = torch.where(input>=threshold, 1.0, 0.0).to(self.device)
 
         return output
 
