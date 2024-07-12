@@ -64,7 +64,7 @@ class Experiment(ABC):
         
         # Experiment parameters
         self.model: Network = model.to(args.device).float()
-        self.data_name = args.data_name.lower()
+        self.data_name = args.data_name.upper()
         self.batch_size: int = args.batch_size
         self.epochs: int = args.epochs
         self.test_sample: int = 0

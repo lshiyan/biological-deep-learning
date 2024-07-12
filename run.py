@@ -6,7 +6,7 @@ script_name = 'train.py'
 # Simulate the command line arguments
 arguments = [
             # Basic configurations  
-            "--data_name=E_MNIST",
+            "--data_name=MNIST",
             "--e_data_name=E_MNIST",
             # Data Factory - MNIST
             "--mnist_train_data=data/mnist/train-images.idx3-ubyte", 
