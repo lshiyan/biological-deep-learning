@@ -171,13 +171,12 @@ class NetworkLayer (nn.Module, ABC):
             if ele < self.output_dimension:
                 random_feature_selector: torch.Tensor = weight[ele]
                 # Move tensor to CPU, convert to NumPy array for visualization
-                original_size: int = random_feature_selector.size(0)
-                next_square: int = int(np.ceil(np.sqrt(original_size))) ** 2
-                padding_size: int = next_square - original_size
-                padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size))
                 feature_row, feature_col = self.row_col(random_feature_selector.size(0))
+                original_size: int = random_feature_selector.size(0)
+                plot_size: int = feature_row * feature_col
+                padding_size: int = plot_size - original_size
+                padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size))
                 heatmap: torch.Tensor = padded_weights.view(feature_row, feature_col).cpu().numpy()
-
                 ax = axes[ele // col, ele % col]
                 im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
                 fig.colorbar(im, ax=ax)
