@@ -44,7 +44,7 @@ arguments = [
             # Dimension of each layer
             '--input_dim=784', 
             '--heb_dim=64', 
-            '--output_dim=26',
+            '--output_dim=10',
             # Hebbian layer hyperparameters  
             '--heb_lamb=15', 
             '--heb_gam=0.99',
