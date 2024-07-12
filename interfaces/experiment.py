@@ -4,16 +4,19 @@ import shutil
 from abc import ABC
 import argparse
 import time
-from typing import Optional, Tuple, List, Union
+from typing import Optional, Tuple, List, Type, Union
 
 # Pytorch imports
-from torch.utils.data import DataLoader
+from torch.nn import Module
+from torch.utils.data import DataLoader, TensorDataset
 
 # Custom defined model imports
 from interfaces.network import Network
+from layers.base.data_setup_layer import DataSetupLayer
 
 # Utils imports
-from utils.experiment_constants import ExperimentPhases, ExperimentTypes, Purposes
+from layers.input_layer import InputLayer
+from utils.experiment_constants import DataSets, ExperimentPhases, ExperimentTypes, LayerNames, Purposes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -61,12 +64,44 @@ class Experiment(ABC):
         
         # Experiment parameters
         self.model: Network = model.to(args.device).float()
+        self.data_name = args.data_name.lower()
         self.batch_size: int = args.batch_size
         self.epochs: int = args.epochs
         self.test_sample: int = 0
         self.device: str = args.device
         self.local_machine: bool = args.local_machine
         self.experiment_type: ExperimentTypes = experiment_mapping[args.experiment_type.upper()]
+        
+        # Datasets
+        self.mnist_train_data = args.mnist_train_data
+        self.mnist_train_label = args.mnist_train_label
+        self.mnist_test_data = args.mnist_test_data
+        self.mnist_test_label = args.mnist_test_label
+        self.mnist_train_size = args.mnist_train_size
+        self.mnist_test_size = args.mnist_test_size
+        self.mnist_classes = args.mnist_classes
+        self.mnist_train_fname = args.mnist_train_fname
+        self.mnist_test_fname = args.mnist_test_fname
+        
+        self.fashion_mnist_train_data = args.fashion_mnist_train_data
+        self.fashion_mnist_train_label = args.fashion_mnist_train_label
+        self.fashion_mnist_test_data = args.fashion_mnist_test_data
+        self.fashion_mnist_test_label = args.fashion_mnist_test_label
+        self.fashion_mnist_train_size = args.fashion_mnist_train_size
+        self.fashion_mnist_test_size = args.fashion_mnist_test_size
+        self.fashion_mnist_classes = args.fashion_mnist_classes
+        self.fashion_mnist_train_fname = args.fashion_mnist_train_fname
+        self.fashion_mnist_test_fname = args.fashion_mnist_test_fname
+        
+        self.e_mnist_train_data = args.e_mnist_train_data
+        self.e_mnist_train_label = args.e_mnist_train_label
+        self.e_mnist_test_data = args.e_mnist_test_data
+        self.e_mnist_test_label = args.e_mnist_test_label
+        self.e_mnist_train_size = args.e_mnist_train_size
+        self.e_mnist_test_size = args.e_mnist_test_size
+        self.e_mnist_classes = args.e_mnist_classes
+        self.e_mnist_train_fname = args.e_mnist_train_fname
+        self.e_mnist_test_fname = args.e_mnist_test_fname
         
         # Timers
         self.START_TIME: Optional[float] = None
@@ -121,6 +156,37 @@ class Experiment(ABC):
         self.EXP_LOG.info("Completed log setups.")
         self.EXP_LOG.info("Completed arguments parsing.")
         self.EXP_LOG.info(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
+        
+        # Get input layer class of model
+        input_layer: Module = self.model.get_module(LayerNames.INPUT)
+        input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
+        
+        # MNIST Dataset Setup
+        self.mnist_train_data_set: TensorDataset = input_class.setup_data(self.mnist_train_data, self.mnist_train_label, self.mnist_train_fname, self.mnist_train_size, DataSets.MNIST)
+        self.mnist_train_data_loader: DataLoader = DataLoader(self.mnist_train_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for mnist training dataset and dataloader.")
+
+        self.mnist_test_data_set: TensorDataset = input_class.setup_data(self.mnist_test_data, self.mnist_test_label, self.mnist_test_fname, self.mnist_test_size, DataSets.MNIST)
+        self.mnist_test_data_loader: DataLoader = DataLoader(self.mnist_test_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for mnist testing dataset and dataloader.")
+        
+        # FASHION-MNIST Dataset Setup
+        self.fashion_mnist_train_data_set: TensorDataset = input_class.setup_data(self.fashion_mnist_train_data, self.fashion_mnist_train_label, self.fashion_mnist_train_fname, self.fashion_mnist_train_size, DataSets.FASHION_MNIST)
+        self.fashion_mnist_train_data_loader: DataLoader = DataLoader(self.fashion_mnist_train_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for fashion-mnist training dataset and dataloader.")
+
+        self.fashion_mnist_test_data_set: TensorDataset = input_class.setup_data(self.fashion_mnist_test_data, self.fashion_mnist_test_label, self.fashion_mnist_test_fname, self.fashion_mnist_test_size, DataSets.FASHION_MNIST)
+        self.fashion_mnist_test_data_loader: DataLoader = DataLoader(self.fashion_mnist_test_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for fashion-mnist testing dataset and dataloader.")
+        
+        # E-MNIST Dataset Setup
+        self.e_mnist_train_data_set: TensorDataset = input_class.setup_data(self.e_mnist_train_data, self.e_mnist_train_label, self.e_mnist_train_fname, self.e_mnist_train_size, DataSets.E_MNIST)
+        self.e_mnist_train_data_loader: DataLoader = DataLoader(self.e_mnist_train_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for e-mnist training dataset and dataloader.")
+
+        self.e_mnist_test_data_set: TensorDataset = input_class.setup_data(self.e_mnist_test_data, self.e_mnist_test_label, self.e_mnist_test_fname, self.e_mnist_test_size, DataSets.E_MNIST)
+        self.e_mnist_test_data_loader: DataLoader = DataLoader(self.e_mnist_test_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for e-mnist testing dataset and dataloader.")
 
     
     def _training(self, 

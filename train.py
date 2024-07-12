@@ -2,6 +2,7 @@ from experiments.base_experiment import BaseExperiment
 
 from experiments.generalization_experiment import GeneralizationExperiment
 from models.hebbian_network import HebbianNetwork
+from utils.experiment_constants import DataSets
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
 from utils.experiment_logger import *

@@ -17,7 +17,7 @@ from layers.input_layer import InputLayer
 from layers.base.data_setup_layer import DataSetupLayer
 
 # Utils imports
-from utils.experiment_constants import ExperimentPhases, LayerNames, Purposes
+from utils.experiment_constants import DataSets, ExperimentPhases, LayerNames, Purposes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -82,29 +82,21 @@ class BaseExperiment(Experiment):
             None
         """
         super().__init__(model, args, name)
-        self.data_name: str = args.data_name
-        self.train_data: str = args.train_data
-        self.train_label: str = args.train_label
-        self.train_fname: str = args.train_filename
-        self.test_data: str = args.test_data
-        self.test_label: str = args.test_label
-        self.test_fname: str = args.test_filename
-        
         self.SAMPLES: int = 0
         
-        # Get input layer class of model
-        input_layer: Module = self.model.get_module(LayerNames.INPUT)
-        input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
+        dataset_mapping = {member.name.upper(): member for member in DataSets}
+        dataset = dataset_mapping[self.data_name.upper()]
         
-        # Training dataset
-        self.train_data_set: TensorDataset = input_class.setup_data(self.train_data, self.train_label, self.train_fname, 60000)
-        self.train_data_loader: DataLoader = DataLoader(self.train_data_set, batch_size=self.batch_size, shuffle=True)
-        self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
-
-        # Testing dataset
-        self.test_data_set: TensorDataset = input_class.setup_data(self.test_data, self.test_label, self.test_fname, 10000)
-        self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
-        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
+        if dataset == DataSets.MNIST:
+            self.test_data_loader: DataLoader = self.mnist_test_data_loader
+            self.train_data_loader: DataLoader = self.mnist_train_data_loader
+        elif dataset == DataSets.E_MNIST:
+            self.test_data_loader: DataLoader = self.e_mnist_test_data_loader
+            self.train_data_loader: DataLoader = self.e_mnist_train_data_loader
+        elif dataset == DataSets.FASHION_MNIST:
+            self.test_data_loader: DataLoader = self.fashion_mnist_test_data_loader
+            self.train_data_loader: DataLoader = self.fashion_mnist_train_data_loader
+        
         
     
     

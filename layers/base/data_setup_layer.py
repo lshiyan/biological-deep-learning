@@ -1,10 +1,12 @@
 import torch
-from torch.utils.data import TensorDataset
+from torch.utils.data import DataLoader, TensorDataset
 import os
 import pandas as pd
 from layers.input_layer import InputLayer
 from typing import IO, List
 import random
+
+from utils.experiment_constants import DataSets
 
 class DataSetupLayer(InputLayer):
     """
@@ -28,7 +30,7 @@ class DataSetupLayer(InputLayer):
 
     
     @staticmethod
-    def setup_data(data: str, label: str, filename: str, size: int) -> TensorDataset:
+    def setup_data(data: str, label: str, filename: str, size: int, dataset: DataSets) -> TensorDataset:
         """
         STATIC METHOD
         Function to setup requested dataset
@@ -46,14 +48,15 @@ class DataSetupLayer(InputLayer):
          
         # Setup dataset   
         data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
-        labels: torch.Tensor = torch.tensor(data_frame[0].values)
+        labels: torch.Tensor = torch.tensor(data_frame[0].values) if dataset != DataSets.E_MNIST else torch.tensor(data_frame[0].values) - 1
         data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
         data_tensor /= 255
         
         return TensorDataset(data_tensor, labels)
     
+    
     @staticmethod
-    def filter_emnist_letters(tensor_dataset: TensorDataset, selected_classes: dict[int, int]):
+    def filter_data_loader(data_loader: DataLoader, filter: dict[int, int]):
         """
         Function to filter EMNIST dataset to include only the specified letter classes
         @param
@@ -62,25 +65,22 @@ class DataSetupLayer(InputLayer):
         @return
             filtered TensorDataset containing only data for the specified letter classes
         """
-        
-        filtered_data = []
-        filtered_label = []
+        data_kept: List[torch.Tensor] = []
+        labels_kept: List[float] = []
 
         # Loop through each label in the dataset
-        for data, label in tensor_dataset:
+        for data, label in data_loader:
+            if label.item() in filter.keys():
+                labels_kept.append(filter[int(label.item())])
+                data_kept.append(data)
 
-            if label.item() in selected_classes.keys():
-                filtered_label.append(selected_classes[int(label.item())])
-                filtered_data.append(data)
-
-        filtered_data = torch.stack(filtered_data)
-        filtered_label = torch.tensor(filtered_label)
-
+        filtered_data = torch.stack(data_kept)
+        filtered_labels = torch.tensor(labels_kept)
+        filtered_dataset = TensorDataset(filtered_data, filtered_labels)
+        filtered_data_loader = DataLoader(filtered_dataset, batch_size=data_loader.batch_size, shuffle=True)
         
-        return TensorDataset(filtered_data, filtered_label)
+        return filtered_data_loader
 
-
-        
 
     @staticmethod
     def convert(img_file_path: str, 

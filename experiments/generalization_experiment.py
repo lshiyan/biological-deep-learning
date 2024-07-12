@@ -20,7 +20,7 @@ from layers.input_layer import InputLayer
 from layers.base.data_setup_layer import DataSetupLayer
 
 # Utils imports
-from utils.experiment_constants import ExperimentPhases, LayerNames, Purposes
+from utils.experiment_constants import DataSets, ExperimentPhases, LayerNames, Purposes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
@@ -105,22 +105,7 @@ class GeneralizationExperiment(Experiment):
             None
         """
         super().__init__(model, args, name)
-        self.data_name: str = args.data_name
-        self.train_data: str = args.train_data
-        self.train_label: str = args.train_label
-        self.train_fname: str = args.train_filename
-        self.test_data: str = args.test_data
-        self.test_label: str = args.test_label
-        self.test_fname: str = args.test_filename
-        
-        self.e_data_name: str = args.e_data_name
-        self.e_train_data: str = args.e_train_data
-        self.e_train_label: str = args.e_train_label
-        self.e_train_fname: str = args.e_train_filename
-        self.e_test_data: str = args.e_test_data
-        self.e_test_label: str = args.e_test_label
-        self.e_test_fname: str = args.e_test_filename
-        
+
         self.REC_TRAIN_TIME: float = 0
         self.REC_TRAIN_ACC_TIME: float = 0
         self.REC_TEST_ACC_TIME: float = 0
@@ -131,52 +116,27 @@ class GeneralizationExperiment(Experiment):
         self.REC_SAMPLES: int = 0
         self.FREEZE_SAMPLES: int = 0
         
+        self.e_data_name = args.e_data_name
+
+        # Select random letter classes
+        letter_labels = list(range(0, 26))
+        original_class = random.sample(letter_labels, 10)
+        updated_class = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        filter_classes = dict(zip(original_class, updated_class))
+        
+        # Convert Dictionary class into letters
+        letter_class = [chr(65 + key) for key in original_class]
+        self.letter_log = dict(zip(updated_class, letter_class))
+        
         # Get input layer class of model
         input_layer: Module = self.model.get_module(LayerNames.INPUT)
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
-        #####################################################
-        # --------------- DATASET INFORMATION --------------- 
-        #####################################################
-        # MNIST train: 600000
-        # MNIST test: 10000
-        # Fashion MNIST train: 60000
-        # Fashion MNIST test: 10000
-        # EMNIST-Letter train: 88,800
-        # EMNIST-Letter test: 14,800
-
-        
-        # Training dataset
-        self.train_data_set: TensorDataset = input_class.setup_data(self.train_data, self.train_label, self.train_fname, 60000)
-        self.train_data_loader: DataLoader = DataLoader(self.train_data_set, batch_size=self.batch_size, shuffle=True)
-        self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
-
-        # Testing dataset
-        self.test_data_set: TensorDataset = input_class.setup_data(self.test_data, self.test_label, self.test_fname, 10000)
-        self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
-        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
-        
-        # Select random letter classes
-        letter_labels = list(range(1, 27))
-        original_class = random.sample(letter_labels, 10)
-        updated_class = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        dictionary_classes = dict(zip(original_class, updated_class))
-        
-        # Convert Dictionary class into letters
-        letter_class = [chr(64 + key) for key in original_class]
-        self.letter_log = dict(zip(updated_class, letter_class))
-
-        # Extented training dataset
-        self.e_train_data_set: TensorDataset = input_class.setup_data(self.e_train_data, self.e_train_label, self.e_train_fname, 88800)
-        filtered_train_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_train_data_set, dictionary_classes)
-        self.e_train_data_loader: DataLoader = DataLoader(filtered_train_dataset, batch_size=self.batch_size, shuffle=True)
-        self.EXP_LOG.info("Completed setup for e-training dataset and dataloader.")
-        
-        # Extended testing dataset
-        self.e_test_data_set: TensorDataset = input_class.setup_data(self.e_test_data, self.e_test_label, self.e_test_fname, 14800)
-        filtered_test_dataset: TensorDataset = DataSetupLayer.filter_emnist_letters(self.e_test_data_set, dictionary_classes)
-        self.e_test_data_loader: DataLoader = DataLoader(filtered_test_dataset, batch_size=self.batch_size, shuffle=True)
-        self.EXP_LOG.info("Completed setup for e-testing dataset and dataloader.")
+        # Get data loaders
+        self.train_data_loader: DataLoader = self.mnist_train_data_loader
+        self.test_data_loader: DataLoader = self.mnist_test_data_loader
+        self.e_train_data_loader: DataLoader = input_class.filter_data_loader(self.e_mnist_train_data_loader, filter_classes)
+        self.e_test_data_loader: DataLoader = input_class.filter_data_loader(self.e_mnist_test_data_loader, filter_classes)
         
     
     

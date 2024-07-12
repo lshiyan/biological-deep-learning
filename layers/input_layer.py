@@ -3,9 +3,9 @@ from typing import Optional
 
 import torch
 from interfaces.layer import NetworkLayer
-from torch.utils.data import TensorDataset
+from torch.utils.data import TensorDataset, DataLoader
 
-from utils.experiment_constants import LayerNames
+from utils.experiment_constants import DataSets, LayerNames
 
 
 class InputLayer(NetworkLayer, ABC):
@@ -30,9 +30,14 @@ class InputLayer(NetworkLayer, ABC):
 
 
     @staticmethod
-    def setup_data(data: str, label: str, filename: str, size: int) -> TensorDataset:
+    def setup_data(data: str, label: str, filename: str, size: int, dataset: DataSets) -> TensorDataset:
         raise NotImplementedError("This method has yet to be implemented.")
-        
+    
+    
+    @staticmethod
+    def filter_data_loader(data_loader: DataLoader, filter: dict[int, int]):
+        raise NotImplementedError("This method has yet to be implemented.")
+         
 
     @staticmethod
     def convert(img_file: str, label_file: str, out_file: str, data_size: int, img_size: int) -> None:   

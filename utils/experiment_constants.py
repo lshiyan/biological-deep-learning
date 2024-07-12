@@ -99,3 +99,7 @@ class BiasUpdate(Enum):
     NO_BIAS = 'NO_BIAS'
     
      
+class DataSets(Enum):
+    MNIST = 'MNIST'
+    E_MNIST = 'E_MNIST'
+    FASHION_MNIST = 'FASHION_MNIST'
