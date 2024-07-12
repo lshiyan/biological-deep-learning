@@ -300,6 +300,8 @@ class BaseExperiment(Experiment):
         self.PARAM_LOG.info(f"Learning Rule: {self.model.learn.value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Inhibition Rule: {self.model.inhib.value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Weight Growth: {self.model.growth.value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Weight Decay: {self.model.weight_decay.value.lower().capitalize()}")
+        self.PARAM_LOG.info(f"Bias Update: {self.model.bias_update.value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Network Learning Rate: {self.model.lr}")
         self.PARAM_LOG.info(f"Alpha: {self.model.alpha}")
         self.PARAM_LOG.info(f"Beta: {self.model.beta}")
