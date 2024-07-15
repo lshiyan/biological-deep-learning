@@ -9,7 +9,7 @@ __pycache__/
 .vscode/
 
 #Tests
-# tests/
+tests/
 
 #Results
 results/
