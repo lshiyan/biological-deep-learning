@@ -50,6 +50,7 @@ class DataSetupLayer(InputLayer):
         data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
         labels: torch.Tensor = torch.tensor(data_frame[0].values) if dataset != DataSets.E_MNIST else torch.tensor(data_frame[0].values) - 1
         data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+        if dataset == DataSets.E_MNIST: data_tensor.T
         data_tensor /= 255
         
         return TensorDataset(data_tensor, labels)

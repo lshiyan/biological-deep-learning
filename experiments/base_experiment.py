@@ -85,20 +85,33 @@ class BaseExperiment(Experiment):
         self.SAMPLES: int = 0
         
         dataset_mapping = {member.name.upper(): member for member in DataSets}
-        dataset = dataset_mapping[self.data_name.upper()]
+        self.dataset = dataset_mapping[self.data_name.upper()]
         
-        if dataset == DataSets.MNIST:
-            self.test_data_loader: DataLoader = self.mnist_test_data_loader
-            self.train_data_loader: DataLoader = self.mnist_train_data_loader
-        elif dataset == DataSets.E_MNIST:
-            self.test_data_loader: DataLoader = self.e_mnist_test_data_loader
-            self.train_data_loader: DataLoader = self.e_mnist_train_data_loader
-        elif dataset == DataSets.FASHION_MNIST:
-            self.test_data_loader: DataLoader = self.fashion_mnist_test_data_loader
-            self.train_data_loader: DataLoader = self.fashion_mnist_train_data_loader
+        self.train_data = args.train_data
+        self.train_label = args.train_label
+        self.test_data = args.test_data
+        self.test_label = args.test_label
+        self.train_size = args.train_size
+        self.test_size = args.test_size
+        self.classes = args.classes
+        self.train_fname = args.train_fname
+        self.test_fname = args.test_fname
+        
+        # Get input layer class of model
+        input_layer: Module = self.model.get_module(LayerNames.INPUT)
+        input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
+        
+        # Training Dataset Setup
+        self.train_data_set: TensorDataset = input_class.setup_data(self.train_data, self.train_label, self.train_fname, self.train_size, self.dataset)
+        self.train_data_loader: DataLoader = DataLoader(self.train_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
+        
+        # Testing Dataset Setup
+        self.test_data_set: TensorDataset = input_class.setup_data(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset)
+        self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         
         
-    
     
     ################################################################################################
     # Phase 1 Training and Testing: Base (Hebbian and Classification Layers)

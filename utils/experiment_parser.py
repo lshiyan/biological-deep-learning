@@ -15,42 +15,31 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
 
     # Basic configurations
     parser.add_argument('--data_name', type=str, default="MNIST")
-    parser.add_argument('--e_data_name', type=str, default="E_MNIST")
+    parser.add_argument('--ext_data_name', type=str, default="E_MNIST")
 
     # Data Factory
-    parser.add_argument('--mnist_train_data', type=str, default="data/mnist/train-images.idx3-ubyte")
-    parser.add_argument('--mnist_train_label', type=str, default="data/mnist/train-labels.idx1-ubyte")
-    parser.add_argument('--mnist_test_data', type=str, default="data/mnist/test-images.idx3-ubyte")
-    parser.add_argument('--mnist_test_label', type=str, default="data/mnist/test-labels.idx1-ubyte")
-    parser.add_argument('--mnist_train_size', type=int, default=60000)
-    parser.add_argument('--mnist_test_size', type=int, default=10000)
-    parser.add_argument('--mnist_classes', type=int, default=10)
+    parser.add_argument('--train_data', type=str, default="data/mnist/train-images.idx3-ubyte")
+    parser.add_argument('--train_label', type=str, default="data/mnist/train-labels.idx1-ubyte")
+    parser.add_argument('--test_data', type=str, default="data/mnist/test-images.idx3-ubyte")
+    parser.add_argument('--test_label', type=str, default="data/mnist/test-labels.idx1-ubyte")
+    parser.add_argument('--train_size', type=int, default=60000)
+    parser.add_argument('--test_size', type=int, default=10000)
+    parser.add_argument('--classes', type=int, default=10)
     
-    parser.add_argument('--fashion_mnist_train_data', type=str, default="data/fashion_mnist/train-images.idx3-ubyte")
-    parser.add_argument('--fashion_mnist_train_label', type=str, default="data/fashion_mnist/train-labels.idx1-ubyte")
-    parser.add_argument('--fashion_mnist_test_data', type=str, default="data/fashion_mnist/test-images.idx3-ubyte")
-    parser.add_argument('--fashion_mnist_test_label', type=str, default="data/fashion_mnist/test-labels.idx1-ubyte")
-    parser.add_argument('--fashion_mnist_train_size', type=int, default=60000)
-    parser.add_argument('--fashion_mnist_test_size', type=int, default=10000)
-    parser.add_argument('--fashion_mnist_classes', type=int, default=10)
-    
-    parser.add_argument('--e_mnist_train_data', type=str, default="data/e_mnist/train-images.idx3-ubyte")
-    parser.add_argument('--e_mnist_train_label', type=str, default="data/e_mnist/train-labels.idx1-ubyte")
-    parser.add_argument('--e_mnist_test_data', type=str, default="data/e_mnist/test-images.idx3-ubyte")
-    parser.add_argument('--e_mnist_test_label', type=str, default="data/e_mnist/test-labels.idx1-ubyte")
-    parser.add_argument('--e_mnist_train_size', type=int, default=88800)
-    parser.add_argument('--e_mnist_test_size', type=int, default=14800)
-    parser.add_argument('--e_mnist_classes', type=int, default=26)
+    parser.add_argument('--ext_train_data', type=str, default="data/ext_mnist/train-images.idx3-ubyte")
+    parser.add_argument('--ext_train_label', type=str, default="data/ext_mnist/train-labels.idx1-ubyte")
+    parser.add_argument('--ext_test_data', type=str, default="data/ext_mnist/test-images.idx3-ubyte")
+    parser.add_argument('--ext_test_label', type=str, default="data/ext_mnist/test-labels.idx1-ubyte")
+    parser.add_argument('--ext_train_size', type=int, default=60000)
+    parser.add_argument('--ext_test_size', type=int, default=10000)
+    parser.add_argument('--ext_classes', type=int, default=10)
 
     # CSV files generated
-    parser.add_argument('--mnist_train_fname', type=str, default="data/mnist/mnist_train.csv")
-    parser.add_argument('--mnist_test_fname', type=str, default="data/mnist/mnist_test.csv")
+    parser.add_argument('--train_fname', type=str, default="data/mnist/mnist_train.csv")
+    parser.add_argument('--test_fname', type=str, default="data/mnist/mnist_test.csv")
     
-    parser.add_argument('--fashion_mnist_train_fname', type=str, default="data/fashion_mnist/fashion_mnist_train.csv")
-    parser.add_argument('--fashion_mnist_test_fname', type=str, default="data/fashion_mnist/fashion_mnist_test.csv")
-    
-    parser.add_argument('--e_mnist_train_fname', type=str, default="data/e_mnist/e_mnist_train.csv")
-    parser.add_argument('--e_mnist_test_fname', type=str, default="data/e_mnist/e_mnist_test.csv")
+    parser.add_argument('--ext_train_fname', type=str, default="data/ext_mnist/ext_mnist_train.csv")
+    parser.add_argument('--ext_test_fname', type=str, default="data/ext_mnist/ext_mnist_test.csv")
 
     # Dimension of each layer
     parser.add_argument('--input_dim', type=int, default=784)

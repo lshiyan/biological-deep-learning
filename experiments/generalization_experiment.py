@@ -116,7 +116,11 @@ class GeneralizationExperiment(Experiment):
         self.REC_SAMPLES: int = 0
         self.FREEZE_SAMPLES: int = 0
         
-        self.e_data_name = args.e_data_name
+        self.ext_data_name = args.ext_data_name.upper()
+        
+        dataset_mapping = {member.name.upper(): member for member in DataSets}
+        self.dataset = dataset_mapping[self.data_name.upper()]
+        self.ext_dataset = dataset_mapping[self.data_name.upper()]
 
         # Select random letter classes
         letter_labels = list(range(0, 26))
@@ -128,16 +132,54 @@ class GeneralizationExperiment(Experiment):
         letter_class = [chr(65 + key) for key in original_class]
         self.letter_log = dict(zip(updated_class, letter_class))
         
+        # Dataset Information
+        self.train_data = args.train_data
+        self.train_label = args.train_label
+        self.test_data = args.test_data
+        self.test_label = args.test_label
+        self.train_size = args.train_size
+        self.test_size = args.test_size
+        self.classes = args.classes
+        self.train_fname = args.train_fname
+        self.test_fname = args.test_fname
+        
+        # EXT-Dataset Information
+        self.ext_train_data = args.ext_train_data
+        self.ext_train_label = args.ext_train_label
+        self.ext_test_data = args.ext_test_data
+        self.ext_test_label = args.ext_test_label
+        self.ext_train_size = args.ext_train_size
+        self.ext_test_size = args.ext_test_size
+        self.ext_classes = args.ext_classes
+        self.ext_train_fname = args.ext_train_fname
+        self.ext_test_fname = args.ext_test_fname
+        
         # Get input layer class of model
         input_layer: Module = self.model.get_module(LayerNames.INPUT)
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
-        # Get data loaders
-        self.train_data_loader: DataLoader = self.mnist_train_data_loader
-        self.test_data_loader: DataLoader = self.mnist_test_data_loader
-        self.e_train_data_loader: DataLoader = input_class.filter_data_loader(self.e_mnist_train_data_loader, filter_classes)
-        self.e_test_data_loader: DataLoader = input_class.filter_data_loader(self.e_mnist_test_data_loader, filter_classes)
+        # Training Dataset Setup
+        self.train_data_set: TensorDataset = input_class.setup_data(self.train_data, self.train_label, self.train_fname, self.train_size, self.dataset)
+        self.train_data_loader: DataLoader = DataLoader(self.train_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
         
+        # Testing Dataset Setup
+        self.test_data_set: TensorDataset = input_class.setup_data(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset)
+        self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
+        self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
+        
+        # Training Dataset Setup
+        self.ext_train_data_set: TensorDataset = input_class.setup_data(self.ext_train_data, self.ext_train_label, self.ext_train_fname, self.ext_train_size, self.ext_dataset)
+        self.ext_train_data_loader: DataLoader = DataLoader(self.ext_train_data_set, batch_size=self.batch_size, shuffle=True)
+        self.ext_train_data_loader = input_class.filter_data_loader(self.ext_train_data_loader, filter_classes)
+        self.EXP_LOG.info("Completed setup for ext-training dataset and dataloader.")
+        
+        # Testing Dataset Setup
+        self.ext_test_data_set: TensorDataset = input_class.setup_data(self.ext_test_data, self.ext_test_label, self.ext_test_fname, self.ext_test_size, self.ext_dataset)
+        self.ext_test_data_loader: DataLoader = DataLoader(self.ext_test_data_set, batch_size=self.batch_size, shuffle=True)
+        self.ext_test_data_loader = input_class.filter_data_loader(self.ext_test_data_loader, filter_classes)
+        self.EXP_LOG.info("Completed setup for ext-testing dataset and dataloader.")
+    
     
     
     ################################################################################################
@@ -175,8 +217,8 @@ class GeneralizationExperiment(Experiment):
             if self.check_test(self.REC_SAMPLES):
                 self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
                 self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
-                self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
-                self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION)
+                self._testing(self.ext_test_data_loader, Purposes.TEST_ACCURACY, self.ext_data_name, ExperimentPhases.RECONSTRUCTION)
+                self._testing(self.ext_train_data_loader, Purposes.TRAIN_ACCURACY, self.ext_data_name, ExperimentPhases.RECONSTRUCTION)
              
             # Move input and targets to device
             inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
@@ -317,8 +359,8 @@ class GeneralizationExperiment(Experiment):
         for inputs, labels in train_data_loader: 
             # Test model at intervals of samples seen
             if self.check_test(self.FREEZE_SAMPLES):
-                self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
-                self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
+                self._testing(self.ext_test_data_loader, Purposes.TEST_ACCURACY, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS)
+                self._testing(self.ext_train_data_loader, Purposes.TRAIN_ACCURACY, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS)
           
             # Move input and targets to device
             inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
@@ -527,11 +569,11 @@ class GeneralizationExperiment(Experiment):
         
         self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_mnist}, norm = {rec_norm_train_mnist} ({self.data_name})")
         self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs:  cos = {rec_cos_test_mnist}, norm = {rec_norm_test_mnist} ({self.data_name})")
-        self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_emnist}, norm = {rec_norm_train_emnist} ({self.e_data_name})")
-        self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_test_emnist}, norm = {rec_norm_test_emnist} ({self.e_data_name})")
+        self.PARAM_LOG.info(f"Reconstruction training accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_train_emnist}, norm = {rec_norm_train_emnist} ({self.ext_data_name})")
+        self.PARAM_LOG.info(f"Reconstruction testing accuracy of model after training for {self.epochs} epochs: cos = {rec_cos_test_emnist}, norm = {rec_norm_test_emnist} ({self.ext_data_name})")
         
-        self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_emnist} ({self.e_data_name})")
-        self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_emnist} ({self.e_data_name})")
+        self.PARAM_LOG.info(f"Freezing training accuracy of model after training for {self.epochs} epochs: {freeze_train_acc_emnist} ({self.ext_data_name})")
+        self.PARAM_LOG.info(f"Freezing testing accuracy of model after training for {self.epochs} epochs: {freeze_test_acc_emnist} ({self.ext_data_name})")
     
     
     
@@ -552,7 +594,7 @@ class GeneralizationExperiment(Experiment):
         
         # Freezing weights -> training classification    
         for epoch in range(0, self.epochs):
-            self._training(self.e_train_data_loader, epoch, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS)
+            self._training(self.ext_train_data_loader, epoch, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS)
 
         self.EXP_LOG.info("Completed training of model.")        
         self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, 'final')
