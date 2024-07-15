@@ -64,8 +64,8 @@ class ClassificationLayer(OutputLayer):
         A: torch.Tensor
 
         if clamped_output != None:
-            outer_prod: torch.Tensor = torch.outer(clamped_output - y, x)
-            u_times_y: torch.Tensor = torch.mul(u, y)
+            outer_prod: torch.Tensor = torch.outer(clamped_output - y, x).to(self.device)
+            u_times_y: torch.Tensor = torch.mul(u, y).to(self.device)
             A = (outer_prod - self.fc.weight * (u_times_y.unsqueeze(1))).to(self.device)
         else:
             A = torch.outer(y, x).to(self.device)
@@ -120,7 +120,7 @@ class ClassificationLayer(OutputLayer):
         input_copy = self.fc(input_copy)
         self.update_weights(initial_copy, input_copy, clamped_output)
         # self.update_bias(input)
-        output = softmax(input_copy)
+        output = softmax(input_copy).to(self.device)
         
         return output
     
@@ -139,6 +139,6 @@ class ClassificationLayer(OutputLayer):
         input_copy: torch.Tensor = input.clone().detach().squeeze().to(self.device)
         
         input_copy = self.fc(input_copy)
-        output = softmax(input_copy)
+        output = softmax(input_copy).to(self.device)
         
         return output

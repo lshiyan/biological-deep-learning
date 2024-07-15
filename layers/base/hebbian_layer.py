@@ -135,8 +135,8 @@ class HebbianLayer(HiddenLayer):
             function_derivative = self._sigmoid_function()
             
         # Weight Update
-        lr_tensor: torch.Tensor = torch.full(self.fc.weight.shape, self.lr)
-        delta_weight: torch.Tensor = lr_tensor * calculated_rule * function_derivative
+        lr_tensor: torch.Tensor = torch.full(self.fc.weight.shape, self.lr).to(self.device)
+        delta_weight: torch.Tensor = (lr_tensor * calculated_rule * function_derivative).to(self.device)
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
         
 
@@ -186,9 +186,9 @@ class HebbianLayer(HiddenLayer):
 
         # Apply the decay or growth factor
         if self.decay == WeightDecay.TANH:
-            updated_weights = self.fc.weight * factor
+            updated_weights = (self.fc.weight * factor).to(self.device)
         elif self.decay == WeightDecay.SIMPLE:
-            updated_weights = self.fc.weight - factor
+            updated_weights = (self.fc.weight - factor).to(self.device)
         else:
             raise ValueError(f"Invalid weight decay method: {self.decay}")
 

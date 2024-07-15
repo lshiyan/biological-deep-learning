@@ -101,7 +101,7 @@ class HiddenLayer(NetworkLayer, ABC):
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         input_copy = relu(input_copy)
         max_ele: float = torch.max(input_copy).item()
-        input_copy = torch.pow(input_copy, self.lamb)
+        input_copy = torch.pow(input_copy, self.lamb).to(self.device)
         output: torch.Tensor =  (input_copy / abs(max_ele) ** self.lamb).to(self.device)
         
         return output
@@ -168,7 +168,7 @@ class HiddenLayer(NetworkLayer, ABC):
         kernel: torch.Tensor = torch.tensor([torch.exp(torch.Tensor(-(i - size // 2) ** 2 / (2 * sigma ** 2))) for i in range(size)])
         kernel = kernel / torch.sum(kernel)
 
-        output: torch.Tensor = F.conv1d(input_copy.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0)
+        output: torch.Tensor = F.conv1d(input_copy.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0).to(self.device)
         return output
 
     
@@ -249,7 +249,7 @@ class HiddenLayer(NetworkLayer, ABC):
         # Calculate Sanger's Rule
         A: torch.Tensor = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y).to(self.device)
         A = A * (y.unsqueeze(1))
-        computed_rule: torch.Tensor = (outer_prod - A).to(self.device)
+        computed_rule: torch.Tensor = (outer_prod - A).to(self.device).to(self.device)
 
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
@@ -305,7 +305,7 @@ class HiddenLayer(NetworkLayer, ABC):
         @return
             derivative: slope constant (derivative relative to linear rule always = 1)
         """
-        return torch.ones(self.fc.weight.shape)
+        return torch.ones(self.fc.weight.shape).to(self.device)
     
     
     def _sigmoid_function(self) -> torch.Tensor:
@@ -318,8 +318,8 @@ class HiddenLayer(NetworkLayer, ABC):
             derivative: sigmoid derivative of current weights
         """
         current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        sigmoid_k_tensor: torch.Tensor = torch.full(self.fc.weight.shape, self.sigmoid_k)
-        derivative: torch.Tensor = sigmoid_k_tensor - current_weights
+        sigmoid_k_tensor: torch.Tensor = torch.full(self.fc.weight.shape, self.sigmoid_k).to(self.device)
+        derivative: torch.Tensor = (sigmoid_k_tensor - current_weights).to(self.device)
         derivative = current_weights * derivative
         derivative = (1 / self.sigmoid_k) * derivative
         return derivative
@@ -344,15 +344,15 @@ class HiddenLayer(NetworkLayer, ABC):
         average: float = torch.mean(self.exponential_average).item()
 
         # Gets ratio vs mean
-        norm_exp_avg: torch.Tensor = self.exponential_average / average
+        norm_exp_avg: torch.Tensor = (self.exponential_average / average).to(self.device)
         
-        x: torch.Tensor = -self.eps * (norm_exp_avg - 1)
+        x: torch.Tensor = (-self.eps * (norm_exp_avg - 1)).to(self.device)
         # x: torch.Tensor = self.eps * (norm_exp_avg - 1)
-        sech_x: torch.Tensor = 1 / torch.cosh(x)
+        sech_x: torch.Tensor = (1 / torch.cosh(x)).to(self.device)
 
         # Calculate the growth factors
-        growth_factor_positive: torch.Tensor = self.eps * tanh(x) + 1
-        growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
+        growth_factor_positive: torch.Tensor = (self.eps * tanh(x) + 1).to(self.device)
+        growth_factor_negative: torch.Tensor = (torch.reciprocal(growth_factor_positive)).to(self.device)
         growth_factor_positive = growth_factor_positive.unsqueeze(1)
         growth_factor_negative = growth_factor_negative.unsqueeze(1)
         
@@ -364,7 +364,7 @@ class HiddenLayer(NetworkLayer, ABC):
         # growth_factor_negative: torch.Tensor = self.fc.weight * cst_term * last_term.unsqueeze(1) * extra_term.unsqueeze(1)
         
         # Combined growth_factor
-        growth_factor = torch.where(self.fc.weight > 0, growth_factor_positive, growth_factor_negative)
+        growth_factor: torch.Tensor = torch.where(self.fc.weight > 0, growth_factor_positive, growth_factor_negative).to(self.device)
         
         return growth_factor
     
@@ -386,17 +386,17 @@ class HiddenLayer(NetworkLayer, ABC):
         average: float = torch.mean(self.exponential_average).item()
 
         # Gets ratio vs mean
-        norm_exp_avg: torch.Tensor = self.exponential_average / average
+        norm_exp_avg: torch.Tensor = (self.exponential_average / average).to(self.device)
         
-        x: torch.Tensor = -self.eps * (norm_exp_avg - 1)
+        x: torch.Tensor = (-self.eps * (norm_exp_avg - 1)).to(self.device)
 
         # calculate the growth factors
-        growth_factor_positive: torch.Tensor = sigmoid(self.eps * tanh(x) + 1)
-        growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive)
+        growth_factor_positive: torch.Tensor = sigmoid(self.eps * tanh(x) + 1).to(self.device)
+        growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive).to(self.device)
         growth_factor_positive = growth_factor_positive.unsqueeze(1)
         growth_factor_negative = growth_factor_negative.unsqueeze(1)
         
-        growth_factor = torch.where(self.fc.weight > 0, growth_factor_positive, growth_factor_negative)
+        growth_factor = torch.where(self.fc.weight > 0, growth_factor_positive, growth_factor_negative).to(self.device)
         
         return growth_factor
     
@@ -406,7 +406,7 @@ class HiddenLayer(NetworkLayer, ABC):
         average: float = torch.mean(self.exponential_average).item()
         
         # Compute simple weight decay
-        decay_weight: torch.Tensor = self.eps * (self.exponential_average / average - 1)
+        decay_weight: torch.Tensor = (self.eps * (self.exponential_average / average - 1)).to(self.device)
         decay_weight = decay_weight.unsqueeze(1)
         
         return decay_weight
@@ -417,7 +417,7 @@ class HiddenLayer(NetworkLayer, ABC):
         average: float = torch.mean(self.exponential_average).item()
         
         # Compute simple weight decay
-        decay_weight: torch.Tensor = self.eps * (self.exponential_average / average - 1)
+        decay_weight: torch.Tensor = (self.eps * (self.exponential_average / average - 1)).to(self.device)
         decay_weight = decay_weight.unsqueeze(1)
         decay_weight = self._sigmoid_function() * decay_weight
         
@@ -442,14 +442,14 @@ class HiddenLayer(NetworkLayer, ABC):
             None
         """
         y: torch.Tensor = output.clone().detach().squeeze().to(self.device)
-        exponential_bias = torch.exp(-1 * self.fc.bias)
+        exponential_bias = (torch.exp(-1 * self.fc.bias)).to(self.device)
 
         # Compute bias update scaled by output probabilities.
-        A: torch.Tensor = torch.mul(exponential_bias, y) - 1
+        A: torch.Tensor = (torch.mul(exponential_bias, y) - 1).to(self.device)
         A = self.fc.bias + self.lr * A
 
         # Normalize biases to maintain stability. (Divide by max bias value)
-        bias_maxes: torch.Tensor = torch.max(A, dim=0).values
+        bias_maxes: torch.Tensor = (torch.max(A, dim=0).values).to(self.device)
         self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
         
         
@@ -465,7 +465,7 @@ class HiddenLayer(NetworkLayer, ABC):
         output_copy: torch.Tensor = output.clone().detach().squeeze().to(self.device)
         
         avg_output: float = torch.mean(output_copy).item()
-        bias_update: torch.Tensor = self.eps * (output_copy - avg_output)
+        bias_update: torch.Tensor = (self.eps * (output_copy - avg_output)).to(self.device)
         self.fc.bias = nn.Parameter(torch.sub(self.fc.bias, bias_update), requires_grad=False)
     
     

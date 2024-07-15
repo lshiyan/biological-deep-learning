@@ -93,7 +93,7 @@ class NetworkLayer (nn.Module, ABC):
         @return
             id_tensor: 3D tensor with increasing size of identify matrices
         """
-        id_tensor: torch.Tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float)
+        id_tensor: torch.Tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float).to(self.device)
         for i in range(0, self.output_dimension):
             identity: torch.Tensor = torch.eye(i+1)
             padded_identity: torch.Tensor = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, self.output_dimension - i-1))
@@ -169,13 +169,13 @@ class NetworkLayer (nn.Module, ABC):
         fig, axes = plt.subplots(row, col, figsize=(fig_width, fig_height)) # type: ignore
         for ele in range(row * col): 
             if ele < self.output_dimension:
-                random_feature_selector: torch.Tensor = weight[ele]
                 # Move tensor to CPU, convert to NumPy array for visualization
+                random_feature_selector: torch.Tensor = weight[ele].cpu()
                 feature_row, feature_col = self.row_col(random_feature_selector.size(0))
                 original_size: int = random_feature_selector.size(0)
                 plot_size: int = feature_row * feature_col
                 padding_size: int = plot_size - original_size
-                padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size))
+                padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size)).cpu()
                 heatmap: torch.Tensor = padded_weights.view(feature_row, feature_col).cpu().numpy()
                 ax = axes[ele // col, ele % col]
                 im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
@@ -183,6 +183,7 @@ class NetworkLayer (nn.Module, ABC):
                 ax.set_title(f'Weight {ele}')
                 
                 # Move the tensor back to the GPU if needed
+                padded_weights = padded_weights.to(self.device)
                 random_feature_selector = random_feature_selector.to(self.device)
             else:
                 ax = axes[ele // col, ele % col]
@@ -203,8 +204,8 @@ class NetworkLayer (nn.Module, ABC):
         @return
             number of active weights
         """
-        weights: torch.Tensor = self.fc.weight
-        active: torch.Tensor = torch.where(weights > beta, weights, 0.0)
+        weights: torch.Tensor = self.fc.weight.to(self.device)
+        active: torch.Tensor = torch.where(weights > beta, weights, 0.0).to(self.device)
         return active.nonzero().size(0)
 
 

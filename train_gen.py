@@ -49,7 +49,7 @@ for l in lambda_test:
     
                     for num in range(0, 1):
                         # Base model training
-                        model = HebbianNetwork('Hebbian Network', ARGS)
+                        model = HebbianNetwork('Hebbian Network', ARGS).to(ARGS.device)
                         
                         experiment = GeneralizationExperiment(model, ARGS, f'{ARGS.experiment_type.lower()}-{l}-{lr}-{eps}-{dim}-{k}-{num}')
                         accuracies = list(experiment.run())
