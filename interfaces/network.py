@@ -54,7 +54,7 @@ class Network(nn.Module, ABC):
             None
         """
         for name, module in self.named_children():
-            module.visualize_weights(path, num, use, name.lower())
+            module.visualize_weights(path, num, use, name.lower().capitalize())
 
 
     def active_weights(self, beta: float) -> dict[str, int]:

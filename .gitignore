@@ -9,7 +9,7 @@ __pycache__/
 .vscode/
 
 #Tests
-tests/
+# tests/
 
 #Results
 results/
@@ -19,3 +19,6 @@ results/
 
 #Virtual env
 neuroai_venv/
+
+# tmp folder
+tmp/
