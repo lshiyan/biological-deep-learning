@@ -25,8 +25,8 @@ arguments = [
             "--ext_test_size=14800",
             "--ext_classes=26",
             # CSV files generated - MNIST
-            "--mnist_train_fname=data/mnist/mnist_train.csv",
-            "--mnist_test_fname=data/mnist/mnist_test.csv",
+            "--train_fname=data/mnist/mnist_train.csv",
+            "--test_fname=data/mnist/mnist_test.csv",
             # CSV files generated - E-MNIST
             "--ext_train_fname=data/ext_mnist/ext_mnist_train.csv",
             "--ext_test_fname=data/ext_mnist/ext_mnist_test.csv",

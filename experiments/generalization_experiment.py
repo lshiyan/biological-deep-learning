@@ -124,7 +124,7 @@ class GeneralizationExperiment(Experiment):
 
         # Select random letter classes
         letter_labels = list(range(0, 26))
-        original_class = random.sample(letter_labels, 10)
+        original_class = sorted(random.sample(letter_labels, 10))
         updated_class = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         filter_classes = dict(zip(original_class, updated_class))
         
@@ -603,12 +603,12 @@ class GeneralizationExperiment(Experiment):
     
     def _final_test(self) -> Tuple[float, ...]:
         rec_cos_test_mnist, rec_norm_test_mnist = self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
-        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
+        rec_cos_test_emnist, rec_norm_test_emnist = self._testing(self.ext_test_data_loader, Purposes.TEST_ACCURACY, self.ext_data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
         rec_cos_train_mnist, rec_norm_train_mnist = self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
-        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
+        rec_cos_train_emnist, rec_norm_train_emnist = self._testing(self.ext_train_data_loader, Purposes.TRAIN_ACCURACY, self.ext_data_name, ExperimentPhases.RECONSTRUCTION) # type: ignore
         
-        freeze_test_acc_emnist: float = self._testing(self.e_test_data_loader, Purposes.TEST_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
-        freeze_train_acc_emnist: float = self._testing(self.e_train_data_loader, Purposes.TRAIN_ACCURACY, self.e_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
+        freeze_test_acc_emnist: float = self._testing(self.ext_test_data_loader, Purposes.TEST_ACCURACY, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
+        freeze_train_acc_emnist: float = self._testing(self.ext_train_data_loader, Purposes.TRAIN_ACCURACY, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS) # type: ignore
         
         self.EXP_LOG.info("Completed final testing methods.")
         

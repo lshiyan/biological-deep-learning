@@ -16,11 +16,11 @@ results_log = configure_logger('Base Result Log', './results/results.log')
 ARGS = parse_arguments()
 
 # Experiments setup
-lambda_test = lambda_list()
-lr_test = lr_list()
-eps_test = eps_list()
-dim_test = dim_list()
-sigmoid_k_test = sigmoid_k_list()
+lambda_test = lambda_list(15)
+lr_test = lr_list(0.005)
+eps_test = eps_list(0.0001)
+dim_test = dim_list(64)
+sigmoid_k_test = sigmoid_k_list(1)
 
 
 for l in lambda_test:
