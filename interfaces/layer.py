@@ -215,7 +215,7 @@ class NetworkLayer (nn.Module, ABC):
         row: int = 0
         col: int = 0
         
-        root: int = int(math.sqrt(num))
+        root: int = int(math.ceil(math.sqrt(num)))
         min_product: int = num ** 2
         
         for i in range(2, root + 1):

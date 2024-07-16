@@ -65,7 +65,7 @@ arguments = [
             '--init=uniform',
             # Experiment parameters
             '--batch_size=1',
-            '--epochs=1', 
+            '--epochs=10', 
             # '--device=cpu',
             '--device=cuda:8',
             '--local_machine=True',

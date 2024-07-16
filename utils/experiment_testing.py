@@ -35,7 +35,7 @@ def dim_list(num: Optional[float] = None) -> List[float]:
     else:
         test_list.append(10)
         test_list.append(784)
-        for n in range(1, 11):
+        for n in range(2, 11):
             test_list.append(2 ** n)
     test_list.sort()
     return test_list
