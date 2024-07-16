@@ -13,7 +13,7 @@ pip install pandas
 pip install matplotlib
 pip install numpy
 
-/mnt/teaching/COMP551/pzheng3
+/mnt/teaching/COMP551/pzheng3/biological-deep-learning
 
 venv neuroai_venv
 tests
