@@ -30,6 +30,10 @@ import matplotlib.pyplot as plt
 
 class ForgetExperiment(Experiment):
 
+#####################################################
+# STAGE 1: experiment set up
+#####################################################
+
     def __init__(self, model: Network, args: argparse.Namespace, name: str) -> None:
         """
         CONTRUCTOR METHOD
@@ -75,6 +79,7 @@ class ForgetExperiment(Experiment):
         self.testing_test_dataloader_list: list[DataLoader] = []
         self.TOTAL_SAMPLES: int = 1
         self.SUB_EXP_SAMPLES: int  = 1
+        self.curr_folder_path: str = self.RESULT_PATH
 
     
     def _setup_dataloaders(self, input_dataset: TensorDataset, sub_experiment_scope_list: list[ list[int] ] ) -> list[DataLoader]:
@@ -112,16 +117,65 @@ class ForgetExperiment(Experiment):
             os.makedirs(os.path.join(subdirectory_path, 'output'), exist_ok=True)
             
 
-    
+#####################################################
+# STAGE 2: training and evaluation
+#####################################################
+
+    def _experiment(self) -> None:
+
+        for step in range(len(self.sub_experiment_scope_list)):
+
+            curr_train_dataloader: DataLoader = self.sub_experiemnts_train_dataloader_list[step]
+            curr_test_dataloader: DataLoader = self.sub_experiemnts_test_dataloader_list[step]
+            self.curr_folder_path: str = self.RESULT_PATH + f"{self.data_name}_{'_'.join(map(str, self.sub_experiment_scope_list[step]))}"
+
+            for epoch in range(self.epochs):
+
+                self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
+
+            self.SUB_EXP_SAMPLES = 1
+            
 
 
 
+    def _training(self, 
+                  train_data_loader: DataLoader, 
+                  epoch: int, 
+                  dname: str, 
+                  phase: ExperimentPhases, 
+                  visualize: bool = True
+                  ) -> None:
+        
+        if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, "learning")
+
+        # Epoch and Batch set up
+        train_batches_per_epoch: int = len(train_data_loader)
+        self.EXP_LOG.info(f"This training batch is epoch #{epoch} with {train_batches_per_epoch} batches of size {self.batch_size} in this epoch.")
+
+        need_test: bool = True
+
+        for inputs, labels in train_data_loader: 
+
+            if need_test:
+
+                self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, self.data_name, ExperimentPhases.FORGET)
+
+                for curr_test_dataloader in self.testing_test_dataloader_list:
+
+                    self._testing(curr_test_dataloader, Purposes.TEST_ACCURACY, epoch, self.data_name, ExperimentPhases.FORGET)
+                
+                need_test = False
 
 
-
-
-
-
-
-
+            # Move input and targets to device
+            inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
+            
+            # Forward pass
+            self.model.train()
+            self.model(inputs, clamped_output=labels)
+            
+            # Increment samples seen
+            self.TOTAL_SAMPLES += 1
+            self.SUB_EXP_SAMPLES += 1
+        
 
