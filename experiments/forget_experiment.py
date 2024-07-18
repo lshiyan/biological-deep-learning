@@ -134,7 +134,7 @@ class ForgetExperiment(Experiment):
                 self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
 
             self.SUB_EXP_SAMPLES = 1
-            
+
 
 
 
@@ -145,6 +145,8 @@ class ForgetExperiment(Experiment):
                   phase: ExperimentPhases, 
                   visualize: bool = True
                   ) -> None:
+        
+        sub_experiment_name = self.curr_folder_path.split('/')[-1]  # Assumes '/' as the path separator.
         
         if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, "learning")
 
@@ -178,4 +180,134 @@ class ForgetExperiment(Experiment):
             self.TOTAL_SAMPLES += 1
             self.SUB_EXP_SAMPLES += 1
         
+
+
+
+    def _testing(self, 
+                 test_data_loader: DataLoader, 
+                 purpose: Purposes, 
+                 epoch: int, 
+                 dname: str, 
+                 phase: ExperimentPhases,
+                 visualize: bool = True,
+                 ) -> Union[float, Tuple[float, ...]]:
+        
+        sub_experiment_name = self.curr_folder_path.split('/')[-1]  # Assumes '/' as the path separator.
+        
+        final_accuracy: float = 0
+
+        with torch.no_grad():
+            
+            correct_test_count: int = 0
+
+            total_test_count: int = len(test_data_loader)
+
+            for inputs, labels in test_data_loader:
+
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                
+                # Inference
+                predictions: torch.Tensor = self.model(inputs)
+                
+                # Evaluates performance of model on testing dataset
+                correct_test_count += (predictions.argmax(-1) == labels).type(torch.float).sum()
+
+            final_accuracy = correct_test_count/total_test_count
+                
+        test_end = time.time()
+
+        if purpose == Purposes.TEST_ACCURACY: 
+            self.TEST_LOG.info(f'Current Experiment: {sub_experiment_name} || Current Subexperiment Samples Seen: {self.SUB_EXP_SAMPLES} || Total Samples Seen: {self.TOTAL_SAMPLES} || Test Accuracy: {final_accuracy}')
+        
+        if purpose == Purposes.TRAIN_ACCURACY: 
+            self.TRAIN_LOG.info(f'Current Experiment: {sub_experiment_name} || Current Subexperiment Samples Seen: {self.SUB_EXP_SAMPLES} || Total Samples Seen: {self.TOTAL_SAMPLES} || Train Accuracy: {final_accuracy}')
+        
+        if visualize: 
+            self.model.visualize_weights(self.curr_folder_path, self.SAMPLES, purpose.name.lower())
+
+        return final_accuracy
+
+
+#####################################################
+# STAGE 3: final testing and report
+#####################################################
+
+    def _final_test(self):
+
+        list_of_train_accuracy: list = []
+        list_of_test_accuracy: list = []
+
+        for step in range(len(self.sub_experiment_scope_list)):
+
+            curr_train_dataloader: DataLoader = self.sub_experiemnts_train_dataloader_list[step]
+            curr_test_dataloader: DataLoader = self.sub_experiemnts_test_dataloader_list[step]
+            self.curr_folder_path: str = self.RESULT_PATH + f"{self.data_name}_{'_'.join(map(str, self.sub_experiment_scope_list[step]))}"
+
+
+            temp_test_acc: Union[float, Tuple[float, ...]] = self._testing(curr_test_dataloader, 
+                                                                           Purposes.TEST_ACCURACY, 
+                                                                           0,
+                                                                           self.data_name, 
+                                                                           ExperimentPhases.FORGET,
+                                                                           visualize=False)
+            temp_train_acc: Union[float, Tuple[float, ...]] = self._testing(curr_train_dataloader, 
+                                                                            Purposes.TEST_ACCURACY, 
+                                                                            0,
+                                                                            self.data_name, 
+                                                                            ExperimentPhases.FORGET, 
+                                                                            visualize=False)
+
+            list_of_test_accuracy.append(temp_test_acc)
+            list_of_train_accuracy.append(temp_train_acc)
+
+
+            self.SUB_EXP_SAMPLES = 1
+
+        full_list_of_accuracy = list_of_test_accuracy + list_of_train_accuracy
+        return full_list_of_accuracy
+"""
+Concatenating the lists
+    So, the entries will be the order as follows:
+    TEST ACCURACY SECTION
+        digits 0 and 1 test accuracy
+        digits 2 and 3 test accuracy
+        digits 4 and 5 test accuracy
+        digits 6 and 7 test accuracy
+        digits 8 and 9 test accuracy
+    TRAIN ACCURACY SECTION
+        digits 0 and 1 train accuracy
+        digits 2 and 3 train accuracy
+        digits 4 and 5 train accuracy
+        digits 6 and 7 train accuracy
+        digits 8 and 9 train accuracy
+"""
+
+        
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
