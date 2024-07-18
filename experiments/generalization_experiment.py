@@ -193,8 +193,6 @@ class GeneralizationExperiment(Experiment):
         print(f"Experiment '{self.EXP_NAME}/Hidden' result folder created successfully.")
 
 
-    
-    
     ################################################################################################
     # Phase 1 Training and Testing: Reconstruction (Hebbian Layer)
     ################################################################################################    
