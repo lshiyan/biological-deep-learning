@@ -46,7 +46,7 @@ class ForgetExperiment(Experiment):
             None
         """
         super().__init__(model, args, name)
-        
+    
         dataset_mapping = {member.name.upper(): member for member in DataSets}
         self.dataset = dataset_mapping[self.data_name.upper()]
         
@@ -83,7 +83,7 @@ class ForgetExperiment(Experiment):
         self.SUB_EXP_SAMPLES: int  = 1
         self.curr_folder_path: str = self.RESULT_PATH
 
-    
+
     def _setup_dataloaders(self, input_dataset: TensorDataset, sub_experiment_scope_list: list[ list[int] ] ) -> list[DataLoader]:
 
         result: list[ DataLoader ] = []
@@ -104,8 +104,11 @@ class ForgetExperiment(Experiment):
 
 #TODO set up the folder logic for both forget experiment and other types of generic experiemnts
     def _setup_result_folder(self, result_path: str) -> None:
+
+        sub_experiment_scope_list = [[0,1],[2,3],[4,5],[6,7],[8,9]]
+        os.makedirs(f"{self.RESULT_PATH}", exist_ok=True)
         
-        for label_value_list in self.sub_experiment_scope_list:
+        for label_value_list in sub_experiment_scope_list:
             
             # Create the subdirectory name
             subdirectory_name = f"{self.data_name}_{'_'.join(map(str, label_value_list))}"
@@ -115,8 +118,8 @@ class ForgetExperiment(Experiment):
             os.makedirs(subdirectory_path, exist_ok=True)
             
             # Create the 'hidden' and 'output' subdirectories
-            os.makedirs(os.path.join(subdirectory_path, 'hidden'), exist_ok=True)
-            os.makedirs(os.path.join(subdirectory_path, 'output'), exist_ok=True)
+            os.makedirs(os.path.join(subdirectory_path, 'Hidden'), exist_ok=True)
+            os.makedirs(os.path.join(subdirectory_path, 'Output'), exist_ok=True)
             
 
 #####################################################
@@ -129,7 +132,7 @@ class ForgetExperiment(Experiment):
 
             curr_train_dataloader: DataLoader = self.sub_experiemnts_train_dataloader_list[step]
             curr_test_dataloader: DataLoader = self.sub_experiemnts_test_dataloader_list[step]
-            self.curr_folder_path: str = self.RESULT_PATH + f"{self.data_name}_{'_'.join(map(str, self.sub_experiment_scope_list[step]))}"
+            self.curr_folder_path: str = os.path.join(self.RESULT_PATH, f"{self.data_name}_{'_'.join(map(str, self.sub_experiment_scope_list[step]))}")
 
             self.testing_test_dataloader_list.append(curr_test_dataloader)
 

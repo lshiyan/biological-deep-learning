@@ -14,6 +14,7 @@ results_log = configure_logger('Forget Result Log', './results/results.log')
 
 # Get arguments
 ARGS = parse_arguments()
+print(ARGS.sub_experiment_scope_list)
 
 # Experiments setup
 lambda_test = [16]

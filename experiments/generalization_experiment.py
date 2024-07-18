@@ -185,6 +185,7 @@ class GeneralizationExperiment(Experiment):
     # Phase 0 Folder setup
     ################################################################################################    
     def _setup_result_folder(self, result_path: str) -> None:
+        os.makedirs(f"{self.RESULT_PATH}", exist_ok=True)
         os.makedirs(f"{self.RESULT_PATH}/Output", exist_ok=True)
         os.makedirs(f"{self.RESULT_PATH}/Hidden", exist_ok=True)
         print(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
