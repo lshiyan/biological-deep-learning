@@ -148,7 +148,12 @@ class ForgetExperiment(Experiment):
         
         sub_experiment_name = self.curr_folder_path.split('/')[-1]  # Assumes '/' as the path separator.
         
-        if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, "learning")
+        if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}")
+
+        train_epoch_start: float = self.TRAIN_TIME
+        
+        train_start: float = time.time()
+        self.EXP_LOG.info(f"Started '_training' function with {dname.upper()}.")
 
         # Epoch and Batch set up
         train_batches_per_epoch: int = len(train_data_loader)
@@ -159,6 +164,9 @@ class ForgetExperiment(Experiment):
         for inputs, labels in train_data_loader: 
 
             if need_test:
+                # Pause train timer and add to total time
+                train_pause_time: float = time.time()
+                self.TRAIN_TIME += train_pause_time - train_start
 
                 self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, self.data_name, ExperimentPhases.FORGET)
 
@@ -168,6 +176,8 @@ class ForgetExperiment(Experiment):
                 
                 need_test = False
 
+                # Restart train timer
+                train_start = time.time()
 
             # Move input and targets to device
             inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
@@ -180,8 +190,13 @@ class ForgetExperiment(Experiment):
             self.TOTAL_SAMPLES += 1
             self.SUB_EXP_SAMPLES += 1
         
-
-
+        train_end: float = time.time()
+        self.TRAIN_TIME += train_end - train_start
+        train_epoch_end: float = self.TRAIN_TIME
+        training_time = train_epoch_end - train_epoch_start
+        
+        self.EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(training_time)}.")
+        self.EXP_LOG.info("Completed '_training' function for forget experiment")
 
     def _testing(self, 
                  test_data_loader: DataLoader, 
@@ -259,7 +274,6 @@ class ForgetExperiment(Experiment):
 
             list_of_test_accuracy.append(temp_test_acc)
             list_of_train_accuracy.append(temp_train_acc)
-
 
             self.SUB_EXP_SAMPLES = 1
 
