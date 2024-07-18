@@ -83,18 +83,27 @@ class Experiment(ABC):
         # Result outputs
         self.EXP_NAME: str = name
         self.RESULT_PATH: str = f"results/experiment-{self.EXP_NAME}"
-
-
-        if os.path.exists(self.RESULT_PATH):
+        
+        if not os.path.exists(self.RESULT_PATH):
+            os.makedirs(self.RESULT_PATH, exist_ok=True)
+            os.makedirs(f"{self.RESULT_PATH}/Output", exist_ok=True)
+            os.makedirs(f"{self.RESULT_PATH}/Hidden", exist_ok=True)
+            print(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
+            print(f"Experiment '{self.EXP_NAME}/Output' result folder created successfully.")
+            print(f"Experiment '{self.EXP_NAME}/Hidden' result folder created successfully.")
+        else:
             try:
                 shutil.rmtree(self.RESULT_PATH)
                 print(f"Removed {self.RESULT_PATH}.")
+                os.makedirs(self.RESULT_PATH, exist_ok=True)
+                os.makedirs(f"{self.RESULT_PATH}/Output", exist_ok=True)
+                os.makedirs(f"{self.RESULT_PATH}/Hidden", exist_ok=True)
+                print(f"Experiment {self.EXP_NAME} result folder re-created successfully.")
+                print(f"Experiment '{self.EXP_NAME}/Output' result folder re-created successfully.")
+                print(f"Experiment '{self.EXP_NAME}/Hidden' result folder re-created successfully.")
             except OSError as e:
                 print(f"Error: {e.strerror}")
-
-        # General Folder setup
-        os.makedirs(f"{self.RESULT_PATH}", exist_ok=True)
-
+            
         # Loggers for experiment
         self.loggers: List[logging.Logger] = []
         self.PRINT_LOG: logging.Logger = configure_logger("Print Log", f"{self.RESULT_PATH}/prints.log") # Replace print statements (for debugging purposes)
@@ -116,10 +125,6 @@ class Experiment(ABC):
         self.EXP_LOG.info("Completed log setups.")
         self.EXP_LOG.info("Completed arguments parsing.")
         self.EXP_LOG.info(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
-
-    def _setup_result_folder(self, result_path: str) -> None:
-        raise NotImplementedError("This method was not implemented.")
-
 
     def _training(self, 
                   train_data_loader: DataLoader, 

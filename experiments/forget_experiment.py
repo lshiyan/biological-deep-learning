@@ -4,6 +4,8 @@ from argparse import Namespace
 import ast
 import time
 from typing import Tuple, Type, Union
+import shutil
+
 
 # Pytorch imports
 import torch
@@ -104,6 +106,13 @@ class ForgetExperiment(Experiment):
 
 
     def _setup_result_folder(self, result_path: str) -> None:
+        
+        
+        try:
+            shutil.rmtree(f"{self.RESULT_PATH}/Output")
+            shutil.rmtree(f"{self.RESULT_PATH}/Hidden")
+        except OSError as e:
+            print(f"Error: {e.strerror}")
 
         for label_value_list in self.sub_experiment_scope_list:
             
