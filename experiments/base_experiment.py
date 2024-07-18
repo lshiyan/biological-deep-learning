@@ -1,4 +1,5 @@
 # Built-in imports
+import os
 import time
 from typing import Tuple, Type, Union
 
@@ -111,6 +112,18 @@ class BaseExperiment(Experiment):
         self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         
+    ################################################################################################
+    # Phase 0 Folder setup
+    ################################################################################################    
+    def _setup_result_folder(self, result_path: str) -> None:
+        os.makedirs(f"{self.RESULT_PATH}/Output", exist_ok=True)
+        os.makedirs(f"{self.RESULT_PATH}/Hidden", exist_ok=True)
+        print(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
+        print(f"Experiment '{self.EXP_NAME}/Output' result folder created successfully.")
+        print(f"Experiment '{self.EXP_NAME}/Hidden' result folder created successfully.")
+
+
+
         
     
     ################################################################################################

@@ -1,4 +1,5 @@
 # Built-in imports
+import os
 from ast import Module
 import time
 from typing import Tuple, Type, Union
@@ -180,6 +181,17 @@ class GeneralizationExperiment(Experiment):
         self.ext_test_data_loader = input_class.filter_data_loader(self.ext_test_data_loader, filter_classes)
         self.EXP_LOG.info("Completed setup for ext-testing dataset and dataloader.")
     
+    ################################################################################################
+    # Phase 0 Folder setup
+    ################################################################################################    
+    def _setup_result_folder(self, result_path: str) -> None:
+        os.makedirs(f"{self.RESULT_PATH}/Output", exist_ok=True)
+        os.makedirs(f"{self.RESULT_PATH}/Hidden", exist_ok=True)
+        print(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
+        print(f"Experiment '{self.EXP_NAME}/Output' result folder created successfully.")
+        print(f"Experiment '{self.EXP_NAME}/Hidden' result folder created successfully.")
+
+
     
     
     ################################################################################################
