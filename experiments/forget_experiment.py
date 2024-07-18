@@ -1,6 +1,7 @@
 # Built-in imports
 import os
 from argparse import Namespace
+import ast
 import time
 from typing import Tuple, Type, Union
 
@@ -45,7 +46,6 @@ class ForgetExperiment(Experiment):
             None
         """
         super().__init__(model, args, name)
-        self.SAMPLES: int = 0
         
         dataset_mapping = {member.name.upper(): member for member in DataSets}
         self.dataset = dataset_mapping[self.data_name.upper()]
@@ -69,7 +69,9 @@ class ForgetExperiment(Experiment):
         self.test_data_set: TensorDataset = self.input_class.setup_data(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset)
 
         # Subexperiment scope list set up
-        self.sub_experiment_scope_list = args.sub_experiment_scope_list
+        # Convert the string argument to a list of lists
+        print(args.sub_experiment_scope_list)
+        self.sub_experiment_scope_list = ast.literal_eval(args.sub_experiment_scope_list)
 
         # Dataloader setup
         self.sub_experiemnts_train_dataloader_list: list[DataLoader] = self._setup_dataloaders(self.train_data_set, self.sub_experiment_scope_list)
@@ -254,10 +256,10 @@ class ForgetExperiment(Experiment):
         
         self.EXP_LOG.info(f"Completed testing with {correct_test_count} out of {total_test_count}.")
         self.EXP_LOG.info("Completed '_testing' function.")
-        self.EXP_LOG.info(f"Testing ({purpose.value.lower()} acc) of sample #{self.SAMPLES} took {time_to_str(testing_time)}.")
+        self.EXP_LOG.info(f"Testing ({purpose.value.lower()} acc) of sample #{self.SUB_EXP_SAMPLES} in current subexperiment took {time_to_str(testing_time)}.")
 
         if visualize: 
-            self.model.visualize_weights(self.curr_folder_path, self.SAMPLES, purpose.name.lower())
+            self.model.visualize_weights(self.curr_folder_path, self.SUB_EXP_SAMPLES, purpose.name.lower())
 
         return final_accuracy
 

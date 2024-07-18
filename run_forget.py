@@ -7,6 +7,8 @@ script_name = 'train_forget.py'
 arguments = [
             # Basic configurations  
             "--data_name=MNIST",
+            # Dataset parameters
+            "--sub_experiment_scope_list=[[0,1],[2,3],[4,5],[6,7],[8,9]]",
             # Data Factory - MNIST
             "--train_data=data/mnist/train-images.idx3-ubyte", 
             "--train_label=data/mnist/train-labels.idx1-ubyte", 
@@ -69,8 +71,7 @@ arguments = [
             '--device=cpu',
             # '--device=cuda:8',
             '--local_machine=True',
-            '--experiment_type=base'
-            '--sub_experiment_scope_list=[[0,1], [2,3], [4,5], [6,7], [8,9]]'
+            '--experiment_type=FORGET'
             ]
 
 # Construct the command

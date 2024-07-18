@@ -16,7 +16,7 @@ results_log = configure_logger('Forget Result Log', './results/results.log')
 ARGS = parse_arguments()
 
 # Experiments setup
-lambda_test = [15]
+lambda_test = [16]
 lr_test = [0.005]
 eps_test = [0.0001]
 dim_test = [64]
