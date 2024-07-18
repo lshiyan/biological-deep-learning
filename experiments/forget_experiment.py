@@ -79,8 +79,8 @@ class ForgetExperiment(Experiment):
 
         # Other attributes set up 
         self.testing_test_dataloader_list: list[DataLoader] = []
-        self.TOTAL_SAMPLES: int = 1
-        self.SUB_EXP_SAMPLES: int  = 1
+        self.TOTAL_SAMPLES: int = 0
+        self.SUB_EXP_SAMPLES: int  = 0
         self.curr_folder_path: str = self.RESULT_PATH
 
         self._setup_result_folder(self.RESULT_PATH)
@@ -137,7 +137,7 @@ class ForgetExperiment(Experiment):
 
                 self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
 
-            self.SUB_EXP_SAMPLES = 1
+            self.SUB_EXP_SAMPLES = 0
 
 
 
@@ -295,8 +295,6 @@ class ForgetExperiment(Experiment):
 
             list_of_test_accuracy.append(temp_test_acc)
             list_of_train_accuracy.append(temp_train_acc)
-
-            self.SUB_EXP_SAMPLES = 1
 
         full_list_of_accuracy = list_of_test_accuracy + list_of_train_accuracy
         return full_list_of_accuracy
