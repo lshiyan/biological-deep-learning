@@ -111,6 +111,9 @@ class BaseExperiment(Experiment):
         self.test_data_set: TensorDataset = input_class.setup_data(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset)
         self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
+
+        # Set up folder
+        self._setup_result_folder(self.RESULT_PATH)
         
     ################################################################################################
     # Phase 0 Folder setup

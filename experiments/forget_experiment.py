@@ -83,6 +83,8 @@ class ForgetExperiment(Experiment):
         self.SUB_EXP_SAMPLES: int  = 1
         self.curr_folder_path: str = self.RESULT_PATH
 
+        self._setup_result_folder(self.RESULT_PATH)
+
 
     def _setup_dataloaders(self, input_dataset: TensorDataset, sub_experiment_scope_list: list[ list[int] ] ) -> list[DataLoader]:
 
@@ -101,14 +103,9 @@ class ForgetExperiment(Experiment):
         return result
 
 
-
-#TODO set up the folder logic for both forget experiment and other types of generic experiemnts
     def _setup_result_folder(self, result_path: str) -> None:
 
-        sub_experiment_scope_list = [[0,1],[2,3],[4,5],[6,7],[8,9]]
-        os.makedirs(f"{self.RESULT_PATH}", exist_ok=True)
-        
-        for label_value_list in sub_experiment_scope_list:
+        for label_value_list in self.sub_experiment_scope_list:
             
             # Create the subdirectory name
             subdirectory_name = f"{self.data_name}_{'_'.join(map(str, label_value_list))}"

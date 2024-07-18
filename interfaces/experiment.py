@@ -92,9 +92,8 @@ class Experiment(ABC):
             except OSError as e:
                 print(f"Error: {e.strerror}")
 
-
-        # Folder setup
-        self._setup_result_folder(self.RESULT_PATH)
+        # General Folder setup
+        os.makedirs(f"{self.RESULT_PATH}", exist_ok=True)
 
         # Loggers for experiment
         self.loggers: List[logging.Logger] = []
