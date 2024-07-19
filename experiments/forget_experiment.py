@@ -48,7 +48,8 @@ class ForgetExperiment(Experiment):
             None
         """
         super().__init__(model, args, name)
-    
+
+
         dataset_mapping = {member.name.upper(): member for member in DataSets}
         self.dataset = dataset_mapping[self.data_name.upper()]
         
@@ -87,6 +88,13 @@ class ForgetExperiment(Experiment):
 
         self._setup_result_folder(self.RESULT_PATH)
 
+        self.test_dataloader_dictionary: dict[DataLoader, str] = {}      # Key is the test dataloader, value is the the sub experiment name
+        self._setup_test_dataloader_dictionary()
+
+        self.sub_experiment_train_timers: dict[str, float] = {}
+        self.sub_experiment_test_timers: dict[str, float] = {}
+        self._setup_timer_dictionaries()
+
 
     def _setup_dataloaders(self, input_dataset: TensorDataset, sub_experiment_scope_list: list[ list[int] ] ) -> list[DataLoader]:
 
@@ -105,8 +113,8 @@ class ForgetExperiment(Experiment):
         return result
 
 
+
     def _setup_result_folder(self, result_path: str) -> None:
-        
         
         try:
             shutil.rmtree(f"{self.RESULT_PATH}/Output")
@@ -128,6 +136,29 @@ class ForgetExperiment(Experiment):
             os.makedirs(os.path.join(subdirectory_path, 'Output'), exist_ok=True)
             
 
+
+    def _setup_test_dataloader_dictionary(self) -> None:
+
+        for label_value_list, curr_test_dataloader in zip(self.sub_experiment_scope_list, self.sub_experiemnts_test_dataloader_list):
+
+            subdirectory_name = f"{self.data_name}_{'_'.join(map(str, label_value_list))}"
+            
+            self.test_dataloader_dictionary[curr_test_dataloader] = subdirectory_name
+
+
+
+    def _setup_timer_dictionaries(self) -> None:
+
+        for label_value_list in self.sub_experiment_scope_list:
+
+            subdirectory_name = f"{self.data_name}_{'_'.join(map(str, label_value_list))}"
+            
+            self.sub_experiment_train_timers[subdirectory_name] = 0
+            self.sub_experiment_test_timers[subdirectory_name] = 0
+
+        print(self.sub_experiment_train_timers)
+        print(self.sub_experiment_test_timers)
+
 #####################################################
 # STAGE 2: training and evaluation
 #####################################################
@@ -135,6 +166,8 @@ class ForgetExperiment(Experiment):
     def _experiment(self) -> None:
 
         for step in range(len(self.sub_experiment_scope_list)):
+
+            self.SUB_EXP_SAMPLES = 0
 
             curr_train_dataloader: DataLoader = self.sub_experiemnts_train_dataloader_list[step]
             curr_test_dataloader: DataLoader = self.sub_experiemnts_test_dataloader_list[step]
@@ -146,8 +179,7 @@ class ForgetExperiment(Experiment):
 
                 self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
 
-            self.SUB_EXP_SAMPLES = 0
-
+            #self.SUB_EXP_SAMPLES = 0
 
 
 
@@ -163,8 +195,7 @@ class ForgetExperiment(Experiment):
         
         if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}")
 
-        train_epoch_start: float = self.TRAIN_TIME
-        
+        # Start timer
         train_start: float = time.time()
         self.EXP_LOG.info(f"Started '_training' function with {dname.upper()}.")
 
@@ -179,14 +210,14 @@ class ForgetExperiment(Experiment):
             if need_test:
                 # Pause train timer and add to total time
                 train_pause_time: float = time.time()
-                self.TRAIN_TIME += train_pause_time - train_start
+                self.sub_experiment_train_timers[sub_experiment_name] += (train_pause_time - train_start)
 
                 self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, self.data_name, ExperimentPhases.FORGET)
 
                 for curr_test_dataloader in self.testing_test_dataloader_list:
 
                     self._testing(curr_test_dataloader, Purposes.TEST_ACCURACY, epoch, self.data_name, ExperimentPhases.FORGET)
-                
+
                 need_test = False
 
                 # Restart train timer
@@ -194,22 +225,23 @@ class ForgetExperiment(Experiment):
 
             # Move input and targets to device
             inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
-            
+
             # Forward pass
             self.model.train()
             self.model(inputs, clamped_output=labels)
-            
+
             # Increment samples seen
             self.TOTAL_SAMPLES += 1
             self.SUB_EXP_SAMPLES += 1
         
         train_end: float = time.time()
-        self.TRAIN_TIME += train_end - train_start
-        train_epoch_end: float = self.TRAIN_TIME
-        training_time = train_epoch_end - train_epoch_start
-        
-        self.EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(training_time)}.")
+        total_added_train_time = train_end - train_start
+        self.sub_experiment_train_timers[sub_experiment_name] += total_added_train_time
+
+        self.EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(total_added_train_time)}.")
         self.EXP_LOG.info("Completed '_training' function for forget experiment")
+
+
 
     def _testing(self, 
                  test_data_loader: DataLoader, 
@@ -256,12 +288,19 @@ class ForgetExperiment(Experiment):
                 
         test_end = time.time()
         testing_time = test_end - test_start
+        
+        self.DEBUG_LOG.info(f"Test start for this: {test_start}")
+        self.DEBUG_LOG.info(f"Test end for this: {test_end}")
+        self.DEBUG_LOG.info(f"Test duration: {testing_time}")
 
         if purpose == Purposes.TEST_ACCURACY: 
-            self.TEST_LOG.info(f'Current Experiment: {sub_experiment_name} || Current Subexperiment Samples Seen: {self.SUB_EXP_SAMPLES} || Total Samples Seen: {self.TOTAL_SAMPLES} || Test Accuracy: {final_accuracy}')
+            testing_subexperiment_name = self.test_dataloader_dictionary[test_data_loader]
+            self.sub_experiment_test_timers[testing_subexperiment_name] += testing_time
+            self.TEST_LOG.info(f'Current Experiment: {sub_experiment_name} || Current Subexperiment Samples Seen: {self.SUB_EXP_SAMPLES} || Total Samples Seen: {self.TOTAL_SAMPLES} || Test Accuracy on {testing_subexperiment_name}: {final_accuracy}')
         
         if purpose == Purposes.TRAIN_ACCURACY: 
-            self.TRAIN_LOG.info(f'Current Experiment: {sub_experiment_name} || Current Subexperiment Samples Seen: {self.SUB_EXP_SAMPLES} || Total Samples Seen: {self.TOTAL_SAMPLES} || Train Accuracy: {final_accuracy}')
+            self.sub_experiment_train_timers[sub_experiment_name] += testing_time
+            self.TRAIN_LOG.info(f'Current Experiment: {sub_experiment_name} || Current Subexperiment Samples Seen: {self.SUB_EXP_SAMPLES} || Total Samples Seen: {self.TOTAL_SAMPLES} || Train Accuracy on {sub_experiment_name}: {final_accuracy}')
         
         self.EXP_LOG.info(f"Completed testing with {correct_test_count} out of {total_test_count}.")
         self.EXP_LOG.info("Completed '_testing' function.")
@@ -286,7 +325,7 @@ class ForgetExperiment(Experiment):
 
             curr_train_dataloader: DataLoader = self.sub_experiemnts_train_dataloader_list[step]
             curr_test_dataloader: DataLoader = self.sub_experiemnts_test_dataloader_list[step]
-            self.curr_folder_path: str = self.RESULT_PATH + f"{self.data_name}_{'_'.join(map(str, self.sub_experiment_scope_list[step]))}"
+            self.curr_folder_path: str = os.path.join(self.RESULT_PATH, f"{self.data_name}_{'_'.join(map(str, self.sub_experiment_scope_list[step]))}")
 
 
             temp_test_acc: Union[float, Tuple[float, ...]] = self._testing(curr_test_dataloader, 
@@ -296,7 +335,7 @@ class ForgetExperiment(Experiment):
                                                                            ExperimentPhases.FORGET,
                                                                            visualize=False)
             temp_train_acc: Union[float, Tuple[float, ...]] = self._testing(curr_train_dataloader, 
-                                                                            Purposes.TEST_ACCURACY, 
+                                                                            Purposes.TRAIN_ACCURACY, 
                                                                             0,
                                                                             self.data_name, 
                                                                             ExperimentPhases.FORGET, 
@@ -352,13 +391,20 @@ class ForgetExperiment(Experiment):
         
         self.EXP_LOG.info("Completed logging of experiment parameters.")
 
-#TODO need to fix this to be more accurate and represent the training and testing time of each individual sub experiment
+
     def _param_end_log(self):
+        total_train_time = sum(self.sub_experiment_train_timers.values())
+        total_test_time = sum(self.sub_experiment_test_timers.values())
+
         self.PARAM_LOG.info(f"End time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.END_TIME))}")
-        self.PARAM_LOG.info(f"Runtime of experiment: {time_to_str(self.DURATION if self.DURATION != None else 0)}")
-        self.PARAM_LOG.info(f"Total train time of experiment: {time_to_str(self.TRAIN_TIME)}")
-        self.PARAM_LOG.info(f"Total test time (test acc) of experiment: {time_to_str(self.TEST_ACC_TIME)}")
-        self.PARAM_LOG.info(f"Total test time (train acc) of experiment: {time_to_str(self.TRAIN_ACC_TIME)}")
+        self.PARAM_LOG.info(f"Runtime of experiment: {time_to_str(self.DURATION if self.DURATION is not None else 0)}")
+        self.PARAM_LOG.info(f"Total train time of experiment: {time_to_str(total_train_time)}")
+        self.PARAM_LOG.info(f"Total test time of experiment: {time_to_str(total_test_time)}")
+        for sub_experiment_name, curr_timer in self.sub_experiment_test_timers.items():
+            self.PARAM_LOG.info(f"Total test time (test acc) of {sub_experiment_name} experiment: {time_to_str(curr_timer)}")
+
+        for sub_experiment_name, curr_timer in self.sub_experiment_train_timers.items():
+            self.PARAM_LOG.info(f"Total train time of {sub_experiment_name} experiment: {time_to_str(curr_timer)}")
     
     
     def _final_test_log(self, results) -> None:

@@ -17,7 +17,7 @@ ARGS = parse_arguments()
 print(ARGS.sub_experiment_scope_list)
 
 # Experiments setup
-lambda_test = [16]
+lambda_test = [10]
 lr_test = [0.005]
 eps_test = [0.0001]
 dim_test = [64]
