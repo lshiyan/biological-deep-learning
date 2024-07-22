@@ -54,6 +54,7 @@ class ExperimentTypes(Enum):
     """
     BASE = 'BASE'
     GENERALIZATION = 'GENERALIZATION'
+    FORGET = 'FORGET'
     
     
 class Purposes(Enum):
@@ -75,6 +76,7 @@ class ExperimentPhases(Enum):
     BASE = 'BASE'
     RECONSTRUCTION = 'RECONSTRUCTION'
     FREEZING_WEIGHTS = 'FREEZING_WEIGHTS'
+    FORGET = 'FORGET'
 
 
 class ParamInit(Enum):

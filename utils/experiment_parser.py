@@ -17,6 +17,9 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     parser.add_argument('--data_name', type=str, default="MNIST")
     parser.add_argument('--ext_data_name', type=str, default="E_MNIST")
 
+    # Sub experiment label classes
+    parser.add_argument('--sub_experiment_scope_list', type=str, default='[[0,1],[2,3],[4,5],[6,7],[8,9]]')
+
     # Data Factory
     parser.add_argument('--train_data', type=str, default="data/mnist/train-images.idx3-ubyte")
     parser.add_argument('--train_label', type=str, default="data/mnist/train-labels.idx1-ubyte")

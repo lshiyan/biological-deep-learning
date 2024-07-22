@@ -103,7 +103,7 @@ class Experiment(ABC):
                 print(f"Experiment '{self.EXP_NAME}/Hidden' result folder re-created successfully.")
             except OSError as e:
                 print(f"Error: {e.strerror}")
-        
+            
         # Loggers for experiment
         self.loggers: List[logging.Logger] = []
         self.PRINT_LOG: logging.Logger = configure_logger("Print Log", f"{self.RESULT_PATH}/prints.log") # Replace print statements (for debugging purposes)
@@ -126,7 +126,6 @@ class Experiment(ABC):
         self.EXP_LOG.info("Completed arguments parsing.")
         self.EXP_LOG.info(f"Experiment '{self.EXP_NAME}' result folder created successfully.")
 
-    
     def _training(self, 
                   train_data_loader: DataLoader, 
                   epoch: int, 

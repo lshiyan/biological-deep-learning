@@ -1,4 +1,5 @@
 # Built-in imports
+import os
 from ast import Module
 import time
 from typing import Tuple, Type, Union
@@ -179,9 +180,8 @@ class GeneralizationExperiment(Experiment):
         self.ext_test_data_loader: DataLoader = DataLoader(self.ext_test_data_set, batch_size=self.batch_size, shuffle=True)
         self.ext_test_data_loader = input_class.filter_data_loader(self.ext_test_data_loader, filter_classes)
         self.EXP_LOG.info("Completed setup for ext-testing dataset and dataloader.")
-    
-    
-    
+
+
     ################################################################################################
     # Phase 1 Training and Testing: Reconstruction (Hebbian Layer)
     ################################################################################################    
