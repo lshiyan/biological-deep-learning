@@ -1,4 +1,5 @@
 # Built-in imports
+from ssl import Purpose
 import time
 from typing import Tuple, Type, Union
 
@@ -351,6 +352,8 @@ class BaseExperiment(Experiment):
         
         for epoch in range(0, self.epochs):
             self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.BASE)
+            self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.BASE)
+            self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE)
         
         self.EXP_LOG.info("Completed training of model.")        
         self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final')
