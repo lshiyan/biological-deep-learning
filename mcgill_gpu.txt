@@ -11,9 +11,7 @@ neuroai_venv\Scripts\activate
 deactivate
 
 pip3 install torch torchvision torchaudio
-pip install pandas
-pip install matplotlib
-pip install numpy
+pip install pandas matplotlib numpy
 
 /mnt/teaching/COMP551/pzheng3/biological-deep-learning
 
