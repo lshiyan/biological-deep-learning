@@ -1,4 +1,5 @@
 from abc import ABC
+import math
 from typing import Optional
 from numpy import outer
 import torch
@@ -146,25 +147,23 @@ class HiddenLayer(NetworkLayer, ABC):
         output: torch.Tensor = torch.where(input>=max_ele, 1.0, 0.0).to(self.device)
 
         return output
-
     
-    def _gaussian_inhibition(self, input: torch.Tensor, sigma: float = 1.0) -> torch.Tensor:
+    
+    def _gaussian_inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
         Calculates gaussian lateral inhibition
         @param
             input: input to layer
-            sigma: 
         @return
             output: activation after lateral inhibition
         """
-        # NOTE: this does not work as of yet
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
-        size: int = int(2 * sigma + 1)
-        kernel: torch.Tensor = torch.tensor([torch.exp(torch.Tensor(-(i - size // 2) ** 2 / (2 * sigma ** 2))) for i in range(size)])
-        kernel = kernel / torch.sum(kernel)
+        mu: float = torch.max(input).item() 
+        sigma: float = 1 / math.sqrt(2 * math.pi)
+        gaussian: torch.Tensor = ((1 / (sigma * torch.sqrt(torch.tensor(2 * torch.pi)))) * torch.exp(-self.lamb * ((input_copy - mu) / sigma) ** 2)).to(self.device)
 
-        output: torch.Tensor = F.conv1d(input_copy.unsqueeze(0).unsqueeze(0), kernel.unsqueeze(0).unsqueeze(0), padding=size//2).squeeze(0).squeeze(0).to(self.device)
+        output: torch.Tensor = gaussian
         return output
 
     
