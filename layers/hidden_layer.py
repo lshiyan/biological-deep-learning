@@ -113,24 +113,7 @@ class HiddenLayer(NetworkLayer, ABC):
         return output
     
     
-    def _softmax_inhibition(self, input: torch.Tensor) -> torch.Tensor:
-        """
-        METHOD
-        Calculates softmax lateral inhibition
-        Inhibition: x = Softmax(x - max(x))
-        @param
-            input: input to layer
-        @return
-            output: activation after lateral inhibition
-        """
-        # Calculates the softmax of the input for softmax lateral inhibition
-        input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
-        max_ele: float = torch.max(input_copy).item()
-        output: torch.Tensor = F.softmax(input_copy - max_ele, dim=-1).to(self.device)
-        return output
-    
-    
-    def _exp_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+    def _exp_softmax_inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
         Calculates exponential softmax (Modern Hopfield) lateral inhibition
@@ -147,7 +130,7 @@ class HiddenLayer(NetworkLayer, ABC):
         return output
     
         
-    def _wta_inhibition(self, input:torch.Tensor, threshold: float = 0.5) -> torch.Tensor:
+    def _wta_inhibition(self, input:torch.Tensor) -> torch.Tensor:
         """
         METHOD
         Calculates k-winners-takes-all lateral inhibition
@@ -159,7 +142,8 @@ class HiddenLayer(NetworkLayer, ABC):
             output: activation after lateral inhibition
         """
         # Computes winner-takes-all inhibition
-        output: torch.Tensor = torch.where(input>=threshold, input, 0.0).to(self.device)
+        max_ele: float = torch.max(input).item()
+        output: torch.Tensor = torch.where(input>=max_ele, 1.0, 0.0).to(self.device)
 
         return output
 
@@ -199,9 +183,9 @@ class HiddenLayer(NetworkLayer, ABC):
         
         # Compute ReLU and lateral inhibition
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
-        input_copy = relu(input_copy)
+        activation: torch.Tensor = relu(input_copy).to(self.device)
         sum: float = input_copy.sum().item()
-        output: torch.Tensor =  (input_copy / sum).to(self.device)
+        output: torch.Tensor =  (activation / sum).to(self.device)
         
         return output
     

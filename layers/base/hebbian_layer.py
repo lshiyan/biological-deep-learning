@@ -105,10 +105,8 @@ class HebbianLayer(HiddenLayer):
         """ 
         if self.inhibition_rule == LateralInhibitions.RELU_INHIBITION:
             return self._relu_inhibition(input)
-        elif self.inhibition_rule == LateralInhibitions.SOFTMAX_INHIBITION:
-            return self._softmax_inhibition(input)
-        elif self.inhibition_rule == LateralInhibitions.HOPFIELD_INHIBITION:
-            return self._exp_inhibition(input)
+        elif self.inhibition_rule == LateralInhibitions.EXP_SOFTMAX_INHIBITION:
+            return self._exp_softmax_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.WTA_INHIBITION:
             return self._wta_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.GAUSSIAN_INHIBITION:
