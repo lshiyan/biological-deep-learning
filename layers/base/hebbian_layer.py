@@ -149,7 +149,7 @@ class HebbianLayer(HiddenLayer):
             raise NameError("Unknown weight growth rule.")
             
         # Weight Update
-        delta_weight: torch.Tensor = (self.lr * calculated_rule * function_derivative * self.lr).to(self.device)
+        delta_weight: torch.Tensor = (self.lr * calculated_rule * function_derivative).to(self.device)
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
         
 

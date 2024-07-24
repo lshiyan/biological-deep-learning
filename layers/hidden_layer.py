@@ -27,7 +27,6 @@ class HiddenLayer(NetworkLayer, ABC):
             init (ParamInit): fc parameter initiation type
         OWN ATTR.
             exponential_average (torch.Tensor): tensor to keep track of exponential averages
-            id_tensor (torch.Tensor): id tensor of layer
             gamma (float): decay factor -> factor to decay learning rate
             lamb (float): lambda hyperparameter for lateral inhibition
             eps (float): to avoid division by 0
@@ -86,7 +85,6 @@ class HiddenLayer(NetworkLayer, ABC):
         self.eps: float = eps
         self.sigmoid_k: float = sigmoid_k
         self.exponential_average: torch.Tensor = torch.zeros(self.output_dimension).to(self.device)
-        self.id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
 
 
 
@@ -257,12 +255,12 @@ class HiddenLayer(NetworkLayer, ABC):
         # Calculate outer product of output and input
         outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
 
-        # Retrieve initial weights 
-        # initial_weight: torch.Tensor = torch.transpose(self.fc.weight.clone().detach().to(self.device), 0, 1)
+        # Retrieve initial weights
         initial_weight: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
 
         # Calculate Sanger's Rule
-        A: torch.Tensor = (torch.einsum('ij, i -> ij', initial_weight, y) * (y.unsqueeze(1))).to(self.device)
+        id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
+        A: torch.Tensor = torch.einsum('kj, lkm, m, l -> lj', initial_weight, id_tensor, y, y).to(self.device)
         computed_rule: torch.Tensor = (outer_prod - A).to(self.device)
 
         # Update exponential averages
@@ -295,9 +293,7 @@ class HiddenLayer(NetworkLayer, ABC):
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
 
         # Calculate Fully Orthogonal Rule
-        # ytw = torch.matmul(y.unsqueeze(0), weights).to(self.device)
-        # norm_term = torch.outer(y.squeeze(0), ytw.squeeze(0)).to(self.device)
-        norm_term: torch.Tensor = torch.einsum("i, i, ij -> ij", y, y, weights)
+        norm_term: torch.Tensor = torch.einsum("i, ij, k -> kj", y, weights, y)
 
         # Compute change in weights
         computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
