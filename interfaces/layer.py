@@ -3,7 +3,6 @@ import math
 from typing import Optional, Tuple
 import matplotlib
 import matplotlib.figure
-from networkx import reconstruct_path
 
 from utils.experiment_constants import LayerNames, ParamInit
 matplotlib.use('Agg')
@@ -18,6 +17,7 @@ class NetworkLayer (nn.Module, ABC):
     INTERFACE
     Defines a single layer of an ANN -> Every layer of the interface must implement interface
     @instance attr.
+        name (LayerNames): name of layer
         input_dimension (int): number of inputs into the layer
         output_dimension (int): number of outputs from the layer
         device (str): device that will be used for CUDA
@@ -80,23 +80,21 @@ class NetworkLayer (nn.Module, ABC):
             
             param.requires_grad_(False)
 
-        # Frozen or not for the layer
-        self.freeze = False
 
-
-    def create_id_tensors(self) -> torch.Tensor:   
+    @staticmethod
+    def create_id_tensors(dim: int) -> torch.Tensor:   
         """
         METHOD
         Creates an identity tensor
         @param
-            None
+            dim: dimension of id tensor
         @return
             id_tensor: 3D tensor with increasing size of identify matrices
         """
-        id_tensor: torch.Tensor = torch.zeros(self.output_dimension, self.output_dimension, self.output_dimension, dtype=torch.float).to(self.device)
-        for i in range(0, self.output_dimension):
+        id_tensor: torch.Tensor = torch.zeros(dim, dim, dim, dtype=torch.float)
+        for i in range(0, dim):
             identity: torch.Tensor = torch.eye(i+1)
-            padded_identity: torch.Tensor = torch.nn.functional.pad(identity, (0, self.output_dimension - i-1, 0, self.output_dimension - i-1))
+            padded_identity: torch.Tensor = torch.nn.functional.pad(identity, (0, dim - i - 1, 0, dim - i - 1))
             id_tensor[i] = padded_identity
         return id_tensor
     
@@ -158,7 +156,7 @@ class NetworkLayer (nn.Module, ABC):
         row, col = self.row_col(self.output_dimension)
         
         # Calculate size of figure
-        subplot_size = 3  # You can adjust this value to make subplots larger or smaller
+        subplot_size = 3
         fig_width = col * subplot_size
         fig_height = row * subplot_size
 
@@ -189,6 +187,7 @@ class NetworkLayer (nn.Module, ABC):
                 ax = axes[ele // col, ele % col]
                 ax.axis('off')
         
+        # Save file and close plot
         file_path: str = result_path + plot_name
         plt.tight_layout()
         plt.savefig(file_path)
@@ -220,8 +219,8 @@ class NetworkLayer (nn.Module, ABC):
         
         for i in range(2, root + 1):
             if num % i == 0:
-                factor1 = i
-                factor2 = num // i
+                factor1: int = i
+                factor2: int = num // i
                 
                 if factor1 * factor2 >= num and factor1 * factor2 <= min_product:
                     min_product = factor1 * factor2
@@ -235,6 +234,5 @@ class NetworkLayer (nn.Module, ABC):
                     min_product = factor1 * factor2
                     row = min(factor1, factor2)
                     col = max(factor1, factor2)
-        
         
         return row, col

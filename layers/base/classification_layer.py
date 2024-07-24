@@ -11,11 +11,17 @@ class ClassificationLayer(OutputLayer):
     Defines the functionality of the base classification layer
     @instance attr.
         NetworkLayer ATTR.
+            name (LayerNames): name of layer
             input_dimension (int): number of inputs into the layer
-            output_dimension (int): number of outputs from layer
+            output_dimension (int): number of outputs from the layer
             device (str): device that will be used for CUDA
             lr (float): how fast model learns at each iteration
             fc (nn.Linear): fully connected layer using linear transformation
+            alpha (float): lower bound for random unifrom 
+            beta (float): upper bound for random uniform
+            sigma (float): variance for random normal
+            mu (float): mean for random normal
+            init (ParamInit): fc parameter initiation type
         OWN ATTR.
             include_first (bool): wether or not to include first neuro in classification
     """

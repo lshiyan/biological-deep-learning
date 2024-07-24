@@ -1,7 +1,5 @@
 from abc import ABC
-import logging
-from typing import Optional, Tuple
-import warnings
+from typing import Optional
 from numpy import outer
 import torch
 import torch.nn as nn
@@ -16,19 +14,24 @@ class HiddenLayer(NetworkLayer, ABC):
     Defines a single hidden layer in ANN -> Every hidden layer should implement this class
     @instance attr.
         PARENT ATTR.
+            name (LayerNames): name of layer
             input_dimension (int): number of inputs into the layer
-            output_dimension (int): number of outputs from layer
+            output_dimension (int): number of outputs from the layer
             device (str): device that will be used for CUDA
             lr (float): how fast model learns at each iteration
             fc (nn.Linear): fully connected layer using linear transformation
+            alpha (float): lower bound for random unifrom 
+            beta (float): upper bound for random uniform
+            sigma (float): variance for random normal
+            mu (float): mean for random normal
+            init (ParamInit): fc parameter initiation type
         OWN ATTR.
-            exponential_average (torch.Tensor): 0 tensor to keep track of exponential averages
+            exponential_average (torch.Tensor): tensor to keep track of exponential averages
             id_tensor (torch.Tensor): id tensor of layer
             gamma (float): decay factor -> factor to decay learning rate
             lamb (float): lambda hyperparameter for lateral inhibition
             eps (float): to avoid division by 0
             sigmoid_k (float): constant for sigmoid wieght growth updates
-            
     """
 
     #################################################################################################
@@ -37,7 +40,7 @@ class HiddenLayer(NetworkLayer, ABC):
     def __init__(self, 
                  input_dimension: int, 
                  output_dimension: int, 
-                 device: str,
+                 device: str = 'cpu',
                  learning_rate: float = 0.005,
                  alpha: float = 0,
                  beta: float = 1,
@@ -56,6 +59,11 @@ class HiddenLayer(NetworkLayer, ABC):
             output_dimension: number of outputs from layer
             device: device that will be used for CUDA
             learning_rate: how fast model learns at each iteration
+            alpha: lower bound for random unifrom 
+            beta: upper bound for random uniform
+            sigma: variance for random normal
+            mu: mean for random normal
+            init: fc parameter initiation type
             lamb: lambda hyperparameter for lateral inhibition
             gamma: affects exponentialaverages updates
             eps: affects weight decay updates
@@ -78,7 +86,7 @@ class HiddenLayer(NetworkLayer, ABC):
         self.eps: float = eps
         self.sigmoid_k: float = sigmoid_k
         self.exponential_average: torch.Tensor = torch.zeros(self.output_dimension).to(self.device)
-        self.id_tensor: torch.Tensor = self.create_id_tensors().to(self.device)
+        self.id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
 
 
 
@@ -89,6 +97,7 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Calculates ReLU lateral inhibition
+        Inhibition: x = [ ReLU(x) / max(x) ] ^ lamb
         @param
             input: input to layer
         @return
@@ -101,8 +110,7 @@ class HiddenLayer(NetworkLayer, ABC):
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         input_copy = relu(input_copy)
         max_ele: float = torch.max(input_copy).item()
-        input_copy = torch.pow(input_copy, self.lamb).to(self.device)
-        output: torch.Tensor =  (input_copy / abs(max_ele) ** self.lamb).to(self.device)
+        output: torch.Tensor =  ((input_copy / max_ele) ** self.lamb).to(self.device)
         
         return output
     
@@ -111,28 +119,33 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Calculates softmax lateral inhibition
+        Inhibition: x = Softmax(x - max(x))
         @param
             input: input to layer
         @return
             output: activation after lateral inhibition
         """
+        # Calculates the softmax of the input for softmax lateral inhibition
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
-        output: torch.Tensor = F.softmax(input_copy, dim=-1).to(self.device)
+        max_ele: float = torch.max(input_copy).item()
+        output: torch.Tensor = F.softmax(input_copy - max_ele, dim=-1).to(self.device)
         return output
     
     
     def _exp_inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Calculates exponential (Modern Hopfield) lateral inhibition
+        Calculates exponential softmax (Modern Hopfield) lateral inhibition
+        Inhibition: x = Softmax((x - max(x)) ** lamb)
         @param
             input: input to layer
         @return
             output: activation after lateral inhibition
         """
+        # Computes exponential softmax with numerical stabilization
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         max_ele: float = torch.max(input_copy).item()
-        output: torch.Tensor = F.softmax((input_copy - max_ele) * self.lamb, dim=-1).to(self.device)
+        output: torch.Tensor = F.softmax((input_copy - max_ele) ** self.lamb, dim=-1).to(self.device)
         return output
     
         
@@ -140,14 +153,15 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Calculates k-winners-takes-all lateral inhibition
+        Inhibition: x = x if x > threshold else 0
         @param
             input: input to layer
             threshold: amount to be counted as activated
         @return
             output: activation after lateral inhibition
         """
-        # NOTE: this function does not work as of yet
-        output: torch.Tensor = torch.where(input>=threshold, 1.0, 0.0).to(self.device)
+        # Computes winner-takes-all inhibition
+        output: torch.Tensor = torch.where(input>=threshold, input, 0.0).to(self.device)
 
         return output
 
@@ -176,6 +190,7 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Calculates devisive normalization lateral inhibition
+        Inhibition: x = ReLU(x) / sum(ReLU(x))
         @param
             input: input to layer
         @return
@@ -187,7 +202,7 @@ class HiddenLayer(NetworkLayer, ABC):
         # Compute ReLU and lateral inhibition
         input_copy: torch.Tensor = input.clone().detach().float().to(self.device)
         input_copy = relu(input_copy)
-        sum: torch.Tensor = input_copy.sum()
+        sum: float = input_copy.sum().item()
         output: torch.Tensor =  (input_copy / sum).to(self.device)
         
         return output
@@ -200,11 +215,12 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Computes Hebbian Leanring Rule.
+        Rule: delta Wij = (y * x)ij 
         @param
             input: the input of the layer
             output: the output of the layer
         @return
-            
+            computed_rule: computed hebbian rule
         """
         # Copy both input and output to be used in Sanger's Rule
         x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
@@ -213,10 +229,7 @@ class HiddenLayer(NetworkLayer, ABC):
         y.requires_grad_(False)
         
         # Calculate outer product of output and input
-        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
-
-        # Calculate Hebbian Learning Rule
-        computed_rule: torch.Tensor = outer_prod.to(self.device)
+        computed_rule: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
 
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
@@ -228,11 +241,12 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Computes Sanger's Rule
+        Rule: delta Wij = ((y * x)ij - yi * SUM(Wkj * yk, k=1 to i))
         @param
             input: the input of the layer
             output: the output of the layer
         @return
-            computed_rule: this is the delta_weight value
+            computed_rule: computed sanger's rule
         """
         # Copy both input and output to be used in Sanger's Rule
         x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
@@ -243,13 +257,13 @@ class HiddenLayer(NetworkLayer, ABC):
         # Calculate outer product of output and input
         outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
 
-        # Retrieve initial weights (transposed) 
-        initial_weight: torch.Tensor = torch.transpose(self.fc.weight.clone().detach().to(self.device), 0, 1)
+        # Retrieve initial weights 
+        # initial_weight: torch.Tensor = torch.transpose(self.fc.weight.clone().detach().to(self.device), 0, 1)
+        initial_weight: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
 
         # Calculate Sanger's Rule
-        A: torch.Tensor = torch.einsum('jk, lkm, m -> lj', initial_weight, self.id_tensor, y).to(self.device)
-        A = A * (y.unsqueeze(1))
-        computed_rule: torch.Tensor = (outer_prod - A).to(self.device).to(self.device)
+        A: torch.Tensor = (torch.einsum('ij, i -> ij', initial_weight, y) * (y.unsqueeze(1))).to(self.device)
+        computed_rule: torch.Tensor = (outer_prod - A).to(self.device)
 
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
@@ -261,6 +275,7 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Update weights using Fully Orthogonal Rule.
+        Rule: delta Wij = ((y * x)ij - yi * SUM(W * yk))
         @param
             input: the inputs into the layer
             output: the output of the layer
@@ -277,11 +292,12 @@ class HiddenLayer(NetworkLayer, ABC):
         outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
 
         # Retrieve initial weights
-        initial_weight: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+        weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
 
         # Calculate Fully Orthogonal Rule
-        ytw = torch.matmul(y.unsqueeze(0), initial_weight).to(self.device)
-        norm_term = torch.outer(y.squeeze(0), ytw.squeeze(0)).to(self.device)
+        # ytw = torch.matmul(y.unsqueeze(0), weights).to(self.device)
+        # norm_term = torch.outer(y.squeeze(0), ytw.squeeze(0)).to(self.device)
+        norm_term: torch.Tensor = torch.einsum("i, i, ij -> ij", y, y, weights)
 
         # Compute change in weights
         computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
@@ -300,6 +316,7 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Defines weight updates when using linear funciton
+        Derivatives 1
         @param
             None
         @return
@@ -312,6 +329,7 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Defines weight updates when using sigmoid funciton
+        Derivative: 1/K * (K - Wij) * Wij
         @param
             None
         @return
@@ -319,9 +337,7 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
         sigmoid_k_tensor: torch.Tensor = torch.full(self.fc.weight.shape, self.sigmoid_k).to(self.device)
-        derivative: torch.Tensor = (sigmoid_k_tensor - current_weights).to(self.device)
-        derivative = current_weights * derivative
-        derivative = (1 / self.sigmoid_k) * derivative
+        derivative: torch.Tensor = (1 / self.sigmoid_k) * (sigmoid_k_tensor - current_weights) * current_weights
         return derivative
         
 
@@ -402,23 +418,40 @@ class HiddenLayer(NetworkLayer, ABC):
     
     
     def _simple_linear_weight_decay(self) -> torch.Tensor:
+        """
+        METHOD
+        Simple linear weight decay
+        Decay: linear_derivative * eps * (ai / a - 1)
+        @param
+            None
+        @return
+            decay_weight: amount to decay the weights by
+        """
         # Gets average of exponential averages
         average: float = torch.mean(self.exponential_average).item()
         
         # Compute simple weight decay
-        decay_weight: torch.Tensor = (self.eps * (self.exponential_average / average - 1)).to(self.device)
-        decay_weight = decay_weight.unsqueeze(1)
+        decay_weight: torch.Tensor = (self.eps * (self.exponential_average / average - 1)).unsqueeze(1).to(self.device)
+        decay_weight = self._linear_function() * decay_weight
         
         return decay_weight
     
     
     def _simple_sigmoid_weight_decay(self) -> torch.Tensor:
+        """
+        METHOD
+        Simple linear weight decay
+        Decay: sigmoid_derivative * eps * (ai / a - 1)
+        @param
+            None
+        @return
+            decay_weight: amount to decay the weights by
+        """
         # Gets average of exponential averages
         average: float = torch.mean(self.exponential_average).item()
         
         # Compute simple weight decay
-        decay_weight: torch.Tensor = (self.eps * (self.exponential_average / average - 1)).to(self.device)
-        decay_weight = decay_weight.unsqueeze(1)
+        decay_weight: torch.Tensor = (self.eps * (self.exponential_average / average - 1)).unsqueeze(1).to(self.device)
         decay_weight = self._sigmoid_function() * decay_weight
         
         return decay_weight
@@ -457,6 +490,7 @@ class HiddenLayer(NetworkLayer, ABC):
         """
         METHOD
         Defines a simple bias update rule
+        Update: b - eps * (yi - y)
         @param
             output: output of the current layer
         @return

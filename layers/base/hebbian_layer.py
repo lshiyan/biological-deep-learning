@@ -1,5 +1,4 @@
 from typing import Optional
-import warnings
 import torch
 import torch.nn as nn
 from layers.hidden_layer import HiddenLayer
@@ -12,21 +11,30 @@ class HebbianLayer(HiddenLayer):
     Defines the functionality of the base hebbian layer
     @instance attr.
         NetworkLayer ATTR.
+            name (LayerNames): name of layer
             input_dimension (int): number of inputs into the layer
-            output_dimension (int): number of outputs from layer
+            output_dimension (int): number of outputs from the layer
             device (str): device that will be used for CUDA
             lr (float): how fast model learns at each iteration
             fc (nn.Linear): fully connected layer using linear transformation
+            alpha (float): lower bound for random unifrom 
+            beta (float): upper bound for random uniform
+            sigma (float): variance for random normal
+            mu (float): mean for random normal
+            init (ParamInit): fc parameter initiation type
         HiddenLayer ATTR.
-            exponential_average (torch.Tensor): 0 tensor to keep track of exponential averages
+            exponential_average (torch.Tensor): tensor to keep track of exponential averages
+            id_tensor (torch.Tensor): id tensor of layer
             gamma (float): decay factor -> factor to decay learning rate
             lamb (float): lambda hyperparameter for lateral inhibition
             eps (float): to avoid division by 0
-            id_tensor (torch.Tensor): id tensor of layer
+            sigmoid_k (float): constant for sigmoid wieght growth updates
         OWN ATTR.
             inhibition_rule (LateralInhibitions): which inhibition to be used
             learning_rule (LearningRules): which learning rule to use
             weight_growth (WeightGrowth): which function type should the weight updates follow
+            weight_decay (WeightDecay): which weight decay to use
+            bias_update (BiasUpdate): which bias update rule to follow
     """
     def __init__(self, 
                  input_dimension: int, 
@@ -58,9 +66,11 @@ class HebbianLayer(HiddenLayer):
             learning_rate: how fast model learns at each iteration
             gamma: affects exponentialaverages updates
             eps: affects weight decay updates
-            inhibition_rule (LateralInhibitions): which inhibition to be used
-            learning_rule (LearningRules): which learning rule to use
-            weight_growth (WeightGrowth): which function type should the weight updates follow
+            inhibition_rule: which inhibition to be used
+            learning_rule: which learning rule to use
+            weight_growth: which function type should the weight updates follow
+            weight_decay: which weight decay to use
+            bias_update: which bias update rule to follow
         @return
             None
         """
@@ -91,7 +101,7 @@ class HebbianLayer(HiddenLayer):
         @param
             input: the inputs into the layer
         @return
-            inputs after inhibition
+            outputs of inhibiton
         """ 
         if self.inhibition_rule == LateralInhibitions.RELU_INHIBITION:
             return self._relu_inhibition(input)
@@ -128,26 +138,25 @@ class HebbianLayer(HiddenLayer):
             calculated_rule = self._sanger_rule(input, output)
         elif self.learning_rule == LearningRules.FULLY_ORTHOGONAL_LEARNING_RULE:
             calculated_rule = self._fully_orthogonal_rule(input, output)
+        else:
+            raise NameError("Unknown learning rule.")
         
         if self.weight_growth == WeightGrowth.LINEAR:
             function_derivative = self._linear_function()
         elif self.weight_growth == WeightGrowth.SIGMOID:
             function_derivative = self._sigmoid_function()
+        else:
+            raise NameError("Unknown weight growth rule.")
             
         # Weight Update
-        lr_tensor: torch.Tensor = torch.full(self.fc.weight.shape, self.lr).to(self.device)
-        delta_weight: torch.Tensor = (lr_tensor * calculated_rule * function_derivative).to(self.device)
+        delta_weight: torch.Tensor = (self.lr * calculated_rule * function_derivative * self.lr).to(self.device)
         self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
         
 
     def update_bias(self, output: torch.Tensor) -> None:
         """
         METHOD
-        Defines the way the biases will be updated at each iteration of the training
-        It updates the biases of the classifier layer using a decay mechanism adjusted by the output probabilities.
-        The method applies an exponential decay to the biases, which is modulated by the output probabilities,
-        and scales the update by the learning rate. 
-        The biases are normalized after the update.
+        Update bias using pre-defined rule
         @param
             output: The output tensor of the layer.
         @return
@@ -166,7 +175,7 @@ class HebbianLayer(HiddenLayer):
     def weight_decay(self) -> None:
         """
         METHOD
-        Decays the overused weights and increases the underused weights using tanh functions.
+        Decays weights according to rule
         @param
             None
         @return
@@ -206,13 +215,11 @@ class HebbianLayer(HiddenLayer):
         @return
             output: returns the data after passing it through the layer
         """
-        # Copy input -> calculate output -> update weights -> return output
+        # Calculate output -> Update weights -> Update bias -> Decay weights -> return output
         input_copy = input.clone().to(self.device).float()
-        initial_input = input.clone().to(self.device).float()
         
-        input_copy = self.fc(input_copy)
-        output = self.inhibition(input_copy)
-        self.update_weights(initial_input, output)
+        output = self.inhibition(self.fc(input_copy))
+        self.update_weights(input_copy, output)
         self.update_bias(output)
         self.weight_decay()
         
@@ -232,8 +239,7 @@ class HebbianLayer(HiddenLayer):
         @return
             output: returns the data after passing it throw the layer
         """
-        # Copy input -> calculate output -> return output
+        # Calculate output -> Return output
         input_copy = input.clone().to(self.device).float()
-        input_copy = self.fc(input_copy)
-        output = self.inhibition(input_copy)
+        output = self.inhibition(self.fc(input_copy))
         return output

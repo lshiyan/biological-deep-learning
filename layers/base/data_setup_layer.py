@@ -4,7 +4,6 @@ import os
 import pandas as pd
 from layers.input_layer import InputLayer
 from typing import IO, List
-import random
 
 from utils.experiment_constants import DataSets
 
@@ -15,6 +14,7 @@ class DataSetupLayer(InputLayer):
     @instance attr.
         NetworkLayer ATTR.
             * Not used for this layer *
+            name (LayerNames): name of layer
         InputLayer ATTR.
         OWN ATTR.
     """
@@ -59,7 +59,7 @@ class DataSetupLayer(InputLayer):
     @staticmethod
     def filter_data_loader(data_loader: DataLoader, filter: dict[int, int]):
         """
-        Function to filter EMNIST dataset to include only the specified letter classes
+        Function to filter dataset to include only the specified classes
         @param
             tensor_dataset: original TensorDataset containing EMNIST data and labels
             selected_classes: list of letter classes to include

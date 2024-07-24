@@ -15,6 +15,7 @@ class InputLayer(NetworkLayer, ABC):
     @instance attr.
         PARENT ATTR.
             * Not used for this layer *
+            name (LayerNames): name of layer
         OWN ATTR.
     """
     def __init__(self) -> None:
