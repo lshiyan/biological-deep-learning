@@ -18,6 +18,7 @@ class HebbianNetwork(Network):
     Defines the base hebbian network
     @instance attr.
         PARENT ATTR.
+            name (str): name of network
             device (int) = id of the gpu that the model will be running in
         OWN ATTR.
             input_dim (int): number of inputs
@@ -53,7 +54,7 @@ class HebbianNetwork(Network):
         self.heb_dim: int = args.heb_dim
         self.output_dim: int = args.output_dim
 
-        # Hebbian layer hyperparameters stored in dictionary
+        # Hebbian layer hyperparameters
         inhibition_mapping: dict[str, LateralInhibitions] = {member.value.upper(): member for member in LateralInhibitions}
         learning_rule_mapping: dict[str, LearningRules] = {member.value.upper(): member for member in LearningRules}
         weight_growth_mapping: dict[str, WeightGrowth] = {member.value.upper(): member for member in WeightGrowth}
@@ -71,7 +72,7 @@ class HebbianNetwork(Network):
         self.weight_decay: WeightDecay = weight_decay_mapping[args.weight_decay.upper()]
         self.bias_update: BiasUpdate = bias_update_mapping[args.bias_update.upper()]
 
-        # Classification layer hyperparameters stored in dictionary
+        # Classification layer hyperparameters
         self.include_first = args.include_first
 
         # Shared hyperparameters

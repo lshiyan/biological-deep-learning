@@ -1,6 +1,5 @@
 from abc import ABC
 from typing import Optional
-import warnings
 import torch
 import torch.nn as nn
 from utils.experiment_constants import LayerNames
@@ -18,7 +17,8 @@ class Network(nn.Module, ABC):
         """
         CONSTRUCTOR METHOD
         @attr.
-            device: device that will be used for CUDA
+            name: name of network
+            device: device that will be used
         @return
             None
         """
