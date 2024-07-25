@@ -1,11 +1,11 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 
-def lambda_list(num: Optional[float] = None) -> List[float]:
+def lambda_list(*args: float) -> List[float]:
     test_list: List[float] = []
     
-    if num:
-        test_list.append(num)
+    if args:
+        for num in args: test_list.append(num)
     else:
         for n in range(1, 20):
             test_list.append(n)
@@ -14,11 +14,11 @@ def lambda_list(num: Optional[float] = None) -> List[float]:
     return test_list
     
     
-def lr_list(num: Optional[float] = None) -> List[float]:
+def lr_list(*args: float) -> List[float]:
     test_list: List[float] = []
     
-    if num:
-        test_list.append(num)
+    if args:
+        for num in args: test_list.append(num)
     else:
         for n in range(2, 5):
             test_list.append(10 ** -n)
@@ -27,11 +27,11 @@ def lr_list(num: Optional[float] = None) -> List[float]:
     return test_list
     
     
-def dim_list(num: Optional[float] = None) -> List[float]:
+def dim_list(*args: float) -> List[float]:
     test_list: List[float] = []
     
-    if num:
-        test_list.append(num)
+    if args:
+        for num in args: test_list.append(num)
     else:
         test_list.append(10)
         test_list.append(784)
@@ -41,11 +41,11 @@ def dim_list(num: Optional[float] = None) -> List[float]:
     return test_list
     
     
-def eps_list(num: Optional[float] = None) -> List[float]:
+def eps_list(*args: float) -> List[float]:
     test_list: List[float] = []
     
-    if num:
-        test_list.append(num)
+    if args:
+        for num in args: test_list.append(num)
     else:
         for n in range(2, 7):
             test_list.append(10 ** -n)
@@ -53,11 +53,11 @@ def eps_list(num: Optional[float] = None) -> List[float]:
     return test_list
     
     
-def sigmoid_k_list(num: Optional[float] = None) -> List[float]:
+def sigmoid_k_list(*args: float) -> List[float]:
     test_list: List[float] = []
     
-    if num:
-        test_list.append(num)
+    if args:
+        for num in args: test_list.append(num)
     else:
         for n in range(1, 11):
             test_list.append(0.1 * n)
