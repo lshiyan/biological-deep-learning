@@ -14,6 +14,7 @@ pip3 install torch torchvision torchaudio
 pip install pandas matplotlib numpy
 
 /mnt/teaching/COMP551/pzheng3/biological-deep-learning
+/mnt/graduate/pzheng3/biological-deep-learning
 
 venv neuroai_venv
 tests
