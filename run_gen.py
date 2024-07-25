@@ -39,13 +39,13 @@ arguments = [
             '--heb_gam=0.99',
             '--heb_eps=0.0001',
             '--sigmoid_k=1',
-            '--learning_rule=sanger',
+            '--learning_rule=orthogonal',
             '--inhibition_rule=relu',
             '--weight_growth=linear',
             '--weight_decay=simple',
             '--bias_update=no_bias',
             # Classification layer hyperparameters
-            '--include_first=False',
+            '--include_first=True',
             # Shared hyperparameters
             '--lr=0.005',
             '--alpha=0',
@@ -55,7 +55,7 @@ arguments = [
             '--init=uniform',
             # Experiment parameters
             '--batch_size=1',
-            '--epochs=3', 
+            '--epochs=10', 
             '--device=cpu',
             '--device=cuda:5',
             '--local_machine=True',

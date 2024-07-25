@@ -47,7 +47,7 @@ for l in lambda_test:
                     freeze_train_acc_list = []
                     freeze_test_acc_list = []
     
-                    for num in range(0, 1):
+                    for num in range(0, 5):
                         # Base model training
                         model = HebbianNetwork('Hebbian Network', ARGS).to(ARGS.device)
                         
