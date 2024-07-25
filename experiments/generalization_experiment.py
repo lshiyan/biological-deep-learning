@@ -588,6 +588,10 @@ class GeneralizationExperiment(Experiment):
         # Reconstruction -> Hebbian layer training and testing
         for epoch in range(0, self.epochs):
             self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.RECONSTRUCTION)
+            self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
+            self._testing(self.test_data_loader, Purposes.TEST_ACCURACY, self.data_name, ExperimentPhases.RECONSTRUCTION)
+            self._testing(self.ext_train_data_loader, Purposes.TRAIN_ACCURACY, self.ext_data_name, ExperimentPhases.RECONSTRUCTION)
+            self._testing(self.ext_test_data_loader, Purposes.TEST_ACCURACY, self.ext_data_name, ExperimentPhases.RECONSTRUCTION)
         
         # Reset test_sample
         self.test_sample = 0
@@ -595,6 +599,8 @@ class GeneralizationExperiment(Experiment):
         # Freezing weights -> training classification    
         for epoch in range(0, self.epochs):
             self._training(self.ext_train_data_loader, epoch, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS)
+            self._testing(self.ext_train_data_loader, Purposes.TRAIN_ACCURACY, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS)
+            self._testing(self.ext_test_data_loader, Purposes.TEST_ACCURACY, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS)
 
         self.EXP_LOG.info("Completed training of model.")        
         self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, 'final')
