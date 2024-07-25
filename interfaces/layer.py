@@ -30,8 +30,8 @@ class NetworkLayer (nn.Module, ABC):
         init (ParamInit): fc parameter initiation type
     """
     def __init__(self, 
-                 input_dimension: int, 
-                 output_dimension: int, 
+                 input_dimension: int = 784, 
+                 output_dimension: int = 64, 
                  device: str = 'cpu',
                  learning_rate: float = 0.005,
                  alpha: float = 0,

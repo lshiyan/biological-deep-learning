@@ -73,35 +73,31 @@ for l in lambda_test:
                         avg_train = average(freeze_train_acc_list)
                         var_train = variance(freeze_train_acc_list)
                         
-                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Dataset: {experiment.ext_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Freeze Test Acc: avg = {avg_test}, var = {var_test} || Freeze Train Acc: avg = {avg_train}, var = {var_train}") # type: ignore
+                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Freeze Test/Train Acc: avg = {avg_test}/{avg_train}, var = {var_test}/{var_train}")
                         
                         avg_test_cos = average(cos_test_list)
                         var_test_cos = variance(cos_test_list)
                         avg_train_cos = average(cos_train_list)
                         var_train_cos = variance(cos_train_list)
                         
-                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos}, var = {var_test_cos} || Cos-Sim Train Acc: avg = {avg_train_cos}, var = {var_train_cos}")
-                        
                         avg_test_cos_ext = average(cos_test_ext_list)
                         var_test_cos_ext = variance(cos_test_ext_list)
                         avg_train_cos_ext = average(cos_train_ext_list)
                         var_train_cos_ext = variance(cos_train_ext_list)
                         
-                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Dataset: {experiment.ext_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test Acc: avg = {avg_test_cos_ext}, var = {var_test_cos_ext} || Cos-Sim Train Acc: avg = {avg_train_cos_ext}, var = {var_train_cos_ext}") # type: ignore
+                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Cos-Sim Test/Train Acc (Dataset): avg = {avg_test_cos}/{avg_train_cos}, var = {var_test_cos}/{var_train_cos} || Cos-Sim Test/Train Acc (EXT-Dataset): avg = {avg_test_cos_ext}/{avg_train_cos_ext}, var = {var_test_cos_ext}/{var_train_cos_ext}")
                         
                         avg_test_norm = average(norm_test_list)
                         var_test_norm = variance(norm_test_list)
                         avg_train_norm = average(norm_train_list)
                         var_train_norm = variance(norm_train_list)
                         
-                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm}, var = {var_test_norm} || Norm Train Acc: avg = {avg_train_norm}, var = {var_train_norm}")
-                        
                         avg_test_norm_ext = average(norm_test_ext_list)
                         var_test_norm_ext = variance(norm_test_ext_list)
                         avg_train_norm_ext = average(norm_train_ext_list)
                         var_train_norm_ext = variance(norm_train_ext_list)
                         
-                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Dataset: {experiment.ext_data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test Acc: avg = {avg_test_norm_ext}, var = {var_test_norm_ext} || Norm Train Acc: avg = {avg_train_norm_ext}, var = {var_train_norm_ext}") # type: ignore
+                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test/Train Acc: avg = {avg_test_norm}/{avg_train_norm}, var = {var_test_norm}/{var_train_norm} || Norm Test/Train Acc: avg = {avg_test_norm_ext}/{avg_train_norm_ext}, var = {var_test_norm_ext}/{var_train_norm_ext}")
                         
                         
         

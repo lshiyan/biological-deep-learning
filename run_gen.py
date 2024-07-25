@@ -57,6 +57,7 @@ arguments = [
             '--batch_size=1',
             '--epochs=3', 
             '--device=cpu',
+            '--device=cuda:5',
             '--local_machine=True',
             '--experiment_type=generalization'
             ]
