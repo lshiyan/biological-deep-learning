@@ -176,7 +176,7 @@ class NetworkLayer (nn.Module, ABC):
                 padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size)).cpu()
                 heatmap: torch.Tensor = padded_weights.view(feature_row, feature_col).cpu().numpy()
                 ax = axes[ele // col, ele % col]
-                im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+                im = ax.imshow(heatmap, cmap='hot', interpolation='nearest', vmin=0, vmax=1)
                 fig.colorbar(im, ax=ax)
                 ax.set_title(f'Weight {ele}')
                 
