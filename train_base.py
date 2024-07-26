@@ -16,7 +16,7 @@ results_log = configure_logger('Base Result Log', './results/results.log')
 ARGS = parse_arguments()
 
 # Experiments setup
-lambda_test = lambda_list()
+lambda_test = lambda_list(1)
 lr_test = lr_list(0.005)
 eps_test = eps_list(0.0001)
 dim_test = dim_list(64)
@@ -39,11 +39,11 @@ for l in lambda_test:
                     test_acc_e_list = []
                     train_acc_e_list = []
     
-                    for num in range(0, 3):
+                    for num in range(0, 1):
                         # Base model training
                         model = HebbianNetwork('Hebbian Network', ARGS).to(ARGS.device)
                         
-                        experiment = BaseExperiment(model, ARGS, f'{ARGS.experiment_type.lower()}-{l}-{lr}-{eps}-{dim}-{k}-{num}')
+                        experiment = BaseExperiment(model, ARGS, f'{ARGS.experiment_type.lower()}-{ARGS.learning_rule.lower()}-{ARGS.inhibition.lower()}-{ARGS.weight_growth.lower()}-{ARGS.weight_decay.lower()}-{ARGS.bias_update.lower()}-{l}-{lr}-{eps}-{dim}-{k}-{num}')
                         accuracies = list(experiment.run())
                         experiment.cleanup()
                         
