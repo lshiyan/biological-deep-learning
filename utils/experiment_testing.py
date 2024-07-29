@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List
 
 
 def lambda_list(*args: float) -> List[float]:
@@ -7,9 +7,9 @@ def lambda_list(*args: float) -> List[float]:
     if args:
         for num in args: test_list.append(num)
     else:
-        for n in range(1, 20):
-            test_list.append(n)
-            test_list.append(1/n)
+        for n in range(-4, 4):
+            lamb = 2 ** n
+            test_list.append(lamb)
     test_list.sort()
     return test_list
     
