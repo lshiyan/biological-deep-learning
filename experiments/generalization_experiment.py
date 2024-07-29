@@ -301,8 +301,8 @@ class GeneralizationExperiment(Experiment):
                 scalar_cos_error = cur_cos_error.mean()
                 total_cos_error += scalar_cos_error
                 
-            cos_error = total_cos_error / total
-            norm_error = total_norm_error / total
+            cos_error = round(total_cos_error / total, 4)
+            norm_error = round(total_norm_error / total, 4)
                 
         test_end = time.time()
         testing_time = test_end - test_start
@@ -427,7 +427,7 @@ class GeneralizationExperiment(Experiment):
                 # Evaluates performance of model on testing dataset
                 correct += (predictions.argmax(-1) == labels).type(torch.float).sum()
 
-            final_accuracy = correct/total
+            final_accuracy = round(correct/total, 4)
                 
         test_end = time.time()
         testing_time = test_end - test_start

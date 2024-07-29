@@ -223,7 +223,7 @@ class BaseExperiment(Experiment):
                 # Evaluates performance of model on testing dataset
                 correct += (predictions.argmax(-1) == labels).type(torch.float).sum()
 
-            final_accuracy = correct/total
+            final_accuracy = round(correct/total, 4)
                 
         test_end = time.time()
         testing_time = test_end - test_start
