@@ -43,7 +43,7 @@ for l in lambda_test:
                         # Base model training
                         model = HebbianNetwork('Hebbian Network', ARGS).to(ARGS.device)
                         
-                        experiment = BaseExperiment(model, ARGS, f'{ARGS.experiment_type.lower()}-{ARGS.learning_rule.lower()}-{ARGS.inhibition.lower()}-{ARGS.weight_growth.lower()}-{ARGS.weight_decay.lower()}-{ARGS.bias_update.lower()}-{l}-{lr}-{eps}-{dim}-{k}-{num}')
+                        experiment = BaseExperiment(model, ARGS, f'{ARGS.experiment_type.lower()}-{ARGS.learning_rule.lower()}-{ARGS.inhibition_rule.lower()}-{ARGS.weight_growth.lower()}-{ARGS.weight_decay.lower()}-{ARGS.bias_update.lower()}-{l}-{lr}-{eps}-{dim}-{k}-{num}')
                         accuracies = list(experiment.run())
                         experiment.cleanup()
                         
