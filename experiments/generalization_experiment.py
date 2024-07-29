@@ -277,7 +277,7 @@ class GeneralizationExperiment(Experiment):
         with torch.no_grad():
             total_norm_error: float = 0
             total_cos_error: float = 0
-            total: int = len(test_data_loader)
+            total: int = len(test_data_loader) * self.batch_size
 
             # Loop thorugh testing batches
             for inputs, labels in test_data_loader:
@@ -294,12 +294,12 @@ class GeneralizationExperiment(Experiment):
                 norm_input = LA.vector_norm(inputs, ord=2)
                 curr_error = LA.vector_norm((reconstruct_input / norm_reconstructed) - (inputs / norm_input)) 
                 curr_error_squared = curr_error ** 2
-                total_norm_error += curr_error_squared
+                total_norm_error += curr_error_squared.item()
                 
                 # Cosine Similarity
                 cur_cos_error = cos(inputs, reconstruct_input)
                 scalar_cos_error = cur_cos_error.mean()
-                total_cos_error += scalar_cos_error
+                total_cos_error += scalar_cos_error.item()
                 
             cos_error = round(total_cos_error / total, 4)
             norm_error = round(total_norm_error / total, 4)
