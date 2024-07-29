@@ -210,7 +210,7 @@ class BaseExperiment(Experiment):
 
         with torch.no_grad():
             correct: int = 0
-            total: int = len(test_data_loader)
+            total: int = len(test_data_loader) * self.batch_size
 
             # Loop thorugh testing batches
             for inputs, labels in test_data_loader:
@@ -221,7 +221,7 @@ class BaseExperiment(Experiment):
                 predictions: torch.Tensor = self.model(inputs)
                 
                 # Evaluates performance of model on testing dataset
-                correct += (predictions.argmax(-1) == labels).type(torch.float).sum()
+                correct += (predictions.argmax(-1) == labels).type(torch.float).sum().item()
 
             final_accuracy = round(correct/total, 4)
                 
