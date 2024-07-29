@@ -97,7 +97,7 @@ for l in lambda_test:
                         avg_train_norm_ext = average(norm_train_ext_list)
                         var_train_norm_ext = variance(norm_train_ext_list)
                         
-                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test/Train Acc: avg = {avg_test_norm}/{avg_train_norm}, var = {var_test_norm}/{var_train_norm} || Norm Test/Train Acc: avg = {avg_test_norm_ext}/{avg_train_norm_ext}, var = {var_test_norm_ext}/{var_train_norm_ext}")
+                        results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Norm Test/Train Acc (Dataset): avg = {avg_test_norm}/{avg_train_norm}, var = {var_test_norm}/{var_train_norm} || Norm Test/Train Acc (EXT-Dataset): avg = {avg_test_norm_ext}/{avg_train_norm_ext}, var = {var_test_norm_ext}/{var_train_norm_ext}")
                         
                         
         
