@@ -43,6 +43,7 @@ arguments = [
             '--inhibition_rule=relu',
             '--weight_growth=linear',
             '--bias_update=no_bias',
+            '--focus=synapse',
             # Classification layer hyperparameters
             # Shared hyperparameters
             '--lr=0.005',

@@ -1,6 +1,5 @@
 import argparse
-from enum import Enum
-from typing import Optional, Union
+from typing import Optional
 import torch
 from interfaces.network import Network
 from layers.base.classification_layer import ClassificationLayer
@@ -9,7 +8,7 @@ from layers.base.hebbian_layer import HebbianLayer
 from layers.hidden_layer import HiddenLayer
 from layers.input_layer import InputLayer
 from layers.output_layer import OutputLayer
-from utils.experiment_constants import BiasUpdate, LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightDecay, WeightGrowth
+from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightDecay, WeightGrowth
 
 
 class HebbianNetwork(Network):
@@ -31,7 +30,6 @@ class HebbianNetwork(Network):
             learn (LearningRules): which learning rule that will be used
             growth (WeightGrowth): type of weight growth
             sig_k (float): sigmoid learning constant
-            in_1 (bool): wether to include first neuron in classification layer
             lr (float): learning rate of classification layer
             alpha (flaot): lower bound for random uniform
             beta (flaot): upper bound for random uniform
@@ -61,21 +59,30 @@ class HebbianNetwork(Network):
         param_init_mapping: dict[str, ParamInit] = {member.value.upper(): member for member in ParamInit}
         weight_decay_mapping: dict[str, WeightDecay] = {member.value.upper(): member for member in WeightDecay}
         bias_update_mapping: dict[str, BiasUpdate] = {member.value.upper(): member for member in BiasUpdate}
+        focus_mapping: dict[str, Focus] = {member.value.upper(): member for member in Focus}
+        activation_mapping: dict[str, ActivationMethods] = {member.value.upper(): member for member in ActivationMethods}
         
         self.heb_lamb: float = args.heb_lamb
         self.heb_eps: float = args.heb_eps
         self.heb_gam: float = args.heb_gam
-        self.sig_k: float = args.sigmoid_k
-        self.inhib: LateralInhibitions = inhibition_mapping[args.inhibition_rule.upper()]
-        self.learn: LearningRules = learning_rule_mapping[args.learning_rule.upper()]
-        self.growth: WeightGrowth = weight_growth_mapping[args.weight_growth.upper()]
-        self.weight_decay: WeightDecay = weight_decay_mapping[args.weight_decay.upper()]
-        self.bias_update: BiasUpdate = bias_update_mapping[args.bias_update.upper()]
+        self.heb_inhib: LateralInhibitions = inhibition_mapping[args.inhibition_rule.upper()]
+        self.heb_learn: LearningRules = learning_rule_mapping[args.learning_rule.upper()]
+        self.heb_growth: WeightGrowth = weight_growth_mapping[args.weight_growth.upper()]
+        self.heb_weight_decay: WeightDecay = weight_decay_mapping[args.weight_decay.upper()]
+        self.heb_bias_update: BiasUpdate = bias_update_mapping[args.bias_update.upper()]
+        self.heb_focus: Focus = focus_mapping[args.focus.upper()]
+        self.heb_act: ActivationMethods = activation_mapping[args.heb_act.upper()]
 
         # Classification layer hyperparameters
+        self.class_learn: LearningRules = learning_rule_mapping[args.class_learn.upper()]
+        self.class_growth: WeightGrowth = weight_growth_mapping[args.class_growth.upper()]
+        self.class_bias_update: BiasUpdate = bias_update_mapping[args.class_bias.upper()]
+        self.class_focus: Focus = focus_mapping[args.class_focus.upper()]
+        self.class_act: ActivationMethods = activation_mapping[args.class_act.upper()]
 
         # Shared hyperparameters
         self.lr: float = args.lr
+        self.sig_k: float = args.sigmoid_k
         self.alpha: float = args.alpha
         self.beta: float = args.beta
         self.sigma: float = args.sigma
@@ -97,11 +104,13 @@ class HebbianNetwork(Network):
                                                   self.heb_gam,
                                                   self.heb_eps,
                                                   self.sig_k,
-                                                  self.inhib,
-                                                  self.learn,
-                                                  self.growth,
-                                                  self.weight_decay,
-                                                  self.bias_update)
+                                                  self.heb_inhib,
+                                                  self.heb_learn,
+                                                  self.heb_growth,
+                                                  self.heb_weight_decay,
+                                                  self.heb_bias_update,
+                                                  self.heb_focus,
+                                                  self.heb_act)
         classification_layer: OutputLayer = ClassificationLayer(self.heb_dim, 
                                                                 self.output_dim, 
                                                                 self.device, 
@@ -110,7 +119,13 @@ class HebbianNetwork(Network):
                                                                 self.beta,
                                                                 self.sigma,
                                                                 self.mu,
-                                                                self.init)
+                                                                self.sig_k,
+                                                                self.init,
+                                                                self.class_learn,
+                                                                self.class_growth,
+                                                                self.class_bias_update,
+                                                                self.class_focus
+                                                                )
         
         self.add_module(input_layer.name.name, input_layer)
         self.add_module(hebbian_layer.name.name, hebbian_layer)

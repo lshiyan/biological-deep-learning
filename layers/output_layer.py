@@ -61,18 +61,3 @@ class OutputLayer(NetworkLayer, ABC):
                          init)
         self.name: LayerNames = LayerNames.OUTPUT
         
-
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> None:
-        raise NotImplementedError("This method has yet to be implemented.")
-        
-
-    def update_bias(self, output: torch.Tensor) -> None:
-        raise NotImplementedError("This method has yet to be implemented.")
-    
-
-    def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
-        raise NotImplementedError("This method has yet to be implemented.")
-    
-    
-    def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("This method has yet to be implemented.")

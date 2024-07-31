@@ -1,5 +1,9 @@
+import multiprocessing
+from typing import Tuple
 from experiments.base_experiment import BaseExperiment
 
+from interfaces.experiment import Experiment
+from interfaces.network import Network
 from models.hebbian_network import HebbianNetwork
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
@@ -22,37 +26,45 @@ dim_test = dim_list(64)
 sigmoid_k_test = sigmoid_k_list(1)
 
 
-for l in lambda_test:
-    for dim in dim_test:
-        for lr in lr_test:
-            for eps in eps_test:
-                for k in sigmoid_k_test:
-                    ARGS.heb_lamb = l
-                    ARGS.lr = lr
-                    ARGS.heb_eps = eps
-                    ARGS.heb_dim = dim
-                    ARGS.sigmoid_k = k
-    
-                    test_acc_list = []
-                    train_acc_list = []
-                    test_acc_e_list = []
-                    train_acc_e_list = []
-    
-                    for num in range(0, 1):
-                        # Base model training
-                        model = HebbianNetwork('Hebbian Network', ARGS).to(ARGS.device)
-                        
-                        experiment = BaseExperiment(model, ARGS, f'{ARGS.experiment_type.lower()}-{ARGS.learning_rule.lower()}-{ARGS.inhibition_rule.lower()}-{ARGS.weight_growth.lower()}-{ARGS.weight_decay.lower()}-{ARGS.bias_update.lower()}-{l}-{lr}-{eps}-{dim}-{k}-{num}')
-                        accuracies = list(experiment.run())
-                        experiment.cleanup()
-                        
-                        train_acc_list.append(accuracies[0])
-                        test_acc_list.append(accuracies[1])
+def main():
+    train_acc_list, test_acc_list = parallel_training(ARGS, 5)
                             
-                    avg_test = average(test_acc_list)
-                    var_test = variance(test_acc_list)
-                    avg_train = average(train_acc_list)
-                    var_train = variance(train_acc_list)
-                    
-                    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {l} || LR: {lr} || EPS: {eps} || Dim: {dim} || Sigmoid K: {k} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
-                    
+    avg_test = average(test_acc_list)
+    var_test = variance(test_acc_list)
+    avg_train = average(train_acc_list)
+    var_train = variance(train_acc_list)
+
+    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || LR: {ARGS.lr} || EPS: {ARGS.heb_eps} || Dim: {ARGS.heb_dim} || Sigmoid K: {ARGS.sigmoid_k} || Dataset: {ARGS.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
+
+
+def train_and_eval(args: Tuple) -> List[float]:
+    params: argparse.Namespace
+    num: int
+    params, num = args
+    model: Network = HebbianNetwork('Hebbian Network', params).to(params.device)
+    experiment: Experiment = BaseExperiment(model, params, f'{params.experiment_type.lower()}-{params.learning_rule.lower()}-{params.inhibition_rule.lower()}-{params.weight_growth.lower()}-{params.weight_decay.lower()}-{params.bias_update.lower()}-{params.heb_lamb}-{params.lr}-{params.heb_eps}-{params.heb_dim}-{params.sigmoid_k}-{num}')
+    accuracies: List[float] = list(experiment.run())
+    experiment.cleanup()
+    
+    return accuracies
+
+
+def parallel_training(params: argparse.Namespace, total: int) -> Tuple[List[float], List[float]]:
+    # Create a pool of worker processes
+    with multiprocessing.Pool(processes=total) as pool:
+        # Map the list of parameters to the function that performs training
+        param_list = [
+            (params, process_id)
+            for process_id in range(total)
+        ]
+        results = pool.map(train_and_eval, param_list)
+    
+    # Split results into train and test accuracy lists
+    train_acc_list = [result[0] for result in results]
+    test_acc_list = [result[1] for result in results]
+    
+    return train_acc_list, test_acc_list
+
+
+if __name__ == "__main__":
+    main()

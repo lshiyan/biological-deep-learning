@@ -53,19 +53,26 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     parser.add_argument('--heb_lamb', type=float, default=15)
     parser.add_argument('--heb_gam', type=float, default=0.99)
     parser.add_argument('--heb_eps', type=float, default=0.01)
-    parser.add_argument('--sigmoid_k', type=float, default=1)
     parser.add_argument('--learning_rule', type=str, default='Sanger')
     parser.add_argument('--inhibition_rule', type=str, default='Relu')
     parser.add_argument('--weight_growth', type=str, default='Linear')
     parser.add_argument('--weight_decay', type=str, default='No_Decay')
     parser.add_argument('--bias_update', type=str, default='No_Bias')
+    parser.add_argument('--focus', type=str, default='Synapse')
+    parser.add_argument('--heb_act', type=str, default='Basic')
 
     # Classification layer hyperparameters
+    parser.add_argument('--class_learn', type=str, default='Controlled')
+    parser.add_argument('--class_growth', type=str, default='Linear')
+    parser.add_argument('--class_bias', type=str, default='No_Bias')
+    parser.add_argument('--class_focus', type=str, default='Synapse')
+    parser.add_argument('--class_act', type=str, default='Basic')
     
     # Shared hyperparameters
     parser.add_argument("--lr", type=float, default=0.005)
+    parser.add_argument('--sigmoid_k', type=float, default=1)
     parser.add_argument("--alpha", type=float, default=0)
-    parser.add_argument("--beta", type=float, default=1)
+    parser.add_argument("--beta", type=float, default=10e-7)
     parser.add_argument("--sigma", type=float, default=1)
     parser.add_argument("--mu", type=float, default=0)
     parser.add_argument("--init", type=str, default='uniform')

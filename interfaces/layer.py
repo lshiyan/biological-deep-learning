@@ -29,6 +29,10 @@ class NetworkLayer (nn.Module, ABC):
         mu (float): mean for random normal
         init (ParamInit): fc parameter initiation type
     """
+    
+    #################################################################################################
+    # Constructor Method
+    #################################################################################################
     def __init__(self, 
                  input_dimension: int = 784, 
                  output_dimension: int = 64, 
@@ -79,34 +83,30 @@ class NetworkLayer (nn.Module, ABC):
                 raise NameError(f"Invalid parameter init {self.init}.")
             
             param.requires_grad_(False)
-
-
-    @staticmethod
-    def create_id_tensors(dim: int) -> torch.Tensor:   
-        """
-        METHOD
-        Creates an identity tensor
-        @param
-            dim: dimension of id tensor
-        @return
-            id_tensor: 3D tensor with increasing size of identify matrices
-        """
-        id_tensor: torch.Tensor = torch.zeros(dim, dim, dim, dtype=torch.float)
-        for i in range(0, dim):
-            identity: torch.Tensor = torch.eye(i+1)
-            padded_identity: torch.Tensor = torch.nn.functional.pad(identity, (0, dim - i - 1, 0, dim - i - 1))
-            id_tensor[i] = padded_identity
-        return id_tensor
     
+
+    #################################################################################################
+    # Activations and weight/bias updates that will be called for train/eval forward
+    #################################################################################################
+    def activation(self, input: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError("This method has yet to be implemented.")
+
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> None:
-        raise NotImplementedError("This method is not implemented.")
-
-
-    def update_bias(self, output: torch.Tensor) -> None:
-        raise NotImplementedError("This method is not implemented.")
+        raise NotImplementedError("This method has yet to be implemented.")
     
 
+    def update_bias(self, output: torch.Tensor) -> None:
+        raise NotImplementedError("This method has yet to be implemented.")
+    
+
+    def weight_decay(self) -> None:
+        raise NotImplementedError("This method has yet to be implemented.")
+    
+    
+    #################################################################################################
+    # Training and Evaluation Methods
+    #################################################################################################
     def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None, freeze: bool = False) -> torch.Tensor:
         """
         METHOD
@@ -135,6 +135,9 @@ class NetworkLayer (nn.Module, ABC):
         raise NotImplementedError("This method is not implemented.")
 
 
+    #################################################################################################
+    # Helper Methods
+    #################################################################################################
     def visualize_weights(self, result_path: str, num: int, use: str, fname: str) -> None:
         """
         METHOD
@@ -209,6 +212,9 @@ class NetworkLayer (nn.Module, ABC):
         return active.nonzero().size(0)
 
 
+    #################################################################################################
+    # Static Methods Methods
+    #################################################################################################
     @staticmethod
     def row_col(num: int) -> Tuple[int, int]:
         # Find value for row and column
@@ -237,3 +243,23 @@ class NetworkLayer (nn.Module, ABC):
                     col = max(factor1, factor2)
         
         return row, col
+    
+    
+    @staticmethod
+    def create_id_tensors(dim: int) -> torch.Tensor:   
+        """
+        METHOD
+        Creates an identity tensor
+        @param
+            dim: dimension of id tensor
+        @return
+            id_tensor: 3D tensor with increasing size of identify matrices
+        """
+        id_tensor: torch.Tensor = torch.zeros(dim, dim, dim, dtype=torch.float)
+        for i in range(0, dim):
+            identity: torch.Tensor = torch.eye(i+1)
+            padded_identity: torch.Tensor = torch.nn.functional.pad(identity, (0, dim - i - 1, 0, dim - i - 1))
+            id_tensor[i] = padded_identity
+        return id_tensor
+    
+    

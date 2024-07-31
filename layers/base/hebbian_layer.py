@@ -1,8 +1,11 @@
+import math
 from typing import Optional
+from numpy import outer
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from layers.hidden_layer import HiddenLayer
-from utils.experiment_constants import *
+from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LearningRules, ParamInit, WeightDecay, WeightGrowth
 
 
 class HebbianLayer(HiddenLayer):
@@ -36,6 +39,10 @@ class HebbianLayer(HiddenLayer):
             weight_decay (WeightDecay): which weight decay to use
             bias_update (BiasUpdate): which bias update rule to follow
     """
+    
+    #################################################################################################
+    # Constructor Method
+    #################################################################################################
     def __init__(self, 
                  input_dimension: int, 
                  output_dimension: int, 
@@ -54,7 +61,9 @@ class HebbianLayer(HiddenLayer):
                  learning_rule: LearningRules = LearningRules.SANGER_LEARNING_RULE,
                  weight_growth: WeightGrowth = WeightGrowth.LINEAR,
                  weight_decay: WeightDecay = WeightDecay.TANH,
-                 bias_update: BiasUpdate = BiasUpdate.NO_BIAS
+                 bias_update: BiasUpdate = BiasUpdate.NO_BIAS,
+                 focus: Focus = Focus.SYNASPSE,
+                 activation: ActivationMethods = ActivationMethods.BASIC
                  ) -> None:
         """
         CONSTRUCTOR METHOD
@@ -82,18 +91,43 @@ class HebbianLayer(HiddenLayer):
                          beta, 
                          sigma, 
                          mu, 
-                         init, 
-                         lamb, 
-                         gamma, 
-                         eps, 
-                         sigmoid_k)
+                         init)
         self.inhibition_rule: LateralInhibitions = inhibition_rule
         self.learning_rule: LearningRules = learning_rule
         self.weight_growth: WeightGrowth = weight_growth
         self.decay: WeightDecay = weight_decay
         self.bias_update: BiasUpdate = bias_update
+        self.focus: Focus = focus
+        self.activation_method: ActivationMethods = activation
+        
+        self.gamma: float = gamma
+        self.lamb: float = lamb
+        self.eps: float = eps
+        self.sigmoid_k: float = sigmoid_k
+        self.exponential_average: torch.Tensor = torch.zeros(self.output_dimension).to(self.device)
 
 
+
+    #################################################################################################
+    # Activations and weight/bias updates that will be called for train/eval forward
+    #################################################################################################
+    def activation(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates activation of the layer.
+        @param
+            input: the inputs into the layer
+        @return
+            outputs of layer
+        """ 
+        if self.activation_method == ActivationMethods.BASIC:
+            return self._basic_activation(input)
+        elif self.activation_method == ActivationMethods.NORMALIZED:
+            return self._normalized_activation(input)
+        else:
+            raise ValueError("Invalid activation method.")
+        
+        
     def inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
@@ -121,6 +155,8 @@ class HebbianLayer(HiddenLayer):
         """
         METHOD
         Update weights using defined rule.
+        delta W = lr * rule * derivative
+        W = W + delta W
         @param
             input: the inputs into the layer
             output: the output of the layer
@@ -143,12 +179,15 @@ class HebbianLayer(HiddenLayer):
             function_derivative = self._linear_function()
         elif self.weight_growth == WeightGrowth.SIGMOID:
             function_derivative = self._sigmoid_function()
+        elif self.weight_growth == WeightGrowth.EXPONENTIAL:
+            function_derivative = self._exponential_function()
         else:
             raise NameError("Unknown weight growth rule.")
             
         # Weight Update
         delta_weight: torch.Tensor = (self.lr * calculated_rule * function_derivative).to(self.device)
-        self.fc.weight = nn.Parameter(torch.add(self.fc.weight, delta_weight), requires_grad=False)
+        updated_weight: torch.Tensor = torch.add(self.fc.weight, delta_weight)
+        self.fc.weight = nn.Parameter(updated_weight, requires_grad=False)
         
 
     def update_bias(self, output: torch.Tensor) -> None:
@@ -202,7 +241,11 @@ class HebbianLayer(HiddenLayer):
         # Update the weights of the fully connected layer
         self.fc.weight = nn.Parameter(updated_weights, requires_grad=False)
     
+    
 
+    #################################################################################################
+    # Training and Evaluation Methods
+    #################################################################################################
     def _train_forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         METHOD
@@ -213,11 +256,10 @@ class HebbianLayer(HiddenLayer):
         @return
             output: returns the data after passing it through the layer
         """
-        # Calculate output -> Update weights -> Update bias -> Decay weights -> return output
-        input_copy = input.clone().to(self.device).float()
-        
-        output = self.inhibition(self.fc(input_copy))
-        self.update_weights(input_copy, output)
+        # Calculate activation -> Calculate inhibition -> Update weights -> Update bias -> Decay weights -> return output
+        activations: torch.Tensor = self.activation(input)
+        output: torch.Tensor = self.inhibition(activations)
+        self.update_weights(input, output)
         self.update_bias(output)
         self.weight_decay()
         
@@ -237,7 +279,462 @@ class HebbianLayer(HiddenLayer):
         @return
             output: returns the data after passing it throw the layer
         """
-        # Calculate output -> Return output
-        input_copy = input.clone().to(self.device).float()
-        output = self.inhibition(self.fc(input_copy))
+        # Calculate activation -> calculate inhibition -> Return output
+        activations: torch.Tensor = self.activation(input)
+        output: torch.Tensor = self.inhibition(activations)
+        
         return output
+    
+    
+    
+    #################################################################################################
+    # Different Activation Methods
+    #################################################################################################
+    def _basic_activation(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates the activations through fully connected linear layer
+        @param
+            input: input to layer
+        @return
+            output: activation after passing through layer
+        """
+        return self.fc(input)
+    
+    
+    def _normalized_activation(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates the normalized activations through fully connected linear layer
+        @param
+            input: input to layer
+        @return
+            output: activation after passing through layer
+        """
+        weight: torch.Tensor = self.fc.weight.clone().detach().float().to(self.device)
+        norm: torch.Tensor = torch.norm(weight, p=2, dim=-1, keepdim=True)
+        normalized_weight: torch.Tensor = weight / norm
+        
+        return F.linear(input, normalized_weight, bias=self.fc.bias)
+    
+    
+    
+    #################################################################################################
+    # Different Inhibition Methods
+    #################################################################################################
+    def _relu_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates ReLU lateral inhibition
+        Inhibition: x = [ ReLU(x) / max(x) ] ^ lamb
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        # Get ReLU activation function
+        relu: nn.ReLU = nn.ReLU()
+        
+        # Compute ReLU and lateral inhibition
+        relu_input = relu(input)
+        max_ele: float = torch.max(input).item()
+        output: torch.Tensor =  ((relu_input / max_ele) ** self.lamb).to(self.device)
+        
+        return output
+    
+    
+    def _exp_softmax_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates exponential softmax (Modern Hopfield) lateral inhibition
+        Inhibition: x = Softmax((x - max(x)) ** lamb)
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        # Computes exponential softmax with numerical stabilization
+        max_ele: float = torch.max(input).item()
+        output: torch.Tensor = F.softmax((input - max_ele) ** self.lamb, dim=-1).to(self.device)
+        return output
+    
+        
+    def _wta_inhibition(self, input:torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates k-winners-takes-all lateral inhibition
+        Inhibition: x = x if x > threshold else 0
+        @param
+            input: input to layer
+            threshold: amount to be counted as activated
+        @return
+            output: activation after lateral inhibition
+        """
+        # Computes winner-takes-all inhibition
+        max_ele: float = torch.max(input).item()
+        output: torch.Tensor = torch.where(input>=max_ele, 1.0, 0.0).to(self.device)
+
+        return output
+    
+    
+    def _gaussian_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates gaussian lateral inhibition
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        mu: float = torch.max(torch.mean(input)).item() 
+        sigma: float = 1 / math.sqrt(2 * math.pi)
+        gaussian: torch.Tensor = ((1 / (sigma * torch.sqrt(torch.tensor(2 * torch.pi)))) * torch.exp(-self.lamb * ((input - mu) / sigma) ** 2)).to(self.device)
+        output: torch.Tensor = gaussian # NOTE: should i multiply gaussian by input?
+        
+        return output
+
+    
+    def _norm_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates devisive normalization lateral inhibition
+        Inhibition: x = ReLU(x) / sum(ReLU(x))
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        # Get ReLU activation function
+        relu: nn.ReLU = nn.ReLU()
+        
+        # Compute ReLU and lateral inhibition
+        activation: torch.Tensor = relu(input).to(self.device)
+        sum: float = input.sum().item()
+        output: torch.Tensor =  (activation / sum).to(self.device)
+        
+        return output
+    
+    
+    #################################################################################################
+    # Different Weight Updates Methods
+    #################################################################################################
+    def _hebbian_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Computes Hebbian Leanring Rule.
+        Rule: delta Wij = (y * x)ij 
+        @param
+            input: the input of the layer
+            output: the output of the layer
+        @return
+            computed_rule: computed hebbian rule
+        """
+        # Copy both input and output to be used in Sanger's Rule
+        x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
+        x.requires_grad_(False)
+        y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device)
+        y.requires_grad_(False)
+        
+        # Calculate outer product of output and input
+        computed_rule: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
+
+        # Update exponential averages
+        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+        
+        return computed_rule
+
+    
+    def _sanger_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Computes Sanger's Rule
+        Rule: delta Wij = ((y * x)ij - yi * SUM(Wkj * yk, k=1 to i))
+        @param
+            input: the input of the layer
+            output: the output of the layer
+        @return
+            computed_rule: computed sanger's rule
+        """
+        # Copy both input and output to be used in Sanger's Rule
+        x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
+        x.requires_grad_(False)
+        y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device)
+        y.requires_grad_(False)
+        
+        # Calculate outer product of output and input
+        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
+
+        # Retrieve initial weights
+        initial_weight: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+
+        # Calculate Sanger's Rule
+        id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
+        A: torch.Tensor = torch.einsum('kj, lkm, m, l -> lj', initial_weight, id_tensor, y, y).to(self.device)
+        computed_rule: torch.Tensor = (outer_prod - A).to(self.device)
+
+        # Update exponential averages
+        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+        
+        return computed_rule
+
+
+    def _fully_orthogonal_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Update weights using Fully Orthogonal Rule.
+        Rule: delta Wij = ((y * x)ij - yi * SUM(W * yk))
+        @param
+            input: the inputs into the layer
+            output: the output of the layer
+        @return
+            None
+        """
+        # Copy both input and output to be used in Sanger's Rule
+        x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
+        x.requires_grad_(False)
+        y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device)
+        y.requires_grad_(False)
+        
+        # Calculate outer product of output and input
+        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
+
+        # Retrieve initial weights
+        weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+
+        # Calculate Fully Orthogonal Rule
+        norm_term: torch.Tensor = torch.einsum("i, ij, k -> kj", y, weights, y)
+
+        # Compute change in weights
+        computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
+
+        # Update exponential averages
+        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+        
+        return computed_rule
+
+
+
+    #################################################################################################
+    # Different Weights Growth for Wegiht Updates
+    #################################################################################################
+    def _linear_function(self) -> torch.Tensor:
+        """
+        METHOD
+        Defines weight updates when using linear funciton
+        Derivatives 1
+        @param
+            None
+        @return
+            derivative: slope constant (derivative relative to linear rule always = 1)
+        """
+        return torch.ones(self.fc.weight.shape).to(self.device)
+    
+    
+    def _sigmoid_function(self) -> torch.Tensor:
+        """
+        METHOD
+        Defines weight updates when using sigmoid function
+        Derivative: 1/K * (K - Wij) * Wij or 1/K * (K - Wi:) * Wi:
+        @param
+            None
+        @return
+            derivative: sigmoid derivative of current weights
+        """
+        current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+        derivative: torch.Tensor
+        
+        if self.focus == Focus.SYNASPSE:
+            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - current_weights) * current_weights
+        elif self.focus == Focus.NEURON:
+            norm: torch.Tensor = torch.norm(current_weights, p=2, dim=-1, keepdim=True)
+            normalized_weights: torch.Tensor = current_weights / norm
+            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - normalized_weights) * normalized_weights
+        else:
+            raise ValueError("Invalid focus type.")
+        
+        return derivative
+    
+    
+    def _exponential_function(self) -> torch.Tensor:
+        """
+        METHOD
+        Defines weight updates when using exponential function
+        Derivative: Wij or  Wi:
+        @param
+            None
+        @return
+            derivative: exponential derivative of current weights
+        """
+        current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+        derivative: torch.Tensor
+        
+        if self.focus == Focus.SYNASPSE:
+            derivative = current_weights
+        elif self.focus == Focus.NEURON:
+            norm: torch.Tensor = torch.norm(current_weights, p=2, dim=-1, keepdim=True)
+            normalized_weights: torch.Tensor = current_weights / norm
+            derivative = normalized_weights
+        
+        return derivative
+        
+
+        
+    #################################################################################################
+    # Different Weights Growth for Weight Updates
+    #################################################################################################
+    def _linear_weight_decay(self) -> torch.Tensor:
+        """
+        METHOD
+        Decays the overused weights and increases the underused weights using tanh functions.
+        @param
+            None
+        @return
+            None
+        """
+        tanh: nn.Tanh = nn.Tanh()
+
+        # Gets average of exponential averages
+        average: float = torch.mean(self.exponential_average).item()
+
+        # Gets ratio vs mean
+        norm_exp_avg: torch.Tensor = (self.exponential_average / average).to(self.device)
+        
+        x: torch.Tensor = (-self.eps * (norm_exp_avg - 1)).to(self.device)
+        # x: torch.Tensor = self.eps * (norm_exp_avg - 1)
+        sech_x: torch.Tensor = (1 / torch.cosh(x)).to(self.device)
+
+        # Calculate the growth factors
+        growth_factor_positive: torch.Tensor = (self.eps * tanh(x) + 1).to(self.device)
+        growth_factor_negative: torch.Tensor = (torch.reciprocal(growth_factor_positive)).to(self.device)
+        growth_factor_positive = growth_factor_positive.unsqueeze(1)
+        growth_factor_negative = growth_factor_negative.unsqueeze(1)
+        
+        # cst_term: float = -self.eps * (1 - self.gamma) / average
+        # last_term: torch.Tensor = torch.reciprocal(torch.sinh(x) * torch.cosh(x))
+        # extra_term: torch.Tensor = (1 - self.eps * tanh(x)) ** 2
+        
+        # growth_factor_positive: torch.Tensor = self.fc.weight * cst_term * last_term.unsqueeze(1)
+        # growth_factor_negative: torch.Tensor = self.fc.weight * cst_term * last_term.unsqueeze(1) * extra_term.unsqueeze(1)
+        
+        # Combined growth_factor
+        growth_factor: torch.Tensor = torch.where(self.fc.weight > 0, growth_factor_positive, growth_factor_negative).to(self.device)
+        
+        return growth_factor
+    
+
+    def _sigmoid_weight_decay(self) -> torch.Tensor:
+        # NOTE: currently does not work
+        """
+        METHOD
+        Decays the overused weights and increases the underused weights using tanh functions.
+        @param
+            None
+        @return
+            None
+        """
+        tanh: nn.Tanh = nn.Tanh()
+        sigmoid: nn.Sigmoid = nn.Sigmoid()
+
+        # Gets average of exponential averages
+        average: float = torch.mean(self.exponential_average).item()
+
+        # Gets ratio vs mean
+        norm_exp_avg: torch.Tensor = (self.exponential_average / average).to(self.device)
+        
+        x: torch.Tensor = (-self.eps * (norm_exp_avg - 1)).to(self.device)
+
+        # calculate the growth factors
+        growth_factor_positive: torch.Tensor = sigmoid(self.eps * tanh(x) + 1).to(self.device)
+        growth_factor_negative: torch.Tensor = torch.reciprocal(growth_factor_positive).to(self.device)
+        growth_factor_positive = growth_factor_positive.unsqueeze(1)
+        growth_factor_negative = growth_factor_negative.unsqueeze(1)
+        
+        growth_factor = torch.where(self.fc.weight > 0, growth_factor_positive, growth_factor_negative).to(self.device)
+        
+        return growth_factor
+    
+    
+    def _simple_linear_weight_decay(self) -> torch.Tensor:
+        """
+        METHOD
+        Simple linear weight decay
+        Decay: linear_derivative * eps * (ai / a - 1)
+        @param
+            None
+        @return
+            decay_weight: amount to decay the weights by
+        """
+        # Gets average of exponential averages
+        average: float = torch.mean(self.exponential_average).item()
+        
+        # Compute simple weight decay
+        decay_weight: torch.Tensor = (self.eps * (self.exponential_average / average - 1)).unsqueeze(1).to(self.device)
+        decay_weight = self._linear_function() * decay_weight
+        
+        return decay_weight
+    
+    
+    def _simple_sigmoid_weight_decay(self) -> torch.Tensor:
+        """
+        METHOD
+        Simple linear weight decay
+        Decay: sigmoid_derivative * eps * (ai / a - 1)
+        @param
+            None
+        @return
+            decay_weight: amount to decay the weights by
+        """
+        # Gets average of exponential averages
+        average: float = torch.mean(self.exponential_average).item()
+        
+        # Compute simple weight decay
+        decay_weight: torch.Tensor = (self.eps * (self.exponential_average / average - 1)).unsqueeze(1).to(self.device)
+        decay_weight = self._sigmoid_function() * decay_weight
+        
+        return decay_weight
+                
+
+
+    #################################################################################################
+    # Different Weights Growth for Wegiht Updates
+    #################################################################################################
+    def _hebbian_bias_update(self, output:torch.Tensor) -> None:
+        """
+        METHOD
+        Defines the way the biases will be updated at each iteration of the training
+        It updates the biases of the classifier layer using a decay mechanism adjusted by the output probabilities.
+        The method applies an exponential decay to the biases, which is modulated by the output probabilities,
+        and scales the update by the learning rate. 
+        The biases are normalized after the update.
+        @param
+            output: The output tensor of the layer.
+        @return
+            None
+        """
+        y: torch.Tensor = output.clone().detach().squeeze().to(self.device)
+        exponential_bias = (torch.exp(-1 * self.fc.bias)).to(self.device)
+
+        # Compute bias update scaled by output probabilities.
+        A: torch.Tensor = (torch.mul(exponential_bias, y) - 1).to(self.device)
+        A = self.fc.bias + self.lr * A
+
+        # Normalize biases to maintain stability. (Divide by max bias value)
+        bias_maxes: torch.Tensor = (torch.max(A, dim=0).values).to(self.device)
+        self.fc.bias = nn.Parameter(A/bias_maxes.item(), requires_grad=False)
+        
+        
+    def _simple_bias_update(self, output: torch.Tensor) -> None:
+        """
+        METHOD
+        Defines a simple bias update rule
+        Update: b - eps * (yi - y)
+        @param
+            output: output of the current layer
+        @return
+            None
+        """
+        output_copy: torch.Tensor = output.clone().detach().squeeze().to(self.device)
+        
+        avg_output: float = torch.mean(output_copy).item()
+        bias_update: torch.Tensor = (self.eps * (output_copy - avg_output)).to(self.device)
+        self.fc.bias = nn.Parameter(torch.sub(self.fc.bias, bias_update), requires_grad=False)

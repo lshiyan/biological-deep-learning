@@ -9,6 +9,7 @@ class LearningRules(Enum):
     HEBBIAN_LEARNING_RULE = 'HEBBIAN'
     SANGER_LEARNING_RULE = 'SANGER'
     FULLY_ORTHOGONAL_LEARNING_RULE = 'ORTHOGONAL'
+    CONTROLLED_LEARNING_RULE = 'CONTROLLED'
     
     
 class LateralInhibitions(Enum):
@@ -32,6 +33,7 @@ class WeightGrowth(Enum):
     """
     LINEAR = 'LINEAR'
     SIGMOID = 'SIGMOID'
+    EXPONENTIAL = 'EXPONENTIAL'
     
 
 class LayerNames(Enum):
@@ -104,3 +106,13 @@ class DataSets(Enum):
     MNIST = 'MNIST'
     E_MNIST = 'E_MNIST'
     FASHION_MNIST = 'FASHION_MNIST'
+    
+    
+class ActivationMethods(Enum):
+    BASIC = 'BASIC'
+    NORMALIZED = 'NORMALIZED'
+    
+    
+class Focus(Enum):
+    SYNASPSE = 'SYNAPSE'
+    NEURON = 'NEURON'
