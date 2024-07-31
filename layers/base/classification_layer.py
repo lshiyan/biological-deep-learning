@@ -171,7 +171,7 @@ class ClassificationLayer(OutputLayer):
         @return
             output: returns the data after passing it through the layer
         """
-        # Calculate activation -> Calculate inhibition -> Update weights -> Update bias -> Decay weights -> return output
+        # Calculate activation -> Calculate inhibition -> Update weights -> Update bias -> Return output
         activations: torch.Tensor = self.activation(input)
         output: torch.Tensor = self.probability(activations)
         self.update_weights(input, activations, clamped_output)

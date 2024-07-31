@@ -57,7 +57,6 @@ class HebbianNetwork(Network):
         learning_rule_mapping: dict[str, LearningRules] = {member.value.upper(): member for member in LearningRules}
         weight_growth_mapping: dict[str, WeightGrowth] = {member.value.upper(): member for member in WeightGrowth}
         param_init_mapping: dict[str, ParamInit] = {member.value.upper(): member for member in ParamInit}
-        weight_decay_mapping: dict[str, WeightDecay] = {member.value.upper(): member for member in WeightDecay}
         bias_update_mapping: dict[str, BiasUpdate] = {member.value.upper(): member for member in BiasUpdate}
         focus_mapping: dict[str, Focus] = {member.value.upper(): member for member in Focus}
         activation_mapping: dict[str, ActivationMethods] = {member.value.upper(): member for member in ActivationMethods}

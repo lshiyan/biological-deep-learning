@@ -99,10 +99,6 @@ class NetworkLayer (nn.Module, ABC):
     def update_bias(self, output: torch.Tensor) -> None:
         raise NotImplementedError("This method has yet to be implemented.")
     
-
-    def weight_decay(self) -> None:
-        raise NotImplementedError("This method has yet to be implemented.")
-    
     
     #################################################################################################
     # Training and Evaluation Methods
