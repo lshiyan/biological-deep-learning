@@ -162,6 +162,7 @@ class NetworkLayer (nn.Module, ABC):
 
         # Get the weights and create heatmap
         weight: torch.Tensor = self.fc.weight
+        max_value: float = torch.max(weight).item()
         fig: matplotlib.figure.Figure
         axes: np.ndarray
         fig, axes = plt.subplots(row, col, figsize=(fig_width, fig_height)) # type: ignore
@@ -176,7 +177,7 @@ class NetworkLayer (nn.Module, ABC):
                 padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size)).cpu()
                 heatmap: torch.Tensor = padded_weights.view(feature_row, feature_col).cpu().numpy()
                 ax = axes[ele // col, ele % col]
-                im = ax.imshow(heatmap, cmap='hot', interpolation='nearest', vmin=0, vmax=1)
+                im = ax.imshow(heatmap, cmap='hot', interpolation='nearest', vmin=0, vmax=max_value)
                 fig.colorbar(im, ax=ax)
                 ax.set_title(f'Weight {ele}')
                 

@@ -73,7 +73,6 @@ class HebbianNetwork(Network):
         self.bias_update: BiasUpdate = bias_update_mapping[args.bias_update.upper()]
 
         # Classification layer hyperparameters
-        self.include_first = args.include_first
 
         # Shared hyperparameters
         self.lr: float = args.lr
@@ -111,8 +110,7 @@ class HebbianNetwork(Network):
                                                                 self.beta,
                                                                 self.sigma,
                                                                 self.mu,
-                                                                self.init,
-                                                                self.include_first)
+                                                                self.init)
         
         self.add_module(input_layer.name.name, input_layer)
         self.add_module(hebbian_layer.name.name, hebbian_layer)

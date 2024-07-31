@@ -57,11 +57,10 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     parser.add_argument('--learning_rule', type=str, default='Sanger')
     parser.add_argument('--inhibition_rule', type=str, default='Relu')
     parser.add_argument('--weight_growth', type=str, default='Linear')
-    parser.add_argument('--weight_decay', type=str, default='Tanh')
+    parser.add_argument('--weight_decay', type=str, default='No_Decay')
     parser.add_argument('--bias_update', type=str, default='No_Bias')
 
     # Classification layer hyperparameters
-    parser.add_argument('--include_first', type=bool, default=True)
     
     # Shared hyperparameters
     parser.add_argument("--lr", type=float, default=0.005)

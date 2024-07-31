@@ -1,5 +1,3 @@
-from experiments.base_experiment import BaseExperiment
-
 from experiments.generalization_experiment import GeneralizationExperiment
 from models.hebbian_network import HebbianNetwork
 from utils.experiment_parser import *

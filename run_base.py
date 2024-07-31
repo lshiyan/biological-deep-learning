@@ -52,10 +52,8 @@ arguments = [
             '--learning_rule=orthogonal',
             '--inhibition_rule=relu',
             '--weight_growth=linear',
-            '--weight_decay=simple',
             '--bias_update=no_bias',
             # Classification layer hyperparameters
-            '--include_first=True',
             # Shared hyperparameters
             '--lr=0.005',
             '--alpha=0',

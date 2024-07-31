@@ -23,7 +23,6 @@ class ClassificationLayer(OutputLayer):
             mu (float): mean for random normal
             init (ParamInit): fc parameter initiation type
         OWN ATTR.
-            include_first (bool): wether or not to include first neuro in classification
     """
     def __init__(self, 
                  input_dimension: int,
@@ -35,7 +34,6 @@ class ClassificationLayer(OutputLayer):
                  sigma: float = 1,
                  mu: float = 0,
                  init: ParamInit = ParamInit.UNIFORM,
-                 include_first: bool = True
                  ) -> None:
         """
         CONSTRUCTOR METHOD
@@ -49,7 +47,6 @@ class ClassificationLayer(OutputLayer):
             None
         """
         super().__init__(input_dimension, output_dimension, device, learning_rate, alpha, beta, sigma, mu, init)
-        self.include_first: bool = include_first
         
 
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> None:
@@ -82,9 +79,6 @@ class ClassificationLayer(OutputLayer):
         # Normalize weights by the maximum value in each row to stabilize the learning.
         weight_maxes: torch.Tensor = (torch.max(weights, dim=1).values).to(self.device)
         self.fc.weight = nn.Parameter(weights/weight_maxes.unsqueeze(1), requires_grad=False)
-
-        # Zero out the first column of weights -> this is to prevent the first weight from learning everything
-        if not self.include_first: self.fc.weight[:, 0] = 0
         
 
     def update_bias(self, output: torch.Tensor) -> None:
