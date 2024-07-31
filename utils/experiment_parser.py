@@ -53,12 +53,11 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     parser.add_argument('--heb_lamb', type=float, default=15)
     parser.add_argument('--heb_gam', type=float, default=0.99)
     parser.add_argument('--heb_eps', type=float, default=0.01)
-    parser.add_argument('--learning_rule', type=str, default='Sanger')
-    parser.add_argument('--inhibition_rule', type=str, default='Relu')
-    parser.add_argument('--weight_growth', type=str, default='Linear')
-    parser.add_argument('--weight_decay', type=str, default='No_Decay')
-    parser.add_argument('--bias_update', type=str, default='No_Bias')
-    parser.add_argument('--focus', type=str, default='Synapse')
+    parser.add_argument('--heb_learn', type=str, default='Sanger')
+    parser.add_argument('--heb_inhib', type=str, default='Relu')
+    parser.add_argument('--heb_growth', type=str, default='Linear')
+    parser.add_argument('--heb_bias', type=str, default='No_Bias')
+    parser.add_argument('--heb_focus', type=str, default='Synapse')
     parser.add_argument('--heb_act', type=str, default='Basic')
 
     # Classification layer hyperparameters

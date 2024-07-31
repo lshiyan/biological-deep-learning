@@ -65,12 +65,11 @@ class HebbianNetwork(Network):
         self.heb_lamb: float = args.heb_lamb
         self.heb_eps: float = args.heb_eps
         self.heb_gam: float = args.heb_gam
-        self.heb_inhib: LateralInhibitions = inhibition_mapping[args.inhibition_rule.upper()]
-        self.heb_learn: LearningRules = learning_rule_mapping[args.learning_rule.upper()]
-        self.heb_growth: WeightGrowth = weight_growth_mapping[args.weight_growth.upper()]
-        self.heb_weight_decay: WeightDecay = weight_decay_mapping[args.weight_decay.upper()]
-        self.heb_bias_update: BiasUpdate = bias_update_mapping[args.bias_update.upper()]
-        self.heb_focus: Focus = focus_mapping[args.focus.upper()]
+        self.heb_inhib: LateralInhibitions = inhibition_mapping[args.heb_inhib.upper()]
+        self.heb_learn: LearningRules = learning_rule_mapping[args.heb_learn.upper()]
+        self.heb_growth: WeightGrowth = weight_growth_mapping[args.heb_growth.upper()]
+        self.heb_bias_update: BiasUpdate = bias_update_mapping[args.heb_bias.upper()]
+        self.heb_focus: Focus = focus_mapping[args.heb_focus.upper()]
         self.heb_act: ActivationMethods = activation_mapping[args.heb_act.upper()]
 
         # Classification layer hyperparameters
@@ -107,7 +106,6 @@ class HebbianNetwork(Network):
                                                   self.heb_inhib,
                                                   self.heb_learn,
                                                   self.heb_growth,
-                                                  self.heb_weight_decay,
                                                   self.heb_bias_update,
                                                   self.heb_focus,
                                                   self.heb_act)

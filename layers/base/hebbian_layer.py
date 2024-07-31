@@ -60,7 +60,6 @@ class HebbianLayer(HiddenLayer):
                  inhibition_rule: LateralInhibitions = LateralInhibitions.RELU_INHIBITION, 
                  learning_rule: LearningRules = LearningRules.SANGER_LEARNING_RULE,
                  weight_growth: WeightGrowth = WeightGrowth.LINEAR,
-                 weight_decay: WeightDecay = WeightDecay.TANH,
                  bias_update: BiasUpdate = BiasUpdate.NO_BIAS,
                  focus: Focus = Focus.SYNASPSE,
                  activation: ActivationMethods = ActivationMethods.BASIC
@@ -95,7 +94,6 @@ class HebbianLayer(HiddenLayer):
         self.inhibition_rule: LateralInhibitions = inhibition_rule
         self.learning_rule: LearningRules = learning_rule
         self.weight_growth: WeightGrowth = weight_growth
-        self.decay: WeightDecay = weight_decay
         self.bias_update: BiasUpdate = bias_update
         self.focus: Focus = focus
         self.activation_method: ActivationMethods = activation
@@ -207,39 +205,6 @@ class HebbianLayer(HiddenLayer):
             self._hebbian_bias_update(output)
         else:
             raise ValueError("Update Bias type invalid.")
-        
-
-    def weight_decay(self) -> None:
-        """
-        METHOD
-        Decays weights according to rule
-        @param
-            None
-        @return
-            None
-        """
-        # No weight decay
-        if self.decay == WeightDecay.NO_DECAY:
-            return
-
-        # Determine the growth or decay factor
-        if self.weight_growth == WeightGrowth.LINEAR:
-            factor = self._linear_weight_decay() if self.decay == WeightDecay.TANH else self._simple_linear_weight_decay()
-        elif self.weight_growth == WeightGrowth.SIGMOID:
-            factor = self._sigmoid_weight_decay() if self.decay == WeightDecay.TANH else self._simple_sigmoid_weight_decay()
-        else:
-            raise ValueError(f"Invalid weight growth method: {self.weight_growth}")
-
-        # Apply the decay or growth factor
-        if self.decay == WeightDecay.TANH:
-            updated_weights = (self.fc.weight * factor).to(self.device)
-        elif self.decay == WeightDecay.SIMPLE:
-            updated_weights = (self.fc.weight - factor).to(self.device)
-        else:
-            raise ValueError(f"Invalid weight decay method: {self.decay}")
-
-        # Update the weights of the fully connected layer
-        self.fc.weight = nn.Parameter(updated_weights, requires_grad=False)
     
     
 
@@ -256,12 +221,11 @@ class HebbianLayer(HiddenLayer):
         @return
             output: returns the data after passing it through the layer
         """
-        # Calculate activation -> Calculate inhibition -> Update weights -> Update bias -> Decay weights -> return output
+        # Calculate activation -> Calculate inhibition -> Update weights -> Update bias -> Rreturn output
         activations: torch.Tensor = self.activation(input)
         output: torch.Tensor = self.inhibition(activations)
         self.update_weights(input, output)
         self.update_bias(output)
-        self.weight_decay()
         
         # Check if there are any NaN weights
         if (self.fc.weight.isnan().any()):
