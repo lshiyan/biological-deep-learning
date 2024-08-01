@@ -448,7 +448,7 @@ class HebbianLayer(HiddenLayer):
         y.requires_grad_(False)
         
         # Calculate outer product of output and input
-        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
+        outer_prod: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
 
         # Retrieve initial weights
         weights: torch.Tensor = self.normalized_weights.clone().detach().to(self.device)
@@ -482,10 +482,10 @@ class HebbianLayer(HiddenLayer):
         y.requires_grad_(False)
         
         # Calculate outer product of output and input
-        outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
+        outer_prod: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
 
         # Retrieve initial weights
-        weights: torch.Tensor = self.normalized_weights.clone().detach().to(self.device)
+        weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
 
         # Calculate Fully Orthogonal Rule
         norm_term: torch.Tensor = torch.einsum("i, ij, k -> kj", y, weights, y)

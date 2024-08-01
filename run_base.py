@@ -45,7 +45,7 @@ arguments = [
             '--heb_dim=64', 
             '--output_dim=10',
             # Hebbian layer hyperparameters  
-            '--heb_lamb=15', 
+            '--heb_lamb=0.25', 
             '--heb_gam=0.99',
             '--heb_eps=0.0001',
             '--heb_learn=orthogonal',
