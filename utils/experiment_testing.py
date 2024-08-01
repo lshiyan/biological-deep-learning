@@ -7,7 +7,7 @@ def lambda_list(*args: float) -> List[float]:
     if args:
         for num in args: test_list.append(num)
     else:
-        for n in range(-4, 4):
+        for n in range(-2, 4):
             lamb = 2 ** n
             test_list.append(lamb)
     test_list.sort()
