@@ -18,7 +18,7 @@ results_log = configure_logger('Base Result Log', './results/results.log')
 ARGS = parse_arguments()
 
 def main():
-    train_acc_list, test_acc_list = parallel_training(ARGS, 5)
+    train_acc_list, test_acc_list = parallel_training(ARGS, 1)
                             
     avg_test = round(average(test_acc_list), 4)
     var_test = round(variance(test_acc_list), 6)
@@ -33,7 +33,7 @@ def train_and_eval(args: Tuple) -> List[float]:
     num: int
     params, num = args
     model: Network = HebbianNetwork('Hebbian Network', params).to(params.device)
-    experiment: Experiment = BaseExperiment(model, params, f'{params.experiment_type.lower()}-{params.heb_learn.lower()}-{params.heb_inhib.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}-{params.lr}-{params.heb_eps}-{params.sigmoid_k}-{params.class_learn}-{num}')
+    experiment: Experiment = BaseExperiment(model, params, f'{params.experiment_type.lower()}-{params.heb_learn.lower()}-{params.heb_inhib.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}-{params.sigmoid_k}-{params.class_learn}-{num}')
     accuracies: List[float] = list(experiment.run())
     experiment.cleanup()
     
