@@ -19,6 +19,7 @@ class LateralInhibitions(Enum):
     @instance attr.
     """
     RELU_INHIBITION = 'RELU'
+    MAX_INHIBITION = 'MAX'
     EXP_SOFTMAX_INHIBITION = 'EXP_SOFTMAX'
     WTA_INHIBITION = 'WTA'
     GAUSSIAN_INHIBITION = 'GAUSSIAN'

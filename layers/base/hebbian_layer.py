@@ -104,6 +104,8 @@ class HebbianLayer(HiddenLayer):
         self.sigmoid_k: float = sigmoid_k
         self.exponential_average: torch.Tensor = torch.zeros(self.output_dimension).to(self.device)
 
+        self.normalized_weights: torch.Tensor = self.normalize(self.fc.weight).to(self.device)
+        
 
 
     #################################################################################################
@@ -137,6 +139,8 @@ class HebbianLayer(HiddenLayer):
         """ 
         if self.inhibition_rule == LateralInhibitions.RELU_INHIBITION:
             return self._relu_inhibition(input)
+        elif self.inhibition_rule == LateralInhibitions.MAX_INHIBITION:
+            return self._max_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.EXP_SOFTMAX_INHIBITION:
             return self._exp_softmax_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.WTA_INHIBITION:
@@ -186,6 +190,9 @@ class HebbianLayer(HiddenLayer):
         delta_weight: torch.Tensor = (self.lr * calculated_rule * function_derivative).to(self.device)
         updated_weight: torch.Tensor = torch.add(self.fc.weight, delta_weight)
         self.fc.weight = nn.Parameter(updated_weight, requires_grad=False)
+        
+        # Normalized Weight Update
+        self.normalized_weights = self.normalize(updated_weight).to(self.device)
         
 
     def update_bias(self, output: torch.Tensor) -> None:
@@ -275,11 +282,7 @@ class HebbianLayer(HiddenLayer):
         @return
             output: activation after passing through layer
         """
-        weight: torch.Tensor = self.fc.weight.clone().detach().float().to(self.device)
-        norm: torch.Tensor = torch.norm(weight, p=2, dim=-1, keepdim=True)
-        normalized_weight: torch.Tensor = weight / norm
-        
-        return F.linear(input, normalized_weight, bias=self.fc.bias)
+        return F.linear(input, self.normalized_weights, bias=self.fc.bias)
     
     
     
@@ -306,6 +309,24 @@ class HebbianLayer(HiddenLayer):
         
         return output
     
+    
+    def _max_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Calculates ReLU lateral inhibition
+        Inhibition: x = [ abs(x) / abs(x) ] ^ lamb * proper sign
+        @param
+            input: input to layer
+        @return
+            output: activation after lateral inhibition
+        """
+        sign: torch.Tensor = torch.where(input>=0, 1, -1)    
+        abs_input: torch.Tensor = torch.abs(input)
+        max_ele: float = torch.max(abs_input).item()
+        output: torch.Tensor = (((abs_input / max_ele) ** self.lamb) * sign).to(self.device)
+        
+        return output
+             
     
     def _exp_softmax_inhibition(self, input: torch.Tensor) -> torch.Tensor:
         """
@@ -400,6 +421,7 @@ class HebbianLayer(HiddenLayer):
         y.requires_grad_(False)
         
         # Calculate outer product of output and input
+        computed_rule: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
         computed_rule: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
 
         # Update exponential averages
@@ -429,11 +451,11 @@ class HebbianLayer(HiddenLayer):
         outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
 
         # Retrieve initial weights
-        initial_weight: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+        weights: torch.Tensor = self.normalized_weights.clone().detach().to(self.device)
 
         # Calculate Sanger's Rule
         id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
-        A: torch.Tensor = torch.einsum('kj, lkm, m, l -> lj', initial_weight, id_tensor, y, y).to(self.device)
+        A: torch.Tensor = torch.einsum('kj, lkm, m, l -> lj', weights, id_tensor, y, y).to(self.device)
         computed_rule: torch.Tensor = (outer_prod - A).to(self.device)
 
         # Update exponential averages
@@ -463,7 +485,7 @@ class HebbianLayer(HiddenLayer):
         outer_prod: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
 
         # Retrieve initial weights
-        weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+        weights: torch.Tensor = self.normalized_weights.clone().detach().to(self.device)
 
         # Calculate Fully Orthogonal Rule
         norm_term: torch.Tensor = torch.einsum("i, ij, k -> kj", y, weights, y)
@@ -702,3 +724,15 @@ class HebbianLayer(HiddenLayer):
         avg_output: float = torch.mean(output_copy).item()
         bias_update: torch.Tensor = (self.eps * (output_copy - avg_output)).to(self.device)
         self.fc.bias = nn.Parameter(torch.sub(self.fc.bias, bias_update), requires_grad=False)
+        
+        
+        
+    #################################################################################################
+    # Static Methods
+    #################################################################################################
+    @staticmethod
+    def normalize(weights: torch.Tensor) -> torch.Tensor:
+        norm: torch.Tensor = torch.norm(weights, p=2, dim=-1, keepdim=True)
+        normalized_weights: torch.Tensor = weights / norm
+        
+        return normalized_weights

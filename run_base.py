@@ -53,9 +53,9 @@ arguments = [
             '--heb_growth=linear',
             '--heb_bias=no_bias',
             '--heb_focus=synapse',
-            '--heb_act=basic',
+            '--heb_act=normalized',
             # Classification layer hyperparameters
-            '--class_learn=controlled',
+            '--class_learn=hebbian',
             '--class_growth=linear',
             '--class_bias=no_bias',
             '--class_focus=synapse',
