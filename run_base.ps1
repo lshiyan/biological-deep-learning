@@ -12,11 +12,11 @@ $scriptName = 'train_base.py'
 
 $lambda_values = @(0.25, 1, 16)
 $sig_k_values = @(1)
-$heb_learn_values = @('orthogonal')
+$heb_learn_values = @('sanger', 'orthogonal')
 $heb_inhib_values = @('relu', 'max', 'exp_softmax')
-$heb_growth_values = @('linear')
-$heb_focus_values = @('synapse')
-$class_learn_values = @('hebbian')
+$heb_growth_values = @('linear', 'sigmoid', 'exponential')
+$heb_focus_values = @('synapse', 'neuron')
+$class_learn_values = @('hebbian', 'controlled')
 
 # Define the static part of the arguments
 $staticArguments = @(
