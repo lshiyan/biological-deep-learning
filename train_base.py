@@ -8,7 +8,6 @@ from models.hebbian_network import HebbianNetwork
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
 from utils.experiment_logger import *
-from utils.experiment_testing import eps_list, dim_list, lambda_list, lr_list, sigmoid_k_list
 from utils.experiment_timer import *
 from utils.experiment_stats import *
 
@@ -17,14 +16,6 @@ results_log = configure_logger('Base Result Log', './results/results.log')
 
 # Get arguments
 ARGS = parse_arguments()
-
-# Experiments setup
-lambda_test = lambda_list(1)
-lr_test = lr_list(0.005)
-eps_test = eps_list(0.0001)
-dim_test = dim_list(64)
-sigmoid_k_test = sigmoid_k_list(1)
-
 
 def main():
     train_acc_list, test_acc_list = parallel_training(ARGS, 5)
@@ -42,7 +33,7 @@ def train_and_eval(args: Tuple) -> List[float]:
     num: int
     params, num = args
     model: Network = HebbianNetwork('Hebbian Network', params).to(params.device)
-    experiment: Experiment = BaseExperiment(model, params, f'{params.experiment_type.lower()}-{params.heb_learn.lower()}-{params.heb_inhib.lower()}-{params.heb_growth.lower()}-{params.heb_bias.lower()}-{params.heb_lamb}-{params.lr}-{params.heb_eps}-{params.heb_dim}-{params.sigmoid_k}-{num}')
+    experiment: Experiment = BaseExperiment(model, params, f'{params.experiment_type.lower()}-{params.heb_learn.lower()}-{params.heb_inhib.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}-{params.lr}-{params.heb_eps}-{params.sigmoid_k}-{params.class_learn}-{num}')
     accuracies: List[float] = list(experiment.run())
     experiment.cleanup()
     

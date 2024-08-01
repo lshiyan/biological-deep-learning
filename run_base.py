@@ -51,9 +51,7 @@ arguments = [
             '--heb_learn=orthogonal',
             '--heb_inhib=relu',
             '--heb_growth=linear',
-            '--heb_bias=no_bias',
             '--heb_focus=synapse',
-            '--heb_act=normalized',
             # Classification layer hyperparameters
             '--class_learn=hebbian',
             '--class_growth=linear',
