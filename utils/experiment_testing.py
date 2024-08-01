@@ -59,7 +59,8 @@ def sigmoid_k_list(*args: float) -> List[float]:
     if args:
         for num in args: test_list.append(num)
     else:
-        for n in range(1, 11):
-            test_list.append(0.1 * n)
+        for n in range(-2, 2):
+            k = 10 ** n
+            test_list.append(k)
     test_list.sort()    
     return test_list
