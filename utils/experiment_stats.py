@@ -10,7 +10,8 @@ def average(numbers: List[float]) -> float:
     @return
         average of list
     """
-    return sum(numbers) / len(numbers) if numbers else 0
+    avg: float = sum(numbers) / len(numbers) if numbers else 0
+    return round(avg, 4)
 
 
 def variance(numbers: List[float], sample: bool = True) -> float:
@@ -28,10 +29,9 @@ def variance(numbers: List[float], sample: bool = True) -> float:
     mean: float = average(numbers)
     squared_diffs: List[float] = [(x - mean) ** 2 for x in numbers]
     
-    if sample:
-        return sum(squared_diffs) / (len(numbers) - 1)
-    else:
-        return sum(squared_diffs) / len(numbers)
+    variance: float = sum(squared_diffs) / (len(numbers) - 1)
+    
+    return round(variance, 6)
     
 
 def min_diff(means: List[float]) -> float:

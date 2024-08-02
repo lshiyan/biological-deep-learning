@@ -35,30 +35,34 @@ arguments = [
             '--heb_dim=64', 
             '--output_dim=10',
             # Hebbian layer hyperparameters  
-            '--heb_lamb=15', 
+            '--heb_lamb=16', 
             '--heb_gam=0.99',
             '--heb_eps=0.0001',
-            '--sigmoid_k=1',
-            '--learning_rule=orthogonal',
-            '--inhibition_rule=relu',
-            '--weight_growth=linear',
-            '--bias_update=no_bias',
-            '--focus=synapse',
+            '--heb_learn=orthogonal',
+            '--heb_inhib=relu',
+            '--heb_growth=linear',
+            '--heb_focus=synapse',
             # Classification layer hyperparameters
+            '--class_learn=hebbian',
+            '--class_growth=linear',
+            '--class_bias=no_bias',
+            '--class_focus=synapse',
+            '--class_act=basic',
             # Shared hyperparameters
             '--lr=0.005',
+            '--sigmoid_k=1',
             '--alpha=0',
-            '--beta=1',
+            '--beta=10e-7',
             '--sigma=1',
             '--mu=0',
             '--init=uniform',
             # Experiment parameters
             '--batch_size=1',
-            '--epochs=10', 
+            '--epochs=1', 
             '--device=cpu',
-            '--device=cuda:5',
+            # '--device=cuda:5',
             '--local_machine=True',
-            '--experiment_type=generalization'
+            '--experiment_type=base'
             ]
 
 # Construct the command

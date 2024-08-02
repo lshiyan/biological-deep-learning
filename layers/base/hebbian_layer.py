@@ -530,7 +530,8 @@ class HebbianLayer(HiddenLayer):
         if self.focus == Focus.SYNASPSE:
             derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - current_weights) * current_weights
         elif self.focus == Focus.NEURON:
-            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - self.normalized_weights) * self.normalized_weights
+            norm: torch.Tensor = self.get_norm(self.fc.weight)
+            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - norm) * norm
         else:
             raise ValueError("Invalid focus type.")
         
@@ -553,7 +554,8 @@ class HebbianLayer(HiddenLayer):
         if self.focus == Focus.SYNASPSE:
             derivative = current_weights
         elif self.focus == Focus.NEURON:
-            derivative = self.normalized_weights
+            norm: torch.Tensor = self.get_norm(self.fc.weight)
+            derivative = norm
         else:
             raise ValueError("Invalid focus type.")
         
@@ -727,8 +729,14 @@ class HebbianLayer(HiddenLayer):
     # Static Methods
     #################################################################################################
     @staticmethod
+    def get_norm(weights: torch.Tensor) -> torch.Tensor:
+        norm: torch.Tensor = torch.norm(weights, p=2, dim=-1, keepdim=True)
+        return norm
+    
+    
+    @staticmethod
     def normalize(weights: torch.Tensor) -> torch.Tensor:
-        norm: torch.Tensor = torch.norm(weights, p=2, dim=-1, keepdim=True) #/ math.sqrt(weights.size(0))
+        norm: torch.Tensor = HebbianLayer.get_norm(weights)
         normalized_weights: torch.Tensor = weights / norm
         
         return normalized_weights

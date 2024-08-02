@@ -13,8 +13,11 @@ deactivate
 powershell -ExecutionPolicy Bypass -File run_base.ps1
 powershell -ExecutionPolicy Bypass -File run_gen.ps1
 
+./run_base.sh
+./run_gen.sh
+
 pip3 install torch torchvision torchaudio
-pip install pandas matplotlib numpy
+pip3 install pandas matplotlib numpy
 
 /mnt/teaching/COMP551/pzheng3/biological-deep-learning
 /mnt/graduate/pzheng3/biological-deep-learning

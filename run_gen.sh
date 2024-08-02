@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the base script name
-scriptName='train_base.py'
+scriptName='train_gen.py'
 
 # Define the values for the parameter you want to vary
 # lambda_values=(0.25 0.5 1 2 4 8 16)
@@ -25,6 +25,7 @@ for focus in "${heb_focus_values[@]}"; do
                 # Construct the complete set of arguments including the varying parameter
                 arguments=(
                     "--data_name=MNIST"
+                    "--ext_data_name=EXT_MNIST"
                     "--train_data=data/mnist/train-images.idx3-ubyte"
                     "--train_label=data/mnist/train-labels.idx1-ubyte"
                     "--test_data=data/mnist/test-images.idx3-ubyte"
@@ -32,8 +33,17 @@ for focus in "${heb_focus_values[@]}"; do
                     "--train_size=60000"
                     "--test_size=10000"
                     "--classes=10"
+                    "--ext_train_data=data/ext_mnist/train-images.idx3-ubyte"
+                    "--ext_train_label=data/ext_mnist/train-labels.idx1-ubyte"
+                    "--ext_test_data=data/ext_mnist/test-images.idx3-ubyte"
+                    "--ext_test_label=data/ext_mnist/test-labels.idx1-ubyte"
+                    "--ext_train_size=88800"
+                    "--ext_test_size=14800"
+                    "--ext_classes=26"
                     "--train_fname=data/mnist/mnist_train.csv"
                     "--test_fname=data/mnist/mnist_test.csv"
+                    "--ext_train_fname=data/ext_mnist/ext_mnist_train.csv"
+                    "--ext_test_fname=data/ext_mnist/ext_mnist_test.csv"
                     "--input_dim=784"
                     "--heb_dim=64"
                     "--output_dim=10"
@@ -57,15 +67,14 @@ for focus in "${heb_focus_values[@]}"; do
                     "--mu=0"
                     "--init=uniform"
                     "--batch_size=1"
-                    "--epochs=1"
+                    "--epochs=5"
                     "--device=cpu"
                     "--local_machine=True"
-                    "--experiment_type=base"
+                    "--experiment_type=generalization"
                 )
                 
                 # Start the process with the complete set of arguments
-                allArgs=($scriptName "${arguments[@]}")
-                python "${allArgs[@]}" &
+                python "${scriptName}" "${arguments[@]}" &
                 processes+=($!)
                 echo "Started process: ${processes[-1]}"
             done

@@ -1,5 +1,5 @@
 # Define the base script name
-$scriptName = 'train_base.py'
+$scriptName = 'train_gen.py'
 
 # Define the values for the parameter you want to vary
 # $lambda_values = @(0.25, 0.5, 1, 2, 4, 8, 16)
@@ -25,6 +25,7 @@ foreach ($focus in $heb_focus_values) {
                     $arguments = @(
                         # Basic configurations  
                         "--data_name=MNIST",
+                        "--ext_data_name=EXT_MNIST",
                         # Data Factory - MNIST
                         "--train_data=data/mnist/train-images.idx3-ubyte", 
                         "--train_label=data/mnist/train-labels.idx1-ubyte", 
@@ -33,31 +34,20 @@ foreach ($focus in $heb_focus_values) {
                         "--train_size=60000",
                         "--test_size=10000",
                         "--classes=10",
-                        # # Data Factory - FASHION-MNIST
-                        # "--train_data=data/fashion_mnist/train-images.idx3-ubyte", 
-                        # "--train_label=data/fashion_mnist/train-labels.idx1-ubyte", 
-                        # "--test_data=data/fashion_mnist/test-images.idx3-ubyte", 
-                        # "--test_label=data/fashion_mnist/test-labels.idx1-ubyte", 
-                        # "--train_size=60000",
-                        # "--test_size=10000",
-                        # "--classes=10",
-                        # # Data Factory - E-MNIST
-                        # "--train_data=data/ext_mnist/train-images.idx3-ubyte", 
-                        # "--train_label=data/ext_mnist/train-labels.idx1-ubyte", 
-                        # "--test_data=data/ext_mnist/test-images.idx3-ubyte", 
-                        # "--test_label=data/ext_mnist/test-labels.idx1-ubyte", 
-                        # "--train_size=88800",
-                        # "--test_size=14800",
-                        # "--classes=26",
+                        # Data Factory - E-MNIST
+                        "--ext_train_data=data/ext_mnist/train-images.idx3-ubyte", 
+                        "--ext_train_label=data/ext_mnist/train-labels.idx1-ubyte", 
+                        "--ext_test_data=data/ext_mnist/test-images.idx3-ubyte", 
+                        "--ext_test_label=data/ext_mnist/test-labels.idx1-ubyte", 
+                        "--ext_train_size=88800",
+                        "--ext_test_size=14800",
+                        "--ext_classes=26",
                         # CSV files generated - MNIST
                         "--train_fname=data/mnist/mnist_train.csv",
                         "--test_fname=data/mnist/mnist_test.csv",
-                        # # CSV files generated - E-MNIST
-                        # "--train_fname=data/ext_mnist/ext_mnist_train.csv",
-                        # "--test_fname=data/ext_mnist/ext_mnist_test.csv",
-                        # # CSV files generated - FASHION-MNIST
-                        # "--train_fname=data/fashion_mnist/fashion_mnist_train.csv",
-                        # "--test_fname=data/fashion_mnist/fashion_mnist_test.csv",
+                        # CSV files generated - E-MNIST
+                        "--ext_train_fname=data/ext_mnist/ext_mnist_train.csv",
+                        "--ext_test_fname=data/ext_mnist/ext_mnist_test.csv",
                         # Dimension of each layer
                         '--input_dim=784', 
                         '--heb_dim=64', 
@@ -86,16 +76,16 @@ foreach ($focus in $heb_focus_values) {
                         '--init=uniform',
                         # Experiment parameters
                         '--batch_size=1',
-                        '--epochs=1', 
+                        '--epochs=5', 
                         '--device=cpu',
-                        # '--device=cuda:8',
+                        # '--device=cuda:5',
                         '--local_machine=True',
-                        '--experiment_type=base'
+                        '--experiment_type=generalization'
                     )
                     
                 # Start the process with the complete set of arguments
                 $allArgs = @($scriptName) + $arguments
-                $process = Start-Process -FilePath "python" -ArgumentList $allArgs -NoNewWindow -PassThru
+                $process += Start-Process -FilePath "python" -ArgumentList $allArgs -NoNewWindow -PassThru
                 Write-Output $process
                 $processes += $process
             }
