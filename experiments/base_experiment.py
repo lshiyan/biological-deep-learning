@@ -112,6 +112,8 @@ class BaseExperiment(Experiment):
         self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
+
+
     ################################################################################################
     # Phase 1 Training and Testing: Base (Hebbian and Classification Layers)
     ################################################################################################

@@ -96,7 +96,6 @@ foreach ($focus in $heb_focus_values) {
 
 # Wait for all subprocesses to complete
 foreach ($process in $processes) {
-    Write-Output $process
     $process.WaitForExit()
 }
 
