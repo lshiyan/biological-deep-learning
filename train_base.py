@@ -22,10 +22,10 @@ ARGS = parse_arguments()
 def main():
     train_acc_list, test_acc_list = parallel_training(ARGS, 1)
                             
-    avg_test = round(average(test_acc_list), 4)
-    var_test = round(variance(test_acc_list), 6)
-    avg_train = round(average(train_acc_list), 4)
-    var_train = round(variance(train_acc_list), 6)
+    avg_test = average(test_acc_list)
+    var_test = variance(test_acc_list)
+    avg_train = average(train_acc_list)
+    var_train = variance(train_acc_list)
 
     results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || LR: {ARGS.lr} || EPS: {ARGS.heb_eps} || Dim: {ARGS.heb_dim} || Dataset: {ARGS.data_name.upper()} || Learning Rule: {ARGS.heb_learn.lower().capitalize()} || Function Type: {ARGS.heb_growth.lower().capitalize()} || Focus: {ARGS.heb_focus.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
 
