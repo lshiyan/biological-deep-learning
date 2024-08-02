@@ -80,7 +80,7 @@ def train_and_eval(args: Tuple) -> List[float]:
     num: int
     params, num = args
     model: Network = HebbianNetwork('Hebbian Network', params).to(params.device)
-    experiment: Experiment = GeneralizationExperiment(model, params, f'{params.experiment_type.lower()}-{params.heb_learn.lower()}-{params.heb_inhib.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}-{params.sigmoid_k}-{params.class_learn}-{num}')
+    experiment: Experiment = GeneralizationExperiment(model, params, f'{params.experiment_type.lower()}-{params.heb_learn.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}-{params.sigmoid_k}-{num}')
     accuracies: List[float] = list(experiment.run())
     experiment.cleanup()
     
