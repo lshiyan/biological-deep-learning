@@ -1,6 +1,5 @@
 import math
 from typing import Optional
-from numpy import outer
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -303,9 +302,9 @@ class HebbianLayer(HiddenLayer):
         relu: nn.ReLU = nn.ReLU()
         
         # Compute ReLU and lateral inhibition
-        relu_input = relu(input)
+        relu_input: torch.Tensor = relu(input)
         max_ele: float = torch.max(input).item()
-        output: torch.Tensor =  ((relu_input / max_ele) ** self.lamb).to(self.device)
+        output: torch.Tensor =  ((relu_input / max_ele) ** self.lamb).to(self.device) if max_ele != 0 else torch.zeros(relu_input.size())
         
         return output
     
@@ -422,7 +421,6 @@ class HebbianLayer(HiddenLayer):
         
         # Calculate outer product of output and input
         computed_rule: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
-        computed_rule: torch.Tensor = torch.tensor(outer(y.cpu().numpy(), x.cpu().numpy())).to(self.device)
 
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
@@ -532,9 +530,7 @@ class HebbianLayer(HiddenLayer):
         if self.focus == Focus.SYNASPSE:
             derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - current_weights) * current_weights
         elif self.focus == Focus.NEURON:
-            norm: torch.Tensor = torch.norm(current_weights, p=2, dim=-1, keepdim=True)
-            normalized_weights: torch.Tensor = current_weights / norm
-            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - normalized_weights) * normalized_weights
+            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - self.normalized_weights) * self.normalized_weights
         else:
             raise ValueError("Invalid focus type.")
         
@@ -557,9 +553,9 @@ class HebbianLayer(HiddenLayer):
         if self.focus == Focus.SYNASPSE:
             derivative = current_weights
         elif self.focus == Focus.NEURON:
-            norm: torch.Tensor = torch.norm(current_weights, p=2, dim=-1, keepdim=True)
-            normalized_weights: torch.Tensor = current_weights / norm
-            derivative = normalized_weights
+            derivative = self.normalized_weights
+        else:
+            raise ValueError("Invalid focus type.")
         
         return derivative
         
@@ -732,7 +728,7 @@ class HebbianLayer(HiddenLayer):
     #################################################################################################
     @staticmethod
     def normalize(weights: torch.Tensor) -> torch.Tensor:
-        norm: torch.Tensor = torch.norm(weights, p=2, dim=-1, keepdim=True)
+        norm: torch.Tensor = torch.norm(weights, p=2, dim=-1, keepdim=True) #/ math.sqrt(weights.size(0))
         normalized_weights: torch.Tensor = weights / norm
         
         return normalized_weights
