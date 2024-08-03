@@ -449,7 +449,7 @@ class HebbianLayer(HiddenLayer):
         outer_prod: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
 
         # Retrieve initial weights
-        weights: torch.Tensor = self.normalized_weights.clone().detach().to(self.device)
+        weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
 
         # Calculate Sanger's Rule
         id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
@@ -483,7 +483,7 @@ class HebbianLayer(HiddenLayer):
         outer_prod: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
 
         # Retrieve initial weights
-        weights: torch.Tensor = self.normalized_weights.clone().detach().to(self.device)
+        weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
 
         # Calculate Fully Orthogonal Rule
         norm_term: torch.Tensor = torch.einsum("i, ij, k -> kj", y, weights, y)
