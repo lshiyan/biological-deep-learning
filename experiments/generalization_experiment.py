@@ -425,7 +425,7 @@ class GeneralizationExperiment(Experiment):
                 predictions: torch.Tensor = self.model(inputs)
                 
                 # Evaluates performance of model on testing dataset
-                correct += (predictions.argmax(-1) == labels).type(torch.float).sum()
+                correct += (predictions.argmax(-1) == labels).type(torch.float).sum().item()
 
             final_accuracy = round(correct/total, 4)
                 
