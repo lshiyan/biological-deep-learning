@@ -7,7 +7,7 @@ $scriptName = 'train_gen.py'
 # $heb_growth_values = @('linear', 'sigmoid', 'exponential')
 # $heb_focus_values = @('synapse', 'neuron')
 
-$lambda_values = @(16)
+$lambda_values = @(1)
 $heb_learn_values = @('orthogonal')
 $heb_growth_values = @('linear')
 $heb_focus_values = @('synapse')

@@ -169,13 +169,13 @@ class GeneralizationExperiment(Experiment):
         self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         
-        # Training Dataset Setup
+        # Training EXT-Dataset Setup
         self.ext_train_data_set: TensorDataset = input_class.setup_data(self.ext_train_data, self.ext_train_label, self.ext_train_fname, self.ext_train_size, self.ext_dataset)
         self.ext_train_data_loader: DataLoader = DataLoader(self.ext_train_data_set, batch_size=self.batch_size, shuffle=True)
         self.ext_train_data_loader = input_class.filter_data_loader(self.ext_train_data_loader, filter_classes)
         self.EXP_LOG.info("Completed setup for ext-training dataset and dataloader.")
         
-        # Testing Dataset Setup
+        # Testing EXT-Dataset Setup
         self.ext_test_data_set: TensorDataset = input_class.setup_data(self.ext_test_data, self.ext_test_label, self.ext_test_fname, self.ext_test_size, self.ext_dataset)
         self.ext_test_data_loader: DataLoader = DataLoader(self.ext_test_data_set, batch_size=self.batch_size, shuffle=True)
         self.ext_test_data_loader = input_class.filter_data_loader(self.ext_test_data_loader, filter_classes)
