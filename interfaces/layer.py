@@ -175,7 +175,7 @@ class NetworkLayer (nn.Module, ABC):
                 padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size)).cpu()
                 heatmap: np.ndarray = padded_weights.view(feature_row, feature_col).cpu().numpy()
                 max_value: float = torch.max(random_feature_selector).item()
-                min_value: float = 0
+                min_value: float = torch.min(random_feature_selector).item()
                 ax = axes[ele // col, ele % col]
                 im = ax.imshow(heatmap, cmap='hot', interpolation='nearest', vmin=min_value, vmax=max_value)
                 cbar = fig.colorbar(im, ax=ax)
@@ -184,6 +184,8 @@ class NetworkLayer (nn.Module, ABC):
                 # Setting Color Bar
                 ticks = np.linspace(min_value, max_value, num=5)
                 ticks = ticks.tolist()
+                ticks.append(0)
+                ticks = sorted(set(ticks))
                 cbar.set_ticks(ticks)
                 
                 # Move the tensor back to the GPU if needed
