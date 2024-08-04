@@ -9,10 +9,10 @@ scriptName='train_base.py'
 # heb_growth_values=("linear" "sigmoid" "exponential")
 # heb_focus_values=("synapse" "neuron")
 
-lambda_values=(16)
-heb_learn_values=('orthogonal')
-heb_growth_values=('linear')
-heb_focus_values=('synapse')
+lambda_values=(0.25 1 16)
+heb_learn_values=('sanger' 'orthogonal')
+heb_growth_values=('linear' 'sigmoid' 'exponential')
+heb_focus_values=('synapse' 'neuron')
 
 # Process List
 processes=()
