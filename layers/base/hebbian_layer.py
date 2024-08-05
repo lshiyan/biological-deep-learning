@@ -449,11 +449,17 @@ class HebbianLayer(HiddenLayer):
         outer_prod: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
 
         # Retrieve initial weights
+        id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+        wi_norm: torch.Tensor = self.normalize(weights).to(self.device)
+        wk_norm: torch.Tensor = self.normalize(weights).to(self.device)
+        wk_norm = torch.ones(wk_norm.size()) / wk_norm
+        w_ratio: torch.Tensor = torch.einsum('a, b -> ab', wi_norm, wk_norm).to(self.device)
+        w_ratio = w_ratio.expand_as(id_tensor)
+        w_ratio = w_ratio * id_tensor
 
         # Calculate Sanger's Rule
-        id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
-        A: torch.Tensor = torch.einsum('kj, lkm, m, l -> lj', weights, id_tensor, y, y).to(self.device)
+        A: torch.Tensor = torch.einsum('kj, lkm, m, l -> lj', weights, w_ratio, y, y).to(self.device)
         computed_rule: torch.Tensor = (outer_prod - A).to(self.device)
 
         # Update exponential averages
@@ -484,9 +490,14 @@ class HebbianLayer(HiddenLayer):
 
         # Retrieve initial weights
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
+        wi_norm: torch.Tensor = self.normalize(weights).to(self.device)
+        wk_norm: torch.Tensor = self.normalize(weights).to(self.device)
+        wk_norm = torch.ones(wk_norm.size()) / wk_norm
+        w_ratio: torch.Tensor = torch.einsum('a, b -> ab', wi_norm, wk_norm).to(self.device)
 
         # Calculate Fully Orthogonal Rule
         norm_term: torch.Tensor = torch.einsum("i, ij, k -> kj", y, weights, y)
+        norm_term = norm_term / w_ratio
 
         # Compute change in weights
         computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
