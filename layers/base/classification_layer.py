@@ -135,11 +135,7 @@ class ClassificationLayer(OutputLayer):
         delta_weight: torch.Tensor = (self.lr * calculated_rule * function_derivative).to(self.device)
         updated_weight: torch.Tensor = torch.add(self.fc.weight, delta_weight)
         
-        # Normalize weights by the maximum value in each row to stabilize the learning.
-        max_values: torch.Tensor = (torch.max(updated_weight, dim=-1).values).to(self.device)
-        normalized_weights: torch.Tensor = updated_weight/max_values.unsqueeze(1)
-        
-        self.fc.weight = nn.Parameter(normalized_weights, requires_grad=False)
+        self.fc.weight = nn.Parameter(updated_weight, requires_grad=False)
         
 
     def update_bias(self, output: torch.Tensor) -> None:
@@ -240,7 +236,7 @@ class ClassificationLayer(OutputLayer):
         """
         METHOD
         Defines the way the weights will be updated at each iteration of the training.
-        Rule = delta Sij = lr * (t - yi) xj
+        Rule = delta Sij = lr * t * xj
         @param
             input: The input tensor to the layer before any transformation.
             output: The output tensor of the layer before applying softmax.
@@ -253,7 +249,7 @@ class ClassificationLayer(OutputLayer):
         x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
 
         
-        computed_rule: torch.Tensor = torch.outer(clamped_output - y, x).to(self.device)
+        computed_rule: torch.Tensor = torch.outer(clamped_output, x).to(self.device)
 
         return computed_rule
 
