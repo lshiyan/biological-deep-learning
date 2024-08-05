@@ -331,7 +331,7 @@ class HebbianLayer(HiddenLayer):
         """
         METHOD
         Calculates exponential softmax (Modern Hopfield) lateral inhibition
-        Inhibition: x = Softmax((x - max(x)) ** lamb)
+        Inhibition: x = Softmax((x - max(x)) * lamb)
         @param
             input: input to layer
         @return
@@ -339,7 +339,7 @@ class HebbianLayer(HiddenLayer):
         """
         # Computes exponential softmax with numerical stabilization
         max_ele: float = torch.max(input).item()
-        output: torch.Tensor = F.softmax((input - max_ele) ** self.lamb, dim=-1).to(self.device)
+        output: torch.Tensor = F.softmax((input - max_ele) * self.lamb, dim=-1).to(self.device)
         return output
     
         

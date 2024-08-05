@@ -123,15 +123,30 @@ class GeneralizationExperiment(Experiment):
         self.dataset = dataset_mapping[self.data_name.upper()]
         self.ext_dataset = dataset_mapping[self.data_name.upper()]
 
-        # Select random letter classes
-        letter_labels = list(range(0, 26))
-        original_class = sorted(random.sample(letter_labels, 10))
-        updated_class = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        filter_classes = dict(zip(original_class, updated_class))
+        self.chosen_classes_log: dict
+        self.filter_classes_data: dict
+        self.filter_classes_ext: dict
+
+        if self.data_name == DataSets.MNIST:
+            # Select random letter classes
+            letter_labels = list(range(0, 26))
+            original_class = sorted(random.sample(letter_labels, 10))
+            updated_class = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+            self.filter_classes_ext = dict(zip(original_class, updated_class))
+            
+            # Convert Dictionary class into letters
+            letter_class = [chr(65 + key) for key in original_class]
+            self.chosen_classes_log = dict(zip(updated_class, letter_class))
         
-        # Convert Dictionary class into letters
-        letter_class = [chr(65 + key) for key in original_class]
-        self.letter_log = dict(zip(updated_class, letter_class))
+        elif self.data_name == DataSets.FASHION_MNIST:
+            original_data = [0, 1, 2, 3, 4]
+            updated_data = [(num % 5) for num in original_data]
+            original_ext = [5, 6, 7, 8, 9]
+            updated_ext = [(num % 5) for num in original_ext]
+            self.filter_classes_data = dict(zip(original_data, updated_data))
+            self.filter_classes_ext = dict(zip(original_ext, updated_ext))
+
+            
         
         # Dataset Information
         self.train_data = args.train_data
@@ -162,23 +177,25 @@ class GeneralizationExperiment(Experiment):
         # Training Dataset Setup
         self.train_data_set: TensorDataset = input_class.setup_data(self.train_data, self.train_label, self.train_fname, self.train_size, self.dataset)
         self.train_data_loader: DataLoader = DataLoader(self.train_data_set, batch_size=self.batch_size, shuffle=True)
+        if self.data_name == DataSets.FASHION_MNIST: self.train_data_loader = input_class.filter_data_loader(self.ext_train_data_loader, self.filter_classes_data)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
         
         # Testing Dataset Setup
         self.test_data_set: TensorDataset = input_class.setup_data(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset)
         self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
+        if self.data_name == DataSets.FASHION_MNIST: self.train_data_loader = input_class.filter_data_loader(self.ext_train_data_loader, self.filter_classes_data)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
         
         # Training EXT-Dataset Setup
         self.ext_train_data_set: TensorDataset = input_class.setup_data(self.ext_train_data, self.ext_train_label, self.ext_train_fname, self.ext_train_size, self.ext_dataset)
         self.ext_train_data_loader: DataLoader = DataLoader(self.ext_train_data_set, batch_size=self.batch_size, shuffle=True)
-        self.ext_train_data_loader = input_class.filter_data_loader(self.ext_train_data_loader, filter_classes)
+        self.ext_train_data_loader = input_class.filter_data_loader(self.ext_train_data_loader, self.filter_classes_ext)
         self.EXP_LOG.info("Completed setup for ext-training dataset and dataloader.")
         
         # Testing EXT-Dataset Setup
         self.ext_test_data_set: TensorDataset = input_class.setup_data(self.ext_test_data, self.ext_test_label, self.ext_test_fname, self.ext_test_size, self.ext_dataset)
         self.ext_test_data_loader: DataLoader = DataLoader(self.ext_test_data_set, batch_size=self.batch_size, shuffle=True)
-        self.ext_test_data_loader = input_class.filter_data_loader(self.ext_test_data_loader, filter_classes)
+        self.ext_test_data_loader = input_class.filter_data_loader(self.ext_test_data_loader, self.filter_classes_ext)
         self.EXP_LOG.info("Completed setup for ext-testing dataset and dataloader.")
 
 
@@ -539,6 +556,7 @@ class GeneralizationExperiment(Experiment):
         self.PARAM_LOG.info(f"Sigma: {self.model.sigma}")
         self.PARAM_LOG.info(f"Mu: {self.model.mu}")
         self.PARAM_LOG.info(f"Param Init: {self.model.init.value.lower().capitalize()}")
+        if self.chosen_classes_log != None: self.PARAM_LOG.info(f"Classes Chosen for Current Experiment: {self.chosen_classes_log}")
         self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
         
         self.EXP_LOG.info("Completed logging of experiment parameters.")
