@@ -451,8 +451,8 @@ class HebbianLayer(HiddenLayer):
         # Retrieve initial weights
         id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        wi_norm: torch.Tensor = self.normalize(weights).to(self.device)
-        wk_norm: torch.Tensor = self.normalize(weights).to(self.device)
+        wi_norm: torch.Tensor = self.get_norm(weights).to(self.device)
+        wk_norm: torch.Tensor = self.get_norm(weights).to(self.device)
         wk_norm = torch.ones(wk_norm.size()) / wk_norm
         w_ratio: torch.Tensor = torch.einsum('a, b -> ab', wi_norm, wk_norm).to(self.device)
         w_ratio = w_ratio.expand_as(id_tensor)
@@ -490,8 +490,8 @@ class HebbianLayer(HiddenLayer):
 
         # Retrieve initial weights
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        wi_norm: torch.Tensor = self.normalize(weights).to(self.device)
-        wk_norm: torch.Tensor = self.normalize(weights).to(self.device)
+        wi_norm: torch.Tensor = self.get_norm(weights).to(self.device)
+        wk_norm: torch.Tensor = self.get_norm(weights).to(self.device)
         wk_norm = torch.ones(wk_norm.size()) / wk_norm
         w_ratio: torch.Tensor = torch.einsum('a, b -> ab', wi_norm, wk_norm).to(self.device)
 
