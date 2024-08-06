@@ -134,8 +134,10 @@ class ClassificationLayer(OutputLayer):
         # Weight Update
         delta_weight: torch.Tensor = (self.lr * calculated_rule * function_derivative).to(self.device)
         updated_weight: torch.Tensor = torch.add(self.fc.weight, delta_weight)
+        # self.fc.weight = nn.Parameter(updated_weight, requires_grad=False)
         
-        self.fc.weight = nn.Parameter(updated_weight, requires_grad=False)
+        normalized_weight: torch.Tensor = self.normalize(updated_weight)
+        self.fc.weight = nn.Parameter(normalized_weight, requires_grad=False)
         
 
     def update_bias(self, output: torch.Tensor) -> None:
@@ -222,8 +224,7 @@ class ClassificationLayer(OutputLayer):
             output: activation after passing through layer
         """
         weight: torch.Tensor = self.fc.weight.clone().detach().float().to(self.device)
-        norm: torch.Tensor = torch.norm(weight, p=2, dim=-1, keepdim=True)
-        normalized_weight: torch.Tensor = weight / norm
+        normalized_weight: torch.Tensor = self.normalize(weight).to(self.device)
         
         return F.linear(input, normalized_weight, bias=self.fc.bias)
     
@@ -298,7 +299,7 @@ class ClassificationLayer(OutputLayer):
         """
         METHOD
         Defines weight updates when using sigmoid function
-        Derivative: 1/K * (K - Wij) * Wij or 1/K * (K - Wi:) * Wi:
+        Derivative: 1/K * (K - Wij) * Wij or 1/K * (K - ||Wi:||) * ||Wi:||
         @param
             None
         @return
@@ -310,8 +311,7 @@ class ClassificationLayer(OutputLayer):
         if self.focus == Focus.SYNASPSE:
             derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - current_weights) * current_weights
         elif self.focus == Focus.NEURON:
-            norm: torch.Tensor = torch.norm(current_weights, p=2, dim=-1, keepdim=True)
-            normalized_weights: torch.Tensor = current_weights / norm
+            normalized_weights: torch.Tensor = self.normalize(current_weights)
             derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - normalized_weights) * normalized_weights
         else:
             raise ValueError("Invalid focus type.")
@@ -323,7 +323,7 @@ class ClassificationLayer(OutputLayer):
         """
         METHOD
         Defines weight updates when using exponential function
-        Derivative: Wij or  Wi:
+        Derivative: Wij or  ||Wi:||
         @param
             None
         @return
@@ -335,8 +335,7 @@ class ClassificationLayer(OutputLayer):
         if self.focus == Focus.SYNASPSE:
             derivative = current_weights
         elif self.focus == Focus.NEURON:
-            norm: torch.Tensor = torch.norm(current_weights, p=2, dim=-1, keepdim=True)
-            normalized_weights: torch.Tensor = current_weights / norm
+            normalized_weights: torch.Tensor = self.normalize(current_weights)
             derivative = normalized_weights
         
         return derivative
