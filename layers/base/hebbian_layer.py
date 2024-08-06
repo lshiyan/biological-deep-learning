@@ -454,7 +454,7 @@ class HebbianLayer(HiddenLayer):
         wi_norm: torch.Tensor = self.get_norm(weights).to(self.device)
         wk_norm: torch.Tensor = self.get_norm(weights).to(self.device)
         wk_norm = torch.ones(wk_norm.size()) / wk_norm
-        w_ratio: torch.Tensor = torch.einsum('a, b -> ab', wi_norm, wk_norm).to(self.device)
+        w_ratio: torch.Tensor = torch.einsum('ai, bi -> ab', wi_norm, wk_norm).to(self.device)
         w_ratio = w_ratio.expand_as(id_tensor)
         w_ratio = w_ratio * id_tensor
 
@@ -492,12 +492,11 @@ class HebbianLayer(HiddenLayer):
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
         wi_norm: torch.Tensor = self.get_norm(weights).to(self.device)
         wk_norm: torch.Tensor = self.get_norm(weights).to(self.device)
-        wk_norm = torch.ones(wk_norm.size()) / wk_norm
-        w_ratio: torch.Tensor = torch.einsum('a, b -> ab', wi_norm, wk_norm).to(self.device)
+        wk_norm = torch.ones(wk_norm.size(-1)) / wk_norm
+        w_ratio: torch.Tensor = torch.einsum('ai, bi -> ab', wi_norm, wk_norm).unsqueeze(-1).repeat(1, 1, wk_norm.size(-1)).to(self.device)
 
         # Calculate Fully Orthogonal Rule
-        norm_term: torch.Tensor = torch.einsum("i, ij, k -> kj", y, weights, y)
-        norm_term = norm_term / w_ratio
+        norm_term: torch.Tensor = torch.einsum('mj, lkm, k, l -> lj', weights, w_ratio, y, y).to(self.device)
 
         # Compute change in weights
         computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
@@ -735,19 +734,3 @@ class HebbianLayer(HiddenLayer):
         self.fc.bias = nn.Parameter(torch.sub(self.fc.bias, bias_update), requires_grad=False)
         
         
-        
-    #################################################################################################
-    # Static Methods
-    #################################################################################################
-    @staticmethod
-    def get_norm(weights: torch.Tensor) -> torch.Tensor:
-        norm: torch.Tensor = torch.norm(weights, p=2, dim=-1, keepdim=True)
-        return norm
-    
-    
-    @staticmethod
-    def normalize(weights: torch.Tensor) -> torch.Tensor:
-        norm: torch.Tensor = HebbianLayer.get_norm(weights)
-        normalized_weights: torch.Tensor = weights / norm
-        
-        return normalized_weights
