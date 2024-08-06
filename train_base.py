@@ -27,7 +27,7 @@ def main():
     avg_train = average(train_acc_list)
     var_train = variance(train_acc_list)
 
-    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || LR: {ARGS.lr} || EPS: {ARGS.heb_eps} || Dim: {ARGS.heb_dim} || Dataset: {ARGS.data_name.upper()} || Learning Rule: {ARGS.heb_learn.lower().capitalize()} || Function Type: {ARGS.heb_growth.lower().capitalize()} || Focus: {ARGS.heb_focus.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
+    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || LR: {ARGS.lr} || EPS: {ARGS.heb_eps} || Dim: {ARGS.heb_dim} || Dataset: {ARGS.data_name.upper()} || Learning Rule: {ARGS.heb_learn.lower().capitalize()}/{ARGS.class_learn.lower().capitalize()} || Function Type: {ARGS.heb_growth.lower().capitalize()}/{ARGS.class_growth.lower().capitalize()} || Focus: {ARGS.heb_focus.lower().capitalize()}/{ARGS.class_focus.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
 
 
 # Model Training
@@ -36,7 +36,7 @@ def train_and_eval(args: Tuple) -> List[float]:
     num: int
     params, num = args
     model: Network = HebbianNetwork('Hebbian Network', params).to(params.device)
-    experiment: Experiment = BaseExperiment(model, params, f'{params.experiment_type.lower()}-{params.heb_learn.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}-{params.sigmoid_k}-{num}')
+    experiment: Experiment = BaseExperiment(model, params, f'{params.experiment_type.lower()}-{params.heb_learn.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}-{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
     accuracies: List[float] = list(experiment.run())
     experiment.cleanup()
     
