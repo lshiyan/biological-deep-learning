@@ -188,6 +188,8 @@ class HebbianLayer(HiddenLayer):
         # Weight Update
         delta_weight: torch.Tensor = (self.lr * calculated_rule * function_derivative).to(self.device)
         updated_weight: torch.Tensor = torch.add(self.fc.weight, delta_weight)
+        mean_positive_weight = torch.mean(torch.relu(updated_weight))
+        updated_weight = torch.relu(updated_weight + (mean_positive_weight * 0)) - mean_positive_weight * 0
         self.fc.weight = nn.Parameter(updated_weight, requires_grad=False)
         
         # Normalized Weight Update
@@ -439,29 +441,40 @@ class HebbianLayer(HiddenLayer):
         @return
             computed_rule: computed sanger's rule
         """
-        # Copy both input and output to be used in Sanger's Rule
+        # Copy both input and output to be used in Fully Orthogonal Rule
         x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
         x.requires_grad_(False)
         y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device)
         y.requires_grad_(False)
         
-        # Calculate outer product of output and input
         outer_prod: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
-
+        
         # Retrieve initial weights
-        id_tensor: torch.Tensor = self.create_id_tensors(self.output_dimension).to(self.device)
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        wi_norm: torch.Tensor = self.get_norm(weights).to(self.device)
-        wk_norm: torch.Tensor = self.get_norm(weights).to(self.device)
-        wk_norm = torch.ones(wk_norm.size()) / wk_norm
-        w_ratio: torch.Tensor = torch.einsum('ai, bi -> ab', wi_norm, wk_norm).to(self.device)
-        w_ratio = w_ratio.expand_as(id_tensor)
-        w_ratio = w_ratio * id_tensor
+        
+        # Compute the norms of weight vectors
+        W_norms: torch.Tensor = torch.norm(weights, dim=1, keepdim=False)
+        
+        # Compute scaling terms
+        # scaling_terms[i, j] = W_norms[i] / (W_norms[j] + epsilon)
+        scaling_terms: torch.Tensor = W_norms.reshape(self.output_dimension,1) / (W_norms.reshape(1,self.output_dimension) + 10e-8)
+        
+        # Compute scaled weights
+            # First index -> what it is rescaled to
+            # Second index -> what it is divided by and the W_i of the output
+            # Third index -> input dimension
+        scaled_weight: torch.Tensor = scaling_terms.reshape(self.output_dimension, self.output_dimension, 1) * weights.reshape(1, self.output_dimension, self.input_dimension)
 
-        # Calculate Sanger's Rule
-        A: torch.Tensor = torch.einsum('kj, lkm, m, l -> lj', weights, w_ratio, y, y).to(self.device)
-        computed_rule: torch.Tensor = (outer_prod - A).to(self.device)
+        # Create sanger id tensors
+        sanger_tensor: torch.Tensor = self.create_sanger_tensor(self.output_dimension).to(self.device)
+        sanger_scaled_weights: torch.Tensor = sanger_tensor * scaled_weight
 
+        # Calculate the subtraction term
+        norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, sanger_scaled_weights)
+        
+        # Compute change in weights
+        computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
+        
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
         
@@ -471,36 +484,50 @@ class HebbianLayer(HiddenLayer):
     def _fully_orthogonal_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
         """
         METHOD
-        Update weights using Fully Orthogonal Rule.
-        Rule: delta Wij = ((y * x)ij - yi * SUM(W * yk))
+        Update weights using Fully Orthogonal Rule with scaling term.
+        Rule: delta Wij = ((y * x)ij - yi * SUM(y_k * W_kj * ||W_i|| / ||W_k||))
         @param
             input: the inputs into the layer
             output: the output of the layer
         @return
-            None
+            computed_rule: computed fully orthogonal rule
         """
-        # Copy both input and output to be used in Sanger's Rule
+        # Copy both input and output to be used in Fully Orthogonal Rule
         x: torch.Tensor = input.clone().detach().float().squeeze().to(self.device)
         x.requires_grad_(False)
         y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device)
         y.requires_grad_(False)
         
-        # Calculate outer product of output and input
         outer_prod: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
-
+        
         # Retrieve initial weights
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        wi_norm: torch.Tensor = self.get_norm(weights).to(self.device)
-        wk_norm: torch.Tensor = self.get_norm(weights).to(self.device)
-        wk_norm = torch.ones(wk_norm.size(-1)) / wk_norm
-        w_ratio: torch.Tensor = torch.einsum('ai, bi -> ab', wi_norm, wk_norm).unsqueeze(-1).repeat(1, 1, wk_norm.size(-1)).to(self.device)
+        
+        # Compute the norms of weight vectors
+        W_norms: torch.Tensor = torch.norm(weights, dim=1, keepdim=False)
+        
+        # Compute scaling terms
+        # scaling_terms[i, j] = W_norms[i] / (W_norms[j] + epsilon)
+        scaling_terms: torch.Tensor = W_norms.reshape(self.output_dimension,1) / (W_norms.reshape(1,self.output_dimension) + 10e-8)
+        
+        # Remove the diagonal so as to not have weights subtracting themselves
+        remove_diagonal: torch.Tensor = torch.ones(self.output_dimension, self.output_dimension) - torch.eye(self.output_dimension)
+        remove_diagonal: torch.Tensor = remove_diagonal.reshape(self.output_dimension, self.output_dimension, 1)
 
-        # Calculate Fully Orthogonal Rule
-        norm_term: torch.Tensor = torch.einsum('mj, lkm, k, l -> lj', weights, w_ratio, y, y).to(self.device)
+        # Compute scaled weights
+            # First index -> what it is rescaled to
+            # Second index -> what it is divided by and the W_i of the output
+            # Third index -> input dimension
+        scaled_weight: torch.Tensor = scaling_terms.reshape(self.output_dimension, self.output_dimension, 1) * weights.reshape(1, self.output_dimension, self.input_dimension)
+        
+        # Remove diagonal elements so weights do not subtract themselves
+        scaled_weight: torch.Tensor = scaled_weight * remove_diagonal
 
+        norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, scaled_weight)
+        
         # Compute change in weights
         computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
-
+        
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
         
