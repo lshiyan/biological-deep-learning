@@ -52,12 +52,13 @@ arguments = [
             '--heb_inhib=relu',
             '--heb_growth=linear',
             '--heb_focus=synapse',
+            '--heb_act=normalized',
             # Classification layer hyperparameters
             '--class_learn=hebbian',
             '--class_growth=linear',
             '--class_bias=no_bias',
             '--class_focus=synapse',
-            '--class_act=basic',
+            '--class_act=normalized',
             # Shared hyperparameters
             '--lr=0.005',
             '--sigmoid_k=1',
