@@ -3,6 +3,7 @@ import math
 from typing import Optional, Tuple
 import matplotlib
 import matplotlib.figure
+import matplotlib.colors as mcolors
 
 from utils.experiment_constants import LayerNames, ParamInit
 matplotlib.use('Agg')
@@ -158,6 +159,7 @@ class NetworkLayer (nn.Module, ABC):
         subplot_size = 4
         fig_width = col * subplot_size
         fig_height = row * subplot_size
+        
 
         # Get the weights and create heatmap
         weight: torch.Tensor = self.fc.weight
@@ -176,8 +178,9 @@ class NetworkLayer (nn.Module, ABC):
                 heatmap: np.ndarray = padded_weights.view(feature_row, feature_col).cpu().numpy()
                 max_value: float = torch.max(random_feature_selector).item()
                 min_value: float = torch.min(random_feature_selector).item()
+                custom_cmap = self.get_cmap(min_value, max_value)
                 ax = axes[ele // col, ele % col]
-                im = ax.imshow(heatmap, cmap='hot', interpolation='nearest', vmin=min_value, vmax=max_value)
+                im = ax.imshow(heatmap, cmap=custom_cmap, interpolation='nearest', vmin=min_value, vmax=max_value)
                 cbar = fig.colorbar(im, ax=ax)
                 ax.set_title(f'Weight {ele}')
                 
@@ -249,6 +252,24 @@ class NetworkLayer (nn.Module, ABC):
         return row, col
     
     
+    
+    #################################################################################################
+    # Static Methods
+    #################################################################################################
+    @staticmethod
+    def get_norm(weights: torch.Tensor) -> torch.Tensor:
+        norm: torch.Tensor = torch.norm(weights, p=2, dim=-1, keepdim=True)
+        return norm
+    
+    
+    @staticmethod
+    def normalize(weights: torch.Tensor) -> torch.Tensor:
+        norm: torch.Tensor = NetworkLayer.get_norm(weights)
+        normalized_weights: torch.Tensor = weights / norm
+        
+        return normalized_weights
+    
+    
     @staticmethod
     def create_id_tensors(dim: int) -> torch.Tensor:   
         """
@@ -267,3 +288,26 @@ class NetworkLayer (nn.Module, ABC):
         return id_tensor
     
     
+    @staticmethod
+    def get_cmap(min: float, max: float) -> mcolors.Colormap:
+        hot_cmap: mcolors.Colormap = plt.get_cmap('hot')
+        blue_cmap: mcolors.Colormap = mcolors.LinearSegmentedColormap.from_list('black_to_blue', [(0, 0, 0), (0, 0, 1)]).reversed()
+        
+        if min >= 0:
+            return hot_cmap # If all positive then 'hot' cmap
+        elif max <= 0:
+            return blue_cmap # If all negative then reversed 'twilight' cmap
+        else:
+            total_range: float = abs(min) + abs(max)
+            negative_ratio: float = abs(min) / total_range
+            positive_ratio: float = abs(max) / total_range
+            total_buckets: int = 1024
+            custom_colors = np.vstack((
+                blue_cmap(np.linspace(0, 1, int(total_buckets * negative_ratio))),
+                np.array([[0, 0, 0, 1]]),
+                hot_cmap(np.linspace(0, 1, int(total_buckets * positive_ratio)))
+            ))
+            custom_cmap: mcolors.Colormap = mcolors.LinearSegmentedColormap.from_list('custom_black_hot', custom_colors)
+            
+            return custom_cmap
+        
