@@ -286,25 +286,6 @@ class NetworkLayer (nn.Module, ABC):
             id_tensor[i] = torch.diag(diag)
         return id_tensor
     
-
-    @staticmethod
-    def create_sanger_tensor(dim: int) -> torch.Tensor:   
-        """
-        METHOD
-
-        @param
-            dim: dimension of sanger tensor
-        @return
-
-        """
-        sanger_tensor: torch.Tensor = torch.zeros(dim, dim, 1, dtype=torch.float)
-        for i in range(0, dim):
-            diag : torch.Tensor = torch.concat([torch.ones(i), torch.zeros(dim-i)])
-            sanger_tensor[i] = diag.reshape(-1, 1)
-        return sanger_tensor
-
-
-
     
     @staticmethod
     def get_cmap(min: float, max: float) -> mcolors.Colormap:

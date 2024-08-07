@@ -463,14 +463,11 @@ class HebbianLayer(HiddenLayer):
             # First index -> what it is rescaled to
             # Second index -> what it is divided by and the W_i of the output
             # Third index -> input dimension
-        scaled_weight: torch.Tensor = scaling_terms.reshape(self.output_dimension, self.output_dimension, 1) * weights.reshape(1, self.output_dimension, self.input_dimension)
-
-        # Create sanger id tensors
-        sanger_tensor: torch.Tensor = self.create_sanger_tensor(self.output_dimension).to(self.device)
-        sanger_scaled_weights: torch.Tensor = sanger_tensor * scaled_weight
+            # Torch.tril is used to for setting upper triangle to zeros
+        sanger_scaled_weight: torch.Tensor = scaling_terms.reshape(self.output_dimension, self.output_dimension, 1) * torch.tril(weights, diagonal=-1).reshape(1, self.output_dimension, self.input_dimension)
 
         # Calculate the subtraction term
-        norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, sanger_scaled_weights)
+        norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, sanger_scaled_weight)
         
         # Compute change in weights
         computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
@@ -565,10 +562,12 @@ class HebbianLayer(HiddenLayer):
         derivative: torch.Tensor
         
         if self.focus == Focus.SYNASPSE:
-            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - current_weights) * current_weights
+            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - torch.min(torch.ones_like(current_weights), torch.relu(current_weights)) ) * torch.abs(current_weights)
         elif self.focus == Focus.NEURON:
             norm: torch.Tensor = self.get_norm(self.fc.weight)
-            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - norm) * norm
+            scaled_norm: torch.Tensor = norm / math.sqrt(self.output_dimension)
+
+            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - torch.min(torch.ones_like(scaled_norm), scaled_norm)) * scaled_norm
         else:
             raise ValueError("Invalid focus type.")
         
@@ -589,7 +588,7 @@ class HebbianLayer(HiddenLayer):
         derivative: torch.Tensor
         
         if self.focus == Focus.SYNASPSE:
-            derivative = current_weights
+            derivative = torch.abs(current_weights)
         elif self.focus == Focus.NEURON:
             norm: torch.Tensor = self.get_norm(self.fc.weight)
             derivative = norm
