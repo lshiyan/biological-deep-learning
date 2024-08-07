@@ -48,10 +48,10 @@ arguments = [
             '--heb_lamb=16', 
             '--heb_gam=0.99',
             '--heb_eps=0.0001',
-            '--heb_learn=orthogonal',
+            '--heb_learn=sanger',
             '--heb_inhib=relu',
             '--heb_growth=linear',
-            '--heb_focus=synapse',
+            '--heb_focus=neuron',
             '--heb_act=normalized',
             # Classification layer hyperparameters
             '--class_learn=hebbian',
