@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 import torch
 import torch.nn as nn
@@ -311,8 +312,10 @@ class ClassificationLayer(OutputLayer):
         if self.focus == Focus.SYNASPSE:
             derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - current_weights) * current_weights
         elif self.focus == Focus.NEURON:
-            normalized_weights: torch.Tensor = self.normalize(current_weights)
-            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - normalized_weights) * normalized_weights
+            norm: torch.Tensor = self.get_norm(self.fc.weight)
+            scaled_norm: torch.Tensor = norm / math.sqrt(self.output_dimension)
+
+            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - torch.min(torch.ones_like(scaled_norm), scaled_norm)) * scaled_norm
         else:
             raise ValueError("Invalid focus type.")
         
@@ -323,7 +326,7 @@ class ClassificationLayer(OutputLayer):
         """
         METHOD
         Defines weight updates when using exponential function
-        Derivative: Wij or  ||Wi:||
+        Derivative: Wij or  Wi:
         @param
             None
         @return
@@ -333,10 +336,12 @@ class ClassificationLayer(OutputLayer):
         derivative: torch.Tensor
         
         if self.focus == Focus.SYNASPSE:
-            derivative = current_weights
+            derivative = torch.abs(current_weights)
         elif self.focus == Focus.NEURON:
-            normalized_weights: torch.Tensor = self.normalize(current_weights)
-            derivative = normalized_weights
+            norm: torch.Tensor = self.get_norm(self.fc.weight)
+            derivative = norm
+        else:
+            raise ValueError("Invalid focus type.")
         
         return derivative
                 
