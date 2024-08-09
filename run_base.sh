@@ -64,7 +64,8 @@ for focus in "${heb_focus_values[@]}"; do
                             "--init=uniform"
                             "--batch_size=1"
                             "--epochs=1"
-                            "--device=cpu"
+                            #"--device=cpu"
+                            "--device=cuda:4"
                             "--local_machine=True"
                             "--experiment_type=base"
                         )
