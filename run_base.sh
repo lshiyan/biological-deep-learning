@@ -14,7 +14,7 @@ heb_learn_values=('sanger' 'orthogonal' 'HEBBIAN')
 heb_growth_values=('linear' 'sigmoid' 'exponential')
 clas_growth_values=('linear' 'sigmoid')
 heb_focus_values=('synapse' 'neuron')
-learning_rate_values=(0.01, 0.05, 0.001, 0.005, 0.0001, 0.0005, 0.00001, 0.00005)
+learning_rate_values=(0.01 0.05 0.001 0.005 0.0001 0.0005 0.00001 0.00005)
 
 # Process List
 processes=()
@@ -29,7 +29,7 @@ for focus in "${heb_focus_values[@]}"; do
                         # Construct the complete set of arguments including the varying parameter
                         arguments=(
                             "--data_name=MNIST"
-                            "--experiment_name=_LR_EXPLORATION_",
+                            "--experiment_name=_LR_EXPLORATION_"
                             "--train_data=data/mnist/train-images.idx3-ubyte"
                             "--train_label=data/mnist/train-labels.idx1-ubyte"
                             "--test_data=data/mnist/test-images.idx3-ubyte"
