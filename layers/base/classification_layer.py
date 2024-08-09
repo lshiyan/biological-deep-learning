@@ -140,7 +140,6 @@ class ClassificationLayer(OutputLayer):
         normalized_weight: torch.Tensor = self.normalize(updated_weight)
         self.fc.weight = nn.Parameter(normalized_weight, requires_grad=False)
         
-
     def update_bias(self, output: torch.Tensor) -> None:
         """
         METHOD

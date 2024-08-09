@@ -7,7 +7,7 @@ script_name = 'train_base.py'
 arguments = [
             # Basic configurations  
             "--data_name=MNIST",
-            "--experiment_name=NEW LEARNING RATE NEW SCALE",
+            "--experiment_name=EXTRA_NEW_REPEAT_EXP2",
             # Data Factory - MNIST
             "--train_data=data/mnist/train-images.idx3-ubyte", 
             "--train_label=data/mnist/train-labels.idx1-ubyte", 
@@ -46,12 +46,12 @@ arguments = [
             '--heb_dim=64', 
             '--output_dim=10',
             # Hebbian layer hyperparameters  
-            '--heb_lamb=80', 
+            '--heb_lamb=16', 
             '--heb_gam=0.99',
             '--heb_eps=0.0001',
             '--heb_learn=sanger',
             '--heb_inhib=relu',
-            '--heb_growth=sigmoid',
+            '--heb_growth=linear',
             '--heb_focus=neuron',
             '--heb_act=normalized',
             # Classification layer hyperparameters
@@ -61,7 +61,7 @@ arguments = [
             '--class_focus=neuron',
             '--class_act=normalized',
             # Shared hyperparameters
-            '--lr=0.04',
+            '--lr=0.0005',
             '--sigmoid_k=1',
             '--alpha=0',
             '--beta=1e-2',
