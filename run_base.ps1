@@ -92,8 +92,8 @@ foreach ($heb_focus in $heb_focus_values) {
                             # Experiment parameters
                             '--batch_size=1',
                             '--epochs=10', 
-                            '--device=cpu',
-                            # '--device=cuda:8',
+                            #'--device=cpu',
+                            '--device=cuda:8',
                             '--local_machine=True',
                             '--experiment_type=base'
                         )

@@ -7,7 +7,7 @@ script_name = 'train_base.py'
 arguments = [
             # Basic configurations  
             "--data_name=MNIST",
-            "--experiment_name=LR0.0001",
+            "--experiment_name=Yellow_Tiger_EXP_",
             # Data Factory - MNIST
             "--train_data=data/mnist/train-images.idx3-ubyte", 
             "--train_label=data/mnist/train-labels.idx1-ubyte", 
@@ -56,7 +56,7 @@ arguments = [
             '--heb_act=normalized',
             # Classification layer hyperparameters
             '--class_learn=hebbian',
-            '--class_growth=linear',
+            '--class_growth=exponential',
             '--class_bias=no_bias',
             '--class_focus=neuron',
             '--class_act=normalized',

@@ -26,7 +26,7 @@ class ClassificationLayer(OutputLayer):
             init (ParamInit): fc parameter initiation type
         OWN ATTR.
     """
-    
+
     #################################################################################################
     # Constructor Method
     #################################################################################################
@@ -66,7 +66,7 @@ class ClassificationLayer(OutputLayer):
         self.activation_method: ActivationMethods = activation
         
         self.sigmoid_k: float = sigmoid_k
-        
+
 
     #################################################################################################
     # Activations and weight/bias updates that will be called for train/eval forward
@@ -86,8 +86,8 @@ class ClassificationLayer(OutputLayer):
             return self._normalized_activation(input)
         else:
             raise ValueError("Invalid activation method.")
-        
-        
+
+
     def probability(self, input: torch.Tensor) -> torch.Tensor:
         """
         METHOD
@@ -101,8 +101,8 @@ class ClassificationLayer(OutputLayer):
         output: torch.Tensor = softmax(input).to(self.device)
         
         return output
-    
-    
+
+
     def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor) -> None:
         """
         METHOD
@@ -141,7 +141,7 @@ class ClassificationLayer(OutputLayer):
         
         normalized_weight: torch.Tensor = self.normalize(updated_weight)
         self.fc.weight = nn.Parameter(normalized_weight, requires_grad=False)
-        
+
 
     def update_bias(self, output: torch.Tensor) -> None:
         """
@@ -156,8 +156,8 @@ class ClassificationLayer(OutputLayer):
             return
         else:
             raise ValueError("Update Bias type invalid.")
-        
-    
+
+
     #################################################################################################
     # Training and Evaluation Methods
     #################################################################################################
@@ -182,7 +182,7 @@ class ClassificationLayer(OutputLayer):
             raise ValueError("Weights of the fully connected layer have become NaN.")
         
         return output
-    
+
 
     def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
         """
@@ -277,7 +277,6 @@ class ClassificationLayer(OutputLayer):
         return computed_rule
 
 
-
     #################################################################################################
     # Different Weights Growth
     #################################################################################################
@@ -342,7 +341,6 @@ class ClassificationLayer(OutputLayer):
             raise ValueError("Invalid focus type.")
         
         return derivative
-                
 
 
     #################################################################################################
