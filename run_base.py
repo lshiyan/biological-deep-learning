@@ -7,7 +7,7 @@ script_name = 'train_base.py'
 arguments = [
             # Basic configurations  
             "--data_name=MNIST",
-            "--experiment_name=EXTRA_NEW_REPEAT_EXP2",
+            "--experiment_name= - LR 0.001 - ",
             # Data Factory - MNIST
             "--train_data=data/mnist/train-images.idx3-ubyte", 
             "--train_label=data/mnist/train-labels.idx1-ubyte", 
