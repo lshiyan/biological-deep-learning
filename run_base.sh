@@ -29,6 +29,7 @@ for focus in "${heb_focus_values[@]}"; do
                         # Construct the complete set of arguments including the varying parameter
                         arguments=(
                             "--data_name=MNIST"
+                            "--experiment_name=_LR_EXPLORATION_",
                             "--train_data=data/mnist/train-images.idx3-ubyte"
                             "--train_label=data/mnist/train-labels.idx1-ubyte"
                             "--test_data=data/mnist/test-images.idx3-ubyte"
