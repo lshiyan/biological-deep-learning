@@ -9,12 +9,12 @@ scriptName='train_base.py'
 # heb_growth_values=("linear" "sigmoid" "exponential")
 # heb_focus_values=("synapse" "neuron")
 
-lambda_values=(0.25 0.5 1 2 4 8 16)
-heb_learn_values=('sanger' 'orthogonal')
+lambda_values=(0.25 0.5 1 2 4 8 16 32)
+heb_learn_values=('sanger' 'orthogonal' 'HEBBIAN')
 heb_growth_values=('linear' 'sigmoid' 'exponential')
 clas_growth_values=('linear' 'sigmoid')
 heb_focus_values=('synapse' 'neuron')
-learning_rate_values=(0.0001)
+learning_rate_values=(0.01, 0.05, 0.001, 0.005, 0.0001, 0.0005, 0.00001, 0.00005)
 
 # Process List
 processes=()
