@@ -158,7 +158,6 @@ class ClassificationLayer(OutputLayer):
             raise ValueError("Update Bias type invalid.")
         
     
-    
     #################################################################################################
     # Training and Evaluation Methods
     #################################################################################################
@@ -247,7 +246,6 @@ class ClassificationLayer(OutputLayer):
             computed_rule: computed hebbian rule
         """
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
-        y: torch.Tensor = output.clone().detach().squeeze().to(self.device)
         x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
 
         
