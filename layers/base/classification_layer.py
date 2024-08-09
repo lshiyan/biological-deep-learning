@@ -82,6 +82,8 @@ class ClassificationLayer(OutputLayer):
         """ 
         if self.activation_method == ActivationMethods.BASIC:
             return self._basic_activation(input)
+        elif self.activation_method == ActivationMethods.NORMALIZED:
+            return self._normalized_activation(input)
         else:
             raise ValueError("Invalid activation method.")
         
@@ -140,6 +142,7 @@ class ClassificationLayer(OutputLayer):
         normalized_weight: torch.Tensor = self.normalize(updated_weight)
         self.fc.weight = nn.Parameter(normalized_weight, requires_grad=False)
         
+
     def update_bias(self, output: torch.Tensor) -> None:
         """
         METHOD
@@ -198,7 +201,6 @@ class ClassificationLayer(OutputLayer):
         return output
     
     
-    
     #################################################################################################
     # Different Activation Methods
     #################################################################################################
@@ -227,7 +229,6 @@ class ClassificationLayer(OutputLayer):
         normalized_weight: torch.Tensor = self.normalize(weight).to(self.device)
         
         return F.linear(input, normalized_weight, bias=self.fc.bias)
-    
     
     
     #################################################################################################
