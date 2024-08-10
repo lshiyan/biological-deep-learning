@@ -31,7 +31,7 @@ for focus in "${heb_focus_values[@]}"; do
                             # Construct the complete set of arguments including the varying parameter
                             arguments=(
                                 "--data_name=MNIST"
-                                "--experiment_name=_LR_EXPLORATION_"
+                                "--experiment_name=_LR_EXPLORATION_FINAL"
                                 "--train_data=data/mnist/train-images.idx3-ubyte"
                                 "--train_label=data/mnist/train-labels.idx1-ubyte"
                                 "--test_data=data/mnist/test-images.idx3-ubyte"
@@ -52,7 +52,7 @@ for focus in "${heb_focus_values[@]}"; do
                                 "--heb_learn=$heb_learn"
                                 "--heb_lamb=$lambda"
                                 "--heb_act=normalized"
-                                "--class_learn=hebbian"
+                                "--class_learn=SOFT_HEBB"
                                 "--class_growth=$clas_growth"
                                 "--class_bias=no_bias"
                                 "--class_focus=neuron"
@@ -66,8 +66,8 @@ for focus in "${heb_focus_values[@]}"; do
                                 "--init=uniform"
                                 "--batch_size=1"
                                 "--epochs=1"
-                                #"--device=cpu"
-                                "--device=cuda:4"
+                                "--device=cpu"
+                                # "--device=cuda:4"
                                 "--local_machine=True"
                                 "--experiment_type=base"
                             )
