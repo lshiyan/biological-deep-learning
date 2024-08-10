@@ -253,14 +253,6 @@ class ClassificationLayer(OutputLayer):
         x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
         y: torch.Tensor = activation.clone().detach().squeeze().to(self.device)
 
-        print(f"x dimension: {x.size()}")
-        print(f"y tensor: {y.size()}")
-
-
-        print(f"x tensor: {x}")
-        print(f"y tensor: {y}")
-
-        
         computed_rule: torch.Tensor = torch.outer(y, x).to(self.device)
 
         return computed_rule
@@ -281,17 +273,6 @@ class ClassificationLayer(OutputLayer):
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
         x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
 
-        print(f"x dimension: {x.size()}")
-        print(f"activation tensor: {activation.size()}")
-        print(f"output tensor: {output.size()}")
-        print(f"clamped tensor: {clamped_output.size()}")
-
-
-        print(f"x tensor: {x}")
-        print(f"activation tensor: {activation}")
-        print(f"output tensor: {output}")
-        print(f"clamped output tensor: {clamped_output}")
-        
         computed_rule: torch.Tensor = torch.outer(clamped_output, x).to(self.device)
 
 
