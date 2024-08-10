@@ -36,7 +36,7 @@ def train_and_eval(args: Tuple) -> List[float]:
     num: int
     params, num = args
     model: Network = HebbianNetwork('Hebbian Network', params).to(params.device)
-    experiment: Experiment = BaseExperiment(model, params, f'{params.experiment_name}{params.experiment_type.lower()}-{params.heb_learn.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}-{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+    experiment: Experiment = BaseExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.lr}--{params.heb_learn.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
     accuracies: List[float] = list(experiment.run())
     experiment.cleanup()
     
