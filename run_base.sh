@@ -15,7 +15,7 @@ heb_growth_values=('linear' 'sigmoid' 'exponential')
 clas_growth_values=('linear' 'sigmoid' 'exponential')
 heb_focus_values=('synapse' 'neuron')
 heb_inhib_values=('RELU' 'EXP_SOFTMAX')
-learning_rate_values=(0.01 0.05 0.001 0.005 0.0001 0.0005 0.00001 0.00005)
+learning_rate_values=(0.01 0.05 0.001 0.005 0.0001 0.0005 0.00005)
 
 # Process List
 processes=()
