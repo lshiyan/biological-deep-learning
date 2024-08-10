@@ -149,6 +149,7 @@ class BaseExperiment(Experiment):
 
         # Loop through training batches
         for inputs, labels in train_data_loader:
+
             # Test model at intervals of samples seen
             if self.check_test(self.SAMPLES):
                 # Pause train timer and add to total time

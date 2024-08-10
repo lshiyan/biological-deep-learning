@@ -7,7 +7,7 @@ script_name = 'train_base.py'
 arguments = [
             # Basic configurations  
             "--data_name=MNIST",
-            "--experiment_name=Yellow_Tiger_EXP_",
+            "--experiment_name=TESTING_SOFT_HEBB",
             # Data Factory - MNIST
             "--train_data=data/mnist/train-images.idx3-ubyte", 
             "--train_label=data/mnist/train-labels.idx1-ubyte", 
@@ -46,22 +46,22 @@ arguments = [
             '--heb_dim=64', 
             '--output_dim=10',
             # Hebbian layer hyperparameters  
-            '--heb_lamb=16', 
+            '--heb_lamb=15', 
             '--heb_gam=0.99',
             '--heb_eps=0.0001',
-            '--heb_learn=sanger',
+            '--heb_learn=orthogonal',
             '--heb_inhib=relu',
             '--heb_growth=linear',
             '--heb_focus=neuron',
             '--heb_act=normalized',
             # Classification layer hyperparameters
-            '--class_learn=hebbian',
+            '--class_learn=SOFT_HEBB',
             '--class_growth=exponential',
             '--class_bias=no_bias',
             '--class_focus=neuron',
             '--class_act=normalized',
             # Shared hyperparameters
-            '--lr=0.0005',
+            '--lr=0.005',
             '--sigmoid_k=1',
             '--alpha=0',
             '--beta=1e-2',

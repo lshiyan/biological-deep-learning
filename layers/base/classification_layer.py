@@ -103,7 +103,7 @@ class ClassificationLayer(OutputLayer):
         return output
 
 
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor) -> None:
+    def update_weights(self, input: torch.Tensor, activation: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor) -> None:
         """
         METHOD
         Update weights using defined rule.
@@ -119,12 +119,16 @@ class ClassificationLayer(OutputLayer):
         function_derivative: torch.Tensor
         
         if self.learning_rule == LearningRules.HEBBIAN_LEARNING_RULE:
-            calculated_rule = self._hebbian_rule(input, output, clamped_output)
-        elif self.learning_rule == LearningRules.CONTROLLED_LEARNING_RULE:
-            calculated_rule = self._controlled_hebbian_rule(input, output, clamped_output)
+            calculated_rule = self._unsupervised_hebbian_rule(input, activation, output, clamped_output)
+        elif self.learning_rule == LearningRules.SUPERVISED_HEBBIAN_LEARNING_RULE:
+            calculated_rule = self._supervised_hebbian_rule(input, activation, output, clamped_output)
+        elif self.learning_rule == LearningRules.SOFT_HEBB_LEARNING_RULE:
+            calculated_rule = self._softhebb_hebbian_rule(input, activation, output, clamped_output)
+        elif self.learning_rule == LearningRules.OUTPUT_CONTRASTIVE_LEARNING_RULE:
+            calculated_rule = self._output_contrastive_rule(input, activation, output, clamped_output)
         else:
             raise NameError("Unknown learning rule.")
-        
+
         if self.weight_growth == WeightGrowth.LINEAR:
             function_derivative = self._linear_function()
         elif self.weight_growth == WeightGrowth.SIGMOID:
@@ -174,7 +178,7 @@ class ClassificationLayer(OutputLayer):
         # Calculate activation -> Calculate inhibition -> Update weights -> Update bias -> Return output
         activations: torch.Tensor = self.activation(input)
         output: torch.Tensor = self.probability(activations)
-        self.update_weights(input, activations, clamped_output)
+        self.update_weights(input, activations, output, clamped_output)
         self.update_bias(output)
         
         # Check if there are any NaN weights
@@ -233,11 +237,40 @@ class ClassificationLayer(OutputLayer):
     #################################################################################################
     # Different Weight Updates Methods
     #################################################################################################
-    def _hebbian_rule(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor) -> torch.Tensor:
+    def _unsupervised_hebbian_rule(self, input: torch.Tensor, activation: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor) -> torch.Tensor:
         """
         METHOD
         Defines the way the weights will be updated at each iteration of the training.
-        Rule = delta Sij = lr * t * xj
+        Rule = delta Sij = lr * y * xj
+        @param
+            input: The input tensor to the layer before any transformation.
+            output: The output tensor of the layer before applying softmax.
+            clamped_output: one-hot encode of true labels
+        @return
+            computed_rule: computed hebbian rule
+        """
+        # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
+        x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
+        y: torch.Tensor = activation.clone().detach().squeeze().to(self.device)
+
+        print(f"x dimension: {x.size()}")
+        print(f"y tensor: {y.size()}")
+
+
+        print(f"x tensor: {x}")
+        print(f"y tensor: {y}")
+
+        
+        computed_rule: torch.Tensor = torch.outer(y, x).to(self.device)
+
+        return computed_rule
+
+
+    def _supervised_hebbian_rule(self, input: torch.Tensor, activation: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Defines the way the weights will be updated at each iteration of the training.
+        Rule = delta Sij = lr * y^hat * xj
         @param
             input: The input tensor to the layer before any transformation.
             output: The output tensor of the layer before applying softmax.
@@ -248,13 +281,24 @@ class ClassificationLayer(OutputLayer):
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
         x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
 
+        print(f"x dimension: {x.size()}")
+        print(f"activation tensor: {activation.size()}")
+        print(f"output tensor: {output.size()}")
+        print(f"clamped tensor: {clamped_output.size()}")
+
+
+        print(f"x tensor: {x}")
+        print(f"activation tensor: {activation}")
+        print(f"output tensor: {output}")
+        print(f"clamped output tensor: {clamped_output}")
         
         computed_rule: torch.Tensor = torch.outer(clamped_output, x).to(self.device)
+
 
         return computed_rule
 
     
-    def _controlled_hebbian_rule(self, input: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor) -> torch.Tensor:
+    def _softhebb_hebbian_rule(self, input: torch.Tensor, activation: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor) -> torch.Tensor:
         """
         METHOD
         Defines the way the weights will be updated at each iteration of the training.
@@ -267,7 +311,7 @@ class ClassificationLayer(OutputLayer):
             computed_rule: computed controlled hebbian rule
         """
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
-        u: torch.Tensor = output.clone().detach().squeeze().to(self.device)
+        u: torch.Tensor = activation.clone().detach().squeeze().to(self.device)
         x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
         y: torch.Tensor = torch.softmax(u, dim=-1).to(self.device)
 
@@ -275,6 +319,29 @@ class ClassificationLayer(OutputLayer):
         computed_rule: torch.Tensor = (outer_prod - self.fc.weight * ((u * y).unsqueeze(-1))).to(self.device)
         
         return computed_rule
+    
+
+    def _output_contrastive_rule(self, input: torch.Tensor, activation: torch.Tensor, output: torch.Tensor, clamped_output: torch.Tensor) -> torch.Tensor:
+        """
+        METHOD
+        Defines the way the weights will be updated at each iteration of the training.
+        Rule = delta Sij = lr(y^hat_i - y_i)x_j
+        @param
+            input: The input tensor to the layer before any transformation.
+            output: The output tensor of the layer before applying softmax.
+            clamped_output: one-hot encode of true labels
+        @return
+            computed_rule: computed controlled hebbian rule
+        """
+        # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
+        y_hat: torch.Tensor = clamped_output.clone().detach().squeeze().to(self.device)
+        y: torch.Tensor = output.clone().detach().squeeze().to(self.device)
+        x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
+
+        computed_rule: torch.Tensor = torch.outer(y_hat - y, x).to(self.device)
+        
+        return computed_rule
+
 
 
     #################################################################################################

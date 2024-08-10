@@ -152,7 +152,7 @@ class HebbianLayer(HiddenLayer):
             raise NameError("Unknown inhibition rule.")
     
     
-    def update_weights(self, input: torch.Tensor, output: torch.Tensor) -> None:
+    def update_weights(self, input: torch.Tensor, post_inhibition_activations: torch.Tensor) -> None:
         """
         METHOD
         Update weights using defined rule.
@@ -168,11 +168,11 @@ class HebbianLayer(HiddenLayer):
         function_derivative: torch.Tensor
         
         if self.learning_rule == LearningRules.HEBBIAN_LEARNING_RULE:
-            calculated_rule = self._hebbian_rule(input, output)
+            calculated_rule = self._hebbian_rule(input, post_inhibition_activations)
         elif self.learning_rule == LearningRules.SANGER_LEARNING_RULE:
-            calculated_rule = self._sanger_rule(input, output)
+            calculated_rule = self._sanger_rule(input, post_inhibition_activations)
         elif self.learning_rule == LearningRules.FULLY_ORTHOGONAL_LEARNING_RULE:
-            calculated_rule = self._fully_orthogonal_rule(input, output)
+            calculated_rule = self._fully_orthogonal_rule(input, post_inhibition_activations)
         else:
             raise NameError("Unknown learning rule.")
         
@@ -193,8 +193,7 @@ class HebbianLayer(HiddenLayer):
         self.fc.weight = nn.Parameter(updated_weight, requires_grad=False)
         
         # Normalized Weight Update
-        self.normalized_weights = self.normalize(updated_weight).to(self.device)
-        
+        self.normalized_weights = self.normalize(updated_weight).to(self.device)        
 
     def update_bias(self, output: torch.Tensor) -> None:
         """
@@ -231,15 +230,15 @@ class HebbianLayer(HiddenLayer):
         """
         # Calculate activation -> Calculate inhibition -> Update weights -> Update bias -> Rreturn output
         activations: torch.Tensor = self.activation(input)
-        output: torch.Tensor = self.inhibition(activations)
-        self.update_weights(input, output)
-        self.update_bias(output)
+        post_inhibition_activations: torch.Tensor = self.inhibition(activations)
+        self.update_weights(input, post_inhibition_activations)
+        self.update_bias(post_inhibition_activations)
         
         # Check if there are any NaN weights
         if (self.fc.weight.isnan().any()):
             raise ValueError("Weights of the fully connected layer have become NaN.")
         
-        return output
+        return post_inhibition_activations
     
 
     def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
