@@ -284,7 +284,7 @@ def main(args, timer):
     test_sampler = InterruptableDistributedSampler(test_dataset)
     timer.report("Initialized samplers")
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=train_sampler, num_workers=3)
+    train_dataloader = DataLoader(train_dataset, batch_size=1, sampler=train_sampler, num_workers=3)
     test_dataloader = DataLoader(test_dataset, batch_size=1, sampler=test_sampler)
     timer.report("Initialized dataloaders")
 
