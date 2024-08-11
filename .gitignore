@@ -6,3 +6,6 @@ data/cifar-10-batches-py
 # Large binary dataset files
 data/cifar-10-python.tar.gz
 data/cifar-100-python.tar.gz
+
+# Trained Models
+SavedModels/
