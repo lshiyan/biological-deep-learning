@@ -1,26 +1,3 @@
-# def visualize_weights(self):
-#     nb = int(math.ceil(math.sqrt(self.output_dim)))
-#     if not self.is_output_layer:
-#         fig, axes = plt.subplots(nb, nb, figsize=(32,32))
-#         nb_ele = self.output_dim
-#     else :
-#         nb_ele = self.feedforward.weight.size(0)
-#         fig, axes = plt.subplots(nb, nb, figsize=(32,32))
-        
-#     weight = self.feedforward.weight
-#     for ele in range(nb_ele):
-#         random_feature_selector = weight[ele]
-#         heatmap = random_feature_selector.view(int(math.sqrt(weight.size(1))),
-#                                                 int(math.sqrt(weight.size(1))))
-#         ax = axes[ele // nb, ele % nb]
-#         im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
-#         fig.colorbar(im, ax=ax)
-#         ax.set_title(f'Weight {ele}')
-
-#     plt.tight_layout()
-#     plt.show()
-
-
 import models.MLP.model as MLP
 
 #####################################
@@ -94,14 +71,15 @@ def get_args_parser(add_help=True):
     parser.add_argument("--test-epochs", type=int, default=1)
     # Testing model performance on a test every "test-epochs" epochs
     # ---------------------------------------
+    parser.add_argument("--topdown", type=bool, default=False)
     parser.add_argument("--lr", type=float, default=0.005)
     parser.add_argument("--hsize", type=int, default=64)
     # ---------------------------------------
     parser.add_argument("--lambd", type=float, default=15)
-    parser.add_argument("--batchsize", type=int, default=1)
+    parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--gamma", type=float, default=0.98)
     parser.add_argument("--epsilon", type=float, default=0.01)
-    parser.add_argument("--rho", type=float, default=10)
+    parser.add_argument("--rho", type=int, default=10)
     # For distributed training it is important to distinguish between the per-GPU or "local" batch size (which this
     # hyper-parameter sets) and the "effective" batch size which is the product of the local batch size and the number
     # of GPUs in the cluster. With a local batch size of 16, and 10 nodes with 6 GPUs per node, the effective batch size
@@ -143,13 +121,17 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
 
         # Forward pass
         if args.dataset == "EMNIST":
-            labels = MLP.oneHotEncode(targets, 47)
+            labels = MLP.oneHotEncode(targets, 47, args.device_id)
         elif args.dataset == "FashionMNIST" :
-            labels = MLP.oneHotEncode(targets, 10)
+            labels = MLP.oneHotEncode(targets, 10, args.device_id)
 
-        model(inputs, labels)
+        if args.topdown:
+            model.TD_forward(inputs, labels)
+        else:
+            model(inputs, labels)
 
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
+        metrics["train"].update({"examples_seen": len(inputs)})
         metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
 
         # Advance sampler - essential for interruptibility
@@ -176,7 +158,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
             )
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
-def test_loop(model, optimizer, lr_scheduler, loss_fn, train_dataloader, test_dataloader, metrics, writer, args):
+def test_loop(model, train_dataloader, test_dataloader, metrics, args):
     epoch = test_dataloader.sampler.epoch
     test_batches_per_epoch = len(test_dataloader)
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
@@ -192,15 +174,17 @@ def test_loop(model, optimizer, lr_scheduler, loss_fn, train_dataloader, test_da
             # Move input and targets to device
             inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
+
             # Inference
-            predictions = model(inputs)
+            if args.topdown:
+                predictions = model.TD_forward_test(inputs)
+            else:
+                predictions = model.forward_test(inputs)
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
-            # Test loss
-            test_loss = loss_fn(predictions, targets)
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - loss calculation")
+
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum()
-            metrics["test"].update({"examples_seen": len(inputs), "loss": test_loss.item(), "correct": correct.item()})
+            metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
             metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
             metrics["test"].reset_local()  # Reset local cache
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
@@ -209,15 +193,11 @@ def test_loop(model, optimizer, lr_scheduler, loss_fn, train_dataloader, test_da
 
             # Performance summary at the end of the epoch
             if args.is_master and is_last_batch:
-                total_loss, correct, examples_seen = itemgetter("loss", "correct", "examples_seen")(metrics["test"].agg)
-                avg_test_loss = total_loss / examples_seen
+                correct, examples_seen = itemgetter("correct", "examples_seen")(metrics["test"].agg)
                 pct_test_correct = correct / examples_seen
-                writer.add_scalar("Test/avg_test_loss", avg_test_loss, epoch)
-                writer.add_scalar("Test/pct_test_correct", pct_test_correct, epoch)
                 metrics["test"].end_epoch()
                 timer.report(
-                    f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: AVG TEST LOSS: \
-                             {avg_test_loss}, TEST ACC: {pct_test_correct}"
+                    f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: TEST ACC: {pct_test_correct}"
                 )
 
             # Save checkpoint
@@ -228,7 +208,6 @@ def test_loop(model, optimizer, lr_scheduler, loss_fn, train_dataloader, test_da
                         "model": model.state_dict(),
                         "train_sampler": train_dataloader.sampler.state_dict(),
                         "test_sampler": test_dataloader.sampler.state_dict(),
-                        "lr_scheduler": lr_scheduler.state_dict(),
                         "metrics": metrics,
                     },
                     args.checkpoint_path,
@@ -276,7 +255,7 @@ def main(args, timer):
         train_dataset = datasets.EMNIST(root='./data', split='balanced', train=True, download=False, transform=transform_EMNIST)
         test_dataset = datasets.EMNIST(root='./data', split='balanced', train=False, download=False, transform=transform_EMNIST)
 
-        model = MLP.MLPBaseline_Model(args.hsize, args.lambd, args.lr, args.epsilon, args.rho, args.gamma, 47)
+        model = MLP.MLPBaseline_Model(args.hsize, args.lambd, args.lr, args.epsilon, args.rho, args.gamma, 47, args.device_id)
         model = model.to(args.device_id)
 
     elif dataset == "FashionMNIST":
@@ -284,10 +263,11 @@ def main(args, timer):
             transforms.ToTensor(),
             transforms.Lambda(lambda x: x.view(-1))
         ])
-        train_dataset = datasets.FashionMNIST(root='./data', train=True, download=True, transform=transform_MNIST)
-        test_dataset = datasets.FashionMNIST(root='./data', train=False, download=True, transform=transform_MNIST)
+        train_dataset = datasets.FashionMNIST(root='./data', train=True, download=False, transform=transform_MNIST)
+        test_dataset = datasets.FashionMNIST(root='./data', train=False, download=False, transform=transform_MNIST)
 
-        model = MLP.MLPBaseline_Model(args.hsize, args.lambd, args.lr, args.epsilon, args.rho, args.gamma, 10)
+        model = MLP.MLPBaseline_Model(args.hsize, args.lambd, args.lr, args.epsilon, args.rho, args.gamma, 10, args.device_id)
+        #model = MLP.MLPBaseline_Model(64, 100, 0.005, 0.01, 10, 0.98, 10, args.device_id)
         model = model.to(args.device_id)
 
     timer.report("Initialized datasets")
@@ -343,28 +323,25 @@ def main(args, timer):
 
             # An inner context is also set from the testing sampler. This ensures that both training and testing can be
             # interrupted and resumed from checkpoint.
-            
-            # if epoch % args.test_epochs == 0:
-            #     with test_dataloader.sampler.in_epoch(epoch):
-            #         test_loop(
-            #             model,
-            #             optimizer,
-            #             lr_scheduler,
-            #             loss_fn,
-            #             train_dataloader,
-            #             test_dataloader,
-            #             metrics,
-            #             writer,
-            #             args,
-            #         )
+
+    for epoch in range(test_dataloader.sampler.epoch, args.test_epochs): 
+        with test_dataloader.sampler.in_epoch(epoch):
+            test_loop(
+                model,
+                train_dataloader,
+                test_dataloader,
+                metrics,
+                args,
+            )
 
     print("Done!")
-
-    MLP.Save_Model(model, args.dataset)
+    return model
 
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
-    main(args, timer)
+    model = main(args, timer)
+    if args.is_master:
+        MLP.Save_Model(model, args.dataset)
 
 #################################################################
 # Further Reading

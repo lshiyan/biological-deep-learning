@@ -18,8 +18,8 @@ class ImageType(Enum):
 
 
 
-def oneHotEncode(labels, num_classes):
-    one_hot_encoded = torch.zeros(len(labels), num_classes)
+def oneHotEncode(labels, num_classes, device):
+    one_hot_encoded = torch.zeros(len(labels), num_classes).to(device)
     one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
     return one_hot_encoded.squeeze()
 
@@ -110,7 +110,7 @@ class NeuralNet(nn.Module):
 
 
 class Hebbian_Layer(nn.Module):
-    def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, is_output_layer=False):
+    def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device="cpu", is_output_layer=False):
         super(Hebbian_Layer, self).__init__()
         self.input_dim = inputdim
         self.output_dim = outputdim
@@ -127,7 +127,7 @@ class Hebbian_Layer(nn.Module):
             param=torch.nn.init.uniform_(param, a=0.0, b=1.0)
             param.requires_grad_(False)
         
-        self.exponential_average=torch.zeros(self.output_dim)
+        self.exponential_average=torch.zeros(self.output_dim).to(device)
 
     def inhibition(self, x):
         x=nn.ReLU()(x)
@@ -180,7 +180,6 @@ class Hebbian_Layer(nn.Module):
         x = self.inhibition(x)
         if self.is_output_layer:
             self.update_weights_FullyOrthogonal(input, clamped)
-            x = nn.Softmax()(x)
         else:
             self.update_weights_FullyOrthogonal(input, x)
             #self.normalize_weights()
@@ -202,10 +201,10 @@ class Hebbian_Layer(nn.Module):
     
 
 
-def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses):
+def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device):
     mymodel = NeuralNet()
-    heb_layer = Hebbian_Layer(784, hsize, lr, lamb, wtd, gamma, e)
-    heb_layer2 = Hebbian_Layer(hsize, nclasses, lr, lamb, wtd, gamma, e, is_output_layer=True)
+    heb_layer = Hebbian_Layer(784, hsize, lr, lamb, wtd, gamma, e, device)
+    heb_layer2 = Hebbian_Layer(hsize, nclasses, lr, lamb, wtd, gamma, e, device, is_output_layer=True)
 
     mymodel.add_layer('Hebbian1', heb_layer)
     mymodel.add_layer('Hebbian2', heb_layer2)
@@ -217,19 +216,22 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses):
 def Save_Model(mymodel, dataset):
     timestr = time.strftime("%Y%m%d-%H%M%S")
     foldername = os.getcwd() + '/SavedModels/MLP_FF_' + dataset + '_' + timestr
-    os.mkdir(foldername)
 
-    torch.save(mymodel.state_dict(), foldername + '/model')
+    if not os.path.exists(foldername):
+        os.mkdir(foldername)
+
+    if not os.path.isfile(foldername + '/model'):
+        torch.save(mymodel.state_dict(), foldername + '/model')
 
     view_weights(mymodel, foldername)
 
 
 
-def MLPBaseline_Experiment(epoch, hsize, lamb, lr, e, wtd, gamma, dataloader, dataset, nclasses):
+def MLPBaseline_Experiment(epoch, hsize, lamb, lr, e, wtd, gamma, dataloader, dataset, nclasses, device):
 
     mymodel = NeuralNet()
-    heb_layer = Hebbian_Layer(784, hsize, lr, lamb, wtd, gamma, e)
-    heb_layer2 = Hebbian_Layer(hsize, nclasses, lr, lamb, wtd, gamma, e, is_output_layer=True)
+    heb_layer = Hebbian_Layer(784, hsize, lr, lamb, wtd, gamma, e, device)
+    heb_layer2 = Hebbian_Layer(hsize, nclasses, lr, lamb, wtd, gamma, e, device, is_output_layer=True)
 
     mymodel.add_layer('Hebbian1', heb_layer)
     mymodel.add_layer('Hebbian2', heb_layer2)
@@ -268,7 +270,7 @@ def visualize_weights(self, file):
         nb_ele = self.feedforward.weight.size(0)
         fig, axes = plt.subplots(nb, nb, figsize=(32,32))
         
-    weight = self.feedforward.weight
+    weight = self.feedforward.weight.to('cpu')
     for ele in range(nb_ele):
         random_feature_selector = weight[ele]
         heatmap = random_feature_selector.view(int(math.sqrt(weight.size(1))),
@@ -279,4 +281,5 @@ def visualize_weights(self, file):
         ax.set_title(f'Weight {ele}')
 
     plt.tight_layout()
-    plt.savefig(file)
+    if not os.path.exists(file):
+        plt.savefig(file)
