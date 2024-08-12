@@ -27,7 +27,7 @@ def main():
     avg_train = average(train_acc_list)
     var_train = variance(train_acc_list)
 
-    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || LR: {ARGS.lr} || EPS: {ARGS.heb_eps} || Dim: {ARGS.heb_dim} || Dataset: {ARGS.data_name.upper()} || Learning Rule: {ARGS.heb_learn.lower().capitalize()}/{ARGS.class_learn.lower().capitalize()} || Inhibition Type: {ARGS.heb_inhib.lower().captialize()} || Function Type: {ARGS.heb_growth.lower().capitalize()}/{ARGS.class_growth.lower().capitalize()} || Focus: {ARGS.heb_focus.lower().capitalize()}/{ARGS.class_focus.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
+    results_log.info(f"Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || LR: {ARGS.lr} || EPS: {ARGS.heb_eps} || Dim: {ARGS.heb_dim} || Dataset: {ARGS.data_name.upper()} || Learning Rule: {ARGS.heb_learn.lower().capitalize()}/{ARGS.class_learn.lower().capitalize()} || Inhibition Type: {ARGS.heb_inhib.lower().capitalize()} || Function Type: {ARGS.heb_growth.lower().capitalize()}/{ARGS.class_growth.lower().capitalize()} || Focus: {ARGS.heb_focus.lower().capitalize()}/{ARGS.class_focus.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
 
 
 # Model Training
