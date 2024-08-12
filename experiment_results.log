@@ -1,0 +1,681 @@
+2024-08-11 21:33:40,648 - Started process with PID: 20024 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: linear, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-11 21:33:40,653 - Started process with PID: 30972 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: linear, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-11 21:33:40,658 - Started process with PID: 21780 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: linear, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-11 22:40:32,160 - Process with PID: 20024 completed.
+2024-08-11 22:40:32,160 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-11 22:40:32,161 - Process with PID: 30972 completed.
+2024-08-11 22:40:32,161 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-11 22:40:32,161 - Process with PID: 21780 completed.
+2024-08-11 22:40:32,161 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-11 22:40:32,167 - Started process with PID: 15060 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: linear, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-11 22:40:32,173 - Started process with PID: 25240 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: sigmoid, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-11 22:40:32,178 - Started process with PID: 38036 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: sigmoid, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-11 23:47:49,898 - Process with PID: 15060 completed.
+2024-08-11 23:47:49,899 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-exp_softmax-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-exp_softmax-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-exp_softmax-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-11 23:48:22,309 - Process with PID: 25240 completed.
+2024-08-11 23:48:22,309 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-11 23:48:22,309 - Process with PID: 38036 completed.
+2024-08-11 23:48:22,310 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-11 23:48:22,315 - Started process with PID: 30416 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: sigmoid, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-11 23:48:22,320 - Started process with PID: 37112 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: sigmoid, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-11 23:48:22,325 - Started process with PID: 31480 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: exponential, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-12 00:47:00,152 - Process with PID: 30416 completed.
+2024-08-12 00:47:00,152 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 00:47:00,152 - Process with PID: 37112 completed.
+2024-08-12 00:47:00,153 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 00:47:02,913 - Process with PID: 31480 completed.
+2024-08-12 00:47:02,913 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 00:47:02,919 - Started process with PID: 17540 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: exponential, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 00:47:02,925 - Started process with PID: 15608 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: exponential, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-12 00:47:02,930 - Started process with PID: 2716 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: exponential, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 01:48:33,360 - Process with PID: 17540 completed.
+2024-08-12 01:48:33,360 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 01:49:04,863 - Process with PID: 15608 completed.
+2024-08-12 01:49:04,863 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 01:49:04,863 - Process with PID: 2716 completed.
+2024-08-12 01:49:04,863 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-exp_softmax-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 01:49:04,869 - Started process with PID: 22428 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: linear, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-12 01:49:04,874 - Started process with PID: 11796 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: linear, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 01:49:04,878 - Started process with PID: 32984 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: linear, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-12 02:51:13,276 - Process with PID: 22428 completed.
+2024-08-12 02:51:13,276 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-relu-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-relu-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-relu-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 02:51:13,276 - Process with PID: 11796 completed.
+2024-08-12 02:51:13,276 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-exp_softmax-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-exp_softmax-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-exp_softmax-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 02:51:13,276 - Process with PID: 32984 completed.
+2024-08-12 02:51:13,277 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-relu-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-relu-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-relu-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 02:51:13,282 - Started process with PID: 28516 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: linear, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 02:51:13,287 - Started process with PID: 30328 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: sigmoid, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-12 02:51:13,292 - Started process with PID: 28544 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: sigmoid, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 03:42:21,122 - Process with PID: 28516 completed.
+2024-08-12 03:42:21,122 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-exp_softmax-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-exp_softmax-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-exp_softmax-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 03:48:33,335 - Process with PID: 30328 completed.
+2024-08-12 03:48:33,335 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-relu-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-relu-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-relu-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 03:48:40,711 - Process with PID: 28544 completed.
+2024-08-12 03:48:40,711 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 03:48:40,716 - Started process with PID: 17996 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: sigmoid, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-12 03:48:40,721 - Started process with PID: 29016 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: sigmoid, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 03:48:40,726 - Started process with PID: 34020 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: exponential, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-12 04:48:43,200 - Process with PID: 17996 completed.
+2024-08-12 04:48:43,200 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-relu-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-relu-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-relu-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 04:48:43,200 - Process with PID: 29016 completed.
+2024-08-12 04:48:43,200 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 04:49:09,129 - Process with PID: 34020 completed.
+2024-08-12 04:49:09,129 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-relu-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-relu-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-relu-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 04:49:09,134 - Started process with PID: 5500 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: exponential, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 04:49:09,139 - Started process with PID: 33392 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: exponential, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-12 04:49:09,144 - Started process with PID: 37584 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Class_Growth: exponential, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 05:50:39,128 - Process with PID: 5500 completed.
+2024-08-12 05:50:39,128 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-exp_softmax-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-synapse-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 05:50:39,129 - Process with PID: 33392 completed.
+2024-08-12 05:50:39,129 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-relu-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-relu-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-relu-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 05:50:39,129 - Process with PID: 37584 completed.
+2024-08-12 05:50:39,129 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-exp_softmax-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-sigmoid-neuron-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 05:50:39,134 - Started process with PID: 27304 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: linear, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-12 05:50:39,139 - Started process with PID: 32656 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: linear, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 05:50:39,145 - Started process with PID: 8424 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: linear, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-12 06:02:14,317 - Process with PID: 27304 completed.
+2024-08-12 06:02:14,317 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-relu-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-relu-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-relu-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+
+2024-08-12 06:02:14,318 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 40, in train_and_eval
+    accuracies: List[float] = list(experiment.run())
+                                   ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\experiment.py", line 200, in run
+    self._experiment()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 363, in _experiment
+    self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.BASE)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 274, in _training
+    self._base_train(train_data_loader, epoch, dname, visualize)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 171, in _base_train
+    self.model(inputs, clamped_output=labels)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\models\hebbian_network.py", line 155, in forward
+    input = hebbian_layer(input, freeze=freeze)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\layer.py", line 121, in forward
+    output = self._train_forward(input_copy, clamped_output)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\layers\base\hebbian_layer.py", line 239, in _train_forward
+    raise ValueError("Weights of the fully connected layer have become NaN.")
+ValueError: Weights of the fully connected layer have become NaN.
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 66, in <module>
+    main()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 23, in main
+    train_acc_list, test_acc_list = parallel_training(ARGS, 1)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 55, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 774, in get
+    raise self._value
+ValueError: Weights of the fully connected layer have become NaN.
+
+2024-08-12 06:17:41,813 - Process with PID: 32656 completed.
+2024-08-12 06:17:41,814 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-exp_softmax-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-exp_softmax-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-exp_softmax-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 06:17:42,098 - Process with PID: 8424 completed.
+2024-08-12 06:17:42,100 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-relu-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-relu-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-relu-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+
+2024-08-12 06:17:42,100 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 40, in train_and_eval
+    accuracies: List[float] = list(experiment.run())
+                                   ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\experiment.py", line 200, in run
+    self._experiment()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 363, in _experiment
+    self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.BASE)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 274, in _training
+    self._base_train(train_data_loader, epoch, dname, visualize)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 171, in _base_train
+    self.model(inputs, clamped_output=labels)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\models\hebbian_network.py", line 155, in forward
+    input = hebbian_layer(input, freeze=freeze)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\layer.py", line 121, in forward
+    output = self._train_forward(input_copy, clamped_output)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\layers\base\hebbian_layer.py", line 239, in _train_forward
+    raise ValueError("Weights of the fully connected layer have become NaN.")
+ValueError: Weights of the fully connected layer have become NaN.
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 66, in <module>
+    main()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 23, in main
+    train_acc_list, test_acc_list = parallel_training(ARGS, 1)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 55, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 774, in get
+    raise self._value
+ValueError: Weights of the fully connected layer have become NaN.
+
+2024-08-12 06:17:42,105 - Started process with PID: 21840 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: linear, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 06:17:42,110 - Started process with PID: 38332 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: sigmoid, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-12 06:17:42,116 - Started process with PID: 34920 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: sigmoid, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 07:00:57,162 - Process with PID: 21840 completed.
+2024-08-12 07:00:57,162 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-exp_softmax-0.5---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-exp_softmax-0.5---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-exp_softmax-0.5---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 07:00:57,447 - Process with PID: 38332 completed.
+2024-08-12 07:00:57,447 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-relu-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-relu-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-relu-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+
+2024-08-12 07:00:57,447 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 40, in train_and_eval
+    accuracies: List[float] = list(experiment.run())
+                                   ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\experiment.py", line 200, in run
+    self._experiment()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 363, in _experiment
+    self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.BASE)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 274, in _training
+    self._base_train(train_data_loader, epoch, dname, visualize)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 171, in _base_train
+    self.model(inputs, clamped_output=labels)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\models\hebbian_network.py", line 155, in forward
+    input = hebbian_layer(input, freeze=freeze)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\layer.py", line 121, in forward
+    output = self._train_forward(input_copy, clamped_output)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\layers\base\hebbian_layer.py", line 239, in _train_forward
+    raise ValueError("Weights of the fully connected layer have become NaN.")
+ValueError: Weights of the fully connected layer have become NaN.
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 66, in <module>
+    main()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 23, in main
+    train_acc_list, test_acc_list = parallel_training(ARGS, 1)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 55, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 774, in get
+    raise self._value
+ValueError: Weights of the fully connected layer have become NaN.
+
+2024-08-12 07:01:14,553 - Process with PID: 34920 completed.
+2024-08-12 07:01:14,553 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 07:01:14,559 - Started process with PID: 37692 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: sigmoid, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-12 07:01:14,564 - Started process with PID: 33568 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: sigmoid, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 07:01:14,570 - Started process with PID: 36708 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: exponential, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-12 07:09:25,475 - Process with PID: 37692 completed.
+2024-08-12 07:09:25,475 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-relu-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-relu-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-relu-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+
+2024-08-12 07:09:25,475 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 40, in train_and_eval
+    accuracies: List[float] = list(experiment.run())
+                                   ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\experiment.py", line 200, in run
+    self._experiment()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 363, in _experiment
+    self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.BASE)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 274, in _training
+    self._base_train(train_data_loader, epoch, dname, visualize)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 171, in _base_train
+    self.model(inputs, clamped_output=labels)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\models\hebbian_network.py", line 155, in forward
+    input = hebbian_layer(input, freeze=freeze)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\layer.py", line 121, in forward
+    output = self._train_forward(input_copy, clamped_output)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\layers\base\hebbian_layer.py", line 239, in _train_forward
+    raise ValueError("Weights of the fully connected layer have become NaN.")
+ValueError: Weights of the fully connected layer have become NaN.
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 66, in <module>
+    main()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 23, in main
+    train_acc_list, test_acc_list = parallel_training(ARGS, 1)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 55, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 774, in get
+    raise self._value
+ValueError: Weights of the fully connected layer have become NaN.
+
+2024-08-12 07:27:46,702 - Process with PID: 33568 completed.
+2024-08-12 07:27:46,702 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-exp_softmax-0.5---soft_hebb-sigmoid-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 07:27:46,982 - Process with PID: 36708 completed.
+2024-08-12 07:27:46,982 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-relu-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-relu-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-relu-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+
+2024-08-12 07:27:46,982 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 40, in train_and_eval
+    accuracies: List[float] = list(experiment.run())
+                                   ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\experiment.py", line 200, in run
+    self._experiment()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 363, in _experiment
+    self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.BASE)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 274, in _training
+    self._base_train(train_data_loader, epoch, dname, visualize)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 171, in _base_train
+    self.model(inputs, clamped_output=labels)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\models\hebbian_network.py", line 155, in forward
+    input = hebbian_layer(input, freeze=freeze)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\layer.py", line 121, in forward
+    output = self._train_forward(input_copy, clamped_output)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\layers\base\hebbian_layer.py", line 239, in _train_forward
+    raise ValueError("Weights of the fully connected layer have become NaN.")
+ValueError: Weights of the fully connected layer have become NaN.
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 66, in <module>
+    main()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 23, in main
+    train_acc_list, test_acc_list = parallel_training(ARGS, 1)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 55, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 774, in get
+    raise self._value
+ValueError: Weights of the fully connected layer have become NaN.
+
+2024-08-12 07:27:46,988 - Started process with PID: 29600 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: exponential, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 07:27:46,993 - Started process with PID: 5788 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: exponential, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-12 07:27:46,998 - Started process with PID: 21144 | Lambda: 0.5, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: exponential, Class_Growth: exponential, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 08:06:42,438 - Process with PID: 29600 completed.
+2024-08-12 08:06:42,438 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-exp_softmax-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-synapse-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 08:06:42,723 - Process with PID: 5788 completed.
+2024-08-12 08:06:42,724 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-relu-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-relu-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-relu-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+
+2024-08-12 08:06:42,724 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 40, in train_and_eval
+    accuracies: List[float] = list(experiment.run())
+                                   ^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\experiment.py", line 200, in run
+    self._experiment()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 363, in _experiment
+    self._training(self.train_data_loader, epoch, self.data_name, ExperimentPhases.BASE)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 274, in _training
+    self._base_train(train_data_loader, epoch, dname, visualize)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\experiments\base_experiment.py", line 171, in _base_train
+    self.model(inputs, clamped_output=labels)
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\models\hebbian_network.py", line 155, in forward
+    input = hebbian_layer(input, freeze=freeze)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\virtual_venv\Lib\site-packages\torch\nn\modules\module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\interfaces\layer.py", line 121, in forward
+    output = self._train_forward(input_copy, clamped_output)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\layers\base\hebbian_layer.py", line 239, in _train_forward
+    raise ValueError("Weights of the fully connected layer have become NaN.")
+ValueError: Weights of the fully connected layer have become NaN.
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 66, in <module>
+    main()
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 23, in main
+    train_acc_list, test_acc_list = parallel_training(ARGS, 1)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\Documents\GitHub\biological-deep-learning\train_base.py", line 55, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tianyi Xu\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\pool.py", line 774, in get
+    raise self._value
+ValueError: Weights of the fully connected layer have become NaN.
+
+2024-08-12 08:06:47,569 - Process with PID: 21144 completed.
+2024-08-12 08:06:47,569 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-exp_softmax-0.5---soft_hebb-exponential-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-exponential-neuron-exp_softmax-0.5---soft_hebb-exponential-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 08:06:47,574 - Started process with PID: 288 | Lambda: 0.25, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: linear, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-12 08:06:47,579 - Started process with PID: 37544 | Lambda: 0.25, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: linear, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 08:06:47,583 - Started process with PID: 37164 | Lambda: 0.25, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: linear, Heb_Focus: NEURON, Heb_Inhib: RELU
+2024-08-12 09:03:29,231 - Process with PID: 288 completed.
+2024-08-12 09:03:29,232 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.25---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.25---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-relu-0.25---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 09:03:29,232 - Process with PID: 37544 completed.
+2024-08-12 09:03:29,232 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.25---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.25---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-synapse-exp_softmax-0.25---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 09:03:37,101 - Process with PID: 37164 completed.
+2024-08-12 09:03:37,101 - Standard Output:
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.25---soft_hebb-linear-neuron-0' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.25---soft_hebb-linear-neuron-0/Output' result folder created successfully.
+Experiment '-ORTHOGONAL_BASE_EXPERIMENT-base-0.005--orthogonal-linear-neuron-relu-0.25---soft_hebb-linear-neuron-0/Hidden' result folder created successfully.
+Process Completed.
+
+2024-08-12 09:03:37,106 - Started process with PID: 3892 | Lambda: 0.25, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: linear, Heb_Focus: NEURON, Heb_Inhib: EXP_SOFTMAX
+2024-08-12 09:03:37,111 - Started process with PID: 15060 | Lambda: 0.25, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: sigmoid, Heb_Focus: synapse, Heb_Inhib: RELU
+2024-08-12 09:03:37,116 - Started process with PID: 35064 | Lambda: 0.25, LR: 0.005, Heb_Learn: orthogonal, Heb_Growth: linear, Class_Growth: sigmoid, Heb_Focus: synapse, Heb_Inhib: EXP_SOFTMAX
