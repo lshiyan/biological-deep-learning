@@ -179,13 +179,13 @@ class ClassificationLayer(OutputLayer):
         activations: torch.Tensor = self.activation(input)
         output: torch.Tensor = self.probability(activations)
         self.update_weights(input, activations, output, clamped_output)
-        self.update_bias(output)
+        self.update_bias(activations)
         
         # Check if there are any NaN weights
         if (self.fc.weight.isnan().any()):
             raise ValueError("Weights of the fully connected layer have become NaN.")
         
-        return output
+        return activations
 
 
     def _eval_forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -316,7 +316,7 @@ class ClassificationLayer(OutputLayer):
         """
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
         y_hat: torch.Tensor = clamped_output.clone().detach().squeeze().to(self.device)
-        y: torch.Tensor = output.clone().detach().squeeze().to(self.device)
+        y: torch.Tensor = activation.clone().detach().squeeze().to(self.device)
         x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
 
         computed_rule: torch.Tensor = torch.outer(y_hat - y, x).to(self.device)

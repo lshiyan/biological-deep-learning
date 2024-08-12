@@ -451,23 +451,37 @@ class HebbianLayer(HiddenLayer):
         # Retrieve initial weights
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
         
-        # Compute the norms of weight vectors
-        W_norms: torch.Tensor = torch.norm(weights, dim=1, keepdim=False)
+        # Debugging: Print the shape of weights
+        print(f"weights shape: {weights.shape}")
+        print(f"weight values: {weights}")
+        
+        # Compute the norms of the weights along the input dimension
+        W_norms = torch.norm(weights, dim=1, keepdim=False)
+
+        # Debugging: Print the shape of weight_norms and its values
+        print(f"weight_norms shape: {W_norms.shape}")
+        print(f"weight_norms: {W_norms}")
+
         
         # Compute scaling terms
         # scaling_terms[i, j] = W_norms[i] / (W_norms[j] + epsilon)
         scaling_terms: torch.Tensor = W_norms.reshape(self.output_dimension,1) / (W_norms.reshape(1,self.output_dimension) + 10e-8)
+
+        sanger_scaling_terms: torch.Tensor = torch.tril(scaling_terms, diagonal=-1)
         
         # Compute scaled weights
             # First index -> what it is rescaled to
             # Second index -> what it is divided by and the W_i of the output
             # Third index -> input dimension
             # Torch.tril is used to for setting upper triangle to zeros
-        sanger_scaled_weight: torch.Tensor = scaling_terms.reshape(self.output_dimension, self.output_dimension, 1) * torch.tril(weights, diagonal=-1).reshape(1, self.output_dimension, self.input_dimension)
+        sanger_scaled_weight: torch.Tensor = sanger_scaling_terms.reshape(self.output_dimension, self.output_dimension, 1) * weights.reshape(1, self.output_dimension, self.input_dimension)
 
         # Calculate the subtraction term
         norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, sanger_scaled_weight)
         
+        # Calculate Eta Norm
+        #eta_norm_term: torch.Tensor = norm_term * (100)
+
         # Compute change in weights
         computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
         
@@ -501,6 +515,9 @@ class HebbianLayer(HiddenLayer):
         
         # Compute the norms of weight vectors
         W_norms: torch.Tensor = torch.norm(weights, dim=1, keepdim=False)
+
+        # Calculate Eta Norm
+        #eta_norm_term: torch.Tensor = norm_term * (100)
         
         # Compute scaling terms
         # scaling_terms[i, j] = W_norms[i] / (W_norms[j] + epsilon)
