@@ -55,7 +55,7 @@ arguments = [
             '--heb_focus=neuron',
             '--heb_act=normalized',
             # Classification layer hyperparameters
-            '--class_learn=SOFT_HEBB',
+            '--class_learn=OUTPUT_CONTRASTIVE',
             '--class_growth=exponential',
             '--class_bias=no_bias',
             '--class_focus=neuron',
@@ -71,7 +71,7 @@ arguments = [
             # Experiment parameters
             '--batch_size=1',
             '--epochs=1', 
-            '--device=cpu',
+            '--device=cuda:0',
             # '--device=cuda:5',
             '--local_machine=True',
             '--experiment_type=base'
