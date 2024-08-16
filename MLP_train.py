@@ -19,6 +19,7 @@ import torch
 import torch.distributed as dist
 from torch import nn
 from torch.utils.data import DataLoader
+from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment
@@ -131,6 +132,10 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
             model(inputs, labels)
 
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
+
+        for param in model.parameters():
+            param.grad = param
+    
         metrics["train"].update({"examples_seen": len(inputs)})
         metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
 
@@ -257,6 +262,8 @@ def main(args, timer):
 
         model = MLP.MLPBaseline_Model(args.hsize, args.lambd, args.lr, args.epsilon, args.rho, args.gamma, 47, args.device_id)
         model = model.to(args.device_id)
+        model = DDP(model, device_ids=[args.device_id])
+        timer.report("Prepared model for distributed training")
 
     elif dataset == "FashionMNIST":
         transform_MNIST = transforms.Compose([
@@ -269,6 +276,8 @@ def main(args, timer):
         model = MLP.MLPBaseline_Model(args.hsize, args.lambd, args.lr, args.epsilon, args.rho, args.gamma, 10, args.device_id)
         #model = MLP.MLPBaseline_Model(64, 100, 0.005, 0.01, 10, 0.98, 10, args.device_id)
         model = model.to(args.device_id)
+        model = DDP(model, device_ids=[args.device_id])
+        timer.report("Prepared model for distributed training")
 
     timer.report("Initialized datasets")
 

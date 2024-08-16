@@ -174,7 +174,7 @@ class Hebbian_Layer(nn.Module):
         norm_term = torch.outer(y.squeeze(0), ytw.squeeze(0))
         delta_weight = self.lr*(outer_prod - norm_term)
         new_weights = torch.add(initial_weight, delta_weight)
-        self.feedforward.weight=nn.Parameter(new_weights, requires_grad=False)
+        self.feedforward.weight=nn.Parameter(new_weights)
         self.exponential_average=torch.add(self.gamma*self.exponential_average,(1-self.gamma)*y)
     
     def update_weights_OrthogonalExclusive(self, input: torch.Tensor, output: torch.Tensor):
@@ -232,7 +232,7 @@ class Hebbian_Layer(nn.Module):
         #print(new_weights_norm.shape)
         new_weights = new_weights / (new_weights_norm)
         #print(new_weights)
-        self.feedforward.weight=nn.Parameter(new_weights, requires_grad=False)
+        self.feedforward.weight=nn.Parameter(new_weights)
     
     def weight_decay(self):
         average=torch.mean(self.exponential_average).item()
@@ -243,7 +243,7 @@ class Hebbian_Layer(nn.Module):
         negative_weights=torch.where(self.feedforward.weight<0, self.feedforward.weight, 0.0)
         positive_weights=positive_weights*growth_factor_positive.unsqueeze(1)
         negative_weights=negative_weights*growth_factor_negative.unsqueeze(1)
-        self.feedforward.weight=nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
+        self.feedforward.weight=nn.Parameter(torch.add(positive_weights, negative_weights))
 
     def forward(self, x, clamped):
         x = x.reshape(-1).unsqueeze(0)
