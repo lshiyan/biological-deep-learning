@@ -95,6 +95,8 @@ class ForgetExperiment(Experiment):
         self.sub_experiment_test_timers: dict[str, float] = {}
         self._setup_timer_dictionaries()
 
+        self.keep_training = True
+
 
     def _setup_dataloaders(self, input_dataset: TensorDataset, sub_experiment_scope_list: list[ list[int] ] ) -> list[DataLoader]:
 
@@ -167,6 +169,8 @@ class ForgetExperiment(Experiment):
 
         for step in range(len(self.sub_experiment_scope_list)):
 
+            self.keep_training = True
+
             self.SUB_EXP_SAMPLES = 0
 
             curr_train_dataloader: DataLoader = self.sub_experiemnts_train_dataloader_list[step]
@@ -175,11 +179,15 @@ class ForgetExperiment(Experiment):
 
             self.testing_test_dataloader_list.append(curr_test_dataloader)
 
-            for epoch in range(self.epochs):
+            #for epoch in range(self.epochs):
+            epoch = 0
+
+            while self.keep_training:
 
                 self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
 
-            #self.SUB_EXP_SAMPLES = 0
+                epoch = epoch + 1
+
 
 
 
@@ -223,6 +231,23 @@ class ForgetExperiment(Experiment):
                 # Restart train timer
                 train_start = time.time()
 
+                if self.keep_training == False:
+                    self.EXP_LOG.info("===================")
+                    self.EXP_LOG.info("===================")
+                    self.EXP_LOG.info("===================")
+                    self.EXP_LOG.info("===================")
+                    self.EXP_LOG.info("I SHOUDL BREAK NOW")
+                    self.EXP_LOG.info("===================")
+                    self.EXP_LOG.info("===================")
+                    self.EXP_LOG.info("===================")
+                    self.EXP_LOG.info("===================")
+                    break
+
+            self.EXP_LOG.info("++++++++++++++++++")
+            self.EXP_LOG.info("===================")
+            self.EXP_LOG.info("DID NOT BREAK")
+            self.EXP_LOG.info("===================")
+            self.EXP_LOG.info("+++++++++++++++++++")
             # Move input and targets to device
             inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
 
@@ -285,7 +310,20 @@ class ForgetExperiment(Experiment):
                 correct_test_count += (predictions.argmax(-1) == labels).type(torch.float).sum()
 
             final_accuracy = correct_test_count/total_test_count
-                
+            
+            if (final_accuracy > 0.95) and (purpose == Purposes.TRAIN_ACCURACY):
+                self.EXP_LOG.info("===================")
+                self.EXP_LOG.info("===================")
+                self.EXP_LOG.info("===================")
+                self.EXP_LOG.info("===================")
+                self.EXP_LOG.info("DETECTED BIGGER THAN 95!")
+                self.EXP_LOG.info("===================")
+                self.EXP_LOG.info("===================")
+                self.EXP_LOG.info("===================")
+                self.EXP_LOG.info("===================")
+
+                self.keep_training = False
+
         test_end = time.time()
         testing_time = test_end - test_start
         
