@@ -3,5 +3,5 @@ experiment_name = "TopDown"
 gpu_type = "24GB VRAM GPU"
 gpus = 72
 output_path = "~/outputs/topdown"
-compute_mode = "cycle"
-command = "source ~/.topdown/bin/activate && cd ~/biological-deep-learning/ && torchrun --nnodes=$NNODES --nproc-per-node=$N_PROC --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --node_rank=$RANK MLP_train.py --epochs 1 --dataset FashionMNIST --lambd 100 --save-dir $OUTPUT_PATH --tboard-path $OUTPUT_PATH/tb"
+compute_mode = "interruptible"
+command = "source ~/.topdown/bin/activate && cd ~/biological-deep-learning/ && torchrun --nnodes=$NNODES --nproc-per-node=$N_PROC --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --node_rank=$RANK CNN_train.py --dataset FashionMNIST --epochs 1 --topdown True --save-dir $OUTPUT_PATH --tboard-path $OUTPUT_PATH/tb"

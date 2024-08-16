@@ -1,4 +1,5 @@
 import models.MLP.model as MLP
+import models.CNN.model as CNN
 
 #####################################
 # Progress Timing and Logging
@@ -204,9 +205,11 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
 
         # Forward pass
         if args.dataset == "EMNIST":
-            labels = MLP.oneHotEncode(targets, 47, args.device_id)
+            labels = CNN.oneHotEncode(targets, 47, args.device_id)
+            inputs = inputs.reshape(1,1,28,28)
         elif args.dataset == "FashionMNIST" :
-            labels = MLP.oneHotEncode(targets, 10, args.device_id)
+            labels = CNN.oneHotEncode(targets, 10, args.device_id)
+            inputs = inputs.reshape(1,1,28,28)
 
         if args.topdown:
             model.TD_forward(inputs, labels)
@@ -243,6 +246,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
 def test_loop(model, train_dataloader, test_dataloader, metrics, args):
+
     test_batches_per_epoch = len(test_dataloader)
     epoch = 0
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
@@ -261,22 +265,28 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args):
 
             # Inference
             if args.topdown:
+                inputs = inputs.reshape(1,1,28,28)
                 predictions = model.TD_forward_test(inputs)
             else:
+                inputs = inputs.reshape(1,1,28,28)
                 predictions = model.forward_test(inputs)
+
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
 
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum()
+            model.save_acc(correct, len(inputs))
+
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
             metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
             metrics["test"].reset_local()  # Reset local cache
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
+
             # Advance sampler
             test_dataloader.sampler.advance(len(inputs))
 
             # Performance summary at the end of the epoch
-            if args.is_master and is_last_batch:
+            if is_last_batch:
                 correct, examples_seen = itemgetter("correct", "examples_seen")(metrics["test"].agg)
                 pct_test_correct = correct / examples_seen
                 metrics["test"].end_epoch()
@@ -356,12 +366,13 @@ def main(args, timer, hyperps):
 
         hyperp = hyperps[rank]
 
-        model = MLP.MLPBaseline_Model(hsize=hyperp[0], lamb=hyperp[1], lr=hyperp[2], e=hyperp[3], wtd=hyperp[4], gamma=hyperp[5], nclasses=10, device=args.device_id,
-            o=hyperp[6], w=hyperp[7], ws=hyperp[8])
+        model = CNN.CNNBaseline_Model(inputsize=28, kernel=[4,3,4], stride=[2,1,1], inchannel=[1,8,16], outchannel=[8,16,32], lambd=hyperp[0], lr=hyperp[1], gamma=0.99, epsilon=0.01, 
+            rho=hyperp[2], nbclasses=10, topdown=True, device=args.device_id, wl=hyperp[3], ws=hyperp[4], o=hyperp[5])
 
         model = model.to(args.device_id)
         #model = DDP(model, device_ids=[args.device_id])
         #timer.report("Prepared model for distributed training")
+        v_input = test_dataset[0]
 
     timer.report("Initialized datasets")
 
@@ -378,7 +389,7 @@ def main(args, timer, hyperps):
     timer.report("Initialized samplers")
 
     train_dataloader = DataLoader(train_dataset, batch_size=1, sampler=train_sampler, num_workers=3)
-    test_dataloader = DataLoader(test_dataset, batch_size=1, sampler=test_sampler)
+    test_dataloader = DataLoader(test_dataset, batch_size=1, sampler=test_sampler, shuffle=False)
     timer.report("Initialized dataloaders")
 
 
@@ -413,7 +424,11 @@ def main(args, timer, hyperps):
         model, train_dataloader, test_dataloader, metrics, args
     )
 
-    MLP.Save_Model(model, args.dataset, rank)
+    test_loop(
+        model, train_dataloader, test_dataloader, metrics, args
+    )
+
+    CNN.Save_Model(model, args.dataset, rank, args.topdown, v_input, args.device_id, model.correct/model.tot)
 
     print("Done!")
 
@@ -430,17 +445,14 @@ if __name__ == "__main__":
     # 7 : weight_learning
     # 8 : weight_modifier
 
-    hsize = [256]
-    lambds = [15]
-    lr = [0.005]
-    eps = [0.01]
-    rho = [10]
-    gamma = [0.99]
-    classifier_learnings = [MLP.ClassifierLearning.Supervised, MLP.ClassifierLearning.Contrastive, MLP.ClassifierLearning.Orthogonal]
-    weight_learnings = [MLP.Learning.FullyOrthogonal, MLP.Learning.OrthogonalExclusive]
-    weight_mods = [MLP.WeightScale.WeightDecay, MLP.WeightScale.WeightNormalization]
+    lambds = [3]
+    lr = [5e-5]
+    rho = np.logspace(-7, 0, num=72)
+    classifier_learnings = [CNN.ClassifierLearning.Contrastive]
+    weight_learnings = [CNN.Learning.OrthogonalExclusive]
+    weight_mods = [CNN.WeightScale.WeightNormalization]
 
-    combinations = list(itertools.product(hsize, lambds, lr, eps, rho, gamma, classifier_learnings, weight_learnings, weight_mods))
+    combinations = list(itertools.product(lambds, lr, rho, classifier_learnings, weight_learnings, weight_mods))
     hyperps = [list(comb) for comb in combinations]
 
     main(args, timer, hyperps)
