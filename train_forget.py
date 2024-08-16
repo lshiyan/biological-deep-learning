@@ -1,98 +1,86 @@
+import multiprocessing
+from typing import Tuple, List
+
 from experiments.forget_experiment import ForgetExperiment
-
-
+from interfaces.experiment import Experiment
+from interfaces.network import Network
 from models.hebbian_network import HebbianNetwork
+
 from utils.experiment_parser import *
-from utils.experiment_comparer import *
 from utils.experiment_logger import *
-from utils.experiment_testing import eps_list, dim_list, lambda_list, lr_list, sigmoid_k_list
-from utils.experiment_timer import *
 from utils.experiment_stats import *
 
 # Create log
-results_log = configure_logger('Forget Result Log', './results/results.log')
+results_log = configure_logger('Forget Result Log', './results/results_forget.log')
 
 # Get arguments
 ARGS = parse_arguments()
-print(ARGS.sub_experiment_scope_list)
 
-# Experiments setup
-lambda_test = [10]
-lr_test = [0.005]
-eps_test = [0.0001]
-dim_test = [64]
-sigmoid_k_test = sigmoid_k_list(1)
-
-
-for l in lambda_test:
-    for lr in lr_test:
-        for eps in eps_test:
-            for dim in dim_test:
-                for k in sigmoid_k_test:
-                    ARGS.heb_lamb = l
-                    ARGS.lr = lr
-                    ARGS.heb_eps = eps
-                    ARGS.heb_dim = dim
-                    ARGS.sigmoid_k = k
+# Main Code
+def main():
+    # Parallel training
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
     
-                    test_acc_digit_0_1 = []
-                    test_acc_digit_2_3 = []
-                    test_acc_digit_4_5 = []
-                    test_acc_digit_6_7 = []
-                    test_acc_digit_8_9 = []
+    # Calculate and log averages and variances for each digit pair
+    digit_pairs = [
+        (0, 1, test_acc_lists[0], train_acc_lists[0]),
+        (2, 3, test_acc_lists[1], train_acc_lists[1]),
+        (4, 5, test_acc_lists[2], train_acc_lists[2]),
+        (6, 7, test_acc_lists[3], train_acc_lists[3]),
+        (8, 9, test_acc_lists[4], train_acc_lists[4])
+    ]
 
-                    train_acc_digit_0_1 = []
-                    train_acc_digit_2_3 = []
-                    train_acc_digit_4_5 = []
-                    train_acc_digit_6_7 = []
-                    train_acc_digit_8_9 = []
+    for digit_pair in digit_pairs:
+        digit_1, digit_2, test_acc, train_acc = digit_pair
+        avg_test = average(test_acc)
+        var_test = variance(test_acc)
+        avg_train = average(train_acc)
+        var_train = variance(train_acc)
+        results_log.info(f"Digits {digit_1} and {digit_2} || Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Dataset: {ARGS.data_name.upper()} || Inhibition: {ARGS.heb_inhib.lower().capitalize()} || Learning Rule: {ARGS.heb_learn.lower().capitalize()} || Function Type: {ARGS.heb_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
+
+
+# Model Training
+def train_and_eval(args: Tuple) -> List[List[float]]:
+    params: argparse.Namespace
+    num: int
+    params, num = args
+    model: Network = HebbianNetwork('Hebbian Network', params).to(params.device)
+    experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.lr}--{params.heb_learn.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+    accuracies = list(experiment.run())
+    experiment.cleanup()
+
+    # Return accuracies split by digit pairs
+    return [
+        accuracies[0:5],  # Test accuracies for digit pairs 0-1, 2-3, 4-5, 6-7, 8-9
+        accuracies[5:10]  # Train accuracies for digit pairs 0-1, 2-3, 4-5, 6-7, 8-9
+    ]
+
+
+# Parallel Training
+def parallel_training(params: argparse.Namespace, total: int) -> Tuple[List[List[float]], List[List[float]]]:
+    # Create a pool of worker processes
+    with multiprocessing.Pool(processes=total) as pool:
+        # Map the list of parameters to the function that performs training
+        param_list = [
+            (params, process_id)
+            for process_id in range(total)
+        ]
+        results = pool.map(train_and_eval, param_list)
     
-                    for num in range(0, 5):
-                        # Base model training
-                        model = HebbianNetwork('Hebbian Network', ARGS).to(ARGS.device)
-                        
-                        experiment = ForgetExperiment(model, ARGS, f'{ARGS.experiment_type.lower()}-{l}-{lr}-{eps}-{dim}-{k}-{num}')
-                        accuracies = list(experiment.run())
-                        experiment.cleanup()
-                        
-                        test_acc_digit_0_1.append(accuracies[0])
-                        test_acc_digit_2_3.append(accuracies[1])
-                        test_acc_digit_4_5.append(accuracies[2])
-                        test_acc_digit_6_7.append(accuracies[3])
-                        test_acc_digit_8_9.append(accuracies[4])
+    # Split results into train and test accuracy lists for each digit pair
+    test_acc_lists = [[] for _ in range(5)]
+    train_acc_lists = [[] for _ in range(5)]
 
-                        train_acc_digit_0_1.append(accuracies[5])
-                        train_acc_digit_2_3.append(accuracies[6])
-                        train_acc_digit_4_5.append(accuracies[7])
-                        train_acc_digit_6_7.append(accuracies[8])
-                        train_acc_digit_8_9.append(accuracies[9])
+    for result in results:
+        test_acc, train_acc = result
+        for i in range(5):
+            test_acc_lists[i].append(test_acc[i])
+            train_acc_lists[i].append(train_acc[i])
 
-                    avg_test_0_1 = average(test_acc_digit_0_1)
-                    var_test_0_1 = variance(test_acc_digit_0_1)
-                    avg_train_0_1 = average(test_acc_digit_0_1)
-                    var_train_0_1 = variance(test_acc_digit_0_1)
-                    results_log.info(f"Digits 0 and 1 || Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_0_1}, var = {var_test_0_1} || Train Acc: avg = {avg_train_0_1}, var = {var_train_0_1}")
-                    
-                    avg_test_2_3 = average(test_acc_digit_2_3)
-                    var_test_2_3 = variance(test_acc_digit_2_3)
-                    avg_train_2_3 = average(test_acc_digit_2_3)
-                    var_train_2_3 = variance(test_acc_digit_2_3)
-                    results_log.info(f"Digits 2 and 3 || Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_2_3}, var = {var_test_2_3} || Train Acc: avg = {avg_train_2_3}, var = {var_train_2_3}")
-                    
-                    avg_test_4_5 = average(test_acc_digit_4_5)
-                    var_test_4_5 = variance(test_acc_digit_4_5)
-                    avg_train_4_5 = average(test_acc_digit_4_5)
-                    var_train_4_5 = variance(test_acc_digit_4_5)
-                    results_log.info(f"Digits 4 and 5 || Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_4_5}, var = {var_test_4_5} || Train Acc: avg = {avg_train_4_5}, var = {var_train_4_5}")
-                    
-                    avg_test_6_7 = average(test_acc_digit_6_7)
-                    var_test_6_7 = variance(test_acc_digit_6_7)
-                    avg_train_6_7 = average(test_acc_digit_6_7)
-                    var_train_6_7 = variance(test_acc_digit_6_7)
-                    results_log.info(f"Digits 6 and 7 || Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_6_7}, var = {var_test_6_7} || Train Acc: avg = {avg_train_6_7}, var = {var_train_6_7}")
-                    
-                    avg_test_8_9 = average(test_acc_digit_8_9)
-                    var_test_8_9 = variance(test_acc_digit_8_9)
-                    avg_train_8_9 = average(test_acc_digit_8_9)
-                    var_train_8_9 = variance(test_acc_digit_8_9)
-                    results_log.info(f"Digits 8 and 9 || Epoch: {ARGS.epochs} || Lambda: {l} || Dataset: {experiment.data_name.upper()} || Inhibition: {ARGS.inhibition_rule.lower().capitalize()} || Learning Rule: {ARGS.learning_rule.lower().capitalize()} || Function Type: {ARGS.weight_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test_8_9}, var = {var_test_8_9} || Train Acc: avg = {avg_train_8_9}, var = {var_train_8_9}")
+    return train_acc_lists, test_acc_lists
+
+
+# When to run code
+if __name__ == "__main__":
+    main()
+    print("Process Completed.")

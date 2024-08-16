@@ -164,36 +164,44 @@ class HebbianLayer(HiddenLayer):
         @return
             None
         """
+        input = input.to(self.device)
+        post_inhibition_activations = post_inhibition_activations.to(self.device)
+        
         calculated_rule: torch.Tensor
         function_derivative: torch.Tensor
         
         if self.learning_rule == LearningRules.HEBBIAN_LEARNING_RULE:
-            calculated_rule = self._hebbian_rule(input, post_inhibition_activations)
+            calculated_rule = self._hebbian_rule(input, post_inhibition_activations).to(self.device)
         elif self.learning_rule == LearningRules.SANGER_LEARNING_RULE:
-            calculated_rule = self._sanger_rule(input, post_inhibition_activations)
+            calculated_rule = self._sanger_rule(input, post_inhibition_activations).to(self.device)
         elif self.learning_rule == LearningRules.FULLY_ORTHOGONAL_LEARNING_RULE:
-            calculated_rule = self._fully_orthogonal_rule(input, post_inhibition_activations)
+            calculated_rule = self._fully_orthogonal_rule(input, post_inhibition_activations).to(self.device)
         else:
             raise NameError("Unknown learning rule.")
         
         if self.weight_growth == WeightGrowth.LINEAR:
-            function_derivative = self._linear_function()
+            function_derivative = self._linear_function().to(self.device)
         elif self.weight_growth == WeightGrowth.SIGMOID:
-            function_derivative = self._sigmoid_function()
-        elif self.weight_growth == WeightGrowth.EXPONENTIAL:
-            function_derivative = self._exponential_function()
+            function_derivative = self._sigmoid_function().to(self.device)
+        elif (self.weight_growth == WeightGrowth.EXPONENTIAL) and (self.focus == Focus.SYNASPSE):
+            function_derivative = self._exponential_function().to(self.device)
+        elif (self.weight_growth == WeightGrowth.EXPONENTIAL) and (self.focus == Focus.NEURON):
+            function_derivative = self._linear_function().to(self.device)
         else:
             raise NameError("Unknown weight growth rule.")
-            
+
         # Weight Update
         delta_weight: torch.Tensor = (self.lr * calculated_rule * function_derivative).to(self.device)
-        updated_weight: torch.Tensor = torch.add(self.fc.weight, delta_weight)
+        updated_weight: torch.Tensor = torch.add(self.fc.weight.to(self.device), delta_weight)
         mean_positive_weight = torch.mean(torch.relu(updated_weight))
-        updated_weight = torch.relu(updated_weight + (mean_positive_weight * 0)) - mean_positive_weight * 0
+        updated_weight = torch.relu(updated_weight).to(self.device)
         self.fc.weight = nn.Parameter(updated_weight, requires_grad=False)
-        
+
         # Normalized Weight Update
-        self.normalized_weights = self.normalize(updated_weight).to(self.device)        
+        self.normalized_weights = self.normalize(updated_weight).to(self.device)
+
+        if (self.weight_growth == WeightGrowth.EXPONENTIAL) and (self.focus == Focus.NEURON):
+            self.fc.weight = nn.Parameter(self.normalized_weights, requires_grad=False)   
 
     def update_bias(self, output: torch.Tensor) -> None:
         """
@@ -490,7 +498,6 @@ class HebbianLayer(HiddenLayer):
         
         return computed_rule
 
-
     def _fully_orthogonal_rule(self, input: torch.Tensor, output: torch.Tensor) -> torch.Tensor:
         """
         METHOD
@@ -514,37 +521,34 @@ class HebbianLayer(HiddenLayer):
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
         
         # Compute the norms of weight vectors
-        W_norms: torch.Tensor = torch.norm(weights, dim=1, keepdim=False)
+        W_norms: torch.Tensor = torch.norm(weights, dim=1, keepdim=False).to(self.device)
 
-        # Calculate Eta Norm
-        #eta_norm_term: torch.Tensor = norm_term * (100)
-        
         # Compute scaling terms
-        # scaling_terms[i, j] = W_norms[i] / (W_norms[j] + epsilon)
-        scaling_terms: torch.Tensor = W_norms.reshape(self.output_dimension,1) / (W_norms.reshape(1,self.output_dimension) + 10e-8)
+        scaling_terms: torch.Tensor = W_norms.reshape(self.output_dimension, 1).to(self.device) / \
+                                    (W_norms.reshape(1, self.output_dimension).to(self.device) + 10e-8)
         
         # Remove the diagonal so as to not have weights subtracting themselves
-        remove_diagonal: torch.Tensor = torch.ones(self.output_dimension, self.output_dimension) - torch.eye(self.output_dimension)
-        remove_diagonal: torch.Tensor = remove_diagonal.reshape(self.output_dimension, self.output_dimension, 1)
+        remove_diagonal: torch.Tensor = (torch.ones(self.output_dimension, self.output_dimension) - 
+                                        torch.eye(self.output_dimension)).to(self.device)
+        remove_diagonal: torch.Tensor = remove_diagonal.reshape(self.output_dimension, self.output_dimension, 1).to(self.device)
 
         # Compute scaled weights
-            # First index -> what it is rescaled to
-            # Second index -> what it is divided by and the W_i of the output
-            # Third index -> input dimension
-        scaled_weight: torch.Tensor = scaling_terms.reshape(self.output_dimension, self.output_dimension, 1) * weights.reshape(1, self.output_dimension, self.input_dimension)
+        scaled_weight: torch.Tensor = (scaling_terms.reshape(self.output_dimension, self.output_dimension, 1).to(self.device) * 
+                                    weights.reshape(1, self.output_dimension, self.input_dimension).to(self.device))
         
         # Remove diagonal elements so weights do not subtract themselves
-        scaled_weight: torch.Tensor = scaled_weight * remove_diagonal
+        scaled_weight: torch.Tensor = scaled_weight * remove_diagonal.to(self.device)
 
-        norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, scaled_weight)
+        norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, scaled_weight).to(self.device)
         
         # Compute change in weights
         computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
         
         # Update exponential averages
-        self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+        self.exponential_average = torch.add(self.gamma * self.exponential_average.to(self.device), 
+                                            (1 - self.gamma) * y)
         
-        return computed_rule
+        return computed_rule.to(self.device)
 
 
 
@@ -561,7 +565,7 @@ class HebbianLayer(HiddenLayer):
         @return
             derivative: slope constant (derivative relative to linear rule always = 1)
         """
-        return torch.ones(self.fc.weight.shape).to(self.device)
+        return torch.ones(self.fc.weight.shape, device=self.device)
     
     
     def _sigmoid_function(self) -> torch.Tensor:

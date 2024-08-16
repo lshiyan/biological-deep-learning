@@ -4,18 +4,16 @@ import logging
 import sys
 
 # Set up logging
-logging.basicConfig(filename='experiment_results.log', level=logging.INFO, format='%(asctime)s - %(message)s')
+logging.basicConfig(filename='experiment_results_gen.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # Define the base script name
-script_name = 'train_base.py'
-
-# 0.5, 1, 2, 4, 8, 16, 32, 64, 128
+script_name = 'train_gen.py'
 
 # Define the values for the parameters you want to vary
 lambda_values = [0.5, 1, 2, 4, 8, 16, 32, 64, 128]
 heb_learn_values = ['orthogonal']
-heb_growth_values = [ 'exponential']
-clas_growth_values = ['exponential']
+heb_growth_values = ['exponential']
+clas_growth_values = ['linear']
 heb_focus_values = ['neuron']
 heb_inhib_values = ['RELU']
 class_focus_values = ['neuron']
@@ -33,14 +31,14 @@ parameter_combinations = list(itertools.product(
     learning_rate_values
 ))
 
-# Set the number of concurrent processes to 8
+# Limit the number of concurrent processes
 max_concurrent_processes = 10
 
 # Get the current Python interpreter from the virtual environment
 python_executable = sys.executable
 
 # Specify the GPU ID (e.g., GPU 0)
-gpu_id = 3
+gpu_id = 5
 
 # Process the combinations in batches
 for i in range(0, len(parameter_combinations), max_concurrent_processes):
@@ -53,7 +51,8 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
         # Construct the complete set of arguments including the varying parameter
         arguments = [
             '--data_name=MNIST',
-            '--experiment_name=_TEACHER2_BASE_NEURON_EXP_EXP_',
+            '--ext_data_name=EXT_MNIST',
+            '--experiment_name=_GEN_NEURON_EXP_LINEAR_',
             '--train_data=data/mnist/train-images.idx3-ubyte',
             '--train_label=data/mnist/train-labels.idx1-ubyte',
             '--test_data=data/mnist/test-images.idx3-ubyte',
@@ -61,8 +60,17 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
             '--train_size=60000',
             '--test_size=10000',
             '--classes=10',
+            '--ext_train_data=data/ext_mnist/train-images.idx3-ubyte',
+            '--ext_train_label=data/ext_mnist/train-labels.idx1-ubyte',
+            '--ext_test_data=data/ext_mnist/test-images.idx3-ubyte',
+            '--ext_test_label=data/ext_mnist/test-labels.idx1-ubyte',
+            '--ext_train_size=88800',
+            '--ext_test_size=14800',
+            '--ext_classes=26',
             '--train_fname=data/mnist/mnist_train.csv',
             '--test_fname=data/mnist/mnist_test.csv',
+            '--ext_train_fname=data/ext_mnist/ext_mnist_train.csv',
+            '--ext_test_fname=data/ext_mnist/ext_mnist_test.csv',
             '--input_dim=784',
             '--heb_dim=64',
             '--output_dim=10',
@@ -77,32 +85,32 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
             '--class_learn=OUTPUT_CONTRASTIVE',
             f'--class_growth={clas_growth}',
             '--class_bias=no_bias',
-            f'--class_focus={class_focus}',  # Use the classification focus parameter here
+            f'--class_focus={class_focus}',
             '--class_act=normalized',
             f'--lr={lr}',
             '--sigmoid_k=1',
             '--alpha=0',
-            '--beta=1e-2',
+            '--beta=10e-2',
             '--sigma=1',
             '--mu=0',
             '--init=uniform',
             '--batch_size=1',
             '--epochs=10',
-            f'--device=cuda:{gpu_id}',
+            f'--device=cuda:{gpu_id}',  # Use the specified GPU
             '--local_machine=True',
-            '--experiment_type=base'
+            '--experiment_type=generalization'
         ]
 
         # Construct the command with nice
-        command = ['nice', '-n', '4', python_executable, script_name] + arguments
+        command = ['nice', '-n', '9', python_executable, script_name] + arguments
 
         try:
             # Start the process
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             processes.append(process)
-            logging.info(f"Started process with PID: {process.pid} on GPU: {gpu_id} | Lambda: {lmbda}, LR: {lr}, Heb_Learn: {heb_learn}, Heb_Growth: {heb_growth}, Class_Growth: {clas_growth}, Heb_Focus: {heb_focus}, Heb_Inhib: {heb_inhib}, Class_Focus: {class_focus}")
+            logging.info(f"Started process with PID: {process.pid} on GPU: {gpu_id} | Lambda: {lmbda}, LR: {lr}, Heb_Learn: {heb_learn}, Heb_Growth: {heb_growth}, Clas_Growth: {clas_growth}, Heb_Focus: {heb_focus}, Heb_Inhib: {heb_inhib}, Class_Focus: {class_focus}")
         except Exception as e:
-            logging.error(f"Failed to start process for combination: Lambda={lmbda}, LR={lr}, Heb_Learn={heb_learn}, Heb_Growth={heb_growth}, Class_Growth={clas_growth}, Heb_Focus={heb_focus}, Heb_Inhib={heb_inhib}, Class_Focus={class_focus}. Error: {str(e)}")
+            logging.error(f"Failed to start process for combination: Lambda={lmbda}, LR={lr}, Heb_Learn={heb_learn}, Heb_Growth={heb_growth}, Clas_Growth={clas_growth}, Heb_Focus={heb_focus}, Heb_Inhib={heb_inhib}, Class_Focus={class_focus}. Error: {str(e)}")
 
     # Wait for all processes in the batch to finish before starting the next batch
     for process in processes:
@@ -114,3 +122,5 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
                 logging.error("Standard Error:\n" + stderr)
         except Exception as e:
             logging.error(f"Failed to complete process with PID: {process.pid}. Error: {str(e)}")
+
+logging.info("All subprocesses have completed.")

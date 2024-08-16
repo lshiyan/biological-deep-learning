@@ -258,7 +258,8 @@ class NetworkLayer (nn.Module, ABC):
     #################################################################################################
     @staticmethod
     def get_norm(weights: torch.Tensor) -> torch.Tensor:
-        norm: torch.Tensor = torch.norm(weights, p=2, dim=-1, keepdim=True)
+        norm: torch.Tensor = torch.norm(weights, p=2, dim=-1, keepdim=True).to(weights.device)
+        
         return norm
     
     
@@ -266,8 +267,8 @@ class NetworkLayer (nn.Module, ABC):
     def normalize(weights: torch.Tensor) -> torch.Tensor:
         norm: torch.Tensor = NetworkLayer.get_norm(weights)
         normalized_weights: torch.Tensor = weights / norm
-        
-        return normalized_weights
+
+        return normalized_weights.to(weights.device)
     
     
     @staticmethod
