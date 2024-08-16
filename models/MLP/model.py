@@ -28,6 +28,19 @@ class WeightScale(Enum):
     WeightDecay = 1
     WeightNormalization = 2
 
+class ClassifierLearning(Enum):
+    Supervised = 1
+    Contrastive = 2
+    Orthogonal = 3
+
+class Learning(Enum):
+    FullyOrthogonal = 1
+    OrthogonalExclusive = 2
+
+class WeightScale(Enum):
+    WeightDecay = 1
+    WeightNormalization = 2
+
 
 
 
@@ -92,6 +105,7 @@ class NeuralNet(nn.Module):
                 w_topdown = layers[idx+1].feedforward.weight.detach().clone()
                 h_topdown = hlist[idx+1]
                 x = layers[idx].TD_forward(x, w_topdown, h_topdown)
+                x = layers[idx].TD_forward(x, w_topdown, h_topdown)
                 hlist[idx] = x
         return hlist
 
@@ -126,7 +140,21 @@ class NeuralNet(nn.Module):
                 else:
                     layers[idx].normalize_weights()
 
+                if layers[idx].w_update == Learning.FullyOrthogonal:
+                    layers[idx].update_weights_FullyOrthogonal(input.squeeze(0), label_clamped_hlist[idx].squeeze(0))
+                else:
+                    layers[idx].update_weights_OrthogonalExclusive(input.squeeze(0), label_clamped_hlist[idx].squeeze(0))
+
+                if layers[idx].weight_mod == WeightScale.WeightDecay:
+                    layers[idx].weight_decay()
+                else:
+                    layers[idx].normalize_weights()
+
             elif idx == (nb_layers-1):
+                if layers[idx].o_learning == ClassifierLearning.Supervised:
+                    layers[idx].classifier_update_supervised(label_clamped_hlist[idx-1].squeeze(0), label_clamped_hlist[idx].squeeze(0))
+                elif layers[idx].o_learning == ClassifierLearning.Orthogonal:
+                    layers[idx].update_weights_FullyOrthogonal(label_clamped_hlist[idx-1].squeeze(0), label_clamped_hlist[idx].squeeze(0))
                 if layers[idx].o_learning == ClassifierLearning.Supervised:
                     layers[idx].classifier_update_supervised(label_clamped_hlist[idx-1].squeeze(0), label_clamped_hlist[idx].squeeze(0))
                 elif layers[idx].o_learning == ClassifierLearning.Orthogonal:
@@ -233,8 +261,10 @@ class Hebbian_Layer(nn.Module):
         #print(new_weights.shape)
         #print(new_weights)
         new_weights_norm = torch.norm(new_weights, p=2, dim=1, keepdim=True)
+        new_weights_norm = torch.norm(new_weights, p=2, dim=1, keepdim=True)
         #print(new_weights_norm)
         #print(new_weights_norm.shape)
+        new_weights = new_weights / (new_weights_norm)
         new_weights = new_weights / (new_weights_norm)
         #print(new_weights)
         self.feedforward.weight=nn.Parameter(new_weights, requires_grad=False)
@@ -263,7 +293,21 @@ class Hebbian_Layer(nn.Module):
                 self.classifier_update_supervised(input, clamped)
             else:
                 self.update_weights_FullyOrthogonal(input, clamped)
+            if self.o_learning == ClassifierLearning.Contrastive:
+                self.classifier_update_contrastive(input, x, clamped)
+            elif self.o_learning == ClassifierLearning.Supervised:
+                self.classifier_update_supervised(input, clamped)
+            else:
+                self.update_weights_FullyOrthogonal(input, clamped)
         else:
+            if self.w_update == Learning.FullyOrthogonal:
+                self.update_weights_FullyOrthogonal(input, x)
+            else:
+                self.update_weights_OrthogonalExclusive(input, x)
+            if self.weight_mod == WeightScale.WeightDecay:
+                self.weight_decay()
+            else:
+                self.normalize_weights()
             if self.w_update == Learning.FullyOrthogonal:
                 self.update_weights_FullyOrthogonal(input, x)
             else:
@@ -284,6 +328,8 @@ class Hebbian_Layer(nn.Module):
         if h_l == None:
             h = self.feedforward(x)
         else :
+            #print(self.feedforward(x))
+            #print(torch.matmul(h_l, w))
             #print(self.feedforward(x))
             #print(torch.matmul(h_l, w))
             h = self.feedforward(x) + self.decrease*torch.matmul(h_l, w)
@@ -317,6 +363,7 @@ def Save_Model(mymodel, dataset, device):
 
 
 
+def MLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses):
 def MLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses):
 
     mymodel.train()
@@ -361,6 +408,28 @@ def TDBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses):
     view_weights(mymodel, foldername)
     return mymodel
 
+def TDBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses):
+
+    mymodel.train()
+    cn = 0
+    for _ in range(epoch):
+        for data in tqdm(dataloader):
+            inputs, labels=data
+            #print(inputs)
+            mymodel.TD_forward(inputs, oneHotEncode(labels, nclasses))
+            #cn += 1
+            #if cn == 10:
+            #    return mymodel
+    
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    foldername = os.getcwd() + '/SavedModels/TD_FF_' + dataset + '_' + timestr
+    os.mkdir(foldername)
+
+    torch.save(mymodel.state_dict(), foldername + '/model')
+
+    view_weights(mymodel, foldername)
+    return mymodel
+
 
 def view_weights(model, folder):
     for name, l in model.layers.items():
@@ -375,6 +444,7 @@ def visualize_weights(self, file):
         nb_ele = self.feedforward.weight.size(0)
         fig, axes = plt.subplots(nb, nb, figsize=(32,32))
         
+    weight = self.feedforward.weight.detach().to('cpu')
     weight = self.feedforward.weight.detach().to('cpu')
     for ele in range(nb_ele):
         random_feature_selector = weight[ele]
