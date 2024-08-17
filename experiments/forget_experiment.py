@@ -181,8 +181,9 @@ class ForgetExperiment(Experiment):
 
             #for epoch in range(self.epochs):
             epoch = 0
+            max_epochs = 35
 
-            while self.keep_training:
+            while (self.keep_training) and (epoch <= max_epochs):
 
                 self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
 
@@ -232,22 +233,8 @@ class ForgetExperiment(Experiment):
                 train_start = time.time()
 
                 if self.keep_training == False:
-                    self.EXP_LOG.info("===================")
-                    self.EXP_LOG.info("===================")
-                    self.EXP_LOG.info("===================")
-                    self.EXP_LOG.info("===================")
-                    self.EXP_LOG.info("I SHOUDL BREAK NOW")
-                    self.EXP_LOG.info("===================")
-                    self.EXP_LOG.info("===================")
-                    self.EXP_LOG.info("===================")
-                    self.EXP_LOG.info("===================")
                     break
 
-            self.EXP_LOG.info("++++++++++++++++++")
-            self.EXP_LOG.info("===================")
-            self.EXP_LOG.info("DID NOT BREAK")
-            self.EXP_LOG.info("===================")
-            self.EXP_LOG.info("+++++++++++++++++++")
             # Move input and targets to device
             inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
 
@@ -312,16 +299,6 @@ class ForgetExperiment(Experiment):
             final_accuracy = correct_test_count/total_test_count
             
             if (final_accuracy > 0.95) and (purpose == Purposes.TRAIN_ACCURACY):
-                self.EXP_LOG.info("===================")
-                self.EXP_LOG.info("===================")
-                self.EXP_LOG.info("===================")
-                self.EXP_LOG.info("===================")
-                self.EXP_LOG.info("DETECTED BIGGER THAN 95!")
-                self.EXP_LOG.info("===================")
-                self.EXP_LOG.info("===================")
-                self.EXP_LOG.info("===================")
-                self.EXP_LOG.info("===================")
-
                 self.keep_training = False
 
         test_end = time.time()

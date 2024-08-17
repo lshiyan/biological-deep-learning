@@ -12,13 +12,13 @@ script_name = 'train_forget.py'
 # 0.5, 1, 2, 4, 8, 16, 32, 64, 128
 
 # Define the values for the parameters you want to vary
-lambda_values = [16]
+lambda_values = [0.5, 1, 2, 4, 8, 16, 32, 64, 128]
 heb_learn_values = ['orthogonal']
-heb_growth_values = ['sigmoid']
-clas_growth_values = ['linear']
-heb_focus_values = ['neuron']
+heb_growth_values = ['exponential']
+clas_growth_values = ['exponential']
+heb_focus_values = ['synapse']
 heb_inhib_values = ['RELU']
-class_focus_values = ['neuron']
+class_focus_values = ['synapse']
 learning_rate_values = [0.003]
 
 # Generate all possible combinations of parameters
@@ -40,7 +40,7 @@ max_concurrent_processes = 10
 python_executable = sys.executable
 
 # Specify the GPU ID (e.g., GPU 0)
-gpu_id = 2
+gpu_id = 1
 
 # Process the combinations in batches
 for i in range(0, len(parameter_combinations), max_concurrent_processes):
@@ -53,7 +53,7 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
         # Construct the complete set of arguments including the varying parameter
         arguments = [
             '--data_name=MNIST',
-            '--experiment_name=TESTING',
+            '--experiment_name=_FORGET_SYNAPSE_EXP_EXP_',
             '--train_data=data/mnist/train-images.idx3-ubyte',
             '--train_label=data/mnist/train-labels.idx1-ubyte',
             '--test_data=data/mnist/test-images.idx3-ubyte',
@@ -89,7 +89,7 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
             '--init=uniform',
             '--batch_size=1',
             '--epochs=10',
-            f'--device=cpu',  # Use the specified GPU or CPU
+            f'--device=cuda:{gpu_id}',  # Use the specified GPU or CPU
             '--local_machine=True',
             '--experiment_type=forget'
         ]
