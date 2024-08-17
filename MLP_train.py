@@ -436,15 +436,15 @@ if __name__ == "__main__":
     # 7 : weight_learning
     # 8 : weight_modifier
 
-    hsize = [256]
-    lambds = [15]
+    hsize = [64]
+    lambds = [1, 2, 3, 5, 10, 15, 20, 30, 100]
     lr = [0.005]
     eps = [0.01]
-    rho = [10]
+    rho = [0, 0.1, 0.3, 1, 3, 10]
     gamma = [0.99]
-    classifier_learnings = [MLP.ClassifierLearning.Supervised, MLP.ClassifierLearning.Contrastive, MLP.ClassifierLearning.Orthogonal]
-    weight_learnings = [MLP.Learning.FullyOrthogonal, MLP.Learning.OrthogonalExclusive]
-    weight_mods = [MLP.WeightScale.WeightDecay, MLP.WeightScale.WeightNormalization]
+    classifier_learnings = [MLP.ClassifierLearning.Contrastive]
+    weight_learnings = [MLP.Learning.OrthogonalExclusive]
+    weight_mods = [MLP.WeightScale.WeightNormalization]
 
     combinations = list(itertools.product(hsize, lambds, lr, eps, rho, gamma, classifier_learnings, weight_learnings, weight_mods))
     hyperps = [list(comb) for comb in combinations]

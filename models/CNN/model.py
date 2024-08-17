@@ -622,9 +622,9 @@ def CNNBaseline_Model(inputsize, kernel, stride, inchannel, outchannel, lambd, l
 def Save_Model(mymodel, dataset, rank, topdown, v_input, device, acc):
     timestr = time.strftime("%Y%m%d-%H%M%S")
     if topdown:
-        foldername = os.getcwd() + '/SavedModels_2/CNN_TD_' + dataset + '_' + str(rank) + '_' + str(acc) + '_' + timestr
+        foldername = os.getcwd() + '/SavedModels_3/CNN_TD_' + dataset + '_' + str(rank) + '_' + str(acc) + '_' + timestr
     else:
-        foldername = os.getcwd() + '/SavedModels_2/CNN_FF_' + dataset + '_' + str(rank) + '_' + str(acc) + '_' + timestr
+        foldername = os.getcwd() + '/SavedModels_3/CNN_FF_' + dataset + '_' + str(rank) + '_' + str(acc) + '_' + timestr
 
     if not os.path.exists(foldername):
         os.mkdir(foldername)

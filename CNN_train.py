@@ -448,7 +448,7 @@ if __name__ == "__main__":
 
     lambds = [3]
     lr = [5e-5]
-    rho = np.logspace(0, 7, num=72)
+    rho = np.logspace(-7, 0, num=72)
     classifier_learnings = [CNN.ClassifierLearning.Contrastive]
     weight_learnings = [CNN.Learning.OrthogonalExclusive]
     weight_mods = [CNN.WeightScale.WeightNormalization]

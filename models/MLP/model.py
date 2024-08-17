@@ -105,7 +105,6 @@ class NeuralNet(nn.Module):
                 w_topdown = layers[idx+1].feedforward.weight.detach().clone()
                 h_topdown = hlist[idx+1]
                 x = layers[idx].TD_forward(x, w_topdown, h_topdown)
-                x = layers[idx].TD_forward(x, w_topdown, h_topdown)
                 hlist[idx] = x
         return hlist
 
@@ -352,9 +351,9 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws
 def Save_Model(mymodel, dataset, device, topdown, acc):
     timestr = time.strftime("%Y%m%d-%H%M%S")
     if topdown:
-        foldername = os.getcwd() + '/SavedModels/MLP_TD_' + dataset + '_' + str(device) + '_' + str(acc) + '_' + timestr
+        foldername = os.getcwd() + '/SavedModels4/MLP_TD_' + dataset + '_' + str(device) + '_' + str(acc) + '_' + timestr
     else:
-        foldername = os.getcwd() + '/SavedModels/MLP_FF_' + dataset + '_' + str(device) + '_' + str(acc) + '_' + timestr
+        foldername = os.getcwd() + '/SavedModels4/MLP_FF_' + dataset + '_' + str(device) + '_' + str(acc) + '_' + timestr
 
     if not os.path.exists(foldername):
         os.mkdir(foldername)
