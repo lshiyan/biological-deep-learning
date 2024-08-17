@@ -357,11 +357,13 @@ class ConvolutionHebbianLayer(nn.Module):
         self.convolutionTD = nn.ConvTranspose2d(inc, outc, kernel, stride)
 
     def inhibition(self, output):
+        
+        # output : [batch=1, outchannel, newheight, newwidth]
         output = nn.ReLU()(output)
 
-        max_ele, _ = torch.max(output.squeeze(0).reshape(output.size(1), -1), dim=1)
+        max_ele, _ = torch.max(output, dim=1, keepdim=True)
 
-        output /= max_ele.view(1, output.size(1), 1, 1)
+        output /= (max_ele + 1e-9)
 
         output=torch.pow(output, self.lamb)
 
@@ -620,9 +622,9 @@ def CNNBaseline_Model(inputsize, kernel, stride, inchannel, outchannel, lambd, l
 def Save_Model(mymodel, dataset, rank, topdown, v_input, device, acc):
     timestr = time.strftime("%Y%m%d-%H%M%S")
     if topdown:
-        foldername = os.getcwd() + '/SavedModels/CNN_TD_' + dataset + '_' + str(rank) + '_' + str(acc) + '_' + timestr
+        foldername = os.getcwd() + '/SavedModels_2/CNN_TD_' + dataset + '_' + str(rank) + '_' + str(acc) + '_' + timestr
     else:
-        foldername = os.getcwd() + '/SavedModels/CNN_FF_' + dataset + '_' + str(rank) + '_' + str(acc) + '_' + timestr
+        foldername = os.getcwd() + '/SavedModels_2/CNN_FF_' + dataset + '_' + str(rank) + '_' + str(acc) + '_' + timestr
 
     if not os.path.exists(foldername):
         os.mkdir(foldername)

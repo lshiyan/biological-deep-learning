@@ -268,6 +268,8 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args):
 
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum()
+            model.save_acc(correct.item(), len(inputs))
+
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
             metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
             metrics["test"].reset_local()  # Reset local cache
@@ -413,7 +415,11 @@ def main(args, timer, hyperps):
         model, train_dataloader, test_dataloader, metrics, args
     )
 
-    MLP.Save_Model(model, args.dataset, rank)
+    test_loop(
+        model, train_dataloader, test_dataloader, metrics, args
+    )
+
+    MLP.Save_Model(model, args.dataset, rank, args.topdown, (model.correct/model.tot)*100)
 
     print("Done!")
 

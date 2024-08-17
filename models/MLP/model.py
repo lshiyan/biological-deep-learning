@@ -349,9 +349,12 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws
 
 
 
-def Save_Model(mymodel, dataset, device):
+def Save_Model(mymodel, dataset, device, topdown, acc):
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    foldername = os.getcwd() + '/SavedModels/MLP_FF_' + dataset + '_' + str(device) + '_' + timestr
+    if topdown:
+        foldername = os.getcwd() + '/SavedModels/MLP_TD_' + dataset + '_' + str(device) + '_' + str(acc) + '_' + timestr
+    else:
+        foldername = os.getcwd() + '/SavedModels/MLP_FF_' + dataset + '_' + str(device) + '_' + str(acc) + '_' + timestr
 
     if not os.path.exists(foldername):
         os.mkdir(foldername)
@@ -362,8 +365,6 @@ def Save_Model(mymodel, dataset, device):
     view_weights(mymodel, foldername)
 
 
-
-def MLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses):
 def MLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses):
 
     mymodel.train()

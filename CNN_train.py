@@ -275,7 +275,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args):
 
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum()
-            model.save_acc(correct, len(inputs))
+            model.save_acc(correct.item(), len(inputs))
 
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
             metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
@@ -359,6 +359,7 @@ def main(args, timer, hyperps):
             transforms.ToTensor(),
             transforms.Lambda(lambda x: x.view(-1))
         ])
+
         train_dataset = datasets.FashionMNIST(root='./data', train=True, download=False, transform=transform_MNIST)
         test_dataset = datasets.FashionMNIST(root='./data', train=False, download=False, transform=transform_MNIST)
 
@@ -367,7 +368,7 @@ def main(args, timer, hyperps):
         hyperp = hyperps[rank]
 
         model = CNN.CNNBaseline_Model(inputsize=28, kernel=[4,3,4], stride=[2,1,1], inchannel=[1,8,16], outchannel=[8,16,32], lambd=hyperp[0], lr=hyperp[1], gamma=0.99, epsilon=0.01, 
-            rho=hyperp[2], nbclasses=10, topdown=True, device=args.device_id, wl=hyperp[3], ws=hyperp[4], o=hyperp[5])
+            rho=hyperp[2], nbclasses=10, topdown=True, device=args.device_id, wl=hyperp[4], ws=hyperp[5], o=hyperp[3])
 
         model = model.to(args.device_id)
         #model = DDP(model, device_ids=[args.device_id])
@@ -428,7 +429,7 @@ def main(args, timer, hyperps):
         model, train_dataloader, test_dataloader, metrics, args
     )
 
-    CNN.Save_Model(model, args.dataset, rank, args.topdown, v_input, args.device_id, model.correct/model.tot)
+    CNN.Save_Model(model, args.dataset, rank, args.topdown, v_input, args.device_id, (model.correct/model.tot)*100)
 
     print("Done!")
 
@@ -447,7 +448,7 @@ if __name__ == "__main__":
 
     lambds = [3]
     lr = [5e-5]
-    rho = np.logspace(-7, 0, num=72)
+    rho = np.logspace(0, 7, num=72)
     classifier_learnings = [CNN.ClassifierLearning.Contrastive]
     weight_learnings = [CNN.Learning.OrthogonalExclusive]
     weight_mods = [CNN.WeightScale.WeightNormalization]

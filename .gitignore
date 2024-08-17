@@ -9,3 +9,4 @@ data/cifar-100-python.tar.gz
 
 # Trained Models
 SavedModels/
+SavedModels_2/
