@@ -134,17 +134,27 @@ class GeneralizationExperiment(Experiment):
         self.DEBUG_LOG.info(f"self.ext_dataset is {self.ext_dataset}")
         self.DEBUG_LOG.info(f"DataSets.MNIST is {DataSets.MNIST}")
 
-        if self.dataset == DataSets.MNIST:
+        #if self.dataset == DataSets.MNIST:
             # Select random letter classes
-            letter_labels = list(range(0, 26))
-            original_class = sorted(random.sample(letter_labels, 10))
+            #letter_labels = list(range(0, 26))
+            #original_class = sorted(random.sample(letter_labels, 10))
+            #updated_class = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+            #self.filter_classes_ext = dict(zip(original_class, updated_class))
+            
+            # Convert Dictionary class into letters
+            #letter_class = [chr(65 + key) for key in original_class]
+            #self.chosen_classes_log = dict(zip(updated_class, letter_class))
+
+        if self.dataset == DataSets.MNIST:
+            # Hardcode the specific letter classes
+            letter_class = ['C', 'I', 'L', 'O', 'S', 'Z', 'G', 'B', 'Q', 'P']
+            original_class = [ord(letter) - 65 for letter in letter_class]  # Convert letters to their corresponding indices (0-25)
             updated_class = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
             self.filter_classes_ext = dict(zip(original_class, updated_class))
             
-            # Convert Dictionary class into letters
-            letter_class = [chr(65 + key) for key in original_class]
+            # Log the chosen classes
             self.chosen_classes_log = dict(zip(updated_class, letter_class))
-        
+            
         elif self.dataset == DataSets.FASHION_MNIST:
             original_data = [0, 1, 2, 3, 4]
             updated_data = [(num % 5) for num in original_data]
