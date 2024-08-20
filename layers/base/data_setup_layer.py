@@ -86,14 +86,23 @@ class DataSetupLayer(InputLayer):
         
         return filtered_data_loader
 
-
     @staticmethod
-    def generate_bar_matrix(n: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def generate_bar_matrix(
+        n: int, 
+        min_horizontal: int = 1, 
+        max_horizontal: int = -1, 
+        min_vertical: int = 1, 
+        max_vertical: int = -1
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Generate a single n x n matrix with random vertical and horizontal white bars.
         
         Args:
             n (int): The size of the matrix.
+            min_horizontal (int): Minimum number of horizontal bars (rows) that should be white.
+            max_horizontal (int): Maximum number of horizontal bars (rows) that should be white.
+            min_vertical (int): Minimum number of vertical bars (columns) that should be white.
+            max_vertical (int): Maximum number of vertical bars (columns) that should be white.
             
         Returns:
             Tuple containing:
@@ -101,31 +110,61 @@ class DataSetupLayer(InputLayer):
             - col_labels (np.ndarray): n-sized array representing which columns have white bars.
             - row_labels (np.ndarray): n-sized array representing which rows have white bars.
         """
+        # Set default values if max values are not provided
+        if max_horizontal == -1:
+            max_horizontal = n
+        if max_vertical  == -1:
+            max_vertical = n
+        
+        # Ensure the max values are within valid range
+        max_horizontal = min(max_horizontal, n)
+        max_vertical = min(max_vertical, n)
+        
         # Initialize the matrix with all black (0)
         matrix = np.zeros((n, n), dtype=np.float32)
         
-        # Randomly choose which columns and rows will have white bars
-        col_labels = np.random.choice([0, 1], size=(n,))
-        row_labels = np.random.choice([0, 1], size=(n,))
+        # Randomly choose the number of rows and columns to set to white
+        num_horizontal_bars = np.random.randint(min_horizontal, max_horizontal + 1)
+        num_vertical_bars = np.random.randint(min_vertical, max_vertical + 1)
+        
+        # Randomly select which rows and columns will have white bars
+        row_indices = np.random.choice(n, size=num_horizontal_bars, replace=False)
+        col_indices = np.random.choice(n, size=num_vertical_bars, replace=False)
+        
+        # Create label arrays
+        col_labels = np.zeros(n, dtype=np.int32)
+        row_labels = np.zeros(n, dtype=np.int32)
         
         # Set the selected columns and rows to white (1)
-        for i in range(n):
-            if col_labels[i] == 1:
-                matrix[:, i] = 1  # Set the entire column to white
-            if row_labels[i] == 1:
-                matrix[i, :] = 1  # Set the entire row to white
+        for i in col_indices:
+            matrix[:, i] = 1  # Set the entire column to white
+            col_labels[i] = 1
+        
+        for i in row_indices:
+            matrix[i, :] = 1  # Set the entire row to white
+            row_labels[i] = 1
         
         return matrix, col_labels, row_labels
 
     @staticmethod
-    def setup_bar_matrix_data(n: int, num_samples: int, output_filename: str) -> TensorDataset:
+    def generate_dataset(
+        num_samples: int, 
+        n: int, 
+        min_horizontal: int = 1, 
+        max_horizontal: int = -1, 
+        min_vertical: int = 1, 
+        max_vertical: int = -1
+    ) -> TensorDataset:
         """
-        Generate and save a dataset of n x n matrices with random white bars and corresponding labels.
+        Generate a dataset of n x n matrices with random white bars and corresponding labels.
         
         Args:
-            n (int): Size of each n x n matrix.
             num_samples (int): Number of samples to generate.
-            output_filename (str): Filename to save the generated dataset.
+            n (int): Size of each n x n matrix.
+            min_horizontal (int): Minimum number of horizontal bars (rows) that should be white.
+            max_horizontal (int): Maximum number of horizontal bars (rows) that should be white.
+            min_vertical (int): Minimum number of vertical bars (columns) that should be white.
+            max_vertical (int): Maximum number of vertical bars (columns) that should be white.
             
         Returns:
             TensorDataset: Dataset containing the matrices and their corresponding labels.
@@ -135,7 +174,13 @@ class DataSetupLayer(InputLayer):
         row_labels = []
         
         for _ in range(num_samples):
-            matrix, col_label, row_label = DataSetupLayer.generate_bar_matrix(n)
+            matrix, col_label, row_label = DataSetupLayer.generate_bar_matrix(
+                n, 
+                min_horizontal=min_horizontal, 
+                max_horizontal=max_horizontal, 
+                min_vertical=min_vertical, 
+                max_vertical=max_vertical
+            )
             matrices.append(matrix)
             col_labels.append(col_label)
             row_labels.append(row_label)
@@ -145,16 +190,24 @@ class DataSetupLayer(InputLayer):
         col_labels_tensor = torch.tensor(col_labels)
         row_labels_tensor = torch.tensor(row_labels)
         
-        # Optionally save the dataset for future use
-        torch.save((matrices_tensor, col_labels_tensor, row_labels_tensor), output_filename)
-        print(f"Bar matrix dataset saved to {output_filename}")
-        
         return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
 
     @staticmethod
-    def load_bar_matrix_data(filename: str) -> TensorDataset:
+    def save_dataset(dataset: TensorDataset, filename: str) -> None:
         """
-        Load a previously saved bar matrix dataset from a file.
+        Save the generated dataset to a file.
+        
+        Args:
+            dataset (TensorDataset): The dataset to save.
+            filename (str): The file path to save the dataset.
+        """
+        torch.save(dataset, filename)
+        print(f"Dataset saved to {filename}")
+
+    @staticmethod
+    def load_dataset(filename: str) -> TensorDataset:
+        """
+        Load a previously saved dataset from a file.
         
         Args:
             filename (str): Path to the saved dataset file.
@@ -162,10 +215,7 @@ class DataSetupLayer(InputLayer):
         Returns:
             TensorDataset: The loaded dataset.
         """
-        matrices_tensor, col_labels_tensor, row_labels_tensor = torch.load(filename)
-        return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
-
-
+        return torch.load(filename)
 
 
     @staticmethod
@@ -219,3 +269,18 @@ class DataSetupLayer(InputLayer):
         imgs.close()
         out.close()
         labels.close()
+
+def main():
+        # Generate a dataset
+        n = 28  # Matrix size
+        num_samples = 1000  # Number of samples to generate
+        dataset = DataSetupLayer.generate_dataset(num_samples, n, min_horizontal=2, max_horizontal=5, min_vertical=3, max_vertical=4)
+
+        # Save the dataset
+        DataSetupLayer.save_dataset(dataset, 'bar_matrix_dataset.pt')
+
+        # Load the dataset
+        loaded_dataset = DataSetupLayer.load_dataset('bar_matrix_dataset.pt')
+
+if __name__ == "__main__":
+    main()
