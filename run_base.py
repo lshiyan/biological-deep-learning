@@ -71,7 +71,7 @@ arguments = [
             # Experiment parameters
             '--batch_size=1',
             '--epochs=1', 
-            '--device=cuda:0',
+            '--device=cpu',
             # '--device=cuda:5',
             '--local_machine=True',
             '--experiment_type=base'

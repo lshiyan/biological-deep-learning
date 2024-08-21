@@ -45,8 +45,9 @@ class BarGeneralizationExperiment(Experiment):
         self.SAMPLES: int = 0
         
         # Define dataset parameters
-        self.n = 4
-        self.k = 3
+
+        self.data_matrix_size = args.data_matrix_size
+        self.samples = args.samples
         self.forbidden_combinations = [(0, 1), (2, 3)]
         
         # Set random seeds for reproducibility
@@ -63,19 +64,19 @@ class BarGeneralizationExperiment(Experiment):
         self.EXP_LOG.info("Generating training and test datasets.")
         
         # Generate training dataset
-        training_set = CustomBarMatrixDataset.generate_training_set(self.n, self.k, self.forbidden_combinations)
+        training_set = CustomBarMatrixDataset.generate_training_set(self.data_matrix_size, self.samples, self.forbidden_combinations)
         self.train_data_loader = DataLoader(training_set, batch_size=self.batch_size, shuffle=True)
         
         # Generate test set one (single bars)
-        test_set_one = CustomBarMatrixDataset.generate_test_set_one(self.n)
+        test_set_one = CustomBarMatrixDataset.generate_test_set_one(self.data_matrix_size)
         self.test_set_one_loader = DataLoader(test_set_one, batch_size=self.batch_size, shuffle=False)
         
         # Generate test set two (forbidden combinations)
-        test_set_two = CustomBarMatrixDataset.generate_test_set_two(self.n, self.forbidden_combinations)
+        test_set_two = CustomBarMatrixDataset.generate_test_set_two(self.data_matrix_size, self.forbidden_combinations)
         self.test_set_two_loader = DataLoader(test_set_two, batch_size=self.batch_size, shuffle=False)
         
         # Generate test set three (3+ bars per side)
-        test_set_three = CustomBarMatrixDataset.generate_test_set_three(self.n)
+        test_set_three = CustomBarMatrixDataset.generate_test_set_three(self.data_matrix_size)
         self.test_set_three_loader = DataLoader(test_set_three, batch_size=self.batch_size, shuffle=False)
         
         self.EXP_LOG.info("Completed setup for all datasets and dataloaders.")

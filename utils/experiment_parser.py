@@ -45,6 +45,10 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     
     parser.add_argument('--ext_train_fname', type=str, default="data/ext_mnist/ext_mnist_train.csv")
     parser.add_argument('--ext_test_fname', type=str, default="data/ext_mnist/ext_mnist_test.csv")
+    
+    # Bar generalization experiment specifics
+    parser.add_argument('--data_matrix_size', type=int, default=4)
+    parser.add_argument('--samples', type=int, default=3)
 
     # Dimension of each layer
     parser.add_argument('--input_dim', type=int, default=784)

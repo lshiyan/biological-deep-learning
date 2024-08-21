@@ -13,6 +13,8 @@ arguments = [
     # If dataset paths are needed for logging or other purposes, include them here
     "--train_fname=data/bar_matrix/bar_train.csv",  # These would be placeholders or paths to save the generated datasets
     "--test_fname=data/bar_matrix/bar_test.csv",
+    '--data_matrix_size=4',
+    '--samples=3',
     
     # Dimension of each layer (these are typical settings for a network handling 28x28 input)
     '--input_dim=16',  # For a 28x28 matrix flattened
