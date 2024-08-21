@@ -60,6 +60,7 @@ class ExperimentTypes(Enum):
     BASE = 'BASE'
     GENERALIZATION = 'GENERALIZATION'
     FORGET = 'FORGET'
+    BAR_GENERALIZATION = 'BAR_GENERALIZATION'
     
     
 class Purposes(Enum):
