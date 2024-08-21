@@ -46,6 +46,7 @@ arguments = [
     '--sigma=1',  # Variance for normal initialization
     '--mu=0',  # Mean for normal initialization
     '--init=uniform',  # Initialization method
+    '--random_seed=42',
     
     # Experiment parameters
     '--batch_size=1',  # Batch size

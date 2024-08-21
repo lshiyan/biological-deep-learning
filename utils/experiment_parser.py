@@ -81,6 +81,7 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     parser.add_argument("--sigma", type=float, default=1)
     parser.add_argument("--mu", type=float, default=0)
     parser.add_argument("--init", type=str, default='uniform')
+    parser.add_argument("--random_seed", type=int, default='42')
 
     # Experiment parameters
     parser.add_argument("--batch_size", type=int, default=1)

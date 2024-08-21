@@ -48,11 +48,17 @@ class BarGeneralizationExperiment(Experiment):
 
         self.data_matrix_size = args.data_matrix_size
         self.samples = args.samples
-        self.forbidden_combinations = [(0, 1), (2, 3)]
+        self.forbidden_combinations = [
+            (0, 1), (0, 2),
+            (1, 1), (1, 2),
+            (2, 1), (2, 2),
+            (3, 1), (3, 2),
+            ]
         
         # Set random seeds for reproducibility
-        random.seed(42)
-        np.random.seed(42)
+        self.random_seed = args.random_seed
+        random.seed(self.random_seed)
+        np.random.seed(self.random_seed)
         
         # Generate datasets
         self._setup_datasets()
