@@ -2,19 +2,23 @@
 import os
 import time
 from typing import Tuple, Type, Union
+from matplotlib import transforms
+import matplotlib.pyplot as plt
 
 # Pytorch imports
 import torch
 from torch.nn import Module
 from torch.nn.functional import one_hot
 from torch.utils.data import DataLoader, TensorDataset
+from torchvision import transforms
+from torchvision import datasets
+import torchvision.datasets.utils as dataset_utils
 
 # Custom defined model imports
 from interfaces.experiment import Experiment
 from interfaces.layer import NetworkLayer
 from interfaces.network import Network
 from layers.input_layer import InputLayer
-
 from layers.base.data_setup_layer import DataSetupLayer
 
 # Utils imports
@@ -23,65 +27,9 @@ from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
 
-
-
+# Experiment Class for Colored MNIST
 class ColouredMnistExperiment(Experiment):
-    """
-    CLASS
-    Experiment for base training and testing of model
-    @instance attr.
-        Experiment ATTR.
-            model (Network): model used in experiment
-            batch_size (int): size of each batch of data
-            epochs (int): number of epochs to train
-            test_sample (int): interval at which testing will be done
-            device (str): device that will be used for CUDA
-            local_machine (bool): where code is ran
-            experiment_type (ExperimentTypes): what type of experiment to be ran
-            
-            START_TIME (float): start time of experiment
-            END_TIMER (float): end of experiment
-            DURATION (float): duration of experiment
-            TRAIN_TIME (float): training time
-            TEST_ACC_TIME (float): testing time
-            TRAIN_ACC_TIME (float): testing time
-            EXP_NAME (str): experiment name
-            RESULT_PATH (str): where result files will be created
-            PRINT_LOG (logging.Logger): print log
-            TEST_LOG (logging.Logger): log with all test accuracy results
-            TRAIN_LOG (logging.Logger): log with all trainning accuracy results
-            PARAM_LOG (logging.Logger): parameter log for experiment
-            DEBUG_LOG (logging.Logger): debugging
-            EXP_LOG (logging.Logger): logging of experiment process
-        OWN ATTR.
-            data_name (str): name of dataset
-            train_data (str): path to train data
-            train_label (str): path to train label
-            train_fname (str): path to train filename
-            test_data (str): path to test data
-            test_label (str): path to test label
-            test_fname (str): path to test filename
-            
-            SAMPLES (int): number of samples seen in training
-            
-            train_data_set (TensorDataset): training dataset
-            train_data_loader (DataLoader): training dataloader
-            test_data_set (TensorDataset): testing dataset
-            test_data_loader (DataLoader): testing dataloader
-    """
-    ################################################################################################
-    # Constructor Method
-    ################################################################################################
     def __init__(self, model: Network, args: argparse.Namespace, name: str) -> None:
-        """
-        CONTRUCTOR METHOD
-        @param
-            model: model to be trained and tested in experiment
-            args: all arguments passed for experiment
-            name: name of experiment
-        @return
-            None
-        """
         super().__init__(model, args, name)
         self.SAMPLES: int = 0
         
@@ -98,67 +46,21 @@ class ColouredMnistExperiment(Experiment):
         self.train_fname = args.train_fname
         self.test_fname = args.test_fname
         
-        # Define exclusion mapping: which color is excluded for each digit
-        self.color_mapping = ['C', 'M', 'Y', 'K']
-        self.exclusion_mapping = {digit: self.color_mapping[digit % 4] for digit in range(10)}
-        
         # Get input layer class of model
         input_layer: Module = self.model.get_module(LayerNames.INPUT)
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
-
-        # Training Dataset Setup
-        self.train_data_set: TensorDataset = self.setup_training_data(self.train_data, self.train_label)
+        
+        # Training Dataset Setup with colorization
+        self.train_data_set: TensorDataset = input_layer.setup_colored_mnist(self.train_data, self.train_label, self.train_fname, self.train_size, self.dataset)
         self.train_data_loader: DataLoader = DataLoader(self.train_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
         
-        # Testing Dataset Setup
-        self.test_data_set: TensorDataset = self.setup_testing_data(self.test_data, self.test_label)
+        # Testing Dataset Setup with colorization
+        self.test_data_set: TensorDataset = input_layer.setup_colored_mnist(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset)
         self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
         self.DEBUG_LOG.info(f"DEVICE USED: {self.device}")
-
-    def apply_color_to_digit(self, image: torch.Tensor, digit: int) -> torch.Tensor:
-        """
-        Apply the corresponding CMYK color to the digit.
-        """
-        color = self.color_mapping[digit % 4]
-        color_map = {
-            'C': [0, 255, 255],  # Cyan
-            'M': [255, 0, 255],  # Magenta
-            'Y': [255, 255, 0],  # Yellow
-            'K': [0, 0, 0],      # Black
-        }
-        colored_image = torch.tensor(color_map[color], dtype=torch.float32) * image.unsqueeze(0)
-        return colored_image
-
-    def setup_training_data(self, data, labels):
-        """
-        Setup training data, excluding the reserved color for each digit.
-        """
-        filtered_data = []
-        filtered_labels = []
-        for img, label in zip(data, labels):
-            if self.exclusion_mapping[label.item()] != self.color_mapping[label.item()]:
-                colored_image = self.apply_color_to_digit(img, label.item())
-                filtered_data.append(colored_image)
-                filtered_labels.append(label)
-        return TensorDataset(torch.stack(filtered_data), torch.tensor(filtered_labels))
-
-    def setup_testing_data(self, data, labels):
-        """
-        Setup testing data, including only the reserved color for each digit.
-        """
-        filtered_data = []
-        filtered_labels = []
-        for img, label in zip(data, labels):
-            if self.exclusion_mapping[label.item()] == self.color_mapping[label.item()]:
-                colored_image = self.apply_color_to_digit(img, label.item())
-                filtered_data.append(colored_image)
-                filtered_labels.append(label)
-        return TensorDataset(torch.stack(filtered_data), torch.tensor(filtered_labels))
-
-
 
     ################################################################################################
     # Phase 1 Training and Testing: Base (Hebbian and Classification Layers)
@@ -180,7 +82,7 @@ class ColouredMnistExperiment(Experiment):
         @return
             None
         """
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning')
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning', True)
 
         train_epoch_start: float = self.TRAIN_TIME
         
@@ -193,6 +95,8 @@ class ColouredMnistExperiment(Experiment):
 
         # Loop through training batches
         for inputs, labels in train_data_loader:
+
+            self.DEBUG_LOG.info(f"Input shape before model: {inputs.shape}")  # Print input shape before model
 
             # Test model at intervals of samples seen
             if self.check_test(self.SAMPLES):
@@ -287,7 +191,7 @@ class ColouredMnistExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
         
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower())
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower(), True)
         
         return final_accuracy
     

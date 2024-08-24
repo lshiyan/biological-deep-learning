@@ -61,6 +61,7 @@ class ExperimentTypes(Enum):
     GENERALIZATION = 'GENERALIZATION'
     FORGET = 'FORGET'
     BAR_GENERALIZATION = 'BAR_GENERALIZATION'
+    COLOURED_MNIST = 'COLOURED_MNIST'
     
     
 class Purposes(Enum):
@@ -111,6 +112,7 @@ class DataSets(Enum):
     MNIST = 'MNIST'
     E_MNIST = 'E_MNIST'
     FASHION_MNIST = 'FASHION_MNIST'
+    COLOURED_MNIST = 'COLOURED_MNIST'
     
     
 class ActivationMethods(Enum):

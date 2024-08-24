@@ -42,7 +42,7 @@ class Network(nn.Module, ABC):
         raise NameError(f"There are no layer named {lname.name.upper()}.")
 
 
-    def visualize_weights(self, path: str, num: int, use: str) -> None:
+    def visualize_weights(self, path: str, num: int, use: str, coloured: bool) -> None:
         """
         METHOD
         Visualizes the weights/features learned by each neuron during training
@@ -50,12 +50,15 @@ class Network(nn.Module, ABC):
             path: path to print out result
             num: which iteration is the visualization happening
             use: after what step is the visualization happening
+            colored: whether or not it is a coloured image
         @return
             None
         """
         for name, module in self.named_children():
-            module.visualize_weights(path, num, use, name.lower().capitalize())
-
+            if not coloured:
+                module.visualize_weights(path, num, use, name.lower().capitalize())
+            if coloured: 
+                module.visualize_colored_weights(path, num, use, name.lower().capitalize())
 
     def active_weights(self, beta: float) -> dict[str, int]:
         """

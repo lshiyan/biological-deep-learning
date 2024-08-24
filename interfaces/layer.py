@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 import matplotlib
 import matplotlib.figure
 import matplotlib.colors as mcolors
+import os
 
 from utils.experiment_constants import LayerNames, ParamInit
 matplotlib.use('Agg')
@@ -204,6 +205,84 @@ class NetworkLayer (nn.Module, ABC):
         plt.savefig(file_path)
         plt.close()
     
+
+
+    def visualize_colored_weights(self, result_path: str, num: int, use: str, fname: str) -> None:
+        """
+        METHOD
+        Visualizes the weights/features learned by neurons in this layer using a heatmap.
+        For colored images, it visualizes each channel separately.
+        @param
+            result_path: path to folder where results will be printed
+            num: integer representing certain property (for file name creation purposes)
+            use: the use that called this method (for file name creation purposes)
+            fname: name to be used for folder/file
+        @return
+            None
+        """
+        # Name of saved plot
+        plot_name: str = f'/{fname}/{fname.lower()}layerweights-{num}-{use}.png'
+        
+        # Ensure the directory exists
+        directory = os.path.dirname(result_path + plot_name)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # Rest of the method remains the same...
+        # Find value for row and column
+        row, col = self.row_col(self.output_dimension)
+        
+        # Calculate size of figure
+        subplot_size = 4
+        fig_width = col * subplot_size * 3  # 3 times width for RGB channels
+        fig_height = row * subplot_size
+
+        # Get the weights and create heatmaps
+        weight: torch.Tensor = self.fc.weight  # Assuming this is shaped as (output_dim, input_dim)
+
+        # Assuming input_dim is for colored images: 3 channels * (height * width)
+        channels = 3  # Number of channels (RGB)
+        input_dim = weight.size(1) // channels  # Assuming equal split of weights for each channel
+        feature_row, feature_col = self.row_col(input_dim)
+
+        fig, axes = plt.subplots(row, col * channels, figsize=(fig_width, fig_height))  # Adjusted for 3 channels
+                
+        for ele in range(row * col):
+            if ele < self.output_dimension:
+                for ch in range(channels):
+                    channel_weights = weight[ele, ch * input_dim:(ch + 1) * input_dim].cpu().detach()
+                    channel_weights = channel_weights.view(feature_row, feature_col).numpy()
+
+                    max_value = channel_weights.max()
+                    min_value = channel_weights.min()
+                    custom_cmap = self.get_cmap(min_value, max_value)
+
+                    ax_row = ele // col
+                    ax_col = (ele % col) * channels + ch  # Ensure the column index is calculated correctly
+                    ax = axes[ax_row, ax_col]
+                    im = ax.imshow(channel_weights, cmap=custom_cmap, interpolation='nearest', vmin=min_value, vmax=max_value)
+                    cbar = fig.colorbar(im, ax=ax)
+                    ax.set_title(f'Neuron {ele} - Channel {ch + 1}')
+
+                    # Setting Color Bar
+                    ticks = np.linspace(min_value, max_value, num=5)
+                    ticks = ticks.tolist()
+                    ticks.append(0)
+                    ticks = sorted(set(ticks))
+                    cbar.set_ticks(ticks)
+            else:
+                for ch in range(channels):
+                    ax_row = ele // col
+                    ax_col = (ele % col) * channels + ch
+                    ax = axes[ax_row, ax_col]
+                    ax.axis('off')
+        
+        # Save file and close plot
+        file_path: str = result_path + plot_name
+        plt.tight_layout()
+        plt.savefig(file_path)
+        plt.close()
+            
     
     def active_weights(self, beta: float) -> int:
         """
