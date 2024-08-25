@@ -45,16 +45,11 @@ class BarGeneralizationExperiment(Experiment):
         self.SAMPLES: int = 0
         
         # Define dataset parameters
-
         self.data_matrix_size = args.data_matrix_size
         self.samples = args.samples
-        self.forbidden_combinations = [
-            (0, 1), (0, 2),
-            (1, 1), (1, 2),
-            (2, 1), (2, 2),
-            (3, 1), (3, 2),
-            ]
-        
+
+        self.forbidden_combinations = self.generate_forbidden_combinations(self.samples)
+
         # Set random seeds for reproducibility
         self.random_seed = args.random_seed
         random.seed(self.random_seed)
@@ -74,18 +69,32 @@ class BarGeneralizationExperiment(Experiment):
         self.train_data_loader = DataLoader(training_set, batch_size=self.batch_size, shuffle=True)
         
         # Generate test set one (single bars)
-        test_set_one = CustomBarMatrixDataset.generate_test_set_one(self.data_matrix_size)
+        test_set_one = CustomBarMatrixDataset.generate_test_set_one(self.data_matrix_size, self.samples)
         self.test_set_one_loader = DataLoader(test_set_one, batch_size=self.batch_size, shuffle=False)
         
         # Generate test set two (forbidden combinations)
-        test_set_two = CustomBarMatrixDataset.generate_test_set_two(self.data_matrix_size, self.forbidden_combinations)
+        test_set_two = CustomBarMatrixDataset.generate_test_set_two(self.data_matrix_size, self.samples, self.forbidden_combinations)
         self.test_set_two_loader = DataLoader(test_set_two, batch_size=self.batch_size, shuffle=False)
         
-        # Generate test set three (3+ bars per side)
-        test_set_three = CustomBarMatrixDataset.generate_test_set_three(self.data_matrix_size)
-        self.test_set_three_loader = DataLoader(test_set_three, batch_size=self.batch_size, shuffle=False)
-        
+        # Generate test set three incrementally from 3 to data_matrix_size
+        self.test_set_three_loaders = {}
+        for max_bars in range(3, self.data_matrix_size + 1):
+            test_set_three = CustomBarMatrixDataset.generate_test_set_three(self.data_matrix_size, self.samples, max_bars)
+            loader_name = f'test_set_three_max_{max_bars}_loader'
+            self.test_set_three_loaders[loader_name] = DataLoader(test_set_three, batch_size=self.batch_size, shuffle=False)
+            self.EXP_LOG.info(f"Generated and loaded test set three with max_bars={max_bars}")
+
         self.EXP_LOG.info("Completed setup for all datasets and dataloaders.")
+
+
+    def generate_forbidden_combinations(self, samples):
+        forbidden_combinations = []
+        for i in range(samples):
+            forbidden_combinations.append((i, i))
+            if i < samples - 1:
+                forbidden_combinations.append((i, i + 1))
+        return forbidden_combinations
+    
 
     def _training(self, 
                 train_data_loader: DataLoader, 
@@ -94,7 +103,7 @@ class BarGeneralizationExperiment(Experiment):
                 phase: ExperimentPhases, 
                 visualize: bool = True
                 ) -> None:
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning')
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning', False)
 
         train_epoch_start: float = self.TRAIN_TIME
         train_start: float = time.time()
@@ -114,12 +123,17 @@ class BarGeneralizationExperiment(Experiment):
                 train_pause_time: float = time.time()
                 self.TRAIN_TIME += train_pause_time - train_start
 
+                # Run generalization tests for test set one and two
                 self._generalization_test(self.test_set_one_loader, "Test Set One", "single_bars", ExperimentPhases.BASE)
                 self._generalization_test(self.test_set_two_loader, "Test Set Two", "forbidden_combinations", ExperimentPhases.BASE)
-                self._generalization_test(self.test_set_three_loader, "Test Set Three", "complex_patterns", ExperimentPhases.BASE)
+                
+                # Run generalization tests for each incrementally generated test set three
+                for max_bars, loader in self.test_set_three_loaders.items():
+                    set_name = f"Test Set Three (Max Bars={max_bars.split('_')[-1]})"
+                    self._generalization_test(loader, set_name, "complex_patterns", ExperimentPhases.BASE)
 
+                # Run generalization test for the training set
                 self._generalization_test(self.train_data_loader, "Training Set", "Training samples", ExperimentPhases.BASE)
-
 
                 train_start = time.time()
 
@@ -178,10 +192,6 @@ class BarGeneralizationExperiment(Experiment):
 
                     correct += int(torch.sum(top_k_preds == labels).item())
 
-                self.DEBUG_LOG.info(f"Batch {batch_idx}: Top-k Preds: {top_k_preds}")
-                self.DEBUG_LOG.info(f"Batch {batch_idx}: Labels: {labels}")
-                self.DEBUG_LOG.info(f"Batch {batch_idx}: Correct Predictions: {correct}")
-
             final_accuracy = round(correct / (total * labels.size(1)), 4)
 
         test_end = time.time()
@@ -190,17 +200,17 @@ class BarGeneralizationExperiment(Experiment):
         self.EXP_LOG.info(f"Completed testing with {correct} out of {total}.")
         self.EXP_LOG.info(f"Testing ({purpose}) of sample #{self.SAMPLES} took {time_to_str(testing_time)}.")
 
-        if purpose == "Test Set One":
+        if purpose == "Training Set":
+            self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Training Accuracy: {final_accuracy}')
+        elif purpose == "Test Set One":
             self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Set One Accuracy: {final_accuracy}')
         elif purpose == "Test Set Two":
             self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Set Two Accuracy: {final_accuracy}')
-        elif purpose == "Test Set Three":
+        else:
             self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Set Three Accuracy: {final_accuracy}')
-        elif purpose == "Training Set":
-            self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Training Accuracy: {final_accuracy}')
 
         if visualize:
-            self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.lower())
+            self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.lower(), False)
 
         return final_accuracy
 
@@ -212,24 +222,37 @@ class BarGeneralizationExperiment(Experiment):
         for epoch in range(0, self.epochs):
             self._training(self.train_data_loader, epoch, "training_set", ExperimentPhases.BASE)
             
+            # Run generalization tests for test set one and two
             self._generalization_test(self.test_set_one_loader, "Test Set One", "single_bars", ExperimentPhases.BASE)
             self._generalization_test(self.test_set_two_loader, "Test Set Two", "forbidden_combinations", ExperimentPhases.BASE)
-            self._generalization_test(self.test_set_three_loader, "Test Set Three", "complex_patterns", ExperimentPhases.BASE)
+            
+            # Run generalization tests for each incrementally generated test set three
+            for max_bars, loader in self.test_set_three_loaders.items():
+                set_name = f"Test Set Three (Max Bars={max_bars.split('_')[-1]})"
+                self._generalization_test(loader, set_name, "complex_patterns", ExperimentPhases.BASE)
 
-            self._generalization_test(self.train_data_loader, "Training Set", "Training samples", ExperimentPhases.BASE)
         
         self.EXP_LOG.info("Completed training of model.")        
-        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final')
+        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final', False)
         self.EXP_LOG.info("Visualize weights of model after training.")
+
+
 
     def _final_test(self) -> Tuple[float, ...]:
         test_acc_one = self._generalization_test(self.test_set_one_loader, "Test Set One", "single_bars", ExperimentPhases.BASE, visualize=False)
         test_acc_two = self._generalization_test(self.test_set_two_loader, "Test Set Two", "forbidden_combinations", ExperimentPhases.BASE, visualize=False)
-        test_acc_three = self._generalization_test(self.test_set_three_loader, "Test Set Three", "complex_patterns", ExperimentPhases.BASE, visualize=False)
         
-        self.EXP_LOG.info("Completed final testing methods.")
-        return (test_acc_one, test_acc_two, test_acc_three)
+        # Collect accuracies from all test_set_three loaders
+        test_acc_three_list: List[float] = []
+        for max_bars, loader in self.test_set_three_loaders.items():
+            set_name = f"Test Set Three (Max Bars={max_bars.split('_')[-1]})"
+            test_acc = self._generalization_test(loader, set_name, "complex_patterns", ExperimentPhases.BASE, visualize=False)
+            test_acc_three_list.append(test_acc)
 
+        self.EXP_LOG.info("Completed final testing methods.")
+        
+        # Return all accuracies as a single tuple
+        return (test_acc_one, test_acc_two) + tuple(test_acc_three_list)
 
     ################################################################################################
     # Loggings
@@ -276,8 +299,17 @@ class BarGeneralizationExperiment(Experiment):
         self.PARAM_LOG.info(f"Total test time (train acc) of experiment: {time_to_str(self.TRAIN_ACC_TIME)}")
     
     
-    def _final_test_log(self, results) -> None:
-        test_acc, train_acc = results
+    def _final_test_log(self, results: Tuple[float, ...]) -> None:
+        # The first two results are assumed to be the main test accuracy and training accuracy
+        train_acc = results[0]
+        test_acc = results[1]
+        
+        # Log the main accuracies
         self.PARAM_LOG.info(f"Training accuracy of model after training for {self.epochs} epochs: {train_acc}")
-        self.PARAM_LOG.info(f"Testing accuracy of model after training for {self.epochs} epochs: {test_acc}")
-    
+        self.PARAM_LOG.info(f"Main testing accuracy of model after training for {self.epochs} epochs: {test_acc}")
+        
+        # Log additional test accuracies if present
+        if len(results) > 2:
+            additional_accuracies = results[2:]
+            for idx, acc in enumerate(additional_accuracies, start=3):
+                self.PARAM_LOG.info(f"Additional Test Set {idx} Accuracy: {acc}")

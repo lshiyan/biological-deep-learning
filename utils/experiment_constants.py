@@ -113,6 +113,7 @@ class DataSets(Enum):
     E_MNIST = 'E_MNIST'
     FASHION_MNIST = 'FASHION_MNIST'
     COLOURED_MNIST = 'COLOURED_MNIST'
+    BAR_DATASET = 'BAR_DATASET'
     
     
 class ActivationMethods(Enum):
