@@ -313,7 +313,7 @@ class ColouredMnistExperiment(Experiment):
             self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE)
         
         self.EXP_LOG.info("Completed training of model.")        
-        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final')
+        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final', True)
         self.EXP_LOG.info("Visualize weights of model after training.")
         
     

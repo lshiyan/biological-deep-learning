@@ -202,7 +202,7 @@ class ForgetExperiment(Experiment):
         
         sub_experiment_name = self.curr_folder_path.split('/')[-1]  # Assumes '/' as the path separator.
         
-        if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}")
+        if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}", False)
 
         # Start timer
         train_start: float = time.time()

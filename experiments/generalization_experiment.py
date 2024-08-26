@@ -236,7 +236,7 @@ class GeneralizationExperiment(Experiment):
         @return
             None
         """
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'rec_learning')
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'rec_learning', False)
         
         train_start: float = time.time()
         self.EXP_LOG.info(f"Started 'reconstruct_train' function with {dname.upper()}.")
@@ -354,7 +354,7 @@ class GeneralizationExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
         
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES, f'rec_{purpose.name.lower()}')
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES, f'rec_{purpose.name.lower()}', False)
         
         return (cos_error, norm_error)
     
@@ -380,7 +380,7 @@ class GeneralizationExperiment(Experiment):
         @return
             None
         """
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'freeze_learning')
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'freeze_learning', False)
         
         train_start: float = time.time()
         self.EXP_LOG.info(f"Started 'freeze_train' function with {dname.upper()}.")
@@ -481,7 +481,7 @@ class GeneralizationExperiment(Experiment):
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Train Accuracy: {final_accuracy}')
         
 
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, f'freeze_{purpose.name.lower()}')
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, f'freeze_{purpose.name.lower()}', False)
 
         return final_accuracy
     
@@ -643,7 +643,7 @@ class GeneralizationExperiment(Experiment):
             self._testing(self.ext_test_data_loader, Purposes.TEST_ACCURACY, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS)
 
         self.EXP_LOG.info("Completed training of model.")        
-        self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, 'final')
+        self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, 'final', False)
         self.EXP_LOG.info("Visualize weights of model after training.")
         
     

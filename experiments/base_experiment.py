@@ -136,7 +136,7 @@ class BaseExperiment(Experiment):
         @return
             None
         """
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning')
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning', False)
 
         train_epoch_start: float = self.TRAIN_TIME
         
@@ -243,7 +243,7 @@ class BaseExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
         
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower())
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower(), False)
         
         return final_accuracy
     
@@ -365,7 +365,7 @@ class BaseExperiment(Experiment):
             self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE)
         
         self.EXP_LOG.info("Completed training of model.")        
-        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final')
+        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final', False)
         self.EXP_LOG.info("Visualize weights of model after training.")
         
     

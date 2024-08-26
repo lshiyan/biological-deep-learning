@@ -48,8 +48,11 @@ class DataSetupLayer(InputLayer):
         brightness = image.numpy().squeeze()  # Get brightness from MNIST grayscale image
         colored_image = np.zeros((28, 28, 3))  # Create an empty 3-channel image (RGB)
         
-        for i in range(3):  # Apply color based on brightness
-            colored_image[:, :, i] = brightness * color['rgb'][i] / 255.0
+        # Loop through three color channels (RGB)
+        for i in range(3):  
+            colored_image[:, :, i] = brightness * color['rgb'][i] / 255.0   
+            # 1: Retrieve RGB value corresponding to current channel
+            # 2: Color each pixel of the grayscale image according to its brightness and the chosen RGB color values
 
         return colored_image
 
@@ -67,7 +70,7 @@ class DataSetupLayer(InputLayer):
         @return
             TensorDataset containing (colored data, label)
         """
-        # Color definitions in RGB
+        # Color definitions in RGB and CMYK
         colors = {
             'green': {'rgb': np.array([178, 217, 178]), 'cmyk': np.array([0.18, 0.0, 0.18, 0.15])},
             'beige': {'rgb': np.array([247, 234, 190]), 'cmyk': np.array([0.0, 0.05, 0.23, 0.03])},
@@ -80,18 +83,19 @@ class DataSetupLayer(InputLayer):
         if not os.path.exists(filename):
             DataSetupLayer.convert(data, label, filename, size, 28)
          
-        # Load the dataset
+        # Load the MNIST dataset
         data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
         labels: torch.Tensor = torch.tensor(data_frame[0].values)
         data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float).reshape(-1, 28, 28)
         data_tensor /= 255
         
         # Apply colorization
-        colored_data = []
+        colored_data = []  
+        # Loop through entire tensor dataset
         for i in range(data_tensor.shape[0]):
             color_name = np.random.choice(list(colors.keys()))  # Randomly choose a color
             colored_image = DataSetupLayer.apply_color(data_tensor[i], colors[color_name])
-            colored_data.append(torch.tensor(colored_image, dtype=torch.float32).permute(2, 0, 1))  # Convert to tensor and permute to (C, H, W)
+            colored_data.append(torch.tensor(colored_image, dtype=torch.float32).permute(2, 0, 1))  # Convert to tensor and permute to (Channels, Height, Width)
         
         colored_data_tensor = torch.stack(colored_data)  # Stack all colored images into a tensor
         
