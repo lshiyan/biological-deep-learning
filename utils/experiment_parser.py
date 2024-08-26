@@ -48,7 +48,7 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     
     # Bar generalization experiment specifics
     parser.add_argument('--data_matrix_size', type=int, default=4)
-    parser.add_argument('--samples', type=int, default=3)
+    parser.add_argument('--bar_data_quantity', type=int, default=3)
 
     # Dimension of each layer
     parser.add_argument('--input_dim', type=int, default=784)
