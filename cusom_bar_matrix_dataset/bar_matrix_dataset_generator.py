@@ -8,7 +8,10 @@ import matplotlib.pyplot as plt
 class CustomBarMatrixDataset:
 
     @staticmethod
-    def generate_bar_matrix(n: int, horizontal_indices: List[int], vertical_indices: List[int]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def generate_bar_matrix(n: int, 
+                            horizontal_indices: List[int], 
+                            vertical_indices: List[int]
+                            ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Generate a single n x n matrix with specified horizontal and vertical white bars.
         
@@ -38,7 +41,10 @@ class CustomBarMatrixDataset:
         return matrix, col_labels, row_labels
 
     @staticmethod
-    def generate_training_set(n: int, k: int, forbidden_combinations: List[Tuple[int, int]]) -> TensorDataset:
+    def generate_training_set(n: int, 
+                              k: int, 
+                              forbidden_combinations: List[Tuple[int, int]]
+                              ) -> TensorDataset:
         """
         Generate the training set with the specified rules.
         
@@ -79,110 +85,172 @@ class CustomBarMatrixDataset:
             col_labels.append(col_label)
             row_labels.append(row_label)
 
-        matrices_tensor = torch.tensor(matrices).unsqueeze(1)
-        col_labels_tensor = torch.tensor(col_labels)
-        row_labels_tensor = torch.tensor(row_labels)
+        # Assuming `matrices` and `col_labels` are lists of numpy arrays
+        matrices_np = np.array(matrices)  # Convert the list of numpy arrays to a single numpy array
+        matrices_tensor = torch.tensor(matrices_np).unsqueeze(1)  # Then convert to a PyTorch tensor
+
+        col_labels_np = np.array(col_labels)  # Convert the list of numpy arrays to a single numpy array
+        col_labels_tensor = torch.tensor(col_labels_np)  # Then convert to a PyTorch tensor
+
+        row_labels_np = np.array(row_labels)  # Assuming you also have `row_labels` that need conversion
+        row_labels_tensor = torch.tensor(row_labels_np)  # Convert to a PyTorch tensor
 
         return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
     
     @staticmethod
-    def generate_test_set_one(n: int) -> TensorDataset:
+    def generate_test_set_one(
+        n: int, 
+        k: int
+        ) -> TensorDataset:
         """
         Generate the first test set (single bars only).
         
         Args:
             n (int): The size of the matrix.
+            k (int): Determines the number of samples to generate.
             
         Returns:
             TensorDataset: The generated test dataset.
         """
+        num_samples = 8 ** k
         matrices = []
         col_labels = []
         row_labels = []
-        
-        for i in range(n):
-            # Single horizontal bar
-            matrix, col_label, row_label = CustomBarMatrixDataset.generate_bar_matrix(n, [i], [])
-            matrices.append(matrix)
-            col_labels.append(col_label)
-            row_labels.append(row_label)
-            
-            # Single vertical bar
-            matrix, col_label, row_label = CustomBarMatrixDataset.generate_bar_matrix(n, [], [i])
-            matrices.append(matrix)
-            col_labels.append(col_label)
-            row_labels.append(row_label)
-        
-        matrices_tensor = torch.tensor(matrices).unsqueeze(1)
-        col_labels_tensor = torch.tensor(col_labels)
-        row_labels_tensor = torch.tensor(row_labels)
-        
+
+        while len(matrices) < num_samples:
+            for i in range(n):
+                if len(matrices) >= num_samples:
+                    break
+                # Single horizontal bar
+                matrix, col_label, row_label = CustomBarMatrixDataset.generate_bar_matrix(n, [i], [])
+                matrices.append(matrix)
+                col_labels.append(col_label)
+                row_labels.append(row_label)
+                
+                if len(matrices) >= num_samples:
+                    break
+                # Single vertical bar
+                matrix, col_label, row_label = CustomBarMatrixDataset.generate_bar_matrix(n, [], [i])
+                matrices.append(matrix)
+                col_labels.append(col_label)
+                row_labels.append(row_label)
+
+        # Assuming `matrices` and `col_labels` are lists of numpy arrays
+        matrices_np = np.array(matrices)  # Convert the list of numpy arrays to a single numpy array
+        matrices_tensor = torch.tensor(matrices_np).unsqueeze(1)  # Then convert to a PyTorch tensor
+
+        col_labels_np = np.array(col_labels)  # Convert the list of numpy arrays to a single numpy array
+        col_labels_tensor = torch.tensor(col_labels_np)  # Then convert to a PyTorch tensor
+
+        row_labels_np = np.array(row_labels)  # Assuming you also have `row_labels` that need conversion
+        row_labels_tensor = torch.tensor(row_labels_np)  # Convert to a PyTorch tensor
+
+
         return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
 
 
     @staticmethod
-    def generate_test_set_two(n: int, forbidden_combinations: List[Tuple[int, int]]) -> TensorDataset:
+    def generate_test_set_two(
+        n: int, 
+        k: int,
+        forbidden_combinations: List[Tuple[int, int]]
+        ) -> TensorDataset:
         """
         Generate the second test set (forbidden combinations).
         
         Args:
             n (int): The size of the matrix.
             forbidden_combinations (List[Tuple[int, int]]): List of forbidden (horizontal, vertical) bar index pairs.
+            k (int): Determines the number of samples to generate.
             
         Returns:
             TensorDataset: The generated test dataset.
         """
+        num_samples = 8 ** k
         matrices = []
         col_labels = []
         row_labels = []
 
-        for h, v in forbidden_combinations:
-            matrix, col_label, row_label = CustomBarMatrixDataset.generate_bar_matrix(n, [h], [v])
-            matrices.append(matrix)
-            col_labels.append(col_label)
-            row_labels.append(row_label)
-
-        matrices_tensor = torch.tensor(matrices).unsqueeze(1)
-        col_labels_tensor = torch.tensor(col_labels)
-        row_labels_tensor = torch.tensor(row_labels)
-
-        return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
-
-
-    @staticmethod
-    def generate_test_set_three(n: int) -> TensorDataset:
-        """
-        Generate the third test set (3+ bars per side).
-        
-        Args:
-            n (int): The size of the matrix.
-            
-        Returns:
-            TensorDataset: The generated test dataset.
-        """
-        matrices = []
-        col_labels = []
-        row_labels = []
-        
-        # Generate matrices with 3+ bars per side
-        for horizontal_bars in range(3, n + 1):
-            for vertical_bars in range(3, n + 1):
-                horizontal_indices = random.sample(range(n), horizontal_bars)
-                vertical_indices = random.sample(range(n), vertical_bars)
-                
-                matrix, col_label, row_label = CustomBarMatrixDataset.generate_bar_matrix(n, horizontal_indices, vertical_indices)
+        while len(matrices) < num_samples:
+            for h, v in forbidden_combinations:
+                if len(matrices) >= num_samples:
+                    break
+                matrix, col_label, row_label = CustomBarMatrixDataset.generate_bar_matrix(n, [h], [v])
                 matrices.append(matrix)
                 col_labels.append(col_label)
                 row_labels.append(row_label)
+
+        # Assuming `matrices` and `col_labels` are lists of numpy arrays
+        matrices_np = np.array(matrices)  # Convert the list of numpy arrays to a single numpy array
+        matrices_tensor = torch.tensor(matrices_np).unsqueeze(1)  # Then convert to a PyTorch tensor
+
+        col_labels_np = np.array(col_labels)  # Convert the list of numpy arrays to a single numpy array
+        col_labels_tensor = torch.tensor(col_labels_np)  # Then convert to a PyTorch tensor
+
+        row_labels_np = np.array(row_labels)  # Assuming you also have `row_labels` that need conversion
+        row_labels_tensor = torch.tensor(row_labels_np)  # Convert to a PyTorch tensor
+
+        return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
+    
+    @staticmethod
+    def generate_test_set_three(
+        n: int, 
+        k: int, 
+        max_bars: int
+        ) -> TensorDataset:
+        """
+        Generate the third test set with up to the maximum specified number of bars.
         
-        matrices_tensor = torch.tensor(matrices).unsqueeze(1)
-        col_labels_tensor = torch.tensor(col_labels)
-        row_labels_tensor = torch.tensor(row_labels)
+        Args:
+            n (int): The size of the matrix.
+            k (int): Determines the number of samples to generate.
+            max_bars (int): The maximum number of bars in either direction.
+            
+        Returns:
+            TensorDataset: The generated test dataset.
+        """
+        num_samples = 8 ** k
+        matrices = []
+        col_labels = []
+        row_labels = []
+
+        while len(matrices) < num_samples:
+            # Randomly decide if the max_bars will be for horizontal or vertical
+            if random.choice([True, False]):
+                # max_bars for horizontal, random for vertical
+                horizontal_bars = max_bars
+                vertical_bars = random.randint(0, max_bars - 1)
+            else:
+                # max_bars for vertical, random for horizontal
+                horizontal_bars = random.randint(0, max_bars - 1)
+                vertical_bars = max_bars
+
+            # Ensure we generate unique samples without exceeding the sample count
+            if len(matrices) >= num_samples:
+                break
+
+            # Generate random indices for the bars
+            horizontal_indices = random.sample(range(n), horizontal_bars)
+            vertical_indices = random.sample(range(n), vertical_bars)
+
+            # Generate the matrix and corresponding labels
+            matrix, col_label, row_label = CustomBarMatrixDataset.generate_bar_matrix(n, horizontal_indices, vertical_indices)
+            matrices.append(matrix)
+            col_labels.append(col_label)
+            row_labels.append(row_label)
+            
+
+        # Assuming `matrices` and `col_labels` are lists of numpy arrays
+        matrices_np = np.array(matrices)  # Convert the list of numpy arrays to a single numpy array
+        matrices_tensor = torch.tensor(matrices_np).unsqueeze(1)  # Then convert to a PyTorch tensor
+
+        col_labels_np = np.array(col_labels)  # Convert the list of numpy arrays to a single numpy array
+        col_labels_tensor = torch.tensor(col_labels_np)  # Then convert to a PyTorch tensor
+
+        row_labels_np = np.array(row_labels)  # Assuming you also have `row_labels` that need conversion
+        row_labels_tensor = torch.tensor(row_labels_np)  # Convert to a PyTorch tensor
         
         return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
-
-
-
 
     @staticmethod
     def save_dataset(dataset: TensorDataset, filename: str) -> None:
@@ -210,7 +278,7 @@ class CustomBarMatrixDataset:
 
 def main():
     n = 28
-    k = 3
+    k = 3  # Determines the number of samples to generate
     random.seed(42)
     np.random.seed(42)
     
@@ -222,19 +290,22 @@ def main():
     CustomBarMatrixDataset.visualize_samples(training_set, num_samples=5)
     
     # Generate test set one (single bars only)
-    test_set_one = CustomBarMatrixDataset.generate_test_set_one(n)
+    test_set_one = CustomBarMatrixDataset.generate_test_set_one(n, k)
     CustomBarMatrixDataset.save_dataset(test_set_one, 'test_set_one.pt')
     CustomBarMatrixDataset.visualize_samples(test_set_one, num_samples=5)
     
     # Generate test set two (forbidden combinations)
-    test_set_two = CustomBarMatrixDataset.generate_test_set_two(n, forbidden_combinations)
+    test_set_two = CustomBarMatrixDataset.generate_test_set_two(n, k, forbidden_combinations)
     CustomBarMatrixDataset.save_dataset(test_set_two, 'test_set_two.pt')
     CustomBarMatrixDataset.visualize_samples(test_set_two, num_samples=5)
     
-    # Generate test set three (3+ bars per side)
-    test_set_three = CustomBarMatrixDataset.generate_test_set_three(n)
-    CustomBarMatrixDataset.save_dataset(test_set_three, 'test_set_three.pt')
-    CustomBarMatrixDataset.visualize_samples(test_set_three, num_samples=5)
+    # Generate test set three incrementally from 3 to n
+    for max_bars in range(3, n + 1):
+        test_set_three = CustomBarMatrixDataset.generate_test_set_three(n, k, max_bars)
+        dataset_name = f'test_set_three_max_{max_bars}.pt'
+        CustomBarMatrixDataset.save_dataset(test_set_three, dataset_name)
+        print(f'Generated test set three with max_bars={max_bars}')
+        CustomBarMatrixDataset.visualize_samples(test_set_three, num_samples=5)
 
 if __name__ == "__main__":
     main()
