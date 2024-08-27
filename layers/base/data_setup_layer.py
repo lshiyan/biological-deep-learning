@@ -57,32 +57,25 @@ class DataSetupLayer(InputLayer):
         return colored_image
 
     @staticmethod
-    def setup_colored_mnist(data: str, label: str, filename: str, size: int, dataset: DataSets) -> TensorDataset:
+    def setup_colored_mnist(data: str, label: str, filename: str, size: int, dataset: DataSets, color_map: dict, test_color_map: dict = None) -> TensorDataset:
         """
         STATIC METHOD
-        Function to setup colored MNIST dataset
+        Function to setup colored MNIST dataset with specified colors for each digit.
         @param
             data: data filename
             label: label filename
             filename: data (img + label) filename
             size: number of data
             dataset: dataset type (e.g., DataSets.MNIST)
+            color_map: dictionary mapping each digit to a list of colors for training
+            test_color_map: dictionary mapping each digit to a list of colors for testing (optional)
         @return
             TensorDataset containing (colored data, label)
         """
-        # Color definitions in RGB and CMYK
-        colors = {
-            'green': {'rgb': np.array([178, 217, 178]), 'cmyk': np.array([0.18, 0.0, 0.18, 0.15])},
-            'beige': {'rgb': np.array([247, 234, 190]), 'cmyk': np.array([0.0, 0.05, 0.23, 0.03])},
-            'red': {'rgb': np.array([250, 112, 100]), 'cmyk': np.array([0.0, 0.55, 0.60, 0.02])},
-            'blue': {'rgb': np.array([31, 90, 255]), 'cmyk': np.array([0.88, 0.65, 0.0, 0.0])},
-            'purple': {'rgb': np.array([175, 151, 194]), 'cmyk': np.array([0.10, 0.22, 0.0, 0.24])}
-        }
-
         # Ensure the MNIST dataset is ready
         if not os.path.exists(filename):
             DataSetupLayer.convert(data, label, filename, size, 28)
-         
+        
         # Load the MNIST dataset
         data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
         labels: torch.Tensor = torch.tensor(data_frame[0].values)
@@ -90,16 +83,24 @@ class DataSetupLayer(InputLayer):
         data_tensor /= 255
         
         # Apply colorization
-        colored_data = []  
-        # Loop through entire tensor dataset
+        colored_data = []
+        colored_labels = []
+
         for i in range(data_tensor.shape[0]):
-            color_name = np.random.choice(list(colors.keys()))  # Randomly choose a color
-            colored_image = DataSetupLayer.apply_color(data_tensor[i], colors[color_name])
-            colored_data.append(torch.tensor(colored_image, dtype=torch.float32).permute(2, 0, 1))  # Convert to tensor and permute to (Channels, Height, Width)
+            digit = labels[i].item()  # Get the digit label
+            colors = color_map[digit]  # Get the list of colors for this digit
+            
+            # Apply each color in the list to create multiple colored copies of the digit
+            for color in colors:
+                rgb_values = color['rgb']  # Get the RGB values
+                colored_image = DataSetupLayer.apply_color(data_tensor[i], {'rgb': rgb_values})
+                colored_data.append(torch.tensor(colored_image, dtype=torch.float32).permute(2, 0, 1))
+                colored_labels.append(digit)  # Append the label for each colored copy
         
         colored_data_tensor = torch.stack(colored_data)  # Stack all colored images into a tensor
+        colored_labels_tensor = torch.tensor(colored_labels, dtype=torch.long)  # Convert labels to tensor
         
-        return TensorDataset(colored_data_tensor, labels)
+        return TensorDataset(colored_data_tensor, colored_labels_tensor)
     
     @staticmethod
     def setup_data(data: str, label: str, filename: str, size: int, dataset: DataSets) -> TensorDataset:

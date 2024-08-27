@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from torchvision import transforms
 from torchvision import datasets
 import torchvision.datasets.utils as dataset_utils
+import numpy as np
 
 # Custom defined model imports
 from interfaces.experiment import Experiment
@@ -46,17 +47,57 @@ class ColouredMnistExperiment(Experiment):
         self.train_fname = args.train_fname
         self.test_fname = args.test_fname
         
+
+        # Define color map for training
+        self.train_color_map = {
+            0: [{'name': 'red', 'rgb': np.array([255, 0, 0])},
+                {'name': 'green', 'rgb': np.array([0, 255, 0])}],
+            1: [{'name': 'blue', 'rgb': np.array([0, 0, 255])},
+                {'name': 'red', 'rgb': np.array([255, 0, 0])}],
+            2: [{'name': 'green', 'rgb': np.array([0, 255, 0])},
+                {'name': 'blue', 'rgb': np.array([0, 0, 255])}],
+            3: [{'name': 'red', 'rgb': np.array([255, 0, 0])},
+                {'name': 'green', 'rgb': np.array([0, 255, 0])}],
+            4: [{'name': 'blue', 'rgb': np.array([0, 0, 255])},
+                {'name': 'red', 'rgb': np.array([255, 0, 0])}],
+            5: [{'name': 'green', 'rgb': np.array([0, 255, 0])},
+                {'name': 'blue', 'rgb': np.array([0, 0, 255])}],
+            6: [{'name': 'red', 'rgb': np.array([255, 0, 0])},
+                {'name': 'green', 'rgb': np.array([0, 255, 0])}],
+            7: [{'name': 'blue', 'rgb': np.array([0, 0, 255])},
+                {'name': 'red', 'rgb': np.array([255, 0, 0])}],
+            8: [{'name': 'green', 'rgb': np.array([0, 255, 0])},
+                {'name': 'blue', 'rgb': np.array([0, 0, 255])}],
+            9: [{'name': 'red', 'rgb': np.array([255, 0, 0])},
+                {'name': 'green', 'rgb': np.array([0, 255, 0])}]
+        }
+
+        # Define color map for testing with unseen colors
+        self.test_color_map = {
+            0: [{'name': 'blue', 'rgb': np.array([0, 0, 255])}],  # Color not seen with digit '0' in training
+            1: [{'name': 'green', 'rgb': np.array([0, 255, 0])}],  # Color not seen with digit '1' in training
+            2: [{'name': 'red', 'rgb': np.array([255, 0, 0])}],    # Color not seen with digit '2' in training
+            3: [{'name': 'blue', 'rgb': np.array([0, 0, 255])}],   # Color not seen with digit '3' in training
+            4: [{'name': 'green', 'rgb': np.array([0, 255, 0])}],  # Color not seen with digit '4' in training
+            5: [{'name': 'red', 'rgb': np.array([255, 0, 0])}],    # Color not seen with digit '5' in training
+            6: [{'name': 'blue', 'rgb': np.array([0, 0, 255])}],   # Color not seen with digit '6' in training
+            7: [{'name': 'green', 'rgb': np.array([0, 255, 0])}],  # Color not seen with digit '7' in training
+            8: [{'name': 'red', 'rgb': np.array([255, 0, 0])}],    # Color not seen with digit '8' in training
+            9: [{'name': 'blue', 'rgb': np.array([0, 0, 255])}]    # Color not seen with digit '9' in training
+        }
+
+
         # Get input layer class of model
         input_layer: Module = self.model.get_module(LayerNames.INPUT)
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
         # Training Dataset Setup with colorization
-        self.train_data_set: TensorDataset = input_layer.setup_colored_mnist(self.train_data, self.train_label, self.train_fname, self.train_size, self.dataset)
+        self.train_data_set: TensorDataset = input_layer.setup_colored_mnist(self.train_data, self.train_label, self.train_fname, self.train_size, self.dataset, self.train_color_map)
         self.train_data_loader: DataLoader = DataLoader(self.train_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
         
         # Testing Dataset Setup with colorization
-        self.test_data_set: TensorDataset = input_layer.setup_colored_mnist(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset)
+        self.test_data_set: TensorDataset = input_layer.setup_colored_mnist(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset, self.test_color_map)
         self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
