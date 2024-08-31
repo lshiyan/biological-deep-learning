@@ -60,6 +60,8 @@ class ExperimentTypes(Enum):
     BASE = 'BASE'
     GENERALIZATION = 'GENERALIZATION'
     FORGET = 'FORGET'
+    BAR_GENERALIZATION = 'BAR_GENERALIZATION'
+    COLOURED_MNIST = 'COLOURED_MNIST'
     
     
 class Purposes(Enum):
@@ -82,6 +84,7 @@ class ExperimentPhases(Enum):
     RECONSTRUCTION = 'RECONSTRUCTION'
     FREEZING_WEIGHTS = 'FREEZING_WEIGHTS'
     FORGET = 'FORGET'
+    BAR_GENERALIZATION = 'BAR_GENERALIZATION'
 
 
 class ParamInit(Enum):
@@ -110,6 +113,8 @@ class DataSets(Enum):
     MNIST = 'MNIST'
     E_MNIST = 'E_MNIST'
     FASHION_MNIST = 'FASHION_MNIST'
+    COLOURED_MNIST = 'COLOURED_MNIST'
+    BAR_DATASET = 'BAR_DATASET'
     
     
 class ActivationMethods(Enum):

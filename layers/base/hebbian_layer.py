@@ -518,6 +518,7 @@ class HebbianLayer(HiddenLayer):
         y: torch.Tensor = output.clone().detach().float().squeeze().to(self.device)
         y.requires_grad_(False)
         
+        # Outer product between output (y) and input (x)
         outer_prod: torch.Tensor = torch.einsum("i, j -> ij", y, x).to(self.device)
         
         # Retrieve initial weights
@@ -528,7 +529,7 @@ class HebbianLayer(HiddenLayer):
 
         # Compute scaling terms
         scaling_terms: torch.Tensor = W_norms.reshape(self.output_dimension, 1).to(self.device) / \
-                                    (W_norms.reshape(1, self.output_dimension).to(self.device) + 10e-8)
+                                    (W_norms.reshape(1, self.output_dimension).to(self.device) + 1e-8)
         
         # Remove the diagonal so as to not have weights subtracting themselves
         remove_diagonal: torch.Tensor = (torch.ones(self.output_dimension, self.output_dimension) - 
@@ -542,6 +543,7 @@ class HebbianLayer(HiddenLayer):
         # Remove diagonal elements so weights do not subtract themselves
         scaled_weight: torch.Tensor = scaled_weight * remove_diagonal.to(self.device)
 
+        # Compute the norm term
         norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, scaled_weight).to(self.device)
 
         # Calculate Eta Norm
@@ -555,7 +557,6 @@ class HebbianLayer(HiddenLayer):
                                             (1 - self.gamma) * y)
         
         return computed_rule.to(self.device)
-
 
 
     #################################################################################################

@@ -152,6 +152,9 @@ class HebbianNetwork(Network):
         hebbian_layer = self.get_module(LayerNames.HIDDEN)
         classification_layer = self.get_module(LayerNames.OUTPUT)
 
+        # Flatten the input if necessary
+        input = input.view(input.size(0), -1)  # Flatten input to (batch_size, 3*28*28)
+        
         if not reconstruct:
             input = input.to(self.device)
             input = hebbian_layer(input, freeze=freeze)

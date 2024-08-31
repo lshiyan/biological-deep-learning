@@ -1,13 +1,17 @@
 import subprocess
 
+import torch._dynamo
+print("torch._dynamo module is available.")
+
+
 # Create log
-script_name = 'train_base.py'
+script_name = 'train_coloured_base.py'  # Change to your new training script
 
 # Simulate the command line arguments
 arguments = [
             # Basic configurations  
-            "--data_name=MNIST",
-            "--experiment_name=TESTING_SOFT_HEBB",
+            "--data_name=MNIST",  # Indicate that this is the Coloured MNIST experiment
+            "--experiment_name=COLOURED_MNIST_EXPERIMENT",
             # Data Factory - MNIST
             "--train_data=data/mnist/train-images.idx3-ubyte", 
             "--train_label=data/mnist/train-labels.idx1-ubyte", 
@@ -16,33 +20,11 @@ arguments = [
             "--train_size=60000",
             "--test_size=10000",
             "--classes=10",
-            # # Data Factory - FASHION-MNIST
-            # "--train_data=data/fashion_mnist/train-images.idx3-ubyte", 
-            # "--train_label=data/fashion_mnist/train-labels.idx1-ubyte", 
-            # "--test_data=data/fashion_mnist/test-images.idx3-ubyte", 
-            # "--test_label=data/fashion_mnist/test-labels.idx1-ubyte", 
-            # "--train_size=60000",
-            # "--test_size=10000",
-            # "--classes=10",
-            # # Data Factory - E-MNIST
-            # "--train_data=data/ext_mnist/train-images.idx3-ubyte", 
-            # "--train_label=data/ext_mnist/train-labels.idx1-ubyte", 
-            # "--test_data=data/ext_mnist/test-images.idx3-ubyte", 
-            # "--test_label=data/ext_mnist/test-labels.idx1-ubyte", 
-            # "--train_size=88800",
-            # "--test_size=14800",
-            # "--classes=26",
             # CSV files generated - MNIST
             "--train_fname=data/mnist/mnist_train.csv",
             "--test_fname=data/mnist/mnist_test.csv",
-            # # CSV files generated - E-MNIST
-            # "--train_fname=data/ext_mnist/ext_mnist_train.csv",
-            # "--test_fname=data/ext_mnist/ext_mnist_test.csv",
-            # # CSV files generated - FASHION-MNIST
-            # "--train_fname=data/fashion_mnist/fashion_mnist_train.csv",
-            # "--test_fname=data/fashion_mnist/fashion_mnist_test.csv",
             # Dimension of each layer
-            '--input_dim=784', 
+            '--input_dim=2352', 
             '--heb_dim=64', 
             '--output_dim=10',
             # Hebbian layer hyperparameters  
@@ -54,7 +36,6 @@ arguments = [
             '--heb_growth=linear',
             '--heb_focus=neuron',
             '--heb_act=normalized',
-            '--heb_rho=0.1',
             # Classification layer hyperparameters
             '--class_learn=OUTPUT_CONTRASTIVE',
             '--class_growth=exponential',
@@ -70,12 +51,12 @@ arguments = [
             '--mu=0',
             '--init=uniform',
             # Experiment parameters
-            '--batch_size=1',
-            '--epochs=1', 
+            '--batch_size=1',  # Adjust batch size if needed
+            '--epochs=1',      # Increase epochs for a more thorough experiment
             '--device=cpu',
-            # '--device=cuda:5',
+            # '--device=cuda:5',  # Uncomment if using GPU
             '--local_machine=True',
-            '--experiment_type=base'
+            '--experiment_type=coloured_mnist'  # Specify the experiment type
             ]
 
 # Construct the command
@@ -86,4 +67,4 @@ result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
 
 # Print the output
 print("Standard Output:\n", result.stdout)
-print("Standard Error:\n", result.stderr) 
+print("Standard Error:\n", result.stderr)

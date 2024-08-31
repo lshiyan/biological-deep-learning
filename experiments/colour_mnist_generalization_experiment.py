@@ -2,19 +2,24 @@
 import os
 import time
 from typing import Tuple, Type, Union
+from matplotlib import transforms
+import matplotlib.pyplot as plt
 
 # Pytorch imports
 import torch
 from torch.nn import Module
 from torch.nn.functional import one_hot
 from torch.utils.data import DataLoader, TensorDataset
+from torchvision import transforms
+from torchvision import datasets
+import torchvision.datasets.utils as dataset_utils
+import numpy as np
 
 # Custom defined model imports
 from interfaces.experiment import Experiment
 from interfaces.layer import NetworkLayer
 from interfaces.network import Network
 from layers.input_layer import InputLayer
-
 from layers.base.data_setup_layer import DataSetupLayer
 
 # Utils imports
@@ -23,65 +28,9 @@ from utils.experiment_logger import *
 from utils.experiment_parser import *
 from utils.experiment_timer import *
 
-
-
-class BaseExperiment(Experiment):
-    """
-    CLASS
-    Experiment for base training and testing of model
-    @instance attr.
-        Experiment ATTR.
-            model (Network): model used in experiment
-            batch_size (int): size of each batch of data
-            epochs (int): number of epochs to train
-            test_sample (int): interval at which testing will be done
-            device (str): device that will be used for CUDA
-            local_machine (bool): where code is ran
-            experiment_type (ExperimentTypes): what type of experiment to be ran
-            
-            START_TIME (float): start time of experiment
-            END_TIMER (float): end of experiment
-            DURATION (float): duration of experiment
-            TRAIN_TIME (float): training time
-            TEST_ACC_TIME (float): testing time
-            TRAIN_ACC_TIME (float): testing time
-            EXP_NAME (str): experiment name
-            RESULT_PATH (str): where result files will be created
-            PRINT_LOG (logging.Logger): print log
-            TEST_LOG (logging.Logger): log with all test accuracy results
-            TRAIN_LOG (logging.Logger): log with all trainning accuracy results
-            PARAM_LOG (logging.Logger): parameter log for experiment
-            DEBUG_LOG (logging.Logger): debugging
-            EXP_LOG (logging.Logger): logging of experiment process
-        OWN ATTR.
-            data_name (str): name of dataset
-            train_data (str): path to train data
-            train_label (str): path to train label
-            train_fname (str): path to train filename
-            test_data (str): path to test data
-            test_label (str): path to test label
-            test_fname (str): path to test filename
-            
-            SAMPLES (int): number of samples seen in training
-            
-            train_data_set (TensorDataset): training dataset
-            train_data_loader (DataLoader): training dataloader
-            test_data_set (TensorDataset): testing dataset
-            test_data_loader (DataLoader): testing dataloader
-    """
-    ################################################################################################
-    # Constructor Method
-    ################################################################################################
+# Experiment Class for Colored MNIST
+class ColouredMnistExperiment(Experiment):
     def __init__(self, model: Network, args: argparse.Namespace, name: str) -> None:
-        """
-        CONTRUCTOR METHOD
-        @param
-            model: model to be trained and tested in experiment
-            args: all arguments passed for experiment
-            name: name of experiment
-        @return
-            None
-        """
         super().__init__(model, args, name)
         self.SAMPLES: int = 0
         
@@ -98,23 +47,61 @@ class BaseExperiment(Experiment):
         self.train_fname = args.train_fname
         self.test_fname = args.test_fname
         
+
+        # Define color map for training
+        self.train_color_map = {
+            0: [{'name': 'red', 'rgb': np.array([255, 0, 0])},
+                {'name': 'green', 'rgb': np.array([0, 255, 0])}],
+            1: [{'name': 'blue', 'rgb': np.array([0, 0, 255])},
+                {'name': 'red', 'rgb': np.array([255, 0, 0])}],
+            2: [{'name': 'green', 'rgb': np.array([0, 255, 0])},
+                {'name': 'blue', 'rgb': np.array([0, 0, 255])}],
+            3: [{'name': 'red', 'rgb': np.array([255, 0, 0])},
+                {'name': 'green', 'rgb': np.array([0, 255, 0])}],
+            4: [{'name': 'blue', 'rgb': np.array([0, 0, 255])},
+                {'name': 'red', 'rgb': np.array([255, 0, 0])}],
+            5: [{'name': 'green', 'rgb': np.array([0, 255, 0])},
+                {'name': 'blue', 'rgb': np.array([0, 0, 255])}],
+            6: [{'name': 'red', 'rgb': np.array([255, 0, 0])},
+                {'name': 'green', 'rgb': np.array([0, 255, 0])}],
+            7: [{'name': 'blue', 'rgb': np.array([0, 0, 255])},
+                {'name': 'red', 'rgb': np.array([255, 0, 0])}],
+            8: [{'name': 'green', 'rgb': np.array([0, 255, 0])},
+                {'name': 'blue', 'rgb': np.array([0, 0, 255])}],
+            9: [{'name': 'red', 'rgb': np.array([255, 0, 0])},
+                {'name': 'green', 'rgb': np.array([0, 255, 0])}]
+        }
+
+        # Define color map for testing with unseen colors
+        self.test_color_map = {
+            0: [{'name': 'blue', 'rgb': np.array([0, 0, 255])}],  # Color not seen with digit '0' in training
+            1: [{'name': 'green', 'rgb': np.array([0, 255, 0])}],  # Color not seen with digit '1' in training
+            2: [{'name': 'red', 'rgb': np.array([255, 0, 0])}],    # Color not seen with digit '2' in training
+            3: [{'name': 'blue', 'rgb': np.array([0, 0, 255])}],   # Color not seen with digit '3' in training
+            4: [{'name': 'green', 'rgb': np.array([0, 255, 0])}],  # Color not seen with digit '4' in training
+            5: [{'name': 'red', 'rgb': np.array([255, 0, 0])}],    # Color not seen with digit '5' in training
+            6: [{'name': 'blue', 'rgb': np.array([0, 0, 255])}],   # Color not seen with digit '6' in training
+            7: [{'name': 'green', 'rgb': np.array([0, 255, 0])}],  # Color not seen with digit '7' in training
+            8: [{'name': 'red', 'rgb': np.array([255, 0, 0])}],    # Color not seen with digit '8' in training
+            9: [{'name': 'blue', 'rgb': np.array([0, 0, 255])}]    # Color not seen with digit '9' in training
+        }
+
+
         # Get input layer class of model
         input_layer: Module = self.model.get_module(LayerNames.INPUT)
         input_class: Type[InputLayer] = globals()[input_layer.__class__.__name__]
         
-        # Training Dataset Setup
-        self.train_data_set: TensorDataset = input_class.setup_data(self.train_data, self.train_label, self.train_fname, self.train_size, self.dataset)
+        # Training Dataset Setup with colorization
+        self.train_data_set: TensorDataset = input_layer.setup_colored_mnist(self.train_data, self.train_label, self.train_fname, self.train_size, self.dataset, self.train_color_map)
         self.train_data_loader: DataLoader = DataLoader(self.train_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for training dataset and dataloader.")
         
-        # Testing Dataset Setup
-        self.test_data_set: TensorDataset = input_class.setup_data(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset)
+        # Testing Dataset Setup with colorization
+        self.test_data_set: TensorDataset = input_layer.setup_colored_mnist(self.test_data, self.test_label, self.test_fname, self.test_size, self.dataset, self.test_color_map)
         self.test_data_loader: DataLoader = DataLoader(self.test_data_set, batch_size=self.batch_size, shuffle=True)
         self.EXP_LOG.info("Completed setup for testing dataset and dataloader.")
 
         self.DEBUG_LOG.info(f"DEVICE USED: {self.device}")
-
-
 
     ################################################################################################
     # Phase 1 Training and Testing: Base (Hebbian and Classification Layers)
@@ -136,7 +123,7 @@ class BaseExperiment(Experiment):
         @return
             None
         """
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning', False)
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning', True)
 
         train_epoch_start: float = self.TRAIN_TIME
         
@@ -149,6 +136,8 @@ class BaseExperiment(Experiment):
 
         # Loop through training batches
         for inputs, labels in train_data_loader:
+
+            self.DEBUG_LOG.info(f"Input shape before model: {inputs.shape}")  # Print input shape before model
 
             # Test model at intervals of samples seen
             if self.check_test(self.SAMPLES):
@@ -243,7 +232,7 @@ class BaseExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
         
-        #if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower())
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower(), True)
         
         return final_accuracy
     
@@ -365,7 +354,7 @@ class BaseExperiment(Experiment):
             self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE)
         
         self.EXP_LOG.info("Completed training of model.")        
-        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final', False)
+        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final', True)
         self.EXP_LOG.info("Visualize weights of model after training.")
         
     

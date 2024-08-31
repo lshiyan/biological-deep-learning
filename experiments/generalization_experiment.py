@@ -236,7 +236,7 @@ class GeneralizationExperiment(Experiment):
         @return
             None
         """
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'rec_learning')
+        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'rec_learning', False)
         
         train_start: float = time.time()
         self.EXP_LOG.info(f"Started 'reconstruct_train' function with {dname.upper()}.")
@@ -643,7 +643,7 @@ class GeneralizationExperiment(Experiment):
             self._testing(self.ext_test_data_loader, Purposes.TEST_ACCURACY, self.ext_data_name, ExperimentPhases.FREEZING_WEIGHTS)
 
         self.EXP_LOG.info("Completed training of model.")        
-        self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, 'final')
+        self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, 'final', False)
         self.EXP_LOG.info("Visualize weights of model after training.")
         
     
