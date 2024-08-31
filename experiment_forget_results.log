@@ -1,2 +1,0 @@
-2024-08-16 18:54:36,654 - All subprocesses have completed.
-2024-08-16 18:55:34,815 - Started process with PID: 39334 on GPU: 2 | Lambda: 16, LR: 0.003, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron

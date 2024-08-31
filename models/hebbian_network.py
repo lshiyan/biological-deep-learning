@@ -64,6 +64,7 @@ class HebbianNetwork(Network):
         self.heb_lamb: float = args.heb_lamb
         self.heb_eps: float = args.heb_eps
         self.heb_gam: float = args.heb_gam
+        self.heb_rho: float = args.heb_rho
         self.heb_inhib: LateralInhibitions = inhibition_mapping[args.heb_inhib.upper()]
         self.heb_learn: LearningRules = learning_rule_mapping[args.heb_learn.upper()]
         self.heb_growth: WeightGrowth = weight_growth_mapping[args.heb_growth.upper()]
@@ -107,7 +108,8 @@ class HebbianNetwork(Network):
                                                   self.heb_growth,
                                                   self.heb_bias_update,
                                                   self.heb_focus,
-                                                  self.heb_act)
+                                                  self.heb_act,
+                                                  self.heb_rho)
         classification_layer: OutputLayer = ClassificationLayer(self.heb_dim, 
                                                                 self.output_dim, 
                                                                 self.device, 

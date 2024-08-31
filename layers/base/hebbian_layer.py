@@ -61,7 +61,8 @@ class HebbianLayer(HiddenLayer):
                  weight_growth: WeightGrowth = WeightGrowth.LINEAR,
                  bias_update: BiasUpdate = BiasUpdate.NO_BIAS,
                  focus: Focus = Focus.SYNASPSE,
-                 activation: ActivationMethods = ActivationMethods.BASIC
+                 activation: ActivationMethods = ActivationMethods.BASIC,
+                 rho: float = 0.01
                  ) -> None:
         """
         CONSTRUCTOR METHOD
@@ -104,6 +105,8 @@ class HebbianLayer(HiddenLayer):
         self.exponential_average: torch.Tensor = torch.zeros(self.output_dimension).to(self.device)
 
         self.normalized_weights: torch.Tensor = self.normalize(self.fc.weight).to(self.device)
+
+        self.rho: float = rho
         
 
 
@@ -488,10 +491,10 @@ class HebbianLayer(HiddenLayer):
         norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, sanger_scaled_weight)
         
         # Calculate Eta Norm
-        #eta_norm_term: torch.Tensor = norm_term * (100)
+        eta_norm_term: torch.Tensor = norm_term * self.rho
 
         # Compute change in weights
-        computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
+        computed_rule: torch.Tensor = (outer_prod - eta_norm_term).to(self.device)
         
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
@@ -540,9 +543,12 @@ class HebbianLayer(HiddenLayer):
         scaled_weight: torch.Tensor = scaled_weight * remove_diagonal.to(self.device)
 
         norm_term: torch.Tensor = torch.einsum("i, k, ikj -> ij", y, y, scaled_weight).to(self.device)
+
+        # Calculate Eta Norm
+        eta_norm_term: torch.Tensor = norm_term * self.rho
         
         # Compute change in weights
-        computed_rule: torch.Tensor = (outer_prod - norm_term).to(self.device)
+        computed_rule: torch.Tensor = (outer_prod - eta_norm_term).to(self.device)
         
         # Update exponential averages
         self.exponential_average = torch.add(self.gamma * self.exponential_average.to(self.device), 

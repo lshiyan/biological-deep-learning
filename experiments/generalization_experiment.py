@@ -154,7 +154,7 @@ class GeneralizationExperiment(Experiment):
             
             # Log the chosen classes
             self.chosen_classes_log = dict(zip(updated_class, letter_class))
-            
+
         elif self.dataset == DataSets.FASHION_MNIST:
             original_data = [0, 1, 2, 3, 4]
             updated_data = [(num % 5) for num in original_data]
@@ -354,7 +354,7 @@ class GeneralizationExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Reconstruction Samples Seen: {self.REC_SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: cos-sim = {cos_error}, norm = {norm_error}')
         
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES, f'rec_{purpose.name.lower()}')
+        #if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES, f'rec_{purpose.name.lower()}')
         
         return (cos_error, norm_error)
     
@@ -380,7 +380,7 @@ class GeneralizationExperiment(Experiment):
         @return
             None
         """
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'freeze_learning')
+        #if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'freeze_learning')
         
         train_start: float = time.time()
         self.EXP_LOG.info(f"Started 'freeze_train' function with {dname.upper()}.")
@@ -481,7 +481,7 @@ class GeneralizationExperiment(Experiment):
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.FREEZE_SAMPLES} || Dataset: {dname.upper()} || Freeze Train Accuracy: {final_accuracy}')
         
 
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, f'freeze_{purpose.name.lower()}')
+        #if visualize: self.model.visualize_weights(self.RESULT_PATH, self.REC_SAMPLES + self.FREEZE_SAMPLES, f'freeze_{purpose.name.lower()}')
 
         return final_accuracy
     

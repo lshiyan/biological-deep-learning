@@ -54,6 +54,7 @@ arguments = [
             '--heb_growth=linear',
             '--heb_focus=neuron',
             '--heb_act=normalized',
+            '--heb_rho=0.1',
             # Classification layer hyperparameters
             '--class_learn=OUTPUT_CONTRASTIVE',
             '--class_growth=exponential',

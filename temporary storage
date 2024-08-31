@@ -4,20 +4,23 @@ import logging
 import sys
 
 # Set up logging
-logging.basicConfig(filename='experiment_results_gen.log', level=logging.INFO, format='%(asctime)s - %(message)s')
+logging.basicConfig(filename='experiment_forget_results.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # Define the base script name
-script_name = 'train_gen.py'
+script_name = 'train_forget.py'
+
+# 0.5, 1, 2, 4, 8, 16, 32, 64, 128
 
 # Define the values for the parameters you want to vary
-lambda_values = [0.5, 1, 2, 4, 8, 16, 32, 64, 128]
-heb_learn_values = ['orthogonal']
-heb_growth_values = ['exponential']
-clas_growth_values = ['exponential']
-heb_focus_values = ['synapse']
+lambda_values = [0.5]
+heb_learn_values = ['sanger']
+heb_growth_values = [ 'linear']
+clas_growth_values = ['linear']
+heb_focus_values = ['neuron']
 heb_inhib_values = ['RELU']
-class_focus_values = ['synapse']
-learning_rate_values = [0.003]
+class_focus_values = ['neuron']
+learning_rate_values = [0.01]
+rho_values = [0.03]
 
 # Generate all possible combinations of parameters
 parameter_combinations = list(itertools.product(
@@ -28,11 +31,12 @@ parameter_combinations = list(itertools.product(
     heb_focus_values,
     heb_inhib_values,
     class_focus_values,
-    learning_rate_values
+    learning_rate_values,
+    rho_values
 ))
 
-# Limit the number of concurrent processes
-max_concurrent_processes = 5
+# Set the number of concurrent processes to 8
+max_concurrent_processes = 10
 
 # Get the current Python interpreter from the virtual environment
 python_executable = sys.executable
@@ -46,13 +50,13 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
     batch = parameter_combinations[i:i + max_concurrent_processes]
     
     for combination in batch:
-        lmbda, heb_learn, heb_growth, clas_growth, heb_focus, heb_inhib, class_focus, lr = combination
+        lmbda, heb_learn, heb_growth, clas_growth, heb_focus, heb_inhib, class_focus, lr, rho = combination
+
 
         # Construct the complete set of arguments including the varying parameter
         arguments = [
             '--data_name=MNIST',
-            '--ext_data_name=EXT_MNIST',
-            '--experiment_name=_GEN_SYNAPSE_EXP_EXP_',
+            '--experiment_name=_FORGET_NEURON_LINEAR_LINEAR_',
             '--train_data=data/mnist/train-images.idx3-ubyte',
             '--train_label=data/mnist/train-labels.idx1-ubyte',
             '--test_data=data/mnist/test-images.idx3-ubyte',
@@ -60,27 +64,20 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
             '--train_size=60000',
             '--test_size=10000',
             '--classes=10',
-            '--ext_train_data=data/ext_mnist/train-images.idx3-ubyte',
-            '--ext_train_label=data/ext_mnist/train-labels.idx1-ubyte',
-            '--ext_test_data=data/ext_mnist/test-images.idx3-ubyte',
-            '--ext_test_label=data/ext_mnist/test-labels.idx1-ubyte',
-            '--ext_train_size=88800',
-            '--ext_test_size=14800',
-            '--ext_classes=26',
             '--train_fname=data/mnist/mnist_train.csv',
             '--test_fname=data/mnist/mnist_test.csv',
-            '--ext_train_fname=data/ext_mnist/ext_mnist_train.csv',
-            '--ext_test_fname=data/ext_mnist/ext_mnist_test.csv',
             '--input_dim=784',
             '--heb_dim=64',
             '--output_dim=10',
             '--heb_gam=0.99',
             '--heb_eps=0.0001',
+            '--sub_experiment_scope_list=[[0,1],[2,3],[4,5],[6,7],[8,9]]',  # Specify sub-experiment scopes for forgetting
             f'--heb_inhib={heb_inhib}',
             f'--heb_focus={heb_focus}',
             f'--heb_growth={heb_growth}',
             f'--heb_learn={heb_learn}',
             f'--heb_lamb={lmbda}',
+            f'--heb_rho={rho}',
             '--heb_act=normalized',
             '--class_learn=OUTPUT_CONTRASTIVE',
             f'--class_growth={clas_growth}',
@@ -90,19 +87,19 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
             f'--lr={lr}',
             '--sigmoid_k=1',
             '--alpha=0',
-            '--beta=10e-2',
+            '--beta=0.01',
             '--sigma=1',
             '--mu=0',
             '--init=uniform',
             '--batch_size=1',
             '--epochs=10',
-            f'--device=cuda:{gpu_id}',  # Use the specified GPU
+            f'--device=cuda:{gpu_id}',  # Use the specified GPU or CPU
             '--local_machine=True',
-            '--experiment_type=generalization'
+            '--experiment_type=forget'
         ]
 
         # Construct the command with nice
-        command = ['nice', '-n', '3', python_executable, script_name] + arguments
+        command = ['nice', '-n', '1', python_executable, script_name] + arguments
 
         try:
             # Start the process
@@ -124,3 +121,8 @@ for i in range(0, len(parameter_combinations), max_concurrent_processes):
             logging.error(f"Failed to complete process with PID: {process.pid}. Error: {str(e)}")
 
 logging.info("All subprocesses have completed.")
+
+
+
+
+

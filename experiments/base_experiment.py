@@ -243,7 +243,7 @@ class BaseExperiment(Experiment):
         if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
         if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
         
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower())
+        #if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower())
         
         return final_accuracy
     

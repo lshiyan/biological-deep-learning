@@ -298,7 +298,7 @@ class ForgetExperiment(Experiment):
 
             final_accuracy = correct_test_count/total_test_count
             
-            if (final_accuracy > 0.95) and (purpose == Purposes.TRAIN_ACCURACY):
+            if (final_accuracy >= 0.95) and (purpose == Purposes.TRAIN_ACCURACY):
                 self.keep_training = False
 
         test_end = time.time()
