@@ -367,7 +367,7 @@ def main(args, timer, hyperps):
 
         hyperp = hyperps[rank]
 
-        model = CNN.CNNBaseline_Model(inputsize=28, kernel=[4,3,4], stride=[2,1,1], inchannel=[1,8,16], outchannel=[8,16,32], lambd=hyperp[0], lr=hyperp[1], gamma=0.99, epsilon=0.01, 
+        model = CNN.CNNBaseline_Model(inputsize=(1, 28, 28), kernels=[5,3,3], channels=[16,64,256], strides=[2,2,2], padding=[0, 1, 0], lambd=hyperp[0], lr=hyperp[1], gamma=0.99, epsilon=0.01,
             rho=hyperp[2], nbclasses=10, topdown=True, device=args.device_id, wl=hyperp[4], ws=hyperp[5], o=hyperp[3])
 
         model = model.to(args.device_id)
