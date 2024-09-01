@@ -688,7 +688,7 @@ def CNNBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, imgtyp
             #    return mymodel
     
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    foldername = os.getcwd() + '/SavedModels/MLP_FF_' + dataset + '_' + timestr
+    foldername = os.getcwd() + '/SavedModels/CNN_FF_' + dataset + '_' + timestr
     os.mkdir(foldername)
 
     torch.save(mymodel.state_dict(), foldername + '/model')
