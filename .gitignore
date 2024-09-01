@@ -2,6 +2,7 @@
 data/FashionMNIST
 data/cifar-100-python
 data/cifar-10-batches-py
+data
 
 # Large binary dataset files
 data/cifar-10-python.tar.gz

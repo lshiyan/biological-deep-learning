@@ -66,8 +66,8 @@ if __name__ == "__main__":
                                   rho=0.001, nbclasses=10, topdown=False, device="cpu",
                                   learningrule=CNN.Learning.FullyOrthogonal,
                                   weightscaling=CNN.WeightScale.WeightNormalization,
-                                  outputlayerrule=CNN.ClassifierLearning.Contrastive)
+                                  outputlayerrule=CNN.ClassifierLearning.Contrastive, triangle=False)
     mymodelCNN = CNN.CNNBaseline_Experiment(epoch=1, mymodel=model, dataloader=train_dataloader, dataset='FashionMNIST',
                                       nclasses=10, imgtype=CNN.ImageType.Gray)
     print(CNN.CNN_Baseline_test(mymodel=mymodelCNN, data_loader=test_dataloader, imgtype=CNN.ImageType.Gray,
-                                topdown=True))
+                                topdown=False))
