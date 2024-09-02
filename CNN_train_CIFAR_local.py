@@ -62,14 +62,15 @@ def get_args_parser(add_help=True):
 
 if __name__ == "__main__":
     #args = get_args_parser().parse_args()
-
-    model = CNN.CNNBaseline_Model(inputshape=(3, 32, 32), kernels=[5, 3, 3], channels=[96, 384, 1536], strides=[2, 2, 2],
-                                  padding=[0, 0, 0], lambd=12, lr=0.005, gamma=0.99, epsilon=0.01,
+    # channels = [96, 384, 1536]
+    model = CNN.CNNBaseline_Model(inputshape=(3, 32, 32), kernels=[5, 3, 3], channels=[32, 128, 512], strides=[2, 2, 2],
+                                  padding=[0, 0, 0], lambd=4, lr=0.001, gamma=0.99, epsilon=0.01,
                                   rho=0.001, nbclasses=10, topdown=False, device="cpu",
                                   learningrule=CNN.Learning.SoftHebb,
-                                  weightscaling=CNN.WeightScale.No,
-                                  outputlayerrule=CNN.ClassifierLearning.SoftHebb)
-    mymodelCNN = CNN.CNNBaseline_Experiment(epoch=1, mymodel=model, dataloader=train_dataloader, dataset='CIFAR10',
-                                      nclasses=10, imgtype=CNN.ImageType.RGB)
+                                  weightscaling=CNN.WeightScale.WeightNormalization,
+                                  outputlayerrule=CNN.ClassifierLearning.SoftHebb, triangle=True, whiten_input=True)
+    mymodelCNN = CNN.CNNBaseline_Testing(epoch=1, mymodel=model, dataloader=train_dataloader, testloader= test_dataloader,
+                                         dataset='CIFAR10',
+                                      nclasses=10, imgtype=CNN.ImageType.RGB, topdown=False)
     print(CNN.CNN_Baseline_test(mymodel=mymodelCNN, data_loader=test_dataloader, imgtype=CNN.ImageType.RGB,
                                 topdown=False))
