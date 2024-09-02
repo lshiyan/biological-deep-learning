@@ -14,8 +14,7 @@ import matplotlib.pyplot as plt
 import torch.nn.functional as F
 
 transform = transforms.Compose(
-    [transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    [transforms.ToTensor()])
 
 train_dataset = datasets.CIFAR10(root='./data', train=True,
                                         download=True, transform=transform)
@@ -64,11 +63,11 @@ if __name__ == "__main__":
     #args = get_args_parser().parse_args()
     # channels = [96, 384, 1536]
     model = CNN.CNNBaseline_Model(inputshape=(3, 32, 32), kernels=[5, 3, 3], channels=[32, 128, 512], strides=[2, 2, 2],
-                                  padding=[0, 0, 0], lambd=4, lr=0.001, gamma=0.99, epsilon=0.01,
-                                  rho=0.001, nbclasses=10, topdown=False, device="cpu",
+                                  padding=[0, 0, 0], lambd=4, lr=0.001, gamma=0.99, epsilon=0.01, b=1,
+                                  rho=0.001, nbclasses=10, topdown=False, device="cpu", eta=1,
                                   learningrule=CNN.Learning.SoftHebb,
                                   weightscaling=CNN.WeightScale.WeightNormalization,
-                                  outputlayerrule=CNN.ClassifierLearning.SoftHebb, triangle=True, whiten_input=True)
+                                  outputlayerrule=CNN.ClassifierLearning.SoftHebb, triangle=False, whiten_input=False)
     mymodelCNN = CNN.CNNBaseline_Testing(epoch=1, mymodel=model, dataloader=train_dataloader, testloader= test_dataloader,
                                          dataset='CIFAR10',
                                       nclasses=10, imgtype=CNN.ImageType.RGB, topdown=False)
