@@ -36,7 +36,7 @@ class WeightScale(Enum):
 def oneHotEncode(labels, num_classes, device):
     one_hot_encoded = torch.zeros(len(labels), num_classes).to(device)
     one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
-    return one_hot_encoded.squeeze()
+    return one_hot_encoded
 
 def update_weight_softhebb(input, preactivation, output, weight):
     # input_shape = batch, in_dim
@@ -44,10 +44,12 @@ def update_weight_softhebb(input, preactivation, output, weight):
     # weight_shape = out_dim, in_dim
     b, indim = input.shape
     b, outdim = output.shape
-    norms = torch.norm(weight, dim=1, keepdim=True)
+    W = weight / torch.norm(weight, dim=1, keepdim=True)
+    xn = input / (torch.norm(input, dim=1, keepdim=True) + 1e-9)
+    u = torch.matmul(xn, W.T)
     y = output.reshape(b, outdim, 1)
-    x = input.reshape(b, 1, indim)
-    deltas = y * (x - torch.matmul(torch.relu(preactivation), weight).reshape(b, 1, indim))
+    x = xn.reshape(b, 1, indim)
+    deltas = y * (x - torch.matmul(torch.relu(u), W).reshape(b, 1, indim))
     delta = torch.mean(deltas, dim=0)
     return delta
 
@@ -109,7 +111,7 @@ class ConvolutionalNeuralNet(nn.Module):
                     u, x = layers[idx].TD_forward(x, h_l)
                     hlist[idx] = x.clone()
                     ulist[idx] = u.clone()
-                lastu, prediction = layers[-1].forward(hlist[-2])
+                lastu, prediction = layers[-1].TD_forward(hlist[-2], None)
                 if clamped_output is None:
                     hlist[-1] = prediction.clone()
                 ulist[-1] = lastu.clone()
@@ -128,10 +130,13 @@ class ConvolutionalNeuralNet(nn.Module):
         for i in range(nb_layers - 2):
             layers[i].set_TD_factor(layers[i+1].fold_unfold_divisor)
 
-    def TD_forward(self, x, clamped):
-        self.initialize_TD_weights()
-        hlist, x_L = self.TD_inference(x, clamped)
-        self.update_weights(x, hlist, x_L)
+    def TD_forward(self, x, clamped=None, update_weights=True):
+        with torch.no_grad():
+            self.initialize_TD_weights()
+            ulist, hlist, prediction = self.TD_inference(x, clamped_output=clamped)
+            if update_weights:
+                self.update_weights(x, hlist, ulist, prediction)
+            return prediction
     
     def update_weights(self, inp, hlist, ulist, prediction):
         layers = list(self.layers.values())
@@ -141,29 +146,13 @@ class ConvolutionalNeuralNet(nn.Module):
             i = hlist[idx]
             u = ulist[idx]
             o = hlist[idx+1]
-            layers[idx].update_weights(i, None, o, u)
-        i = hlist[-2].squeeze().squeeze().reshape(-1)
-        layers[-1].update_weights(i, hlist[-1], prediction, ulist[-1])
+            layers[idx].update_weights(i, u, o, None)
+        i = hlist[-2].reshape(hlist[-2].shape[0], -1)
+        layers[-1].update_weights(i, ulist[-1], prediction, hlist[-1])
         #layers[-1].weight_decay()
         
     def TD_forward_test(self, x):
-        with torch.no_grad():
-            input = x.clone()
-            layers = list(self.layers.values())
-            nb_layers = len(layers)
-            hlist = [None]*nb_layers
-            for _ in range(self.iteration):
-                x = input
-                for idx in range(nb_layers-1):
-                    h_l = hlist[idx+1]
-                    _, x = layers[idx].TD_forward(x, h_l)
-                    hlist[idx] = x
-                x_l = layers[-2].TD_forward(hlist[-3], hlist[-1], layers[-1].feedforward.weight)
-                #x_l = layers[-2].forward_test(hlist[-3])
-                hlist[-2] = x_l
-                x_L = layers[-1].forward_test(hlist[-2])
-                hlist[-1] = x_L
-            return hlist[-1]
+        return self.TD_forward(x, update_weights=False)
     
     def set_iteration(self, i):
         self.iteration = i
@@ -379,12 +368,14 @@ class Hebbian_Layer(nn.Module):
         return x
     
     def TD_forward(self, x, h_l):
+        if len(x.shape) > 2:
+            x = x.reshape(x.shape[0], -1)
         if h_l is None:
-            u = self.feedforward(x, update_weights=False)
+            u = self.feedforward(x)
         else :
             #print(self.feedforward(x))
             #print(torch.matmul(h_l, w))
-            u = self.feedforward(x, update_weights=False) + self.rho * torch.matmul(h_l, self.W_TD)
+            u = self.feedforward(x) + self.rho * torch.matmul(h_l, self.W_TD)
         y = self.inhibition(u)
         return u, y
     
@@ -690,7 +681,7 @@ class ConvolutionHebbianLayer(nn.Module):
     
     def top_down_fct(self, h_l):
         if self.convolutionTD:
-            raw_td = self.convolutionTD(h_l)
+            raw_td = self.convolutionTD(h_l, output_size=self.output_shape)
             return raw_td / (self.top_down_factor + 1e-9)
         else:
             h = torch.matmul(h_l, self.W_TD)
@@ -698,12 +689,13 @@ class ConvolutionHebbianLayer(nn.Module):
 
     def TD_forward(self, x, h_l):
         if h_l == None:
-            output = self.forward(x, update_weights=False)
+            u = self.convolution.forward(x)
         else:
             td_component = self.top_down_fct(h_l)
             ff_component = self.convolution.forward(x)
-            output = self.rho*td_component+ff_component
-        return output
+            u = self.rho*td_component+ff_component
+        y = self.inhibition(u)
+        return u, y
     
     def visualize_filters(self, w1):
         fig, axes = plt.subplots(w1.size(1), w1.size(0), figsize=(20, 15))
@@ -748,7 +740,8 @@ def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None,
                                             epsilon, rho, eta=eta, device=device, padding=pad, weightlearning=learningrule,
                                             weightscaling=weightscaling, triangle=triangle, whiten_input=whiten_input, b=b)
         if topdown and layer_id < len(kernels):
-            convlayer.Set_TD(inc=channels[layer_id], outc=out_chan, kernel=kernels[layer_id], stride=stride[layer_id])
+            convlayer.Set_TD(inc=channels[layer_id], outc=out_chan, kernel=kernels[layer_id], stride=strides[layer_id])
+        convlayer.normalize_weights()
         mycnn.add_layer(f"CNNLayer{layer_id}", convlayer)
         layer_id += 1
         input_channels = out_chan
@@ -795,18 +788,23 @@ def Save_Model(mymodel, dataset, rank, topdown, v_input, device, acc):
 
 
 
-def CNNBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, imgtype):
+def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, imgtype, traintopdown=False, testtopdown=False):
 
     mymodel.train()
-    cn = 0
+    samples = 0
     for _ in range(epoch):
         for data in tqdm(dataloader):
+            if samples in [0, 10, 100, 1000, 10000, 20000, 30000]:
+                print(CNN_Baseline_test(mymodel, testloader, imgtype, testtopdown))
             inputs, labels=data
             #print(inputs)
             if imgtype == ImageType.Gray:
                 inputs = inputs.reshape(1,1,28,28)
-            mymodel.forward(inputs, oneHotEncode(labels, nclasses, mymodel.device).unsqueeze(0))
-            #cn += 1
+            if traintopdown:
+                mymodel.TD_forward(inputs, clamped=oneHotEncode(labels, nclasses, mymodel.device))
+            else:
+                mymodel.forward(inputs, oneHotEncode(labels, nclasses, mymodel.device))
+            samples += 1
             #if cn == 10:
             #    return mymodel
     
@@ -818,33 +816,6 @@ def CNNBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, imgtyp
 
     #view_filters(mymodel, foldername)
     #view_ff_weights(mymodel, foldername, dataloader)
-    return mymodel
-
-
-def CNNBaseline_Testing(epoch, mymodel, dataloader, testloader, dataset, nclasses, imgtype, topdown):
-    mymodel.train()
-    samples = 0
-    for _ in range(epoch):
-        for data in tqdm(dataloader):
-            if samples in [0, 10, 100, 1000, 10000]:
-                print(CNN_Baseline_test(mymodel, testloader, imgtype, topdown))
-            inputs, labels = data
-            # print(inputs)
-            if imgtype == ImageType.Gray:
-                inputs = inputs.reshape(1, 1, 28, 28)
-            mymodel.forward(inputs, oneHotEncode(labels, nclasses, mymodel.device).unsqueeze(0))
-            samples += 1
-            # if cn == 10:
-            #    return mymodel
-
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    foldername = os.getcwd() + '/SavedModels/CNN_FF_' + dataset + '_' + timestr
-    os.mkdir(foldername)
-
-    torch.save(mymodel.state_dict(), foldername + '/model')
-
-    # view_filters(mymodel, foldername)
-    # view_ff_weights(mymodel, foldername, dataloader)
     return mymodel
 
 
