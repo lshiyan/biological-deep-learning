@@ -162,13 +162,11 @@ class SGDNetwork(nn.Module):
             return old_w
 
         # Apply the chosen derivative function, only to weights
-        if not is_bias:
-            derivative_value = self.derivative(old_w)
-            print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
-            new_weight = old_w - self.lr * derivative_value * grad  # Gradient descent
-        else:
-            # For biases, skip derivative application
-            new_weight = old_w - self.lr * grad
+
+        derivative_value = self.derivative(old_w)
+        print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
+        new_weight = old_w - self.lr * derivative_value * grad  # Gradient descent
+
 
         return new_weight
 
