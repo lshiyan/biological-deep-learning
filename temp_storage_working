@@ -52,19 +52,31 @@ from utils.experiment_constants import Focus
 from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LearningRules, ParamInit, WeightGrowth
 from layers.base.data_setup_layer import DataSetupLayer
 
+import argparse
+from typing import Optional
+import torch
+from interfaces.network import Network
+from layers.base.classification_layer import ClassificationLayer
+from layers.base.data_setup_layer import DataSetupLayer
+from layers.base.hebbian_layer import HebbianLayer
+from layers.hidden_layer import HiddenLayer
+from layers.input_layer import InputLayer
+from layers.output_layer import OutputLayer
+from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightDecay, WeightGrowth
+
+
+
 # Define growth functions outside the class for better structure
 def linear_growth(w: torch.Tensor) -> torch.Tensor:
     """Defines weight updates using a linear function."""
     return torch.ones_like(w)  # Returns a tensor of ones with the same shape as w
 
-
-def sigmoid_growth(w: torch.Tensor, plasticity: Focus, k: float) -> torch.Tensor:
+def sigmoid_growth(w: torch.Tensor, plasticity: 'Focus', k: float) -> torch.Tensor:
     """Defines weight updates using a sigmoid function."""
     if plasticity == Focus.SYNASPSE:
         weight = torch.abs(w) / k
         derivative = (1 - torch.min(torch.ones_like(w), weight)) * weight
     elif plasticity == Focus.NEURON:
-        # Handle 1D case
         if w.ndim == 1:
             print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
             norm = torch.norm(w / k)
@@ -83,15 +95,13 @@ def sigmoid_growth(w: torch.Tensor, plasticity: Focus, k: float) -> torch.Tensor
         raise ValueError("Invalid focus type.")
     return derivative
 
-def exponential_growth(w: torch.Tensor, plasticity: Focus) -> torch.Tensor:
+def exponential_growth(w: torch.Tensor, plasticity: 'Focus') -> torch.Tensor:
     """Defines weight updates using an exponential function."""
     if plasticity == Focus.SYNASPSE:
         derivative = torch.abs(w)
     elif plasticity == Focus.NEURON:
-        # Handle case where w is 1D
         if w.ndim == 1:
             print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
-            # Assume the input dimension should be the length of w
             input_dim = w.size(0)
             norm = torch.norm(w)
             scaled_norm = norm / math.sqrt(input_dim)
@@ -107,6 +117,7 @@ def exponential_growth(w: torch.Tensor, plasticity: Focus) -> torch.Tensor:
         raise ValueError("Invalid focus type.")
     return derivative
 
+
 class SGDNetwork(nn.Module):
     def __init__(self, name: str, args: argparse.Namespace) -> None:
         super(SGDNetwork, self).__init__()
@@ -119,10 +130,9 @@ class SGDNetwork(nn.Module):
         self.sig_k = args.sigmoid_k
         self.heb_focus = Focus[args.heb_focus.upper()]  # Assuming Focus is Enum
         self.heb_growth = WeightGrowth[args.heb_growth.upper()]  # Assuming WeightGrowth is Enum
+        self.heb_lamb: float = args.heb_lamb
 
         # Select the derivative function based on heb_growth
-        self.derivative = linear_growth  # Default to linear
-
         if self.heb_growth == WeightGrowth.LINEAR:
             self.derivative = linear_growth
         elif self.heb_growth == WeightGrowth.SIGMOID:
@@ -132,15 +142,10 @@ class SGDNetwork(nn.Module):
         else:
             raise ValueError(f"Growth type {self.heb_growth} not supported.")
 
-        # Set up layers
-        self.input_layer = DataSetupLayer()  # Example input layer
-        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim)
-        self.output_layer = nn.Linear(self.heb_dim, self.output_dim)
-        
-        # Setting up layers of the network
-        input_layer: nn.Module = DataSetupLayer()  # Assuming this handles input data setup correctly
-        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim)  # Hidden layer
-        self.output_layer = nn.Linear(self.heb_dim, self.output_dim)  # Output layer
+        # Set up layers without biases
+        input_layer = DataSetupLayer()  # Example input layer
+        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim, bias=False)  # No bias
+        self.output_layer = nn.Linear(self.heb_dim, self.output_dim, bias=False)  # No bias
 
         # Activation function
         self.relu = nn.ReLU()
@@ -154,19 +159,19 @@ class SGDNetwork(nn.Module):
         self.add_module('HIDDEN', self.hidden_layer)
         self.add_module('OUTPUT', self.output_layer)
 
-
-
     def new_weight(self, old_w, grad):
         """Updates the weights using the derivative function and the provided gradient."""
         if grad is None:
             print(f"Skipping weight update for {old_w} because grad is None.")
             return old_w
 
-        # Calculate the new weight using the selected growth function
-        derivative_value = self.derivative(old_w)  # Apply the chosen derivative function
+        # Apply the chosen derivative function to all weights
+        derivative_value = self.derivative(old_w)
         print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
-        new_weight = old_w - self.lr * derivative_value * grad  # Note: minus sign for gradient descent
+        new_weight = old_w - self.lr * derivative_value * grad  # Gradient descent
+
         return new_weight
+
 
     def update_weights(self, logits: torch.Tensor, target: torch.Tensor) -> float:
         """Updates weights based on the loss between logits and target."""
@@ -180,14 +185,14 @@ class SGDNetwork(nn.Module):
         loss.backward()
 
         # Manually update weights using the custom derivative
-        for param in self.parameters():
+        for name, param in self.named_parameters():
             if param.grad is not None:
                 param.data = self.new_weight(param.data, param.grad)
             else:
                 print(f"Warning: Gradient for parameter {param} is None. Skipping update.")
 
         return loss.item()
-
+    
     def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
         """Forward method for processing input through the network."""
         input = input.view(input.size(0), -1)  # Flatten input

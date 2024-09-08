@@ -52,60 +52,20 @@ from utils.experiment_constants import Focus
 from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LearningRules, ParamInit, WeightGrowth
 from layers.base.data_setup_layer import DataSetupLayer
 
-# Define growth functions outside the class for better structure
-def linear_growth(w: torch.Tensor) -> torch.Tensor:
-    """Defines weight updates using a linear function."""
-    return torch.ones_like(w)  # Returns a tensor of ones with the same shape as w
+import argparse
+from typing import Optional
+import torch
+from interfaces.network import Network
+from layers.base.classification_layer import ClassificationLayer
+from layers.base.data_setup_layer import DataSetupLayer
+from layers.base.hebbian_layer import HebbianLayer
+from layers.hidden_layer import HiddenLayer
+from layers.input_layer import InputLayer
+from layers.output_layer import OutputLayer
+from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightDecay, WeightGrowth
 
-
-def sigmoid_growth(w: torch.Tensor, plasticity: Focus, k: float) -> torch.Tensor:
-    """Defines weight updates using a sigmoid function."""
-    if plasticity == Focus.SYNASPSE:
-        weight = torch.abs(w) / k
-        derivative = (1 - torch.min(torch.ones_like(w), weight)) * weight
-    elif plasticity == Focus.NEURON:
-        # Handle 1D case
-        if w.ndim == 1:
-            print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
-            norm = torch.norm(w / k)
-            scaled_norm = norm / math.sqrt(w.size(0))
-            derivative = (1 - min(1.0, scaled_norm)) * scaled_norm
-            return torch.full_like(w, derivative.item())  # Fill with repeated value
-        elif w.ndim == 2:
-            input_dim = w.shape[1]
-            norm = torch.norm(w / k, dim=1, keepdim=True)
-            scaled_norm = norm / math.sqrt(input_dim)
-            derivative = (1 - torch.min(torch.ones_like(scaled_norm), scaled_norm)) * scaled_norm
-            derivative = derivative.repeat(1, w.size(1))  # Adjust shape to match w
-        else:
-            raise ValueError("Unexpected tensor dimensions for NEURON focus.")
-    else:
-        raise ValueError("Invalid focus type.")
-    return derivative
-
-def exponential_growth(w: torch.Tensor, plasticity: Focus) -> torch.Tensor:
-    """Defines weight updates using an exponential function."""
-    if plasticity == Focus.SYNASPSE:
-        derivative = torch.abs(w)
-    elif plasticity == Focus.NEURON:
-        # Handle case where w is 1D
-        if w.ndim == 1:
-            print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
-            # Assume the input dimension should be the length of w
-            input_dim = w.size(0)
-            norm = torch.norm(w)
-            scaled_norm = norm / math.sqrt(input_dim)
-            derivative = torch.full_like(w, scaled_norm)  # Use the same norm value for all elements
-        elif w.ndim == 2:
-            input_dim = w.shape[1]
-            norm = torch.norm(w, dim=1, keepdim=True)
-            scaled_norm = norm / math.sqrt(input_dim)
-            derivative = scaled_norm.repeat(1, w.size(1))  # Adjust shape to match w
-        else:
-            raise ValueError("Unexpected tensor dimensions for NEURON focus.")
-    else:
-        raise ValueError("Invalid focus type.")
-    return derivative
+# Import growth functions from the utils.weight_growth_fcts module
+from utils.weight_growth_fcts import linear_growth, sigmoid_growth, exponential_growth
 
 class SGDNetwork(nn.Module):
     def __init__(self, name: str, args: argparse.Namespace) -> None:
@@ -119,10 +79,9 @@ class SGDNetwork(nn.Module):
         self.sig_k = args.sigmoid_k
         self.heb_focus = Focus[args.heb_focus.upper()]  # Assuming Focus is Enum
         self.heb_growth = WeightGrowth[args.heb_growth.upper()]  # Assuming WeightGrowth is Enum
+        self.heb_lamb: float = args.heb_lamb
 
         # Select the derivative function based on heb_growth
-        self.derivative = linear_growth  # Default to linear
-
         if self.heb_growth == WeightGrowth.LINEAR:
             self.derivative = linear_growth
         elif self.heb_growth == WeightGrowth.SIGMOID:
@@ -131,17 +90,17 @@ class SGDNetwork(nn.Module):
             self.derivative = partial(exponential_growth, plasticity=self.heb_focus)
         else:
             raise ValueError(f"Growth type {self.heb_growth} not supported.")
-        
-        # Setting up layers of the network
-        input_layer: nn.Module = DataSetupLayer()  # Assuming this handles input data setup correctly
-        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim, bias=False)  # Hidden layer
-        self.output_layer = nn.Linear(self.heb_dim, self.output_dim, bias=False)  # Output layer
+
+        # Set up layers without biases
+        input_layer = DataSetupLayer()  # Example input layer
+        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim, bias=False)  # No bias
+        self.output_layer = nn.Linear(self.heb_dim, self.output_dim, bias=False)  # No bias
 
         # Activation function
         self.relu = nn.ReLU()
 
         # Optimizer and loss function
-        self.optimizer = optim.SGD(self.parameters(), lr=self.lr)
+        #self.optimizer = optim.SGD(self.parameters(), lr=self.lr)
         self.loss_fn = nn.CrossEntropyLoss()  # Handles the softmax internally, expects logits and class indices
 
         # Register layers
@@ -149,8 +108,7 @@ class SGDNetwork(nn.Module):
         self.add_module('HIDDEN', self.hidden_layer)
         self.add_module('OUTPUT', self.output_layer)
 
-
-    def new_weight(self, old_w, grad, is_bias=False):
+    def new_weight(self, old_w, grad):
         """Updates the weights using the derivative function and the provided gradient."""
         if grad is None:
             print(f"Skipping weight update for {old_w} because grad is None.")
@@ -162,6 +120,10 @@ class SGDNetwork(nn.Module):
         print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
         new_weight = old_w - self.lr * derivative_value * grad  # Gradient descent
 
+        # Apply the chosen derivative function to all weights
+        derivative_value = self.derivative(old_w)
+        print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
+        new_weight = old_w - self.lr * derivative_value * grad  # Gradient descent
 
         return new_weight
 
@@ -172,15 +134,14 @@ class SGDNetwork(nn.Module):
             f"Logits batch size {logits.size(0)} does not match target batch size {target.size(0)}"
 
         # Compute loss and backpropagate
-        self.optimizer.zero_grad()
+        #self.optimizer.zero_grad()
         loss = self.loss_fn(logits, target)
         loss.backward()
 
         # Manually update weights using the custom derivative
         for name, param in self.named_parameters():
             if param.grad is not None:
-                is_bias = 'bias' in name  # Check if the parameter is a bias
-                param.data = self.new_weight(param.data, param.grad, is_bias)
+                param.data = self.new_weight(param.data, param.grad)
             else:
                 print(f"Warning: Gradient for parameter {param} is None. Skipping update.")
 
@@ -196,6 +157,7 @@ class SGDNetwork(nn.Module):
             self.update_weights(logits, clamped_output)
 
         return logits
+    
 
     def get_module(self, lname: LayerNames) -> nn.Module:
         """

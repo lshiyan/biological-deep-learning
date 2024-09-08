@@ -1,2 +1,307 @@
 2024-08-16 18:54:36,654 - All subprocesses have completed.
 2024-08-16 18:55:34,815 - Started process with PID: 39334 on GPU: 2 | Lambda: 16, LR: 0.003, Heb_Learn: orthogonal, Heb_Growth: sigmoid, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-09-08 12:25:00,517 - Started process with PID: 98100 on GPU: 1 | Lambda: 0.5, LR: 0.003, Heb_Learn: sanger, Heb_Growth: linear, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-09-08 12:25:03,631 - Process with PID: 98100 completed on GPU: 1.
+2024-09-08 12:25:03,632 - Standard Output:
+
+2024-09-08 12:25:03,632 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 50, in train_and_eval
+    experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.heb}--{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+                                                                                                                           ^^^^^^^^^^
+AttributeError: 'Namespace' object has no attribute 'heb'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 87, in <module>
+    main()
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 24, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 70, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+AttributeError: 'Namespace' object has no attribute 'heb'
+
+2024-09-08 12:25:03,633 - Started process with PID: 98113 on GPU: 1 | Lambda: 1, LR: 0.003, Heb_Learn: sanger, Heb_Growth: linear, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-09-08 12:25:06,117 - Process with PID: 98113 completed on GPU: 1.
+2024-09-08 12:25:06,117 - Standard Output:
+
+2024-09-08 12:25:06,117 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 50, in train_and_eval
+    experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.heb}--{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+                                                                                                                           ^^^^^^^^^^
+AttributeError: 'Namespace' object has no attribute 'heb'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 87, in <module>
+    main()
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 24, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 70, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+AttributeError: 'Namespace' object has no attribute 'heb'
+
+2024-09-08 12:25:06,119 - Started process with PID: 98116 on GPU: 1 | Lambda: 2, LR: 0.003, Heb_Learn: sanger, Heb_Growth: linear, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-09-08 12:25:08,667 - Process with PID: 98116 completed on GPU: 1.
+2024-09-08 12:25:08,667 - Standard Output:
+
+2024-09-08 12:25:08,667 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 50, in train_and_eval
+    experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.heb}--{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+                                                                                                                           ^^^^^^^^^^
+AttributeError: 'Namespace' object has no attribute 'heb'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 87, in <module>
+    main()
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 24, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 70, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+AttributeError: 'Namespace' object has no attribute 'heb'
+
+2024-09-08 12:25:08,669 - Started process with PID: 98126 on GPU: 1 | Lambda: 4, LR: 0.003, Heb_Learn: sanger, Heb_Growth: linear, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-09-08 12:25:10,979 - Process with PID: 98126 completed on GPU: 1.
+2024-09-08 12:25:10,979 - Standard Output:
+
+2024-09-08 12:25:10,979 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 50, in train_and_eval
+    experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.heb}--{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+                                                                                                                           ^^^^^^^^^^
+AttributeError: 'Namespace' object has no attribute 'heb'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 87, in <module>
+    main()
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 24, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 70, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+AttributeError: 'Namespace' object has no attribute 'heb'
+
+2024-09-08 12:25:10,981 - Started process with PID: 98129 on GPU: 1 | Lambda: 8, LR: 0.003, Heb_Learn: sanger, Heb_Growth: linear, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-09-08 12:25:13,406 - Process with PID: 98129 completed on GPU: 1.
+2024-09-08 12:25:13,406 - Standard Output:
+
+2024-09-08 12:25:13,406 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 50, in train_and_eval
+    experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.heb}--{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+                                                                                                                           ^^^^^^^^^^
+AttributeError: 'Namespace' object has no attribute 'heb'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 87, in <module>
+    main()
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 24, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 70, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+AttributeError: 'Namespace' object has no attribute 'heb'
+
+2024-09-08 12:25:13,408 - Started process with PID: 98135 on GPU: 1 | Lambda: 16, LR: 0.003, Heb_Learn: sanger, Heb_Growth: linear, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-09-08 12:25:15,829 - Process with PID: 98135 completed on GPU: 1.
+2024-09-08 12:25:15,829 - Standard Output:
+
+2024-09-08 12:25:15,829 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 50, in train_and_eval
+    experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.heb}--{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+                                                                                                                           ^^^^^^^^^^
+AttributeError: 'Namespace' object has no attribute 'heb'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 87, in <module>
+    main()
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 24, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 70, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+AttributeError: 'Namespace' object has no attribute 'heb'
+
+2024-09-08 12:25:15,830 - Started process with PID: 98138 on GPU: 1 | Lambda: 32, LR: 0.003, Heb_Learn: sanger, Heb_Growth: linear, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-09-08 12:25:18,271 - Process with PID: 98138 completed on GPU: 1.
+2024-09-08 12:25:18,272 - Standard Output:
+
+2024-09-08 12:25:18,272 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 50, in train_and_eval
+    experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.heb}--{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+                                                                                                                           ^^^^^^^^^^
+AttributeError: 'Namespace' object has no attribute 'heb'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 87, in <module>
+    main()
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 24, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 70, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+AttributeError: 'Namespace' object has no attribute 'heb'
+
+2024-09-08 12:25:18,273 - Started process with PID: 98143 on GPU: 1 | Lambda: 64, LR: 0.003, Heb_Learn: sanger, Heb_Growth: linear, Clas_Growth: linear, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-09-08 12:25:20,694 - Process with PID: 98143 completed on GPU: 1.
+2024-09-08 12:25:20,694 - Standard Output:
+
+2024-09-08 12:25:20,694 - Standard Error:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+           ^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 50, in train_and_eval
+    experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.heb}--{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+                                                                                                                           ^^^^^^^^^^
+AttributeError: 'Namespace' object has no attribute 'heb'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 87, in <module>
+    main()
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 24, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tianyixu/Documents/github_projects/biological-deep-learning/train_forget.py", line 70, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+AttributeError: 'Namespace' object has no attribute 'heb'
+
+2024-09-08 12:25:20,694 - All subprocesses have completed.
