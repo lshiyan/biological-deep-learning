@@ -14,8 +14,11 @@ from torch.utils.data import DataLoader, TensorDataset
 from interfaces.network import Network
 from layers.base.data_setup_layer import DataSetupLayer
 
+from models.SGD_network import SGDNetwork
+
 # Utils imports
 from layers.input_layer import InputLayer
+from models import SGD_network
 from utils.experiment_constants import DataSets, ExperimentPhases, ExperimentTypes, LayerNames, Purposes
 from utils.experiment_logger import *
 from utils.experiment_parser import *
@@ -50,7 +53,7 @@ class Experiment(ABC):
         DEBUG_LOG (logging.Logger): debugging
         EXP_LOG (logging.Logger): logging of experiment process
     """
-    def __init__(self, model: Network, args: argparse.Namespace, name: str) -> None:
+    def __init__(self, model: SGDNetwork, args: argparse.Namespace, name: str) -> None:
         """
         CONTRUCTOR METHOD
         @param
@@ -63,7 +66,7 @@ class Experiment(ABC):
         experiment_mapping = {member.value.upper(): member for member in ExperimentTypes}
         
         # Experiment parameters
-        self.model: Network = model.to(args.device).float()
+        self.model: SGDNetwork = model.to(args.device).float()
         self.data_name = args.data_name.upper()
         self.batch_size: int = args.batch_size
         self.epochs: int = args.epochs

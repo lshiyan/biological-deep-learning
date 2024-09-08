@@ -17,6 +17,8 @@ from layers.input_layer import InputLayer
 
 from layers.base.data_setup_layer import DataSetupLayer
 
+from models.SGD_network import SGDNetwork
+
 # Utils imports
 from utils.experiment_constants import DataSets, ExperimentPhases, LayerNames, Purposes
 from utils.experiment_logger import *
@@ -72,7 +74,7 @@ class BaseExperiment(Experiment):
     ################################################################################################
     # Constructor Method
     ################################################################################################
-    def __init__(self, model: Network, args: argparse.Namespace, name: str) -> None:
+    def __init__(self, model: SGDNetwork, args: argparse.Namespace, name: str) -> None:
         """
         CONTRUCTOR METHOD
         @param
@@ -136,10 +138,10 @@ class BaseExperiment(Experiment):
         @return
             None
         """
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning', False)
+        if visualize: 
+            self.model.visualize_weights(self.RESULT_PATH, epoch, 'learning')
 
         train_epoch_start: float = self.TRAIN_TIME
-        
         train_start: float = time.time()
         self.EXP_LOG.info(f"Started 'base_train' function with {dname.upper()}.")
 
@@ -163,11 +165,11 @@ class BaseExperiment(Experiment):
                 train_start = time.time()
 
             # Move input and targets to device
-            inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
-            
+            inputs = inputs.to(self.device).float()  # Keep inputs as floats
+            labels = labels.to(self.device)  # Keep labels as raw indices, no one-hot encoding
+
             # Forward pass
             self.model.train()
-            # self.EXP_LOG.info("Set the model to training mode.")
             self.model(inputs, clamped_output=labels)
             
             # Increment samples seen
@@ -180,14 +182,13 @@ class BaseExperiment(Experiment):
             
         self.EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(training_time)}.")
         self.EXP_LOG.info("Completed 'base_train' function.")
-    
-    
+        
     def _base_test(self, 
-                   test_data_loader: DataLoader, 
-                   purpose: Purposes,  
-                   dname: str,
-                   visualize: bool = True,
-                   ) -> float:
+                test_data_loader: DataLoader, 
+                purpose: Purposes,  
+                dname: str,
+                visualize: bool = True,
+                ) -> float:
         """
         METHOD
         Test model with test dataset and determine its accuracy
@@ -195,7 +196,7 @@ class BaseExperiment(Experiment):
             test_data_loader: dataloader containing the testing dataset
             purpose: name of set for logging purposes (test/train)
             dname: dataset name
-            last: is it final test
+            visualize: if the weights of model should be visualized
         @return
             accuracy: float value between [0, 1] to show accuracy model got on test
         """
@@ -215,9 +216,9 @@ class BaseExperiment(Experiment):
 
         with torch.no_grad():
             correct: int = 0
-            total: int = len(test_data_loader) * self.batch_size
+            total: int = 0
 
-            # Loop thorugh testing batches
+            # Loop through testing batches
             for inputs, labels in test_data_loader:
                 # Move input and targets to device
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
@@ -226,28 +227,39 @@ class BaseExperiment(Experiment):
                 predictions: torch.Tensor = self.model(inputs)
                 
                 # Evaluates performance of model on testing dataset
-                correct += (predictions.argmax(-1) == labels).type(torch.float).sum().item()
-
-            final_accuracy = round(correct/total, 4)
+                predicted_classes = predictions.argmax(dim=-1)  # Predicted class indices
+                correct += (predicted_classes == labels).sum().item()  # Count correct predictions
                 
+                # Increment total by the actual batch size, which is 1 in this case
+                total += labels.size(0)
+
+            # Calculate final accuracy
+            if total > 0:
+                final_accuracy = round(correct / total, 4)
+            else:
+                self.EXP_LOG.warning("No samples were evaluated during testing.")
+                    
         test_end = time.time()
         testing_time = test_end - test_start
 
-        if purpose == Purposes.TEST_ACCURACY: self.TEST_ACC_TIME += testing_time
-        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_ACC_TIME += testing_time
+        # Log testing time and accuracy results
+        if purpose == Purposes.TEST_ACCURACY: 
+            self.TEST_ACC_TIME += testing_time
+            self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
+        elif purpose == Purposes.TRAIN_ACCURACY: 
+            self.TRAIN_ACC_TIME += testing_time
+            self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
         
         self.EXP_LOG.info(f"Completed testing with {correct} out of {total}.")
         self.EXP_LOG.info("Completed 'base_test' function.")
         self.EXP_LOG.info(f"Testing ({purpose.value.lower()} acc) of sample #{self.SAMPLES} took {time_to_str(testing_time)}.")
         
-        if purpose == Purposes.TEST_ACCURACY: self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Test Accuracy: {final_accuracy}')
-        if purpose == Purposes.TRAIN_ACCURACY: self.TRAIN_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || Train Accuracy: {final_accuracy}')
-        
-        if visualize: self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower(), False)
+        # Visualize weights if required
+        if visualize: 
+            self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.name.lower())
         
         return final_accuracy
-    
-        
+            
         
     ################################################################################################
     # Training and Testing Methods
@@ -310,27 +322,27 @@ class BaseExperiment(Experiment):
         self.PARAM_LOG.info(f"Input Dimension: {self.model.input_dim}")
         self.PARAM_LOG.info(f"Hebbian Layer Dimension: {self.model.heb_dim}")
         self.PARAM_LOG.info(f"Outout Dimension: {self.model.output_dim}")
-        self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.model.heb_lamb}")
-        self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.model.heb_gam}")
-        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_eps}")
-        self.PARAM_LOG.info(f"Hebbian Learning Rule: {self.model.heb_learn.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Inhibition Rule: {self.model.heb_inhib.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Weight Growth: {self.model.heb_growth.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Bias Update: {self.model.heb_bias_update.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Focus: {self.model.heb_focus.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Activation: {self.model.heb_act.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Learning Rule: {self.model.class_learn.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Weight Growth: {self.model.class_growth.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Bias Update: {self.model.class_bias_update.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Focus: {self.model.class_focus.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Activation: {self.model.class_act.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.model.heb_lamb}")
+        #self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.model.heb_gam}")
+        #self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_eps}")
+        #self.PARAM_LOG.info(f"Hebbian Learning Rule: {self.model.heb_learn.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Inhibition Rule: {self.model.heb_inhib.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Weight Growth: {self.model.heb_growth.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Bias Update: {self.model.heb_bias_update.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Focus: {self.model.heb_focus.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Activation: {self.model.heb_act.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Learning Rule: {self.model.class_learn.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Weight Growth: {self.model.class_growth.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Bias Update: {self.model.class_bias_update.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Focus: {self.model.class_focus.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Activation: {self.model.class_act.value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Network Learning Rate: {self.model.lr}")
-        self.PARAM_LOG.info(f"Sigmoid Constant: {self.model.sig_k}")
-        self.PARAM_LOG.info(f"Alpha: {self.model.alpha}")
-        self.PARAM_LOG.info(f"Beta: {self.model.beta}")
-        self.PARAM_LOG.info(f"Sigma: {self.model.sigma}")
-        self.PARAM_LOG.info(f"Mu: {self.model.mu}")
-        self.PARAM_LOG.info(f"Param Init: {self.model.init.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Sigmoid Constant: {self.model.sig_k}")
+        #self.PARAM_LOG.info(f"Alpha: {self.model.alpha}")
+        #self.PARAM_LOG.info(f"Beta: {self.model.beta}")
+        #self.PARAM_LOG.info(f"Sigma: {self.model.sigma}")
+        #self.PARAM_LOG.info(f"Mu: {self.model.mu}")
+        #self.PARAM_LOG.info(f"Param Init: {self.model.init.value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
         
         self.EXP_LOG.info("Completed logging of experiment parameters.")
@@ -365,7 +377,7 @@ class BaseExperiment(Experiment):
             self._testing(self.train_data_loader, Purposes.TRAIN_ACCURACY, self.data_name, ExperimentPhases.BASE)
         
         self.EXP_LOG.info("Completed training of model.")        
-        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final', False)
+        self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, 'final')
         self.EXP_LOG.info("Visualize weights of model after training.")
         
     

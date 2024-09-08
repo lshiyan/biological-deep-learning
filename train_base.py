@@ -5,6 +5,7 @@ from experiments.base_experiment import BaseExperiment
 from interfaces.experiment import Experiment
 from interfaces.network import Network
 from models.hebbian_network import HebbianNetwork
+from models.SGD_network import SGDNetwork
 
 from utils.experiment_parser import *
 from utils.experiment_comparer import *
@@ -35,8 +36,8 @@ def train_and_eval(args: Tuple) -> List[float]:
     params: argparse.Namespace
     num: int
     params, num = args
-    model: Network = HebbianNetwork('Hebbian Network', params).to(params.device)
-    experiment: Experiment = BaseExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.lr}--{params.heb_learn.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
+    model = SGDNetwork('Hebbian Network', params).to(params.device)
+    experiment: Experiment = BaseExperiment(model, params, 'sgd_test')
     accuracies: List[float] = list(experiment.run())
     experiment.cleanup()
     

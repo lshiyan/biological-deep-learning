@@ -21,6 +21,8 @@ from layers.input_layer import InputLayer
 
 from layers.base.data_setup_layer import DataSetupLayer
 
+from models.SGD_network import SGDNetwork
+
 # Utils imports
 from utils.experiment_constants import DataSets, ExperimentPhases, LayerNames, Purposes
 from utils.experiment_logger import *
@@ -37,7 +39,7 @@ class ForgetExperiment(Experiment):
 # STAGE 1: experiment set up
 #####################################################
 
-    def __init__(self, model: Network, args: argparse.Namespace, name: str) -> None:
+    def __init__(self, model: SGDNetwork, args: argparse.Namespace, name: str) -> None:
         """
         CONTRUCTOR METHOD
         @param
@@ -202,7 +204,7 @@ class ForgetExperiment(Experiment):
         
         sub_experiment_name = self.curr_folder_path.split('/')[-1]  # Assumes '/' as the path separator.
         
-        if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}", False)
+        #if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}", False)
 
         # Start timer
         train_start: float = time.time()
@@ -386,27 +388,27 @@ class ForgetExperiment(Experiment):
         self.PARAM_LOG.info(f"Input Dimension: {self.model.input_dim}")
         self.PARAM_LOG.info(f"Hebbian Layer Dimension: {self.model.heb_dim}")
         self.PARAM_LOG.info(f"Outout Dimension: {self.model.output_dim}")
-        self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.model.heb_lamb}")
-        self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.model.heb_gam}")
-        self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_eps}")
-        self.PARAM_LOG.info(f"Hebbian Learning Rule: {self.model.heb_learn.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Inhibition Rule: {self.model.heb_inhib.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Weight Growth: {self.model.heb_growth.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Bias Update: {self.model.heb_bias_update.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Focus: {self.model.heb_focus.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Hebbian Activation: {self.model.heb_act.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Learning Rule: {self.model.class_learn.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Weight Growth: {self.model.class_growth.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Bias Update: {self.model.class_bias_update.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Focus: {self.model.class_focus.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Classification Activation: {self.model.class_act.value.lower().capitalize()}")
-        self.PARAM_LOG.info(f"Network Learning Rate: {self.model.lr}")
-        self.PARAM_LOG.info(f"Sigmoid Constant: {self.model.sig_k}")
-        self.PARAM_LOG.info(f"Alpha: {self.model.alpha}")
-        self.PARAM_LOG.info(f"Beta: {self.model.beta}")
-        self.PARAM_LOG.info(f"Sigma: {self.model.sigma}")
-        self.PARAM_LOG.info(f"Mu: {self.model.mu}")
-        self.PARAM_LOG.info(f"Param Init: {self.model.init.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Layer Lambda: {self.model.heb_lamb}")
+        #self.PARAM_LOG.info(f"Hebbian Layer Gamma: {self.model.heb_gam}")
+        #self.PARAM_LOG.info(f"Hebbian Layer Epsilon: {self.model.heb_eps}")
+        #self.PARAM_LOG.info(f"Hebbian Learning Rule: {self.model.heb_learn.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Inhibition Rule: {self.model.heb_inhib.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Weight Growth: {self.model.heb_growth.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Bias Update: {self.model.heb_bias_update.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Focus: {self.model.heb_focus.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Hebbian Activation: {self.model.heb_act.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Learning Rule: {self.model.class_learn.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Weight Growth: {self.model.class_growth.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Bias Update: {self.model.class_bias_update.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Focus: {self.model.class_focus.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Classification Activation: {self.model.class_act.value.lower().capitalize()}")
+        #self.PARAM_LOG.info(f"Network Learning Rate: {self.model.lr}")
+        #self.PARAM_LOG.info(f"Sigmoid Constant: {self.model.sig_k}")
+        #self.PARAM_LOG.info(f"Alpha: {self.model.alpha}")
+        #self.PARAM_LOG.info(f"Beta: {self.model.beta}")
+        #self.PARAM_LOG.info(f"Sigma: {self.model.sigma}")
+        #self.PARAM_LOG.info(f"Mu: {self.model.mu}")
+        #self.PARAM_LOG.info(f"Param Init: {self.model.init.value.lower().capitalize()}")
         self.PARAM_LOG.info(f"Sub experiment scope list: {self.sub_experiment_scope_list}")
         self.PARAM_LOG.info(f"Start time of experiment: {time.strftime('%Y-%m-%d %Hh:%Mm:%Ss', time.localtime(self.START_TIME))}")
         
