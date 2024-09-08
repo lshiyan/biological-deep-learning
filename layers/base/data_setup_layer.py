@@ -115,19 +115,31 @@ class DataSetupLayer(InputLayer):
         @return
             tensor dataset containing (data, label)
         """
-        # Converting to .csv file if needed
+        # Convert to .csv file if needed
         if not os.path.exists(filename):
             DataSetupLayer.convert(data, label, filename, size, 28)
          
-        # Setup dataset   
+        # Read the dataset
         data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
-        labels: torch.Tensor = torch.tensor(data_frame[0].values) if dataset != DataSets.E_MNIST else torch.tensor(data_frame[0].values) - 1
-        data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
-        if dataset == DataSets.E_MNIST: data_tensor.T
+        
+        # Convert labels to numeric, handling potential errors
+        data_frame[0] = pd.to_numeric(data_frame[0], errors='coerce')
+        data_frame = data_frame.dropna(subset=[0])  # Drop rows with NaN labels
+        labels: torch.Tensor = torch.tensor(data_frame[0].values.astype(int)) if dataset != DataSets.E_MNIST else torch.tensor(data_frame[0].values.astype(int)) - 1
+
+        # Convert data to numeric and handle potential errors
+        data_values = data_frame.drop(data_frame.columns[0], axis=1).apply(pd.to_numeric, errors='coerce')
+        data_values = data_values.dropna()  # Drop rows with NaN in data
+
+        # Convert data to tensor
+        data_tensor: torch.Tensor = torch.tensor(data_values.values, dtype=torch.float)
+        if dataset == DataSets.E_MNIST:
+            data_tensor = data_tensor.T  # Transpose if needed for E_MNIST
+        
+        # Normalize data
         data_tensor /= 255
         
         return TensorDataset(data_tensor, labels)
-    
     
     @staticmethod
     def filter_data_loader(data_loader: DataLoader, filter: dict[int, int]):
