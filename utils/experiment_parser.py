@@ -14,6 +14,7 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
 
     # Basic configurations
+    parser.add_argument('--model', type=str, default="Hebb")
     parser.add_argument('--data_name', type=str, default="MNIST")
     parser.add_argument('--ext_data_name', type=str, default="E_MNIST")
 

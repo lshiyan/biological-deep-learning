@@ -46,7 +46,10 @@ def train_and_eval(args: Tuple) -> List[List[float]]:
     params: argparse.Namespace
     num: int
     params, num = args
-    model = SGDNetwork('Hebbian Network', params).to(params.device)
+    if "sgd" == params.model.lower():
+        model = SGDNetwork('SGD Network', params).to(params.device)
+    elif "hebb" == params.model.lower():
+        model = HebbianNetwork('Hebbian Network', params).to(params.device)
     experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_lamb}')
     accuracies = list(experiment.run())
     experiment.cleanup()
