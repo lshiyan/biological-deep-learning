@@ -104,6 +104,7 @@ class SGDNetwork(nn.Module):
         self.add_module('HIDDEN', self.hidden_layer)
         self.add_module('OUTPUT', self.output_layer)
         self.init_weights_with_beta()
+        self.fake_exp = True
 
 
     def init_weights_with_beta(self):
@@ -146,13 +147,16 @@ class SGDNetwork(nn.Module):
         #self.optimizer.zero_grad()
         loss = self.loss_fn(logits, target)
         loss.backward()
+        with torch.no_grad():
+            # Manually update weights using the custom derivative
+            for name, param in self.named_parameters():
+                if param.grad is not None:
+                    param.data = self.new_weight(param.data, param.grad)
+                    if self.fake_exp and WeightGrowth.EXPONENTIAL and param.data.ndim==2:
+                        param.data = param.data / (torch.norm(param.data, dim=1, keepdim=True) +1e-9)
 
-        # Manually update weights using the custom derivative
-        for name, param in self.named_parameters():
-            if param.grad is not None:
-                param.data = self.new_weight(param.data, param.grad)
-            else:
-                print(f"Warning: Gradient for parameter {param} is None. Skipping update.")
+                else:
+                    print(f"Warning: Gradient for parameter {param} is None. Skipping update.")
 
         return loss.item()
 
