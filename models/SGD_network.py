@@ -109,12 +109,6 @@ class SGDNetwork(nn.Module):
             print(f"Skipping weight update for {old_w} because grad is None.")
             return old_w
 
-        # Apply the chosen derivative function, only to weights
-
-        derivative_value = self.derivative(old_w)
-        print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
-        new_weight = old_w - self.lr * derivative_value * grad  # Gradient descent
-
         # Apply the chosen derivative function to all weights
         derivative_value = self.derivative(old_w)
         print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
