@@ -48,13 +48,8 @@ import torch.nn as nn
 import torch.optim as optim
 import math
 from typing import Optional
-from utils.experiment_constants import Focus
-from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LearningRules, ParamInit, WeightGrowth
 from layers.base.data_setup_layer import DataSetupLayer
 
-import argparse
-from typing import Optional
-import torch
 from interfaces.network import Network
 from layers.base.classification_layer import ClassificationLayer
 from layers.base.data_setup_layer import DataSetupLayer
