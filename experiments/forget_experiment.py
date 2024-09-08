@@ -193,18 +193,30 @@ class ForgetExperiment(Experiment):
 
 
 
-
     def _training(self, 
-                  train_data_loader: DataLoader, 
-                  epoch: int, 
-                  dname: str, 
-                  phase: ExperimentPhases, 
-                  visualize: bool = True
-                  ) -> None:
-        
+                train_data_loader: DataLoader, 
+                epoch: int, 
+                dname: str, 
+                phase: ExperimentPhases, 
+                visualize: bool = True
+                ) -> None:
+        """
+        METHOD
+        Trains the model for one epoch with the given training data loader.
+        @param
+            train_data_loader: DataLoader for training data.
+            epoch: Current epoch number.
+            dname: Dataset name.
+            phase: Current phase of the experiment.
+            visualize: Whether to visualize weights.
+        @return
+            None
+        """
         sub_experiment_name = self.curr_folder_path.split('/')[-1]  # Assumes '/' as the path separator.
         
-        #if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}", False)
+        # Uncomment if visualization is needed
+        # if visualize: 
+        #     self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}", False)
 
         # Start timer
         train_start: float = time.time()
@@ -226,7 +238,6 @@ class ForgetExperiment(Experiment):
                 self._testing(train_data_loader, Purposes.TRAIN_ACCURACY, epoch, self.data_name, ExperimentPhases.FORGET)
 
                 for curr_test_dataloader in self.testing_test_dataloader_list:
-
                     self._testing(curr_test_dataloader, Purposes.TEST_ACCURACY, epoch, self.data_name, ExperimentPhases.FORGET)
 
                 need_test = False
@@ -234,15 +245,16 @@ class ForgetExperiment(Experiment):
                 # Restart train timer
                 train_start = time.time()
 
-                if self.keep_training == False:
+                if not self.keep_training:
                     break
 
             # Move input and targets to device
-            inputs, labels = inputs.to(self.device).float(), one_hot(labels, self.model.output_dim).squeeze().to(self.device).float()
+            inputs = inputs.to(self.device).float()  # Ensure inputs are floats
+            labels = labels.to(self.device)  # Keep labels as raw class indices
 
             # Forward pass
             self.model.train()
-            self.model(inputs, clamped_output=labels)
+            self.model(inputs, clamped_output=labels)  # Pass the raw indices, not one-hot encoded
 
             # Increment samples seen
             self.TOTAL_SAMPLES += 1
@@ -253,19 +265,31 @@ class ForgetExperiment(Experiment):
         self.sub_experiment_train_timers[sub_experiment_name] += total_added_train_time
 
         self.EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(total_added_train_time)}.")
-        self.EXP_LOG.info("Completed '_training' function for forget experiment")
+        self.EXP_LOG.info("Completed '_training' function for forget experiment.")
 
 
 
     def _testing(self, 
-                 test_data_loader: DataLoader, 
-                 purpose: Purposes, 
-                 epoch: int, 
-                 dname: str, 
-                 phase: ExperimentPhases,
-                 visualize: bool = True,
-                 ) -> Union[float, Tuple[float, ...]]:
-        
+                test_data_loader: DataLoader, 
+                purpose: Purposes, 
+                epoch: int, 
+                dname: str, 
+                phase: ExperimentPhases,
+                visualize: bool = True,
+                ) -> Union[float, Tuple[float, ...]]:
+        """
+        METHOD
+        Test the model with the given testing data loader and determine its accuracy.
+        @param
+            test_data_loader: DataLoader for testing data.
+            purpose: Purpose of the testing (e.g., train or test accuracy).
+            epoch: Current epoch number.
+            dname: Dataset name.
+            phase: Current phase of the experiment.
+            visualize: Whether to visualize weights.
+        @return
+            final_accuracy: The accuracy of the model on the testing data.
+        """
         test_start: float = time.time()
         self.EXP_LOG.info(f"Started '_testing' function with {dname.upper()}.")
 
@@ -273,7 +297,7 @@ class ForgetExperiment(Experiment):
         
         # Epoch and batch set up
         test_batches_per_epoch = len(test_data_loader)
-        self.EXP_LOG.info(f"Sub-experiemnt to be tested is {sub_experiment_name} -- Number of current experiment samples seen is {self.SUB_EXP_SAMPLES} -- Number of total experiment samples seen is {self.TOTAL_SAMPLES}")
+        self.EXP_LOG.info(f"Sub-experiment to be tested is {sub_experiment_name} -- Number of current experiment samples seen is {self.SUB_EXP_SAMPLES} -- Number of total experiment samples seen is {self.TOTAL_SAMPLES}")
         self.EXP_LOG.info(f"This testing is with {test_batches_per_epoch} batches of size {self.batch_size} in this epoch.")
         
         # Set the model to evaluation mode - important for layers with different training / inference behaviour
@@ -283,33 +307,38 @@ class ForgetExperiment(Experiment):
         final_accuracy: float = 0
 
         with torch.no_grad():
-            
             correct_test_count: int = 0
-
-            total_test_count: int = len(test_data_loader)
+            total_test_count: int = 0
 
             for inputs, labels in test_data_loader:
-
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                # Move inputs and labels to device
+                inputs = inputs.to(self.device)  # Ensure inputs are on the correct device
+                labels = labels.to(self.device)  # Keep labels as raw class indices
                 
                 # Inference
                 predictions: torch.Tensor = self.model(inputs)
                 
                 # Evaluates performance of model on testing dataset
-                correct_test_count += (predictions.argmax(-1) == labels).type(torch.float).sum()
+                predicted_classes = predictions.argmax(dim=-1)  # Get predicted class indices
+                correct_test_count += (predicted_classes == labels).sum().item()  # Count correct predictions
+                
+                # Increment total by the actual batch size, which is 1 in this case
+                total_test_count += labels.size(0)
 
-            final_accuracy = correct_test_count/total_test_count
+            # Calculate final accuracy
+            if total_test_count > 0:
+                final_accuracy = round(correct_test_count / total_test_count, 4)
+            else:
+                self.EXP_LOG.warning("No samples were evaluated during testing.")
             
+            # Condition to stop training based on accuracy threshold
             if (final_accuracy > 0.95) and (purpose == Purposes.TRAIN_ACCURACY):
                 self.keep_training = False
 
         test_end = time.time()
         testing_time = test_end - test_start
         
-        self.DEBUG_LOG.info(f"Test start for this: {test_start}")
-        self.DEBUG_LOG.info(f"Test end for this: {test_end}")
-        self.DEBUG_LOG.info(f"Test duration: {testing_time}")
-
+        # Log test times and accuracy results
         if purpose == Purposes.TEST_ACCURACY: 
             testing_subexperiment_name = self.test_dataloader_dictionary[test_data_loader]
             self.sub_experiment_test_timers[testing_subexperiment_name] += testing_time
@@ -323,11 +352,11 @@ class ForgetExperiment(Experiment):
         self.EXP_LOG.info("Completed '_testing' function.")
         self.EXP_LOG.info(f"Testing ({purpose.value.lower()} acc) of sample #{self.SUB_EXP_SAMPLES} in current subexperiment took {time_to_str(testing_time)}.")
 
-        #if visualize: 
-        #    self.model.visualize_weights(self.curr_folder_path, self.SUB_EXP_SAMPLES, purpose.name.lower())
+        # Uncomment if visualization is needed
+        # if visualize: 
+        #     self.model.visualize_weights(self.curr_folder_path, self.SUB_EXP_SAMPLES, purpose.name.lower())
 
         return final_accuracy
-
 
 #####################################################
 # STAGE 3: final testing and report
