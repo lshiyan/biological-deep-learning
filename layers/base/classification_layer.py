@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from layers.output_layer import OutputLayer
 from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LearningRules, ParamInit, WeightDecay, WeightGrowth
+from utils.weight_growth_fcts import sigmoid_growth, exponential_growth
 
 
 class ClassificationLayer(OutputLayer):
@@ -342,35 +343,21 @@ class ClassificationLayer(OutputLayer):
         @return
             derivative: slope constant (derivative relative to linear rule always = 1)
         """
-        return torch.ones(self.fc.weight.shape).to(self.device)
-    
-    
+        return 1.0
+
     def _sigmoid_function(self) -> torch.Tensor:
         """
         METHOD
         Defines weight updates when using sigmoid function
-        Derivative: 1/K * (K - Wij) * Wij or 1/K * (K - ||Wi:||) * ||Wi:||
+        Derivative: 1/K * (K - Wij) * Wij or 1/K * (K - Wi:) * Wi:
         @param
             None
         @return
             derivative: sigmoid derivative of current weights
         """
-        current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        derivative: torch.Tensor
-        
-        if self.focus == Focus.SYNASPSE:
-            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - current_weights) * current_weights
-        elif self.focus == Focus.NEURON:
-            norm: torch.Tensor = self.get_norm(self.fc.weight)
-            scaled_norm: torch.Tensor = norm / math.sqrt(self.output_dimension)
+        current_weights: torch.Tensor = self.fc.weight
+        return sigmoid_growth(current_weights, self.focus, self.sigmoid_k)
 
-            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - torch.min(torch.ones_like(scaled_norm), scaled_norm)) * scaled_norm
-        else:
-            raise ValueError("Invalid focus type.")
-        
-        return derivative
-    
-    
     def _exponential_function(self) -> torch.Tensor:
         """
         METHOD
@@ -381,18 +368,8 @@ class ClassificationLayer(OutputLayer):
         @return
             derivative: exponential derivative of current weights
         """
-        current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        derivative: torch.Tensor
-        
-        if self.focus == Focus.SYNASPSE:
-            derivative = torch.abs(current_weights)
-        elif self.focus == Focus.NEURON:
-            norm: torch.Tensor = self.get_norm(self.fc.weight)
-            derivative = norm
-        else:
-            raise ValueError("Invalid focus type.")
-        
-        return derivative
+        current_weights: torch.Tensor = self.fc.weight
+        return exponential_growth(current_weights, self.focus)
 
 
     #################################################################################################
