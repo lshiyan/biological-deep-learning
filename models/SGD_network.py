@@ -41,6 +41,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
+from functools import partial
+from utils.experiment_constants import Focus, WeightGrowth
+from utils.weight_growth_fcts import sigmoid_growth, exponential_growth, linear_growth
 
 
 
@@ -110,6 +113,21 @@ class SGDNetwork(nn.Module):
         self.add_module('HIDDEN', self.hidden_layer)
         self.add_module('OUTPUT', self.output_layer)
 
+        self.derivative = None
+        if WeightGrowth.LINEAR == self.heb_growth:
+            self.derivative = linear_growth
+        elif WeightGrowth.SIGMOID == self.heb_growth:
+            self.derivative = partial(sigmoid_growth, plasticity=self.heb_focus, k=self.sig_k)
+        elif WeightGrowth.EXPONENTIAL == self.heb_growth:
+            self.derivative = partial(exponential_growth, plasticity=self.heb_focus)
+        else:
+            raise ValueError(f"{self.heb_focus} not an implemented plasticity focus.")
+
+
+    def new_weight(self, old_w, grad):
+        new_weight = old_w + self.lr * self.derivative(old_w) * grad
+        return new_weight
+
     def update_weights(self, logits: torch.Tensor, target: torch.Tensor) -> float:
         """
         Updates weights based on the loss between logits and target.
@@ -123,7 +141,9 @@ class SGDNetwork(nn.Module):
         self.optimizer.zero_grad()
         loss = self.loss_fn(logits, target)  # Compute loss
         loss.backward()  # Backpropagation
-        self.optimizer.step()  # Update weights
+        #self.optimizer.step()  # Update weights
+        for param in self.parameters():
+            param.data = self.new_weight(param.data, param.grad)
         return loss.item()  # Return loss value for tracking
 
     def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None, 
