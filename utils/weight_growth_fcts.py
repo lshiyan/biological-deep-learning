@@ -61,9 +61,9 @@ def exponential_growth(w: torch.Tensor, plasticity: Focus) -> torch.Tensor:
     device = w.device
     derivative: torch.Tensor
 
-    if self.focus == Focus.SYNASPSE:
+    if plasticity == Focus.SYNASPSE:
         derivative = torch.abs(current_weights)
-    elif self.focus == Focus.NEURON:
+    elif plasticity == Focus.NEURON:
         input_dim = w.shape[1]
         norm: torch.Tensor = torch.norm(w, dim=1)
         scaled_norm: torch.Tensor = norm / math.sqrt(input_dim)
