@@ -131,16 +131,11 @@ class SGDNetwork(nn.Module):
             self.derivative = partial(exponential_growth, plasticity=self.heb_focus)
         else:
             raise ValueError(f"Growth type {self.heb_growth} not supported.")
-
-        # Set up layers
-        self.input_layer = DataSetupLayer()  # Example input layer
-        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim, bias=False)
-        self.output_layer = nn.Linear(self.heb_dim, self.output_dim, bias=False)
         
         # Setting up layers of the network
         input_layer: nn.Module = DataSetupLayer()  # Assuming this handles input data setup correctly
-        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim)  # Hidden layer
-        self.output_layer = nn.Linear(self.heb_dim, self.output_dim)  # Output layer
+        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim, bias=False)  # Hidden layer
+        self.output_layer = nn.Linear(self.heb_dim, self.output_dim, bias=False)  # Output layer
 
         # Activation function
         self.relu = nn.ReLU()
