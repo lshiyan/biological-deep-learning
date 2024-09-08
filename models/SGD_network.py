@@ -103,6 +103,7 @@ class SGDNetwork(nn.Module):
         self.add_module(input_layer.name.name, input_layer)
         self.add_module('HIDDEN', self.hidden_layer)
         self.add_module('OUTPUT', self.output_layer)
+        self.init_weights_with_beta()
 
 
     def init_weights_with_beta(self):
@@ -115,7 +116,7 @@ class SGDNetwork(nn.Module):
                     param.data = self.beta * param.data / neuron_norm(param.data, k)
                 else:
                     raise ValueError("Weight inits only implemented for rank 1 and 2 tensors.")
-                
+
             elif self.heb_focus == Focus.SYNASPSE:
                 param.data = self.beta * param.data
             else:
