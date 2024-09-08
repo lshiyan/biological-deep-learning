@@ -134,8 +134,8 @@ class SGDNetwork(nn.Module):
 
         # Set up layers
         self.input_layer = DataSetupLayer()  # Example input layer
-        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim)
-        self.output_layer = nn.Linear(self.heb_dim, self.output_dim)
+        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim, bias=False)
+        self.output_layer = nn.Linear(self.heb_dim, self.output_dim, bias=False)
         
         # Setting up layers of the network
         input_layer: nn.Module = DataSetupLayer()  # Assuming this handles input data setup correctly
