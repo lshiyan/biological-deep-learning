@@ -23,8 +23,7 @@ def sigmoid_growth(w: torch.Tensor, plasticity: 'Focus', k: float) -> torch.Tens
         if w.ndim == 1:
             print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
             norm = torch.norm(w / k)
-            scaled_norm = norm / math.sqrt(w.size(0))
-            derivative = (1 - min(1.0, scaled_norm)) * scaled_norm
+            derivative = (1 - min(1.0, norm)) * norm
             return torch.full_like(w, derivative.item())  # Fill with repeated value
         elif w.ndim == 2:
             input_dim = w.shape[1]
@@ -47,10 +46,8 @@ def exponential_growth(w: torch.Tensor, plasticity: 'Focus') -> torch.Tensor:
     elif plasticity == Focus.NEURON:
         if w.ndim == 1:
             print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
-            input_dim = w.size(0)
             norm = torch.norm(w)
-            scaled_norm = norm / math.sqrt(input_dim)
-            derivative = torch.full_like(w, scaled_norm)  # Use the same norm value for all elements
+            derivative = torch.full_like(w, norm)  # Use the same norm value for all elements
         elif w.ndim == 2:
             input_dim = w.shape[1]
             norm = torch.norm(w, dim=1, keepdim=True)
