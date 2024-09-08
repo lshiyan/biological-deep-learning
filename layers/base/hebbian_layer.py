@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from layers.hidden_layer import HiddenLayer
 from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LearningRules, ParamInit, WeightDecay, WeightGrowth
-from utils.weight_growth_fcts import sigmoid_growth, exponential_growth
+from utils.weight_growth_fcts import sigmoid_growth, exponential_growth, neuron_norm
 
 class HebbianLayer(HiddenLayer):
     """
@@ -96,7 +96,7 @@ class HebbianLayer(HiddenLayer):
         self.bias_update: BiasUpdate = bias_update
         self.focus: Focus = focus
         self.activation_method: ActivationMethods = activation
-        
+        self.beta: float = beta
         self.gamma: float = gamma
         self.lamb: float = lamb
         self.eps: float = eps
@@ -104,7 +104,10 @@ class HebbianLayer(HiddenLayer):
         self.exponential_average: torch.Tensor = torch.zeros(self.output_dimension).to(self.device)
 
         self.normalized_weights: torch.Tensor = self.normalize(self.fc.weight).to(self.device)
-        
+
+        if Focus.NEURON == self.focus and WeightGrowth.SIGMOID == self.weight_growth:
+            w = self.fc.weight.data
+            self.fc.weight = nn.Parameter(self.beta * w / neuron_norm(w, self.sigmoid_k))
 
 
     #################################################################################################

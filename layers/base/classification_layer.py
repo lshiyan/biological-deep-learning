@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from layers.output_layer import OutputLayer
 from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LearningRules, ParamInit, WeightDecay, WeightGrowth
-from utils.weight_growth_fcts import sigmoid_growth, exponential_growth
+from utils.weight_growth_fcts import sigmoid_growth, exponential_growth, neuron_norm
 
 
 class ClassificationLayer(OutputLayer):
@@ -65,8 +65,12 @@ class ClassificationLayer(OutputLayer):
         self.bias_update: BiasUpdate = bias_update
         self.focus: Focus = focus
         self.activation_method: ActivationMethods = activation
-        
+        self.beta: float = beta
         self.sigmoid_k: float = sigmoid_k
+
+        if Focus.NEURON == self.focus and WeightGrowth.SIGMOID == self.weight_growth:
+            w = self.fc.weight.data
+            self.fc.weight = nn.Parameter(self.beta * w / neuron_norm(w, self.sigmoid_k))
 
 
     #################################################################################################
