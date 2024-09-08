@@ -60,7 +60,7 @@ from layers.output_layer import OutputLayer
 from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightDecay, WeightGrowth
 
 # Import growth functions from the utils.weight_growth_fcts module
-from utils.weight_growth_fcts import linear_growth, sigmoid_growth, exponential_growth
+from utils.weight_growth_fcts import linear_growth, sigmoid_growth, exponential_growth, neuron_norm
 
 class SGDNetwork(nn.Module):
     def __init__(self, name: str, args: argparse.Namespace) -> None:
@@ -75,6 +75,7 @@ class SGDNetwork(nn.Module):
         self.heb_focus = Focus[args.heb_focus.upper()]  # Assuming Focus is Enum
         self.heb_growth = WeightGrowth[args.heb_growth.upper()]  # Assuming WeightGrowth is Enum
         self.heb_lamb: float = args.heb_lamb
+        self.beta: float = args.beta
 
         # Select the derivative function based on heb_growth
         if self.heb_growth == WeightGrowth.LINEAR:
@@ -102,6 +103,24 @@ class SGDNetwork(nn.Module):
         self.add_module(input_layer.name.name, input_layer)
         self.add_module('HIDDEN', self.hidden_layer)
         self.add_module('OUTPUT', self.output_layer)
+
+
+    def init_weights_with_beta(self):
+
+        for name, param in self.named_parameters():
+            if self.heb_focus == Focus.NEURON:
+                if param.data.ndim == 1:
+                    param.data = self.beta * param.data
+                elif param.data.ndim == 2:
+                    param.data = self.beta * param.data / neuron_norm(param.data, k)
+                else:
+                    raise ValueError("Weight inits only implemented for rank 1 and 2 tensors.")
+                
+            elif self.heb_focus == Focus.SYNASPSE:
+                param.data = self.beta * param.data
+            else:
+                raise ValueError("Illegal focus.")
+
 
     def new_weight(self, old_w, grad):
         """Updates the weights using the derivative function and the provided gradient."""
