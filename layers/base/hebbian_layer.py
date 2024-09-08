@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from layers.hidden_layer import HiddenLayer
 from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LearningRules, ParamInit, WeightDecay, WeightGrowth
-
+from utils.weight_growth_fcts import sigmoid_growth, exponential_growth
 
 class HebbianLayer(HiddenLayer):
     """
@@ -566,7 +566,7 @@ class HebbianLayer(HiddenLayer):
         @return
             derivative: slope constant (derivative relative to linear rule always = 1)
         """
-        return torch.ones(self.fc.weight.shape, device=self.device)
+        return 1.0
     
     
     def _sigmoid_function(self) -> torch.Tensor:
@@ -579,20 +579,8 @@ class HebbianLayer(HiddenLayer):
         @return
             derivative: sigmoid derivative of current weights
         """
-        current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        derivative: torch.Tensor
-        
-        if self.focus == Focus.SYNASPSE:
-            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - torch.min(torch.ones_like(current_weights), torch.relu(current_weights)) ) * torch.abs(current_weights)
-        elif self.focus == Focus.NEURON:
-            norm: torch.Tensor = self.get_norm(self.fc.weight)
-            scaled_norm: torch.Tensor = norm / math.sqrt(self.output_dimension)
-
-            derivative = (1 / self.sigmoid_k) * (self.sigmoid_k - torch.min(torch.ones_like(scaled_norm), scaled_norm)) * scaled_norm
-        else:
-            raise ValueError("Invalid focus type.")
-        
-        return derivative
+        current_weights: torch.Tensor = self.fc.weight
+        return sigmoid_growth(current_weights, self.focus, self.sigmoid_k)
     
     
     def _exponential_function(self) -> torch.Tensor:
@@ -605,18 +593,8 @@ class HebbianLayer(HiddenLayer):
         @return
             derivative: exponential derivative of current weights
         """
-        current_weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
-        derivative: torch.Tensor
-        
-        if self.focus == Focus.SYNASPSE:
-            derivative = torch.abs(current_weights)
-        elif self.focus == Focus.NEURON:
-            norm: torch.Tensor = self.get_norm(self.fc.weight)
-            derivative = norm
-        else:
-            raise ValueError("Invalid focus type.")
-        
-        return derivative
+        current_weights: torch.Tensor = self.fc.weight
+        return exponential_growth(current_weights, self.focus)
         
 
         
