@@ -2,25 +2,21 @@
 # Different Weights Growth for Weight Updates
 #################################################################################################
 from numbers import Number
-
 import torch
-from utils.experiment_constants import Focus, WeightGrowth
+import math
+from typing import Union
+from utils.experiment_constants import Focus
 
 
 def linear_growth(w: torch.Tensor) -> torch.Tensor:
     """
-    METHOD
-    Defines weight updates when using linear funciton
-    Derivatives 1
-    @param
-        None
-    @return
-        derivative: slope constant (derivative relative to linear rule always = 1)
+    Defines weight updates when using a linear function.
+    Derivatives: constant slope (derivative relative to linear rule always = 1).
     """
-    return 1.0
+    return torch.ones_like(w)  # Ensure this returns a tensor of the same shape as w
 
 
-def sigmoid_growth(w: torch.Tensor, plasticity: Focus, k: Number) -> torch.Tensor:
+def sigmoid_growth(w: torch.Tensor, plasticity: Focus, k: float) -> torch.Tensor:
     """
     METHOD
     Defines weight updates when using sigmoid function
@@ -62,7 +58,7 @@ def exponential_growth(w: torch.Tensor, plasticity: Focus) -> torch.Tensor:
     derivative: torch.Tensor
 
     if plasticity == Focus.SYNASPSE:
-        derivative = torch.abs(current_weights)
+        derivative = torch.abs(w)
     elif plasticity == Focus.NEURON:
         input_dim = w.shape[1]
         norm: torch.Tensor = torch.norm(w, dim=1)

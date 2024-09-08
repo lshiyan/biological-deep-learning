@@ -51,11 +51,11 @@ arguments = [
             '--heb_eps=0.0001',
             '--heb_learn=orthogonal',
             '--heb_inhib=relu',
-            '--heb_growth=linear',
+            '--heb_growth=exponential',
             '--heb_focus=neuron',
             '--heb_act=normalized',
             # Classification layer hyperparameters
-            '--class_learn=OUTPUT_CONTRASTIVE',
+            '--class_learn=SUPERVISED_HEBBIAN',
             '--class_growth=exponential',
             '--class_bias=no_bias',
             '--class_focus=neuron',

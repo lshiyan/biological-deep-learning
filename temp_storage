@@ -41,102 +41,61 @@ from matplotlib import pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-import argparse
 from functools import partial
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import math
-from typing import Optional
-from utils.experiment_constants import Focus
-from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LearningRules, ParamInit, WeightGrowth
-from layers.base.data_setup_layer import DataSetupLayer
-
-# Define growth functions outside the class for better structure
-def linear_growth(w: torch.Tensor) -> torch.Tensor:
-    """Defines weight updates using a linear function."""
-    return torch.ones_like(w)  # Returns a tensor of ones with the same shape as w
+from utils.experiment_constants import Focus, WeightGrowth
+from utils.weight_growth_fcts import sigmoid_growth, exponential_growth, linear_growth
 
 
-def sigmoid_growth(w: torch.Tensor, plasticity: Focus, k: float) -> torch.Tensor:
-    """Defines weight updates using a sigmoid function."""
-    if plasticity == Focus.SYNASPSE:
-        weight = torch.abs(w) / k
-        derivative = (1 - torch.min(torch.ones_like(w), weight)) * weight
-    elif plasticity == Focus.NEURON:
-        # Handle 1D case
-        if w.ndim == 1:
-            print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
-            norm = torch.norm(w / k)
-            scaled_norm = norm / math.sqrt(w.size(0))
-            derivative = (1 - min(1.0, scaled_norm)) * scaled_norm
-            return torch.full_like(w, derivative.item())  # Fill with repeated value
-        elif w.ndim == 2:
-            input_dim = w.shape[1]
-            norm = torch.norm(w / k, dim=1, keepdim=True)
-            scaled_norm = norm / math.sqrt(input_dim)
-            derivative = (1 - torch.min(torch.ones_like(scaled_norm), scaled_norm)) * scaled_norm
-            derivative = derivative.repeat(1, w.size(1))  # Adjust shape to match w
-        else:
-            raise ValueError("Unexpected tensor dimensions for NEURON focus.")
-    else:
-        raise ValueError("Invalid focus type.")
-    return derivative
 
-def exponential_growth(w: torch.Tensor, plasticity: Focus) -> torch.Tensor:
-    """Defines weight updates using an exponential function."""
-    if plasticity == Focus.SYNASPSE:
-        derivative = torch.abs(w)
-    elif plasticity == Focus.NEURON:
-        # Handle case where w is 1D
-        if w.ndim == 1:
-            print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
-            # Assume the input dimension should be the length of w
-            input_dim = w.size(0)
-            norm = torch.norm(w)
-            scaled_norm = norm / math.sqrt(input_dim)
-            derivative = torch.full_like(w, scaled_norm)  # Use the same norm value for all elements
-        elif w.ndim == 2:
-            input_dim = w.shape[1]
-            norm = torch.norm(w, dim=1, keepdim=True)
-            scaled_norm = norm / math.sqrt(input_dim)
-            derivative = scaled_norm.repeat(1, w.size(1))  # Adjust shape to match w
-        else:
-            raise ValueError("Unexpected tensor dimensions for NEURON focus.")
-    else:
-        raise ValueError("Invalid focus type.")
-    return derivative
 
 class SGDNetwork(nn.Module):
+    """
+    Defines a network that uses Stochastic Gradient Descent (SGD) for training.
+    """
+    
     def __init__(self, name: str, args: argparse.Namespace) -> None:
         super(SGDNetwork, self).__init__()
 
-        # Set dimensions and hyperparameters
-        self.input_dim = args.input_dim
-        self.heb_dim = args.heb_dim
-        self.output_dim = args.output_dim
-        self.lr = args.lr
-        self.sig_k = args.sigmoid_k
-        self.heb_focus = Focus[args.heb_focus.upper()]  # Assuming Focus is Enum
-        self.heb_growth = WeightGrowth[args.heb_growth.upper()]  # Assuming WeightGrowth is Enum
+        # Dimension of each layer
+        self.input_dim: int = args.input_dim
+        self.heb_dim: int = args.heb_dim
+        self.output_dim: int = args.output_dim
 
-        # Select the derivative function based on heb_growth
-        self.derivative = linear_growth  # Default to linear
-
-        if self.heb_growth == WeightGrowth.LINEAR:
-            self.derivative = linear_growth
-        elif self.heb_growth == WeightGrowth.SIGMOID:
-            self.derivative = partial(sigmoid_growth, plasticity=self.heb_focus, k=self.sig_k)
-        elif self.heb_growth == WeightGrowth.EXPONENTIAL:
-            self.derivative = partial(exponential_growth, plasticity=self.heb_focus)
-        else:
-            raise ValueError(f"Growth type {self.heb_growth} not supported.")
-
-        # Set up layers
-        self.input_layer = DataSetupLayer()  # Example input layer
-        self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim)
-        self.output_layer = nn.Linear(self.heb_dim, self.output_dim)
+        # Hebbian layer hyperparameters
+        inhibition_mapping: dict[str, LateralInhibitions] = {member.value.upper(): member for member in LateralInhibitions}
+        learning_rule_mapping: dict[str, LearningRules] = {member.value.upper(): member for member in LearningRules}
+        weight_growth_mapping: dict[str, WeightGrowth] = {member.value.upper(): member for member in WeightGrowth}
+        param_init_mapping: dict[str, ParamInit] = {member.value.upper(): member for member in ParamInit}
+        bias_update_mapping: dict[str, BiasUpdate] = {member.value.upper(): member for member in BiasUpdate}
+        focus_mapping: dict[str, Focus] = {member.value.upper(): member for member in Focus}
+        activation_mapping: dict[str, ActivationMethods] = {member.value.upper(): member for member in ActivationMethods}
         
+        self.heb_lamb: float = args.heb_lamb
+        self.heb_eps: float = args.heb_eps
+        self.heb_gam: float = args.heb_gam
+        self.heb_inhib: LateralInhibitions = inhibition_mapping[args.heb_inhib.upper()]
+        self.heb_learn: LearningRules = learning_rule_mapping[args.heb_learn.upper()]
+        self.heb_growth: WeightGrowth = weight_growth_mapping[args.heb_growth.upper()]
+        self.heb_bias_update: BiasUpdate = bias_update_mapping[args.heb_bias.upper()]
+        self.heb_focus: Focus = focus_mapping[args.heb_focus.upper()]
+        self.heb_act: ActivationMethods = activation_mapping[args.heb_act.upper()]
+
+        # Classification layer hyperparameters
+        self.class_learn: LearningRules = learning_rule_mapping[args.class_learn.upper()]
+        self.class_growth: WeightGrowth = weight_growth_mapping[args.class_growth.upper()]
+        self.class_bias_update: BiasUpdate = bias_update_mapping[args.class_bias.upper()]
+        self.class_focus: Focus = focus_mapping[args.class_focus.upper()]
+        self.class_act: ActivationMethods = activation_mapping[args.class_act.upper()]
+
+        # Shared hyperparameters
+        self.lr: float = args.lr
+        self.sig_k: float = args.sigmoid_k
+        self.alpha: float = args.alpha
+        self.beta: float = args.beta
+        self.sigma: float = args.sigma
+        self.mu: float = args.mu
+        self.init: ParamInit = param_init_mapping[args.init.upper()]
+
         # Setting up layers of the network
         input_layer: nn.Module = DataSetupLayer()  # Assuming this handles input data setup correctly
         self.hidden_layer = nn.Linear(self.input_dim, self.heb_dim)  # Hidden layer
@@ -154,51 +113,73 @@ class SGDNetwork(nn.Module):
         self.add_module('HIDDEN', self.hidden_layer)
         self.add_module('OUTPUT', self.output_layer)
 
+       # Assigning derivative functions based on growth type
+        self.derivative = linear_growth  # Default assignment
+        
+        if WeightGrowth.LINEAR == self.heb_growth:
+            self.derivative = linear_growth
+        elif WeightGrowth.SIGMOID == self.heb_growth:
+            self.derivative = partial(sigmoid_growth, plasticity=self.heb_focus, k=self.sig_k)
+        elif WeightGrowth.EXPONENTIAL == self.heb_growth:
+            self.derivative = partial(exponential_growth, plasticity=self.heb_focus)
+        else:
+            raise ValueError(f"{self.heb_focus} not an implemented plasticity focus.")
 
-    def new_weight(self, old_w, grad, is_bias=False):
-        """Updates the weights using the derivative function and the provided gradient."""
+    def new_weight(self, old_w, grad):
+        """
+        Updates the weights using the derivative function and the provided gradient.
+        """
         if grad is None:
             print(f"Skipping weight update for {old_w} because grad is None.")
-            return old_w
+            return old_w  # Return the old weight if no gradient is available
 
-        # Apply the chosen derivative function, only to weights
-        if not is_bias:
-            derivative_value = self.derivative(old_w)
-            print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
-            new_weight = old_w - self.lr * derivative_value * grad  # Gradient descent
-        else:
-            # For biases, skip derivative application
-            new_weight = old_w - self.lr * grad
+        derivative_value = self.derivative(old_w)
+        # Log the derivative value to see if it's too small/large
+        print(f"Derivative value: {derivative_value.mean().item()}")
 
+        new_weight = old_w + self.lr * derivative_value * grad
         return new_weight
 
     def update_weights(self, logits: torch.Tensor, target: torch.Tensor) -> float:
-        """Updates weights based on the loss between logits and target."""
+        """
+        Updates weights based on the loss between logits and target.
+        """
+        # Check if logits and target have matching batch sizes
         print(f"Logits shape: {logits.shape}, Target shape: {target.shape}")
         assert logits.size(0) == target.size(0), \
             f"Logits batch size {logits.size(0)} does not match target batch size {target.size(0)}"
 
-        # Compute loss and backpropagate
+        # Training mode: backpropagate and update weights
         self.optimizer.zero_grad()
-        loss = self.loss_fn(logits, target)
-        loss.backward()
-
-        # Manually update weights using the custom derivative
-        for name, param in self.named_parameters():
+        loss = self.loss_fn(logits, target)  # Compute loss
+        loss.backward()  # Backpropagation
+        
+        # Update each parameter using the custom derivative
+        for param in self.parameters():
             if param.grad is not None:
-                is_bias = 'bias' in name  # Check if the parameter is a bias
-                param.data = self.new_weight(param.data, param.grad, is_bias)
+                param.data = self.new_weight(param.data, param.grad)
             else:
                 print(f"Warning: Gradient for parameter {param} is None. Skipping update.")
+                
+        return loss.item()  # Return loss value for tracking
 
-        return loss.item()
+    def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None, 
+                reconstruct: bool = False, freeze: bool = False) -> torch.Tensor:
+        """
+        Forward method for processing input through the network.
+        If clamped_output is provided, it performs training by calculating loss.
+        """
+        # Flatten the input if necessary
+        input = input.view(input.size(0), -1)  # Flatten input to (batch_size, input_dim)
+        input = input.to(next(self.parameters()).device)
 
-    def forward(self, input: torch.Tensor, clamped_output: Optional[torch.Tensor] = None) -> torch.Tensor:
-        """Forward method for processing input through the network."""
-        input = input.view(input.size(0), -1)  # Flatten input
+        # Forward pass through the hidden layer
         h = self.relu(self.hidden_layer(input))
-        logits = self.output_layer(h)
 
+        # Forward pass through the output layer
+        logits = self.output_layer(h)  # Output is logits of shape [batch_size, 10]
+
+        # If clamped_output (labels) is provided, update weights
         if clamped_output is not None:
             self.update_weights(logits, clamped_output)
 
@@ -327,3 +308,4 @@ class SGDNetwork(nn.Module):
             module_active_weights[name.lower()] = module.active_weights(beta)
         
         return module_active_weights
+
