@@ -7,6 +7,12 @@ import math
 from typing import Union
 from utils.experiment_constants import Focus
 
+def neuron_norm(w, k):
+    out_dim, in_dim = w.shape
+    norm = torch.norm(w / k, dim=1, keepdim=True) / math.sqrt(in_dim)
+    return norm
+
+
 # Define growth functions outside the class for better structure
 def linear_growth(w: torch.Tensor) -> torch.Tensor:
     """Defines weight updates using a linear function."""
@@ -22,15 +28,11 @@ def sigmoid_growth(w: torch.Tensor, plasticity: 'Focus', k: float) -> torch.Tens
     elif plasticity == Focus.NEURON:
         if w.ndim == 1:
             print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
-            norm = torch.norm(w / k)
-            derivative = (1 - min(1.0, norm)) * norm
-            return torch.full_like(w, derivative.item())  # Fill with repeated value
+            derivative = (1 - min(torch.ones_like(w), torch.abs(w) / k)) * torch.abs(w) / k
+            return derivative  # Fill with repeated value
         elif w.ndim == 2:
-            input_dim = w.shape[1]
-            norm = torch.norm(w / k, dim=1, keepdim=True)
-            scaled_norm = norm / math.sqrt(input_dim)
+            scaled_norm = neuron_norm(w, k)
             derivative = (1 - torch.min(torch.ones_like(scaled_norm), scaled_norm)) * scaled_norm
-            derivative = derivative.repeat(1, w.size(1))  # Adjust shape to match w
         else:
             raise ValueError("Unexpected tensor dimensions for NEURON focus.")
     else:
@@ -46,13 +48,9 @@ def exponential_growth(w: torch.Tensor, plasticity: 'Focus') -> torch.Tensor:
     elif plasticity == Focus.NEURON:
         if w.ndim == 1:
             print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
-            norm = torch.norm(w)
-            derivative = torch.full_like(w, norm)  # Use the same norm value for all elements
+            derivative = torch.abs(w)
         elif w.ndim == 2:
-            input_dim = w.shape[1]
-            norm = torch.norm(w, dim=1, keepdim=True)
-            scaled_norm = norm / math.sqrt(input_dim)
-            derivative = scaled_norm.repeat(1, w.size(1))  # Adjust shape to match w
+            derivative = neuron_norm(w, 1)
         else:
             raise ValueError("Unexpected tensor dimensions for NEURON focus.")
     else:
