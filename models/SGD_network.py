@@ -115,7 +115,7 @@ class SGDNetwork(nn.Module):
                 elif param.data.ndim == 2:
                     param.data = self.beta * param.data / neuron_norm(param.data, k)
                 else:
-                    raise ValueError("Weight inits only implemented for rank 1 and 2 tensors.")
+                    raise NotImplementedError("Weight inits only implemented for rank 1 and 2 tensors.")
 
             elif self.heb_focus == Focus.SYNASPSE:
                 param.data = self.beta * param.data
