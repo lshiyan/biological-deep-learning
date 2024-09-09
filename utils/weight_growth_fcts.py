@@ -12,13 +12,10 @@ def neuron_norm(w, k):
     norm = torch.norm(w / k, dim=1, keepdim=True) / math.sqrt(in_dim)
     return norm
 
-
 # Define growth functions outside the class for better structure
 def linear_growth(w: torch.Tensor) -> torch.Tensor:
     """Defines weight updates using a linear function."""
     return torch.ones_like(w)  # Returns a tensor of ones with the same shape as w
-
-
 
 def sigmoid_growth(w: torch.Tensor, plasticity: 'Focus', k: float) -> torch.Tensor:
     """Defines weight updates using a sigmoid function."""
@@ -27,9 +24,8 @@ def sigmoid_growth(w: torch.Tensor, plasticity: 'Focus', k: float) -> torch.Tens
         derivative = (1 - torch.min(torch.ones_like(w), weight)) * weight
     elif plasticity == Focus.NEURON:
         if w.ndim == 1:
-            print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
+            # print(f"Warning: Expected at least 2 dimensions for NEURON focus, got shape {w.shape}")
             derivative = (1 - min(torch.ones_like(w), torch.abs(w) / k)) * torch.abs(w) / k
-            return derivative  # Fill with repeated value
         elif w.ndim == 2:
             scaled_norm = neuron_norm(w, k)
             derivative = (1 - torch.min(torch.ones_like(scaled_norm), scaled_norm)) * scaled_norm
@@ -38,8 +34,6 @@ def sigmoid_growth(w: torch.Tensor, plasticity: 'Focus', k: float) -> torch.Tens
     else:
         raise ValueError("Invalid focus type.")
     return derivative
-
-
 
 def exponential_growth(w: torch.Tensor, plasticity: 'Focus') -> torch.Tensor:
     """Defines weight updates using an exponential function."""

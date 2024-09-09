@@ -1,62 +1,19 @@
 import argparse
-from typing import Optional
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import argparse
 from typing import Optional
 import torch
-from interfaces.network import Network
-from layers.base.classification_layer import ClassificationLayer
-from layers.base.data_setup_layer import DataSetupLayer
-from layers.base.hebbian_layer import HebbianLayer
-from layers.hidden_layer import HiddenLayer
-from layers.input_layer import InputLayer
-from layers.output_layer import OutputLayer
-from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightDecay, WeightGrowth
-import argparse
-from typing import Optional
-import torch
-from interfaces.network import Network
-from layers.base.classification_layer import ClassificationLayer
-from layers.base.data_setup_layer import DataSetupLayer
-from layers.base.hebbian_layer import HebbianLayer
-from layers.hidden_layer import HiddenLayer
-from layers.input_layer import InputLayer
-from layers.output_layer import OutputLayer
-from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightDecay, WeightGrowth
-
-
-from abc import ABC
 import math
 from typing import Optional, Tuple
-import matplotlib
-import matplotlib.figure
-import matplotlib.colors as mcolors
-import os
 
-from utils.experiment_constants import LayerNames, ParamInit
+import matplotlib.figure
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
-import torch
-import torch.nn as nn
-import argparse
 from functools import partial
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import math
-from typing import Optional
 from layers.base.data_setup_layer import DataSetupLayer
-
-from interfaces.network import Network
-from layers.base.classification_layer import ClassificationLayer
-from layers.base.data_setup_layer import DataSetupLayer
-from layers.base.hebbian_layer import HebbianLayer
-from layers.hidden_layer import HiddenLayer
-from layers.input_layer import InputLayer
-from layers.output_layer import OutputLayer
 from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LayerNames, LearningRules, ParamInit, WeightDecay, WeightGrowth
 
 # Import growth functions from the utils.weight_growth_fcts module
@@ -96,9 +53,9 @@ class SGDNetwork(nn.Module):
         self.relu = nn.ReLU()
 
         # Optimizer and loss function
-        #self.optimizer = optim.SGD(self.parameters(), lr=self.lr)
+        self.optimizer = optim.SGD(self.parameters(), lr=self.lr)
         self.loss_fn = nn.CrossEntropyLoss()  # Handles the softmax internally, expects logits and class indices
-
+        # self.mse_loss = nn.MSELoss()
         # Register layers
         self.add_module(input_layer.name.name, input_layer)
         self.add_module('HIDDEN', self.hidden_layer)
@@ -106,6 +63,12 @@ class SGDNetwork(nn.Module):
         self.init_weights_with_beta()
         self.fake_exp = True
 
+    def _norm_distribution_(self):
+        hidden_norms = neuron_norm(self.hidden_layer.weight, self.sig_k).reshape(-1).detach().numpy()
+        class_norms = neuron_norm(self.output_layer.weight, self.sig_k).reshape(-1).detach().numpy()
+        h_perc = np.percentile(hidden_norms, [1, 5, 10, 50, 90, 95, 99])
+        c_perc = np.percentile(class_norms, [1, 5, 10, 50, 90, 95, 99])
+        return h_perc, c_perc
 
     def init_weights_with_beta(self):
 
@@ -114,7 +77,9 @@ class SGDNetwork(nn.Module):
                 if param.data.ndim == 1:
                     param.data = self.beta * param.data
                 elif param.data.ndim == 2:
-                    param.data = self.beta * param.data / neuron_norm(param.data, self.sig_k)
+                    out_dim = param.shape[0]
+                    multiplier = torch.pow(10, - 2 * torch.rand(out_dim, 1) + 2)
+                    param.data = multiplier * self.beta * param.data / neuron_norm(param.data, self.sig_k)
                 else:
                     raise NotImplementedError("Weight inits only implemented for rank 1 and 2 tensors.")
 
@@ -126,37 +91,40 @@ class SGDNetwork(nn.Module):
 
     def new_weight(self, old_w, grad):
         """Updates the weights using the derivative function and the provided gradient."""
-        if grad is None:
-            print(f"Skipping weight update for {old_w} because grad is None.")
-            return old_w
+        # if grad is None:
+        #     print(f"Skipping weight update for {old_w} because grad is None.")
+        #     return old_w
 
         # Apply the chosen derivative function to all weights
         derivative_value = self.derivative(old_w)
-        print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
+        # print(f"Derivative value mean: {derivative_value.mean().item()}")  # Debug statement
+        # ngrad = grad / (torch.norm(grad)+1e-8) if grad.ndim == 1 else grad / (torch.norm(grad, dim=1, keepdim=True) +1e-8)
         new_weight = old_w - self.lr * derivative_value * grad  # Gradient descent
 
         return new_weight
 
     def update_weights(self, logits: torch.Tensor, target: torch.Tensor) -> float:
         """Updates weights based on the loss between logits and target."""
-        print(f"Logits shape: {logits.shape}, Target shape: {target.shape}")
+        # print(f"Logits shape: {logits.shape}, Target shape: {target.shape}")
         assert logits.size(0) == target.size(0), \
             f"Logits batch size {logits.size(0)} does not match target batch size {target.size(0)}"
 
         # Compute loss and backpropagate
-        #self.optimizer.zero_grad()
+        self.optimizer.zero_grad()
         loss = self.loss_fn(logits, target)
+        # loss = self.mse_loss(logits, nn.functional.one_hot(target))
         loss.backward()
         with torch.no_grad():
             # Manually update weights using the custom derivative
             for name, param in self.named_parameters():
                 if param.grad is not None:
                     param.data = self.new_weight(param.data, param.grad)
-                    if self.fake_exp and WeightGrowth.EXPONENTIAL and param.data.ndim==2:
+                    if self.fake_exp and WeightGrowth.EXPONENTIAL == self.heb_growth and param.data.ndim==2:
                         param.data = param.data / (torch.norm(param.data, dim=1, keepdim=True) +1e-9)
 
                 else:
-                    print(f"Warning: Gradient for parameter {param} is None. Skipping update.")
+                    # print(f"Warning: Gradient for parameter {param} is None. Skipping update.")
+                    pass
 
         return loss.item()
 
