@@ -118,7 +118,7 @@ class SGDNetwork(nn.Module):
                 else:
                     raise NotImplementedError("Weight inits only implemented for rank 1 and 2 tensors.")
 
-            elif self.heb_focus == Focus.SYNASPSE:
+            elif self.heb_focus == Focus.SYNAPSE:
                 param.data = self.beta * param.data
             else:
                 raise ValueError("Illegal focus.")

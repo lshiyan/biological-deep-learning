@@ -22,7 +22,7 @@ def linear_growth(w: torch.Tensor) -> torch.Tensor:
 
 def sigmoid_growth(w: torch.Tensor, plasticity: 'Focus', k: float) -> torch.Tensor:
     """Defines weight updates using a sigmoid function."""
-    if plasticity == Focus.SYNASPSE:
+    if plasticity == Focus.SYNAPSE:
         weight = torch.abs(w) / k
         derivative = (1 - torch.min(torch.ones_like(w), weight)) * weight
     elif plasticity == Focus.NEURON:
@@ -43,7 +43,7 @@ def sigmoid_growth(w: torch.Tensor, plasticity: 'Focus', k: float) -> torch.Tens
 
 def exponential_growth(w: torch.Tensor, plasticity: 'Focus') -> torch.Tensor:
     """Defines weight updates using an exponential function."""
-    if plasticity == Focus.SYNASPSE:
+    if plasticity == Focus.SYNAPSE:
         derivative = torch.abs(w)
     elif plasticity == Focus.NEURON:
         if w.ndim == 1:

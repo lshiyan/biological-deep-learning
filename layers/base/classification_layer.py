@@ -45,7 +45,7 @@ class ClassificationLayer(OutputLayer):
                  learning_rule: LearningRules = LearningRules.HEBBIAN_LEARNING_RULE,
                  weight_growth: WeightGrowth = WeightGrowth.LINEAR,
                  bias_update: BiasUpdate = BiasUpdate.NO_BIAS,
-                 focus: Focus = Focus.SYNASPSE,
+                 focus: Focus = Focus.SYNAPSE,
                  activation: ActivationMethods = ActivationMethods.BASIC
                  ) -> None:
         """
