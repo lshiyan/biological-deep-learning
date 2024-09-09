@@ -15,7 +15,7 @@ tests/
 results/
 
 #Data
-#data/
+data/
 
 #Virtual env
 neuroai_venv/
