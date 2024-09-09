@@ -5,21 +5,35 @@ script_name = 'train_forget.py'
 
 # Simulate the command line arguments
 base_arguments = [
+    # Model
+    "--model=SGD",
+    #"--model=Hebb",
     # Basic configurations  
-    "--data_name=MNIST",
     '--experiment_name=_FORGET_SGD_MNIST_LINEAR_',
     # Dataset parameters
     "--sub_experiment_scope_list=[[0,1],[2,3],[4,5],[6,7],[8,9]]",
     # Data Factory - MNIST
-    "--train_data=data/mnist/train-images.idx3-ubyte", 
-    "--train_label=data/mnist/train-labels.idx1-ubyte", 
-    "--test_data=data/mnist/test-images.idx3-ubyte", 
-    "--test_label=data/mnist/test-labels.idx1-ubyte",
+    "--data_name=MNIST",
+    "--train_data=data/mnist/train-images-idx3-ubyte",
+    "--train_label=data/mnist/train-labels-idx1-ubyte",
+    "--test_data=data/mnist/t10k-images-idx3-ubyte",
+    "--test_label=data/mnist/t10k-labels-idx1-ubyte",
     "--train_size=60000",
     "--test_size=10000",
     "--classes=10",
     "--train_fname=data/mnist/mnist_train.csv",
     "--test_fname=data/mnist/mnist_test.csv",
+    # '--data_name=FASHION_MNIST',
+    # '--experiment_name=_FMNIST_EXPERIMENTS_TEST',
+    # '--train_data=data/fashion_mnist/train-images-idx3-ubyte',
+    # '--train_label=data/fashion_mnist/train-labels-idx1-ubyte',
+    # '--test_data=data/fashion_mnist/t10k-images-idx3-ubyte',
+    # '--test_label=data/fashion_mnist/t10k-labels-idx1-ubyte',
+    # '--train_size=60000',
+    # '--test_size=10000',
+    # '--classes=10',
+    # '--train_fname=data/fashion_mnist/fashion-mnist_train.csv',
+    # '--test_fname=data/fashion_mnist/fashion-mnist_test.csv',
     # Dimension of each layer
     '--input_dim=784', 
     '--heb_dim=64', 
@@ -34,7 +48,7 @@ base_arguments = [
     '--heb_act=normalized',
     # Classification layer hyperparameters
     '--class_learn=SUPERVISED_HEBBIAN',
-    '--class_growth=lineasdfsadfa',
+    '--class_growth=linear',
     '--class_bias=no_bias',
     '--class_focus=neuron',
     '--class_act=normalized',

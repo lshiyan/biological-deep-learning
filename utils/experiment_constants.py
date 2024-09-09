@@ -123,5 +123,5 @@ class ActivationMethods(Enum):
     
     
 class Focus(Enum):
-    SYNASPSE = 'SYNAPSE'
+    SYNAPSE = 'SYNAPSE'
     NEURON = 'NEURON'

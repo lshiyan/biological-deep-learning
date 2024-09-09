@@ -339,7 +339,11 @@ class ForgetExperiment(Experiment):
         testing_time = test_end - test_start
         
         # Log test times and accuracy results
-        if purpose == Purposes.TEST_ACCURACY: 
+        if purpose == Purposes.TEST_ACCURACY:
+            # h_perc, c_perc = self.model._norm_distribution_()
+            # q = [1, 5, 10, 50, 90, 95, 99]
+            # self.TEST_LOG.info(f"hidden norm percentiles:\t {list(zip(q, h_perc))}\n"
+            #                    f"class norm percentiles:\t {list(zip(q, c_perc))}")
             testing_subexperiment_name = self.test_dataloader_dictionary[test_data_loader]
             self.sub_experiment_test_timers[testing_subexperiment_name] += testing_time
             self.TEST_LOG.info(f'Current Experiment: {sub_experiment_name} || Current Subexperiment Samples Seen: {self.SUB_EXP_SAMPLES} || Total Samples Seen: {self.TOTAL_SAMPLES} || Test Accuracy on {testing_subexperiment_name}: {final_accuracy}')

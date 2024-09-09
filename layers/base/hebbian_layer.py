@@ -60,7 +60,7 @@ class HebbianLayer(HiddenLayer):
                  learning_rule: LearningRules = LearningRules.SANGER_LEARNING_RULE,
                  weight_growth: WeightGrowth = WeightGrowth.LINEAR,
                  bias_update: BiasUpdate = BiasUpdate.NO_BIAS,
-                 focus: Focus = Focus.SYNASPSE,
+                 focus: Focus = Focus.SYNAPSE,
                  activation: ActivationMethods = ActivationMethods.BASIC
                  ) -> None:
         """
@@ -186,7 +186,7 @@ class HebbianLayer(HiddenLayer):
             function_derivative = self._linear_function().to(self.device)
         elif self.weight_growth == WeightGrowth.SIGMOID:
             function_derivative = self._sigmoid_function().to(self.device)
-        elif (self.weight_growth == WeightGrowth.EXPONENTIAL) and (self.focus == Focus.SYNASPSE):
+        elif (self.weight_growth == WeightGrowth.EXPONENTIAL) and (self.focus == Focus.SYNAPSE):
             function_derivative = self._exponential_function().to(self.device)
         elif (self.weight_growth == WeightGrowth.EXPONENTIAL) and (self.focus == Focus.NEURON):
             function_derivative = self._linear_function().to(self.device)
