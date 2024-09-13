@@ -79,6 +79,9 @@ class NeuralNet(nn.Module):
         for layer_name, module in self.layers.items():
             module.visualize_weights()
 
+    """
+    Used in Feedforward models
+    """
     def forward(self, x, clamped):
         for layer in self.layers.values():
             #print(x)
@@ -93,6 +96,9 @@ class NeuralNet(nn.Module):
     def set_iteration(self, i):
         self.iteration = i
     
+    """
+    Used in Topdown models
+    """
     def forward_clamped(self, x, clamped):
         input = x.detach().clone()
         layers = list(self.layers.values())
@@ -204,6 +210,8 @@ class Hebbian_Layer(nn.Module):
         
     # Fully orthogonal Sanger variant
     def update_weights_FullyOrthogonal(self, input, output):
+        print(input.shape)
+        print(output.shape)
         x=input.detach().clone().squeeze()
         y=output.detach().clone().squeeze()
         initial_weight = self.feedforward.weight.detach().clone()
@@ -327,10 +335,6 @@ class Hebbian_Layer(nn.Module):
         if h_l == None:
             h = self.feedforward(x)
         else :
-            #print(self.feedforward(x))
-            #print(torch.matmul(h_l, w))
-            #print(self.feedforward(x))
-            #print(torch.matmul(h_l, w))
             h = self.feedforward(x) + self.decrease*torch.matmul(h_l, w)
         return self.inhibition(h)
     
