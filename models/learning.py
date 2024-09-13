@@ -6,9 +6,8 @@ import torch.nn as nn
 Learning rules for MLP and CNN models
 """
 
-def update_weights_FullyOrthogonal(input, output, initial_weight, eta=None):
+def update_weights_FullyOrthogonal(input, output, initial_weight, eta=1):
     
-
     outer_prod = torch.einsum('ij,ik->ijk', output, input)
 
     ytw = torch.matmul(output.unsqueeze(1), initial_weight).squeeze(1)
@@ -20,7 +19,7 @@ def update_weights_FullyOrthogonal(input, output, initial_weight, eta=None):
     return delta_weight
 
 
-def update_weights_OrthogonalExclusive(x: torch.Tensor, y: torch.Tensor, weights, device, eta = None):
+def update_weights_OrthogonalExclusive(x: torch.Tensor, y: torch.Tensor, weights, device, eta = 1):
 
     outer_prod: torch.Tensor = torch.einsum("ai, aj -> aij", y, x)
 
