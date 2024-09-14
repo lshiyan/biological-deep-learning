@@ -9,6 +9,8 @@ import models.CNN.model as CNN
 
 from cycling_utils import TimestampedTimer
 
+import models.hyperparams
+
 timer = TimestampedTimer("Imported TimestampedTimer")
 
 import argparse
@@ -205,10 +207,10 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
 
         # Forward pass
         if args.dataset == "EMNIST":
-            labels = CNN.oneHotEncode(targets, 47, args.device_id)
+            labels = models.hyperparams.oneHotEncode(targets, 47, args.device_id)
             inputs = inputs.reshape(1,1,28,28)
         elif args.dataset == "FashionMNIST" :
-            labels = CNN.oneHotEncode(targets, 10, args.device_id)
+            labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
             inputs = inputs.reshape(1,1,28,28)
 
         if args.topdown:
@@ -449,9 +451,9 @@ if __name__ == "__main__":
     lambds = [3]
     lr = [5e-5]
     rho = np.logspace(-7, 0, num=72)
-    classifier_learnings = [CNN.ClassifierLearning.Contrastive]
-    weight_learnings = [CNN.Learning.OrthogonalExclusive]
-    weight_mods = [CNN.WeightScale.WeightNormalization]
+    classifier_learnings = [models.hyperparams.LearningRule.OutputContrastiveSupervised]
+    weight_learnings = [models.hyperparams.LearningRule.OrthogonalExclusive]
+    weight_mods = [models.hyperparams.WeightScale.WeightNormalization]
 
     combinations = list(itertools.product(lambds, lr, rho, classifier_learnings, weight_learnings, weight_mods))
     hyperps = [list(comb) for comb in combinations]

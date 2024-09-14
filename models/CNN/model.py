@@ -1,46 +1,14 @@
 import os 
 import torch
 import torch.nn as nn
-from enum import Enum
 import math
-import numpy as np
 from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
 import time
 import torch.nn.functional as F
 import models.learning as L
+from models.hyperparams import ImageType, LearningRule, WeightScale, Inhibition, oneHotEncode
 
-
-
-class ImageType(Enum):
-    Gray = 1
-    RGB = 2
-
-class ClassifierLearning(Enum):
-    Supervised = 1
-    Contrastive = 2
-    Orthogonal = 3
-    SoftHebb = 4
-
-class Learning(Enum):
-    OrthogonalExclusive = 1
-    FullyOrthogonal = 2
-    SoftHebb = 3
-
-class WeightScale(Enum):
-    WeightDecay = 1
-    WeightNormalization = 2
-    No = 3
-
-class Inhibition(Enum):
-    Softmax = 1
-    Lateral = 2
-
-
-def oneHotEncode(labels, num_classes, device):
-    one_hot_encoded = torch.zeros(len(labels), num_classes).to(device)
-    one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
-    return one_hot_encoded
 
 class ConvolutionalNeuralNet(nn.Module):
     def __init__(self, device):
@@ -144,8 +112,8 @@ class ConvolutionalNeuralNet(nn.Module):
 
 class Hebbian_Layer(nn.Module):
     def __init__(self, inputdim, outputdim, lr, lamb, rho, gamma, eps, device, eta=1, b=1, is_output_layer=False,
-                 output_learning=ClassifierLearning.Supervised, update=Learning.OrthogonalExclusive,
-                 weightscaling=WeightScale.WeightNormalization, triangle=False, inhibition = Inhibition.Lateral):
+                 output_learning=LearningRule.Supervised, update=LearningRule.OrthogonalExclusive,
+                 weightscaling=WeightScale.WeightNormalization, triangle=False, inhibition = Inhibition.RePU):
         super(Hebbian_Layer, self).__init__()
         self.input_dim = inputdim
         self.output_dim = outputdim
@@ -187,7 +155,7 @@ class Hebbian_Layer(nn.Module):
         x=torch.relu(x)
         max_ele=torch.max(x).item()
         x/=(max_ele + 1e-9)
-        if self.inhib == Inhibition.Lateral:
+        if self.inhib == Inhibition.RePU:
             x=torch.pow(x, self.lamb)
         elif self.inhib == Inhibition.Softmax:
             x = nn.Softmax()(x)
@@ -198,7 +166,7 @@ class Hebbian_Layer(nn.Module):
         with torch.no_grad():
             y = output.squeeze()
             initial_weight = self.feedforward.weight
-            delta_w = L.update_weight_softhebb(input, preactivation, output, initial_weight)
+            delta_w = L.update_weight_softhebb(input, preactivation, output, initial_weight, inhibition=self.inhib)
             new_weights = initial_weight + self.lr *  delta_w
             self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
             self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
@@ -242,20 +210,20 @@ class Hebbian_Layer(nn.Module):
     def update_weights(self, input, preactivation, prediction,  true_output=None):
         if self.is_output_layer:
 
-            if self.o_learning == ClassifierLearning.Contrastive:
+            if self.o_learning == LearningRule.OutputContrastiveSupervised:
                 self.classifier_update_contrastive(input, prediction, true_output)
-            elif self.o_learning == ClassifierLearning.Supervised:
+            elif self.o_learning == LearningRule.Supervised:
                 self.classifier_update_supervised(input, true_output)
-            elif self.o_learning == ClassifierLearning.SoftHebb:
+            elif self.o_learning == LearningRule.SoftHebb:
                 self.update_weights_softhebb(input, preactivation, true_output)
-            elif self.o_learning == ClassifierLearning.Orthogonal:
+            elif self.o_learning == LearningRule.Orthogonal:
                 self.update_weights_FullyOrthogonal(input, true_output)
 
-        elif self.w_update == Learning.OrthogonalExclusive:
+        elif self.w_update == LearningRule.OrthogonalExclusive:
                 self.update_weights_OrthogonalExclusive(input, prediction)
-        elif self.w_update == Learning.SoftHebb:
+        elif self.w_update == LearningRule.SoftHebb:
             self.update_weights_softhebb(input, preactivation, prediction)
-        elif self.w_update == Learning.FullyOrthogonal:
+        elif self.w_update == LearningRule.FullyOrthogonal:
             self.update_weights_FullyOrthogonal(input, prediction)
         else:
             raise ValueError("Not Implemented")
@@ -319,8 +287,8 @@ class Hebbian_Layer(nn.Module):
 class ConvolutionHebbianLayer(nn.Module):
     def __init__(self, input_shape, kernel, stride, in_ch, out_ch, lambd, lr, gamma, epsilon, rho, device,
                  eta=1, padding=0,
-                 weightlearning=Learning.SoftHebb, weightscaling=WeightScale.WeightNormalization, triangle=False,
-                 is_output_layer=False, whiten_input=False, b=1, inhibition = Inhibition.Lateral):
+                 weightlearning=LearningRule.SoftHebb, weightscaling=WeightScale.WeightNormalization, triangle=False,
+                 is_output_layer=False, whiten_input=False, b=1, inhibition = Inhibition.RePU):
         super(ConvolutionHebbianLayer, self).__init__()
         self.input_shape = input_shape  # (height, width)
         self.kernel = kernel
@@ -393,7 +361,7 @@ class ConvolutionHebbianLayer(nn.Module):
 
         output /= (max_ele + 1e-9)
 
-        if self.inhib == Inhibition.Lateral:
+        if self.inhib == Inhibition.RePU:
             output=torch.pow(output, self.lamb)
         elif self.inhib == Inhibition.Softmax:
             output = nn.Softmax()(output)
@@ -505,7 +473,7 @@ class ConvolutionHebbianLayer(nn.Module):
             
             u = flatten_out(preactivation)
             y = flatten_out(output)
-            delta_w = L.update_weight_softhebb(x,u, y, W)
+            delta_w = L.update_weight_softhebb(x,u, y, W, inhibition=self.inhib)
             new_W = W + self.lr * delta_w
             new_W = self.fold_weights(new_W)
             self.convolution.weight = nn.Parameter(new_W, requires_grad=False)
@@ -572,12 +540,12 @@ class ConvolutionHebbianLayer(nn.Module):
 
 
     def update_weights(self, input, preactivation, prediction,  true_output=None):
-        if self.w_learning == Learning.OrthogonalExclusive:
+        if self.w_learning == LearningRule.OrthogonalExclusive:
             self.update_weights_orthogonalexclusive(self.get_flattened_input(input), self.get_flattened_output(prediction))
-        elif self.w_learning == Learning.FullyOrthogonal:
+        elif self.w_learning == LearningRule.FullyOrthogonal:
             self.update_weights_FullyOrthogonal(self.get_flattened_input(input),
                                                     self.get_flattened_output(prediction))
-        elif self.w_learning == Learning.SoftHebb:
+        elif self.w_learning == LearningRule.SoftHebb:
             y = prediction if true_output is None else prediction
             self.update_weight_softhebb(input, preactivation, y)
         else:
@@ -654,9 +622,9 @@ class ConvolutionHebbianLayer(nn.Module):
 def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None, lambd=1, lr=0.005,
                       gamma=0.99, epsilon=0.01, rho=1e-3, eta=1e-3, b=1e-4,
                       nbclasses=10, topdown=True, device=None,
-                      learningrule=Learning.OrthogonalExclusive,
-                      weightscaling=WeightScale.WeightNormalization, outputlayerrule=ClassifierLearning.Contrastive,
-                      triangle=False, whiten_input=False, inhibition=Inhibition.Lateral):
+                      learningrule=LearningRule.OrthogonalExclusive,
+                      weightscaling=WeightScale.WeightNormalization, outputlayerrule=LearningRule.OutputContrastiveSupervised,
+                      triangle=False, whiten_input=False, inhibition=Inhibition.RePU):
     if padding is None:
         padding = [0] * len(kernels)
     if strides is None:

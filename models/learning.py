@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-
-
+from models.hyperparams import Inhibition
 """
 Learning rules for MLP and CNN models
 """
@@ -47,17 +46,19 @@ weight : tensor([out_dim, in_dim])
 
 In CNN, batch will be the number of kernel*kernel grids
 """
-def update_weight_softhebb(input, preactivation, output, weight):
+def update_weight_softhebb(input, preactivation, output, weight, inhibition=Inhibition.RePU):
     # input_shape = batch, in_dim
     # output_shape = batch, out_dim = preactivation_shape
     # weight_shape = out_dim, in_dim
     b, indim = input.shape
     b, outdim = output.shape
-    W = weight / torch.norm(weight, dim=1, keepdim=True)
-    xn = input / (torch.norm(input, dim=1, keepdim=True) + 1e-9)
-    u = torch.matmul(xn, W.T)
-    y = output.reshape(b, outdim, 1)
-    x = xn.reshape(b, 1, indim)
-    deltas = y * (x - torch.matmul(torch.relu(u), W).reshape(b, 1, indim))
+    multiplicative_factor = 1
+    W = weight
+    if inhibition == Inhibition.RePU:
+        u = torch.relu(preactivation)
+        multiplicative_factor = multiplicative_factor / (u + 1e-9)
+    elif inhibition == Inhibition.Softmax:
+        u = preactivation
+    deltas = multiplicative_factor *  output * (input - torch.matmul(torch.relu(u), W).reshape(b, 1, indim))
     delta = torch.mean(deltas, dim=0)
     return delta

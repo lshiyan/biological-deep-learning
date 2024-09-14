@@ -13,6 +13,8 @@ import math
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 
+import models.hyperparams
+
 transform = transforms.Compose(
     [transforms.ToTensor()])
 
@@ -66,11 +68,11 @@ if __name__ == "__main__":
     model = CNN.CNNBaseline_Model(inputshape=(3, 32, 32), kernels=[5, 3, 3], channels=[32, 128, 512], strides=[2, 2, 2],
                                   padding=[0, 0, 0], lambd=4, lr=0.005, gamma=0.99, epsilon=0.01, b=1,
                                   rho=0.001, nbclasses=10, topdown=topdown, device="cpu", eta=0.1,
-                                  learningrule=CNN.Learning.SoftHebb,
-                                  weightscaling=CNN.WeightScale.WeightNormalization,
-                                  outputlayerrule=CNN.ClassifierLearning.SoftHebb, triangle=True, whiten_input=False)
+                                  learningrule=models.hyperparams.LearningRule.SoftHebb,
+                                  weightscaling=models.hyperparams.WeightScale.WeightNormalization,
+                                  outputlayerrule=models.hyperparams.LearningRule.SoftHebb, triangle=True, whiten_input=False)
     mymodelCNN = CNN.CNN_Experiment(epoch=1, mymodel=model, dataloader=train_dataloader, testloader= test_dataloader,
-                                         dataset='CIFAR10',
-                                      nclasses=10, imgtype=CNN.ImageType.RGB, traintopdown=topdown, testtopdown=topdown)
-    print(CNN.CNN_Baseline_test(mymodel=mymodelCNN, data_loader=test_dataloader, imgtype=CNN.ImageType.RGB,
+                                    dataset='CIFAR10',
+                                    nclasses=10, imgtype=models.hyperparams.ImageType.RGB, traintopdown=topdown, testtopdown=topdown)
+    print(CNN.CNN_Baseline_test(mymodel=mymodelCNN, data_loader=test_dataloader, imgtype=models.hyperparams.ImageType.RGB,
                                 topdown=topdown))
