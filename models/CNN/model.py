@@ -28,19 +28,21 @@ class Learning(Enum):
     SoftHebb = 3
 
 class WeightScale(Enum):
-    WeightDecay = 1
-    WeightNormalization = 2
-    No = 3
+    WeightNormalization = 1
+    No = 2
 
 class Inhibition(Enum):
     Softmax = 1
-    Lateral = 2
+    RePU = 2
 
 
 def oneHotEncode(labels, num_classes, device):
     one_hot_encoded = torch.zeros(len(labels), num_classes).to(device)
     one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
     return one_hot_encoded
+
+
+
 
 class ConvolutionalNeuralNet(nn.Module):
     def __init__(self, device):
@@ -75,7 +77,7 @@ class ConvolutionalNeuralNet(nn.Module):
     
     def forward_test(self, x):
         for layer in self.layers.values():
-            x = layer.forward_test(x)
+            _, x = layer.forward(x, update_weights=False)
         return x
 
 
@@ -141,88 +143,36 @@ class ConvolutionalNeuralNet(nn.Module):
 
 
 
-
-class Hebbian_Layer(nn.Module):
-    def __init__(self, inputdim, outputdim, lr, lamb, rho, gamma, eps, device, eta=1, b=1, is_output_layer=False,
-                 output_learning=ClassifierLearning.Supervised, update=Learning.OrthogonalExclusive,
-                 weightscaling=WeightScale.WeightNormalization, triangle=False, inhibition = Inhibition.Lateral):
-        super(Hebbian_Layer, self).__init__()
-        self.input_dim = inputdim
-        self.output_dim = outputdim
-        self.lr = lr
+class Hebbian_Classifier(nn.Module):
+    def __init__(self, inputdim, outputdim, lr, lamb, device, b=1, triangle=False, output_learning=ClassifierLearning.Contrastive, inhibition=Inhibition.RePU):
+        super(Hebbian_Classifier, self).__init__()
+        self.inputdim = inputdim
+        self.outputdim = outputdim
+        self.lr = lr 
         self.lamb = lamb
-        self.rho = rho
-        self.b = b
-        self.eta = eta
-        self.gamma = gamma
-        self.epsilon = eps
-        self.is_output_layer = is_output_layer
         self.device = device
-        self.triangle = False
-
-        self.feedforward = nn.Linear(self.input_dim, self.output_dim, bias=False)
-        self.W_TD = None
-
-        for param in self.feedforward.parameters():
-            param=torch.nn.init.uniform_(param, a=0.0, b=self.b)
-            param.requires_grad_(False)
-        
-        self.exponential_average=torch.zeros(self.output_dim).to(self.device)
-        self.o_learning = output_learning
-        self.w_update = update
-        self.weightscaling = weightscaling
+        self.output_learning = output_learning
+        self.triangle = triangle
         self.inhib = inhibition
-
-    def unfold_weights(self):
-        return self.feedforward.weight
-
-    def top_down_weights(self):
-        with torch.no_grad():
-            return torch.linalg.pinv(self.unfold_weights()).T
-
+        self.feedforward = nn.Linear(self.inputdim, self.outputdim, bias=False)
+        self.is_output_layer = True
+        for param in self.feedforward.parameters():
+            param=torch.nn.init.uniform_(param, a=0.0, b=b)
+            param.requires_grad_(False)
+    
     def inhibition(self, x):
         if self.triangle:
             m = torch.mean(x)
             x = x - m
-        x=torch.relu(x)
-        max_ele=torch.max(x).item()
-        x/=(max_ele + 1e-9)
-        if self.inhib == Inhibition.Lateral:
+        if self.inhib == Inhibition.RePU:
+            x=torch.relu(x)
+            max_ele=torch.max(x).item()
+            x/=(max_ele + 1e-9)
             x=torch.pow(x, self.lamb)
         elif self.inhib == Inhibition.Softmax:
             x = nn.Softmax()(x)
         return x
-
-    #SoftHebb
-    def update_weights_softhebb(self, input, preactivation, output):
-        with torch.no_grad():
-            y = output.squeeze()
-            initial_weight = self.feedforward.weight
-            delta_w = L.update_weight_softhebb(input, preactivation, output, initial_weight)
-            new_weights = initial_weight + self.lr *  delta_w
-            self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
-            self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
-
-    # Fully orthogonal
-    def update_weights_FullyOrthogonal(self, input, output):
-        with torch.no_grad():
-            y = output.squeeze()
-            initial_weight = self.feedforward.weight
-            delta_w = L.update_weights_FullyOrthogonal(input, y, initial_weight)
-            new_weights = initial_weight + self.lr *  delta_w
-            self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
-            self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
     
-    # Fully Orthogonal Exclusive 
-    def update_weights_OrthogonalExclusive(self, input: torch.Tensor, output: torch.Tensor):
-        with torch.no_grad():
-            y: torch.Tensor = output.squeeze()
-            weights: torch.Tensor = self.feedforward.weight
-            delta_w = L.update_weights_OrthogonalExclusive(input, y, weights, self.device)
-            new_weights = weights + self.lr *  delta_w
-            self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
-            self.exponential_average=torch.add(self.gamma*self.exponential_average,(1-self.gamma)*y)
-
     def classifier_update_contrastive(self, input, output, true_output):
         with torch.no_grad():
             output = output.squeeze()
@@ -238,89 +188,216 @@ class Hebbian_Layer(nn.Module):
         outer = torch.outer(output, input)
         self.feedforward.weight=nn.Parameter(self.lr * outer + self.feedforward.weight,
                                              requires_grad=False)
-    
-    def update_weights(self, input, preactivation, prediction,  true_output=None):
-        if self.is_output_layer:
-
-            if self.o_learning == ClassifierLearning.Contrastive:
-                self.classifier_update_contrastive(input, prediction, true_output)
-            elif self.o_learning == ClassifierLearning.Supervised:
-                self.classifier_update_supervised(input, true_output)
-            elif self.o_learning == ClassifierLearning.SoftHebb:
-                self.update_weights_softhebb(input, preactivation, true_output)
-            elif self.o_learning == ClassifierLearning.Orthogonal:
-                self.update_weights_FullyOrthogonal(input, true_output)
-
-        elif self.w_update == Learning.OrthogonalExclusive:
-                self.update_weights_OrthogonalExclusive(input, prediction)
-        elif self.w_update == Learning.SoftHebb:
-            self.update_weights_softhebb(input, preactivation, prediction)
-        elif self.w_update == Learning.FullyOrthogonal:
-            self.update_weights_FullyOrthogonal(input, prediction)
-        else:
-            raise ValueError("Not Implemented")
         
-        if self.weightscaling == WeightScale.WeightNormalization:
-            self.normalize_weights()
-        elif self.weightscaling == WeightScale.WeightDecay:
-            self.weight_decay()
-        elif self.weightscaling == WeightScale.No:
-            pass
-        else:
-            raise ValueError("Not Implemented")
+    def update_weights_softhebb(self, input, preactivation, output):
+        with torch.no_grad():
+            y = output.squeeze()
+            initial_weight = self.feedforward.weight
+            delta_w = L.update_weight_softhebb(input, preactivation, output, initial_weight)
+            new_weights = initial_weight + self.lr *  delta_w
+            self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
 
-
-    def normalize_weights(self):
-        weights = self.feedforward.weight
-        new_weights_norm = torch.norm(weights, p=2, dim=1, keepdim=True)
-        new_weights = weights / (new_weights_norm + 1e-9)
-        self.feedforward.weight=nn.Parameter(new_weights, requires_grad=False)
-    
-    def weight_decay(self):
-        average=torch.mean(self.exponential_average).item()
-        A=self.exponential_average/average
-        growth_factor_positive=self.epsilon*nn.Tanh()(-self.epsilon*(A-1))+1
-        growth_factor_negative=torch.reciprocal(growth_factor_positive)
-        positive_weights=torch.where(self.feedforward.weight>0, self.feedforward.weight, 0.0)
-        negative_weights=torch.where(self.feedforward.weight<0, self.feedforward.weight, 0.0)
-        positive_weights=positive_weights*growth_factor_positive.unsqueeze(1)
-        negative_weights=negative_weights*growth_factor_negative.unsqueeze(1)
-        self.feedforward.weight=nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
-
+    def update_weights(self, x, u, y, true_output):
+        if self.output_learning == ClassifierLearning.SoftHebb:
+            self.update_weights_softhebb(x, u, true_output)
+        elif self.output_learning == ClassifierLearning.Contrastive:
+            self.classifier_update_contrastive(x, y, true_output)
+        elif self.output_learning == ClassifierLearning.Supervised:
+            self.classifier_update_supervised(x, true_output)
 
     def forward(self, x, clamped=None, update_weights=True):
-        with torch.no_grad():
-            x = x.reshape(x.shape[0], -1)
-            u = self.feedforward(x)
-            y = self.inhibition(u)
-            if update_weights:
-                self.update_weights(x, u, y, true_output=clamped)
-            return u, y
-            
-    def forward_test(self, x):
         x = x.reshape(x.shape[0], -1)
-        x = self.feedforward(x)
-        x = self.inhibition(x)
-        return x
-    
+        u = self.feedforward(x)
+        y = self.inhibition(u)
+        if update_weights:
+            self.update_weights(x, u, y, true_output=clamped)
+        return u, y 
 
-    def TD_forward(self, x, h_l):
-        if len(x.shape) > 2:
-            x = x.reshape(x.shape[0], -1)
-        if h_l is None:
-            u = self.feedforward(x)
-        else :
-            u = self.feedforward(x) + self.rho * torch.matmul(h_l, self.W_TD)
+    def TD_forward(self, x, h):
+        x = x.reshape(x.shape[0], -1)
+        u = self.feedforward(x)
         y = self.inhibition(u)
         return u, y
+
+        
+
+# class Hebbian_Layer(nn.Module):
+#     def __init__(self, inputdim, outputdim, lr, lamb, rho, gamma, eps, device, eta=1, b=1, is_output_layer=False,
+#                  output_learning=ClassifierLearning.Supervised, update=Learning.OrthogonalExclusive,
+#                  weightscaling=WeightScale.WeightNormalization, triangle=False, inhibition = Inhibition.RePU):
+#         super(Hebbian_Layer, self).__init__()
+#         self.input_dim = inputdim
+#         self.output_dim = outputdim
+#         self.lr = lr
+#         self.lamb = lamb
+#         self.rho = rho
+#         self.b = b
+#         self.eta = eta
+#         self.gamma = gamma
+#         self.epsilon = eps
+#         self.is_output_layer = is_output_layer
+#         self.device = device
+#         self.triangle = triangle
+
+#         self.feedforward = nn.Linear(self.input_dim, self.output_dim, bias=False)
+#         self.W_TD = None
+
+#         for param in self.feedforward.parameters():
+#             param=torch.nn.init.uniform_(param, a=0.0, b=self.b)
+#             param.requires_grad_(False)
+        
+#         self.exponential_average=torch.zeros(self.output_dim).to(self.device)
+#         self.o_learning = output_learning
+#         self.w_update = update
+#         self.weightscaling = weightscaling
+#         self.inhib = inhibition
+
+#     def unfold_weights(self):
+#         return self.feedforward.weight
+
+#     def top_down_weights(self):
+#         with torch.no_grad():
+#             return torch.linalg.pinv(self.unfold_weights()).T
+
+#     def inhibition(self, x):
+#         if self.triangle:
+#             m = torch.mean(x)
+#             x = x - m
+#         x=torch.relu(x)
+#         max_ele=torch.max(x).item()
+#         x/=(max_ele + 1e-9)
+#         x=torch.pow(x, self.lamb)
+#         return x
+    
+
+#     #SoftHebb
+#     def update_weights_softhebb(self, input, preactivation, output):
+#         with torch.no_grad():
+#             y = output.squeeze()
+#             initial_weight = self.feedforward.weight
+#             delta_w = L.update_weight_softhebb(input, preactivation, output, initial_weight)
+#             new_weights = initial_weight + self.lr *  delta_w
+#             self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
+#             self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+
+#     # Fully orthogonal
+#     def update_weights_FullyOrthogonal(self, input, output):
+#         with torch.no_grad():
+#             y = output.squeeze()
+#             initial_weight = self.feedforward.weight
+#             delta_w = L.update_weights_FullyOrthogonal(input, y, initial_weight)
+#             new_weights = initial_weight + self.lr *  delta_w
+#             self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
+#             self.exponential_average = torch.add(self.gamma * self.exponential_average, (1 - self.gamma) * y)
+    
+#     # Fully Orthogonal Exclusive 
+#     def update_weights_OrthogonalExclusive(self, input: torch.Tensor, output: torch.Tensor):
+#         with torch.no_grad():
+#             y: torch.Tensor = output.squeeze()
+#             weights: torch.Tensor = self.feedforward.weight
+#             delta_w = L.update_weights_OrthogonalExclusive(input, y, weights, self.device)
+#             new_weights = weights + self.lr *  delta_w
+#             self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
+#             self.exponential_average=torch.add(self.gamma*self.exponential_average,(1-self.gamma)*y)
+
+#     def classifier_update_contrastive(self, input, output, true_output):
+#         with torch.no_grad():
+#             output = output.squeeze()
+#             input = input.squeeze()
+#             true_output = true_output.squeeze()
+#             outer = torch.outer(true_output - output, input)
+#             self.feedforward.weight=nn.Parameter(torch.relu(self.lr * outer + self.feedforward.weight),
+#                                                  requires_grad=False)
+
+#     def classifier_update_supervised(self, input, output):
+#         output = output.squeeze()
+#         input = input.squeeze()
+#         outer = torch.outer(output, input)
+#         self.feedforward.weight=nn.Parameter(self.lr * outer + self.feedforward.weight,
+#                                              requires_grad=False)
+    
+#     def update_weights(self, input, preactivation, prediction,  true_output=None):
+#         if self.is_output_layer:
+
+#             if self.o_learning == ClassifierLearning.Contrastive:
+#                 self.classifier_update_contrastive(input, prediction, true_output)
+#             elif self.o_learning == ClassifierLearning.Supervised:
+#                 self.classifier_update_supervised(input, true_output)
+#             elif self.o_learning == ClassifierLearning.SoftHebb:
+#                 self.update_weights_softhebb(input, preactivation, true_output)
+#             elif self.o_learning == ClassifierLearning.Orthogonal:
+#                 self.update_weights_FullyOrthogonal(input, true_output)
+
+#         elif self.w_update == Learning.OrthogonalExclusive:
+#                 self.update_weights_OrthogonalExclusive(input, prediction)
+#         elif self.w_update == Learning.SoftHebb:
+#             self.update_weights_softhebb(input, preactivation, prediction)
+#         elif self.w_update == Learning.FullyOrthogonal:
+#             self.update_weights_FullyOrthogonal(input, prediction)
+#         else:
+#             raise ValueError("Not Implemented")
+        
+#         if self.weightscaling == WeightScale.WeightNormalization:
+#             self.normalize_weights()
+#         elif self.weightscaling == WeightScale.WeightDecay:
+#             self.weight_decay()
+#         elif self.weightscaling == WeightScale.No:
+#             pass
+#         else:
+#             raise ValueError("Not Implemented")
+
+
+#     def normalize_weights(self):
+#         weights = self.feedforward.weight
+#         new_weights_norm = torch.norm(weights, p=2, dim=1, keepdim=True)
+#         new_weights = weights / (new_weights_norm + 1e-9)
+#         self.feedforward.weight=nn.Parameter(new_weights, requires_grad=False)
+    
+#     def weight_decay(self):
+#         average=torch.mean(self.exponential_average).item()
+#         A=self.exponential_average/average
+#         growth_factor_positive=self.epsilon*nn.Tanh()(-self.epsilon*(A-1))+1
+#         growth_factor_negative=torch.reciprocal(growth_factor_positive)
+#         positive_weights=torch.where(self.feedforward.weight>0, self.feedforward.weight, 0.0)
+#         negative_weights=torch.where(self.feedforward.weight<0, self.feedforward.weight, 0.0)
+#         positive_weights=positive_weights*growth_factor_positive.unsqueeze(1)
+#         negative_weights=negative_weights*growth_factor_negative.unsqueeze(1)
+#         self.feedforward.weight=nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
+
+
+#     def forward(self, x, clamped=None, update_weights=True):
+#         with torch.no_grad():
+#             x = x.reshape(x.shape[0], -1)
+#             u = self.feedforward(x)
+#             y = self.inhibition(u)
+#             if update_weights:
+#                 self.update_weights(x, u, y, true_output=clamped)
+#             return u, y
+            
+#     def forward_test(self, x):
+#         x = x.reshape(x.shape[0], -1)
+#         x = self.feedforward(x)
+#         x = self.inhibition(x)
+#         return x
+    
+
+#     def TD_forward(self, x, h_l):
+#         if len(x.shape) > 2:
+#             x = x.reshape(x.shape[0], -1)
+#         if h_l is None:
+#             u = self.feedforward(x)
+#         else :
+#             u = self.feedforward(x) + self.rho * torch.matmul(h_l, self.W_TD)
+#         y = self.inhibition(u)
+#         return u, y
     
 
 
 class ConvolutionHebbianLayer(nn.Module):
-    def __init__(self, input_shape, kernel, stride, in_ch, out_ch, lambd, lr, gamma, epsilon, rho, device,
+    def __init__(self, input_shape, kernel, stride, in_ch, out_ch, lambd, lr, rho, device,
                  eta=1, padding=0,
-                 weightlearning=Learning.SoftHebb, weightscaling=WeightScale.WeightNormalization, triangle=False,
-                 is_output_layer=False, whiten_input=False, b=1, inhibition = Inhibition.Lateral):
+                 weightlearning=Learning.SoftHebb, weightscaling=WeightScale.WeightNormalization, triangle=False, 
+                 whiten_input=False, b=1, inhibition = Inhibition.RePU):
         super(ConvolutionHebbianLayer, self).__init__()
         self.input_shape = input_shape  # (height, width)
         self.kernel = kernel
@@ -330,26 +407,25 @@ class ConvolutionHebbianLayer(nn.Module):
         self.out_channel = out_ch
         self.lamb = lambd
         self.lr = lr
-        self.gamma = gamma
-        self.epsilon = epsilon
         self.rho = rho
         self.eta = eta
         self.b=b
         self.device = device
         self.triangle = triangle
-        self.is_output_layer = is_output_layer
         self.whiten_input = whiten_input
-
+        self.is_output_layer = False
         self.w_learning = weightlearning
         self.w_scaling = weightscaling
         self.inhib = inhibition
 
-        self.output_shape = (self._output_formula_(input_shape[0]), self._output_formula_(input_shape[1]))
-        self.nb_tiles = self.output_shape[0] * self.output_shape[1]
+    
+        self.output_shape = None
+        self.nb_tiles = None
 
         self.convolution = nn.Conv2d(stride=self.stride, kernel_size=self.kernel, padding=self.padding,
                                      in_channels=self.in_channel, out_channels=self.out_channel, bias=False)
-        
+        self.batchnorm = nn.BatchNorm2d(self.in_channel, affine=False)
+        self.pool = None
         # Top down weights
         self.convolutionTD = None # if layer above is conv
         self.top_down_factor = None # if layer above is conv
@@ -357,7 +433,10 @@ class ConvolutionHebbianLayer(nn.Module):
 
 
         self.unfold = nn.Unfold(self.kernel, dilation=1, padding=self.padding, stride=self.stride)
+        self.unfold_pool = None
+
         self.fold = nn.Fold(output_size=input_shape, kernel_size=self.kernel, padding=self.padding, stride=self.stride)
+
         self.fold_unfold_divisor = self.fold(self.unfold(torch.ones(1, in_ch, input_shape[0], input_shape[1])))
         for param in self.convolution.parameters():
             param=torch.nn.init.uniform_(param, a=0, b=self.b)
@@ -365,13 +444,21 @@ class ConvolutionHebbianLayer(nn.Module):
 
         self.exponential_average=torch.zeros(self.out_channel).to(device)
 
+
     @staticmethod
     def _generic_output_formula_(size, kernel, padding, dilation, stride):
         return int((size + 2 * padding - dilation * (kernel -1) - 1)/stride + 1)
 
     def _output_formula_(self, size):
-        return self._generic_output_formula_(size, kernel=self.kernel, padding=self.padding, dilation=1,
+        o = self._generic_output_formula_(size, kernel=self.kernel, padding=self.padding, dilation=1,
                                              stride=self.stride)
+        if self.pool:
+            o = self._generic_output_formula_(o, self.pool.kernel_size, self.pool.padding, 1, self.pool.stride)
+        return o
+
+    def compute_output_shape(self):
+        self.output_shape = (self._output_formula_(self.input_shape[0]), self._output_formula_(self.input_shape[1])) 
+        self.nb_tiles = self.output_shape[0] * self.output_shape[1]
 
     def Set_TD(self, inc, outc, kernel, stride):
         self.convolutionTD = nn.ConvTranspose2d(inc, outc, kernel, stride, padding=self.padding)
@@ -379,6 +466,12 @@ class ConvolutionHebbianLayer(nn.Module):
     def set_TD_factor(self, factor):
         self.top_down_factor = factor
 
+    def set_pooling(self, kernel, stride, padding, type):
+        if type == "Max":
+            self.pool = nn.MaxPool2d(kernel_size=kernel, stride=stride, padding=padding)
+        else :
+            self.pool = nn.AvgPool2d(kernel_size=kernel, stride=stride, padding=padding)
+        self.unfold_pool = nn.Unfold(self.pool.kernel_size, 1, self.pool.padding, self.pool.stride)
 
     def inhibition(self, output):
         
@@ -393,7 +486,7 @@ class ConvolutionHebbianLayer(nn.Module):
 
         output /= (max_ele + 1e-9)
 
-        if self.inhib == Inhibition.Lateral:
+        if self.inhib == Inhibition.RePU:
             output=torch.pow(output, self.lamb)
         elif self.inhib == Inhibition.Softmax:
             output = nn.Softmax()(output)
@@ -466,8 +559,6 @@ class ConvolutionHebbianLayer(nn.Module):
         new_weights = self.fold_weights(new_weights)
 
         self.convolution.weight=nn.Parameter(torch.relu(new_weights), requires_grad=False)
-        
-        self.exponential_average=torch.add(self.gamma*self.exponential_average,(1-self.gamma)*torch.mean(output, dim=0))
 
 
     def update_weights_FullyOrthogonal(self, input, output):
@@ -485,24 +576,21 @@ class ConvolutionHebbianLayer(nn.Module):
         new_weights = self.fold_weights(new_weights)
 
         self.convolution.weight=nn.Parameter(torch.relu(new_weights), requires_grad=False)
-        
-        self.exponential_average=torch.add(self.gamma*self.exponential_average,(1-self.gamma)*torch.mean(output, dim=0))
 
 
     def update_weight_softhebb(self, input, preactivation, output):
         with torch.no_grad():
             W = self.unfold_weights()
-            x = self.unfold(input).permute(0, 2, 1)
+            x = self.unfold(input)
+            x = x.permute(0, 2, 1)
             batch_dim, n_tiles, in_dim = x.shape
             x = x.reshape(batch_dim * n_tiles , in_dim)
             batch_dim, out_dim, out_h, out_w = output.shape
             assert out_h * out_w == n_tiles
-
             def flatten_out(z):
                 o = z.permute(0, 2, 3, 1)
                 o = o.reshape( batch_dim * out_h * out_w, out_dim)
                 return o
-            
             u = flatten_out(preactivation)
             y = flatten_out(output)
             delta_w = L.update_weight_softhebb(x,u, y, W)
@@ -522,21 +610,6 @@ class ConvolutionHebbianLayer(nn.Module):
 
         self.convolution.weight=nn.Parameter(new_weights, requires_grad=False)
 
-    def weight_decay(self):
-        average=torch.mean(self.exponential_average).item()
-        A=self.exponential_average/average
-
-        growth_factor_positive=self.epsilon*nn.Tanh()(-self.epsilon*(A-1))+1
-        growth_factor_negative=torch.reciprocal(growth_factor_positive)
-
-        positive_weights=torch.where(self.convolution.weight>0, self.convolution.weight, 0.0)
-        negative_weights=torch.where(self.convolution.weight<0, self.convolution.weight, 0.0)
-        
-        positive_weights=positive_weights*(growth_factor_positive.reshape(self.out_channel, 1,1,1))
-        negative_weights=negative_weights*(growth_factor_negative.reshape(self.out_channel, 1,1,1))
-        
-        self.convolution.weight=nn.Parameter(torch.add(positive_weights, negative_weights), requires_grad=False)
-
     def whiten_image(self, input_image):
         batch, channel, h, w = input_image.shape
         tiles = self.unfold(input_image)
@@ -553,7 +626,7 @@ class ConvolutionHebbianLayer(nn.Module):
 
 
     def get_flattened_input(self, x):
-        convolved_input = self.unfold(x)
+        convolved_input = self.unfold(self.unfold_pool(x))
         # convolved_input : [nb_tiles, input_channels, kernel, kernel]
         convolved_input = convolved_input.reshape(1, self.in_channel, self.nb_tiles, self.kernel,
                                                   self.kernel).permute(0,2,1,3,4).squeeze(0)
@@ -583,33 +656,29 @@ class ConvolutionHebbianLayer(nn.Module):
         else:
             raise ValueError("Not Implemented")
 
-        
-        if self.w_scaling == WeightScale.WeightDecay:
-            self.weight_decay()
-        elif self.w_scaling == WeightScale.WeightNormalization:
+        if self.w_scaling == WeightScale.WeightNormalization:
             self.normalize_weights()
-        else:
-            pass
 
     # x is torch.Size([batch_size=1, channel, height, width])
     def forward(self, x, clamped=None, update_weights=True):
+
         if self.whiten_input:
             x = self.whiten_image(x)
         
+        x = self.batchnorm(x)
         # output is [batch=1, output_channel, new_height, new_width]
         u = self.convolution(x)
 
         output = self.inhibition(u)
+
         if update_weights:
             self.update_weights(x, u, output,  true_output=clamped)
         
+        if self.pool:
+            output = self.pool(output)
+        
         return u, output
-
-
-    def forward_test(self, x):
-        output = self.convolution(x)
-        output = self.inhibition(output)
-        return output
+    
     
     def top_down_fct(self, h_l):
         if self.convolutionTD:
@@ -651,12 +720,59 @@ class ConvolutionHebbianLayer(nn.Module):
         self.visualize_filters(self.convolution.weight)
 
 
+def CNN_Model_from_config(inputshape, config, learningrule, weightscaling, outputlearning, inhibition, device, nbclasses):
+    mycnn = ConvolutionalNeuralNet(device)
+    lamb = config['Lambda']
+    lr = config['Lr']
+    beta = config['beta']
+    rho = config['Rho']
+    eta = config['Eta']
+    is_topdown = config['Topdown']
+    input_channel = inputshape[0]
+    nb_conv = len(config['Convolutions'])
+    l_keys = list(config['Convolutions'].keys())
+    inputsize = inputshape[1:]
+    is_pool = config['PoolingBlock']['Pooling']
+    for layer_idx in range(len(config['Convolutions'])):
+        layerconfig = config['Convolutions'][l_keys[layer_idx]]
+        convlayer = ConvolutionHebbianLayer(input_shape=inputsize, kernel=layerconfig['kernel'], stride=layerconfig['stride'], in_ch=input_channel, out_ch=layerconfig['out_channel'], 
+                                            lambd=lamb, lr=lr, rho=rho, device=device, eta=eta, padding=layerconfig['padding'], weightlearning=learningrule, weightscaling=weightscaling, triangle=layerconfig['triangle'], 
+                                            whiten_input=layerconfig['whiten'], b=beta, inhibition=inhibition)
+        if is_pool:
+            poolconfig = config["PoolingBlock"][l_keys[layer_idx]]
+            convlayer.set_pooling(kernel=poolconfig['kernel'], stride=poolconfig['stride'], padding=poolconfig['padding'], type=poolconfig['Type'])
+        convlayer.compute_output_shape()
+        if is_topdown and layer_idx < (nb_conv-1):
+            convlayer.Set_TD(inc=config['Convolutions'][l_keys[layer_idx+1]]['out_channel'], outc=layerconfig['out_channel'], 
+                             kernel=config['Convolutions'][l_keys[layer_idx+1]]['kernel'], stride=config['Convolutions'][l_keys[layer_idx+1]]['stride'])
+        convlayer.normalize_weights()
+        mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
+        input_channel = layerconfig['out_channel']
+        inputsize = convlayer.output_shape
+        print(f"New Image Dimensions after Convolution : {((layerconfig['out_channel'],) + inputsize)}")
+
+    fc_inputdim = convlayer.nb_tiles * config['Convolutions'][l_keys[-1]]['out_channel']
+    print("Fully connected layer input dim : " + str(fc_inputdim))
+
+    if config['Classifier']['Hebbian'] == True:
+        heblayer = Hebbian_Classifier(fc_inputdim, outputdim=nbclasses, lr=lr, lamb=lamb, device=device, b=beta, triangle=config['Classifier']['triangle'], output_learning=outputlearning, inhibition=inhibition)
+
+        mycnn.add_layer("HebLayer", heblayer)
+
+    if is_topdown:
+        mycnn.initialize_TD_factors()
+    
+    mycnn = mycnn.to(device)
+
+    return mycnn
+
+
 def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None, lambd=1, lr=0.005,
                       gamma=0.99, epsilon=0.01, rho=1e-3, eta=1e-3, b=1e-4,
                       nbclasses=10, topdown=True, device=None,
                       learningrule=Learning.OrthogonalExclusive,
                       weightscaling=WeightScale.WeightNormalization, outputlayerrule=ClassifierLearning.Contrastive,
-                      triangle=False, whiten_input=False, inhibition=Inhibition.Lateral):
+                      triangle=False, whiten_input=False, inhibition=Inhibition.RePU):
     if padding is None:
         padding = [0] * len(kernels)
     if strides is None:
@@ -692,6 +808,8 @@ def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None,
 
     if topdown:
         mycnn.initialize_TD_factors()
+    
+    mycnn = mycnn.to(device)
 
     return mycnn
 
@@ -727,6 +845,8 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
             # if samples in [0, 10, 100, 1000, 10000, 20000, 30000]:
             #     print(CNN_Baseline_test(mymodel, testloader, imgtype, testtopdown))
             inputs, labels=data
+            # inputs = inputs.to('mps')
+            # labels = labels.to('mps')
             #print(inputs)
             inputs = inputs.to(device)
             labels = labels.to(device)
@@ -740,16 +860,16 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
             #if cn == 10:
             #    return mymodel
     
-    timestr = time.strftime("%Y%m%d-%H%M%S")
+    # timestr = time.strftime("%Y%m%d-%H%M%S")
 
-    if traintopdown:
-        foldername = os.getcwd() + '/SavedModels/CNN_TD_' + dataset + '_' + timestr
-    else:
-        foldername = os.getcwd() + '/SavedModels/CNN_FF_' + dataset + '_' + timestr
+    # if traintopdown:
+    #     foldername = os.getcwd() + '/SavedModels/CNN_TD_' + dataset + '_' + timestr
+    # else:
+    #     foldername = os.getcwd() + '/SavedModels/CNN_FF_' + dataset + '_' + timestr
 
-    os.mkdir(foldername)
+    # os.mkdir(foldername)
 
-    torch.save(mymodel.state_dict(), foldername + '/model')
+    # torch.save(mymodel.state_dict(), foldername + '/model')
 
     #view_filters(mymodel, foldername)
     #view_ff_weights(mymodel, foldername, dataloader)

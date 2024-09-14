@@ -1,0 +1,59 @@
+{
+    "Lambda" : 1, 
+    "Lr" : 1e-4,
+    "beta" : 1,
+    "Convolutions" : {
+        "Conv1":{
+            "out_channel" : 32,
+            "kernel" : 5,
+            "stride" : 1,
+            "padding" : 0, 
+            "triangle" : true, 
+            "whiten" : false
+        }, 
+        "Conv2" : {
+            "out_channel" : 128,
+            "kernel" : 3,
+            "stride" : 1,
+            "padding" : 0,
+            "triangle" : true,
+            "whiten" : false
+        }, 
+        "Conv3" : {
+            "out_channel" : 512,
+            "kernel" : 3,
+            "stride" : 1,
+            "padding" : 0,
+            "triangle" : true,
+            "whiten" : false
+        }
+    }, 
+    "PoolingBlock" : {
+        "Pooling" : true, 
+        "Conv1" : {
+            "Type" : "Max",
+            "kernel" : 4,
+            "stride" : 2, 
+            "padding" : 1 
+        }, 
+        "Conv2" : {
+            "Type" : "Max",
+            "kernel" : 4,
+            "stride" : 2, 
+            "padding" : 1 
+        },
+        "Conv3" : {
+            "Type" : "Avg",
+            "kernel" : 2,
+            "stride" : 2, 
+            "padding" : 0 
+        }
+    }, 
+    "Topdown" : false,
+    "Rho" : 1e-3, 
+    "Eta" : 0.1, 
+    "Classifier" : {
+        "Hebbian" : true, 
+        "triangle" : true
+    }
+}
