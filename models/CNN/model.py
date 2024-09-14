@@ -113,7 +113,7 @@ class ConvolutionalNeuralNet(nn.Module):
 
 
 class Hebbian_Classifier(nn.Module):
-    def __init__(self, inputdim, outputdim, lr, lamb, device, b=1, triangle=False, output_learning=ClassifierLearning.Contrastive, inhibition=Inhibition.RePU):
+    def __init__(self, inputdim, outputdim, lr, lamb, device, b=1, triangle=False, output_learning=LearningRule.SoftHebb, inhibition=Inhibition.RePU):
         super(Hebbian_Classifier, self).__init__()
         self.inputdim = inputdim
         self.outputdim = outputdim
@@ -167,11 +167,11 @@ class Hebbian_Classifier(nn.Module):
             self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
 
     def update_weights(self, x, u, y, true_output):
-        if self.output_learning == ClassifierLearning.SoftHebb:
+        if self.output_learning == LearningRule.SoftHebb:
             self.update_weights_softhebb(x, u, true_output)
-        elif self.output_learning == ClassifierLearning.Contrastive:
+        elif self.output_learning == LearningRule.OutputContrastiveSupervised:
             self.classifier_update_contrastive(x, y, true_output)
-        elif self.output_learning == ClassifierLearning.Supervised:
+        elif self.output_learning == LearningRule.Supervised:
             self.classifier_update_supervised(x, true_output)
 
     def forward(self, x, clamped=None, update_weights=True):
@@ -456,7 +456,6 @@ class ConvolutionHebbianLayer(nn.Module):
         output /= (max_ele + 1e-9)
 
         if self.inhib == Inhibition.RePU:
-        if self.inhib == Inhibition.RePU:
             output=torch.pow(output, self.lamb)
         elif self.inhib == Inhibition.Softmax:
             output = nn.Softmax()(output)
@@ -615,7 +614,7 @@ class ConvolutionHebbianLayer(nn.Module):
 
 
     def update_weights(self, input, preactivation, prediction,  true_output=None):
-        if self.w_learning == LearningRule.OrthogonalExclusive:
+        if self.w_learning == LearningRule.Orthogonal:
             self.update_weights_orthogonalexclusive(self.get_flattened_input(input), self.get_flattened_output(prediction))
         elif self.w_learning == LearningRule.FullyOrthogonal:
             self.update_weights_FullyOrthogonal(self.get_flattened_input(input),
@@ -740,7 +739,7 @@ def CNN_Model_from_config(inputshape, config, learningrule, weightscaling, outpu
 def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None, lambd=1, lr=0.005,
                       gamma=0.99, epsilon=0.01, rho=1e-3, eta=1e-3, b=1e-4,
                       nbclasses=10, topdown=True, device=None,
-                      learningrule=LearningRule.OrthogonalExclusive,
+                      learningrule=LearningRule.Orthogonal,
                       weightscaling=WeightScale.WeightNormalization, outputlayerrule=LearningRule.OutputContrastiveSupervised,
                       triangle=False, whiten_input=False, inhibition=Inhibition.RePU):
     if padding is None:

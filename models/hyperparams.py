@@ -1,5 +1,5 @@
 from enum import Enum
-
+import torch
 
 class ImageType(Enum):
     Gray = 1
