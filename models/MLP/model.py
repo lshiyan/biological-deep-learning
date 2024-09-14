@@ -1,40 +1,16 @@
 import os 
 import torch
 import torch.nn as nn
-from enum import Enum
 import math
 import numpy as np
 from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
 import time
 import models.learning as L
-
-
-class ImageType(Enum):
-    Gray = 1
-    RGB = 2
-
-class ClassifierLearning(Enum):
-    Supervised = 1
-    Contrastive = 2
-    Orthogonal = 3
-
-class Learning(Enum):
-    FullyOrthogonal = 1
-    OrthogonalExclusive = 2
-    Softhebb = 3
-
-class WeightScale(Enum):
-    WeightDecay = 1
-    WeightNormalization = 2
+from models.hyperparams import LearningRule, WeightScale, oneHotEncode
 
 
 
-
-def oneHotEncode(labels, num_classes, device):
-    one_hot_encoded = torch.zeros(len(labels), num_classes).to(device)
-    one_hot_encoded.scatter_(1, labels.unsqueeze(1), 1)
-    return one_hot_encoded.squeeze()
 
 def mlp_print_weight(model):
     for l in model.layers.values():
@@ -115,9 +91,9 @@ class NeuralNet(nn.Module):
         nb_layers = len(layers)
         for idx in range(nb_layers):
             if idx == 0:
-                if layers[idx].w_update == Learning.FullyOrthogonal:
+                if layers[idx].w_update == LearningRule.FullyOrthogonal:
                     layers[idx].update_weights_FullyOrthogonal(input, label_clamped_hlist[idx])
-                elif layers[idx].w_update == Learning.Softhebb:
+                elif layers[idx].w_update == LearningRule.Softhebb:
                     layers[idx].update_weight_softhebb(input, ulist[idx], label_clamped_hlist[idx])
                 else:
                     layers[idx].update_weights_OrthogonalExclusive(input, label_clamped_hlist[idx])
@@ -128,11 +104,11 @@ class NeuralNet(nn.Module):
                     layers[idx].normalize_weights()
 
             elif idx == (nb_layers-1):
-                if layers[idx].o_learning == ClassifierLearning.Supervised:
+                if layers[idx].o_learning == LearningRule.Supervised:
                     layers[idx].classifier_update_supervised(label_clamped_hlist[idx-1], label_clamped_hlist[idx])
-                elif layers[idx].o_learning == ClassifierLearning.Orthogonal:
+                elif layers[idx].o_learning == LearningRule.Orthogonal:
                     layers[idx].update_weights_FullyOrthogonal(label_clamped_hlist[idx-1], label_clamped_hlist[idx])
-                elif layers[idx].o_learning == ClassifierLearning.Contrastive:
+                elif layers[idx].o_learning == LearningRule.OutputContrastiveSupervised:
                     layers[idx].classifier_update_contrastive(label_clamped_hlist[idx-1], pred, label_clamped_hlist[idx])
 
     def TD_forward(self, x, labels):
@@ -146,7 +122,7 @@ class NeuralNet(nn.Module):
 
 
 class Hebbian_Layer(nn.Module):
-    def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device, is_output_layer=False, output_learning=ClassifierLearning.Supervised, update=Learning.FullyOrthogonal, weight=WeightScale.WeightDecay):
+    def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device, is_output_layer=False, output_learning=LearningRule.Supervised, update=LearningRule.FullyOrthogonal, weight=WeightScale.WeightDecay):
         super(Hebbian_Layer, self).__init__()
         self.input_dim = inputdim
         self.output_dim = outputdim
@@ -200,7 +176,7 @@ class Hebbian_Layer(nn.Module):
     def update_weight_softhebb(self, input, preac, postac):
         y = postac.squeeze()
         weight = self.feedforward.weight 
-        delta_w = L.update_weight_softhebb(input, preac, postac, weight)
+        delta_w = L.update_weight_softhebb(input, preac, postac, weight, inhibition=self.inhib)
         delta_w = self.lr*delta_w
         self.feedforward.weight=nn.Parameter(torch.add(delta_w, weight), requires_grad=False)
         self.exponential_average=torch.add(self.gamma*self.exponential_average,(1-self.gamma)*y)
@@ -249,16 +225,16 @@ class Hebbian_Layer(nn.Module):
         h = self.feedforward(x)
         x = self.inhibition(h)
         if self.is_output_layer:
-            if self.o_learning == ClassifierLearning.Contrastive:
+            if self.o_learning == LearningRule.OutputContrastiveSupervised:
                 self.classifier_update_contrastive(input, x, clamped)
-            elif self.o_learning == ClassifierLearning.Supervised:
+            elif self.o_learning == LearningRule.Supervised:
                 self.classifier_update_supervised(input, clamped)
             else:
                 self.update_weights_FullyOrthogonal(input, clamped)
         else:
-            if self.w_update == Learning.FullyOrthogonal:
+            if self.w_update == LearningRule.FullyOrthogonal:
                 self.update_weights_FullyOrthogonal(input, x)
-            elif self.w_update == Learning.Softhebb:
+            elif self.w_update == LearningRule.Softhebb:
                 self.update_weight_softhebb(input, h, x)
             else:
                 self.update_weights_OrthogonalExclusive(input, x)

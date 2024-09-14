@@ -13,6 +13,8 @@ import math
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 
+import models.hyperparams
+
 transform_MNIST = transforms.Compose([
             transforms.ToTensor(),
             transforms.Lambda(lambda x: x.view(-1))
@@ -64,10 +66,10 @@ if __name__ == "__main__":
     model = CNN.CNNBaseline_Model(inputshape=(1, 28, 28), kernels=[5, 3, 3], channels=[16, 64, 256], strides=[2, 2, 2],
                                   padding=[0, 1, 0], lambd=4, lr=0.005, gamma=0.99, epsilon=0.01,
                                   rho=0.001, nbclasses=10, topdown=False, device="cpu",
-                                  learningrule=CNN.Learning.FullyOrthogonal,
-                                  weightscaling=CNN.WeightScale.WeightNormalization,
-                                  outputlayerrule=CNN.ClassifierLearning.Contrastive, triangle=False)
+                                  learningrule=models.hyperparams.LearningRule.FullyOrthogonal,
+                                  weightscaling=models.hyperparams.WeightScale.WeightNormalization,
+                                  outputlayerrule=models.hyperparams.LearningRule.OutputContrastiveSupervised, triangle=False)
     mymodelCNN = CNN.CNNBaseline_Experiment(epoch=1, mymodel=model, dataloader=train_dataloader, dataset='FashionMNIST',
-                                      nclasses=10, imgtype=CNN.ImageType.Gray)
-    print(CNN.CNN_Baseline_test(mymodel=mymodelCNN, data_loader=test_dataloader, imgtype=CNN.ImageType.Gray,
+                                            nclasses=10, imgtype=models.hyperparams.ImageType.Gray)
+    print(CNN.CNN_Baseline_test(mymodel=mymodelCNN, data_loader=test_dataloader, imgtype=models.hyperparams.ImageType.Gray,
                                 topdown=False))
