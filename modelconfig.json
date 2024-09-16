@@ -7,25 +7,31 @@
             "out_channel" : 32,
             "kernel" : 5,
             "stride" : 1,
-            "padding" : 0, 
+            "padding" : 2,
+            "paddingmode" : "reflect",
             "triangle" : true, 
-            "whiten" : false
+            "whiten" : false, 
+            "batchnorm" : true
         }, 
         "Conv2" : {
             "out_channel" : 128,
             "kernel" : 3,
             "stride" : 1,
-            "padding" : 0,
+            "padding" : 1,
+            "paddingmode" : "reflect",
             "triangle" : true,
-            "whiten" : false
+            "whiten" : false,
+            "batchnorm" : true
         }, 
         "Conv3" : {
             "out_channel" : 512,
             "kernel" : 3,
             "stride" : 1,
-            "padding" : 0,
+            "padding" : 1,
+            "paddingmode" : "reflect",
             "triangle" : true,
-            "whiten" : false
+            "whiten" : false,
+            "batchnorm" : true
         }
     }, 
     "PoolingBlock" : {
@@ -53,7 +59,7 @@
     "Rho" : 1e-3, 
     "Eta" : 0.1, 
     "Classifier" : {
-        "Hebbian" : true, 
-        "triangle" : true
+        "Hebbian" : false, 
+        "triangle" : false
     }
 }

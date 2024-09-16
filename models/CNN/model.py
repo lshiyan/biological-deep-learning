@@ -111,24 +111,20 @@ class ConvolutionalNeuralNet(nn.Module):
         return self.TD_forward(x, update_weights=False)
 
 
-
 class Hebbian_Classifier(nn.Module):
-    def __init__(self, inputdim, outputdim, lr, lamb, device, b=1, triangle=False, output_learning=LearningRule.SoftHebb, inhibition=Inhibition.RePU):
+    def __init__(self, inputdim, outputdim, device, basemodel, lr):
         super(Hebbian_Classifier, self).__init__()
-        self.inputdim = inputdim
+        self.inputdime = inputdim
         self.outputdim = outputdim
-        self.lr = lr 
-        self.lamb = lamb
         self.device = device
-        self.output_learning = output_learning
-        self.triangle = triangle
-        self.inhib = inhibition
-        self.feedforward = nn.Linear(self.inputdim, self.outputdim, bias=False)
-        self.is_output_layer = True
-        for param in self.feedforward.parameters():
-            param=torch.nn.init.uniform_(param, a=0.0, b=b)
-            param.requires_grad_(False)
-    
+        self.basemodel = basemodel
+        self.linear = nn.Linear(inputdim, outputdim, bias=False)
+        self.lr = lr
+        self.lamb = 1
+        self.triangle = False
+        self.inhib = Inhibition.RePU
+        self.output_learning = LearningRule.OutputContrastiveSupervised
+
     def inhibition(self, x):
         if self.triangle:
             m = torch.mean(x)
@@ -148,23 +144,22 @@ class Hebbian_Classifier(nn.Module):
             input = input.squeeze()
             true_output = true_output.squeeze()
             outer = torch.outer(true_output - output, input)
-            self.feedforward.weight=nn.Parameter(torch.relu(self.lr * outer + self.feedforward.weight),
+            self.linear.weight=nn.Parameter(torch.relu(self.lr * outer + self.linear.weight),
                                                  requires_grad=False)
 
     def classifier_update_supervised(self, input, output):
         output = output.squeeze()
         input = input.squeeze()
         outer = torch.outer(output, input)
-        self.feedforward.weight=nn.Parameter(self.lr * outer + self.feedforward.weight,
+        self.linear.weight=nn.Parameter(self.lr * outer + self.linear.weight,
                                              requires_grad=False)
         
     def update_weights_softhebb(self, input, preactivation, output):
         with torch.no_grad():
-            y = output.squeeze()
-            initial_weight = self.feedforward.weight
+            initial_weight = self.linear.weight
             delta_w = L.update_weight_softhebb(input, preactivation, output, initial_weight)
             new_weights = initial_weight + self.lr *  delta_w
-            self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
+            self.linear.weight = nn.Parameter(new_weights, requires_grad=False)
 
     def update_weights(self, x, u, y, true_output):
         if self.output_learning == LearningRule.SoftHebb:
@@ -174,19 +169,168 @@ class Hebbian_Classifier(nn.Module):
         elif self.output_learning == LearningRule.Supervised:
             self.classifier_update_supervised(x, true_output)
 
-    def forward(self, x, clamped=None, update_weights=True):
-        x = x.reshape(x.shape[0], -1)
-        u = self.feedforward(x)
-        y = self.inhibition(u)
-        if update_weights:
-            self.update_weights(x, u, y, true_output=clamped)
-        return u, y 
+    def train_conv(self, x, label):
+        return self.basemodel(x, label)
 
-    def TD_forward(self, x, h):
-        x = x.reshape(x.shape[0], -1)
-        u = self.feedforward(x)
-        y = self.inhibition(u)
-        return u, y
+    def train_classifier(self, x, label):
+        self.basemodel.eval()
+        with torch.no_grad():
+            y = self.basemodel.forward_test(x)
+            y = y.reshape(y.shape[0], -1)
+        u = self.linear(y)
+        #pred = self.inhibition(u)
+        self.update_weights(y, u, u, true_output=label)
+        return u, y 
+    
+    # def forward(self, x, label):
+    #     self.basemodel.eval()
+    #     with torch.no_grad():
+    #         y = self.basemodel(x, label)
+    #         y = y.reshape(y.shape[0], -1)
+    #     self.optim.zero_grad()
+    #     pred = self.linear(self.drop(y))
+    #     loss = self.lossfn(pred, label)
+    #     loss.backward()
+    #     self.optim.step()
+    #     return pred
+    
+    def forward_test(self, x):
+        self.basemodel.eval()
+        self.eval()
+        with torch.no_grad():
+            y = self.basemodel.forward_test(x)
+            y = y.reshape(y.shape[0], -1)
+        pred = self.linear(y)
+        #pred = self.inhibition(pred)
+        return pred
+
+
+class Gradient_Classifier(nn.Module):
+    def __init__(self, inputdim, outputdim, device, basemodel, lr):
+        super(Gradient_Classifier, self).__init__()
+        self.inputdime = inputdim
+        self.outputdim = outputdim
+        self.device = device
+        self.basemodel = basemodel
+        self.linear = nn.Linear(inputdim, outputdim)
+        self.drop = nn.Dropout(0.5)
+
+        self.optim = torch.optim.Adam(self.linear.parameters(), lr=lr)
+        self.lossfn = nn.CrossEntropyLoss()
+
+    
+    def train_conv(self, x, label):
+        return self.basemodel(x, label)
+
+    def train_classifier(self, x, label):
+        self.basemodel.eval()
+        with torch.no_grad():
+            y = self.basemodel.forward_test(x)
+            y = y.reshape(y.shape[0], -1)
+        self.optim.zero_grad()
+        pred = self.linear(self.drop(y))
+        loss = self.lossfn(pred, label)
+        loss.backward()
+        self.optim.step()
+        return pred
+    
+    def forward(self, x, label):
+        self.basemodel.eval()
+        with torch.no_grad():
+            y = self.basemodel(x, label)
+            y = y.reshape(y.shape[0], -1)
+        self.optim.zero_grad()
+        pred = self.linear(self.drop(y))
+        loss = self.lossfn(pred, label)
+        loss.backward()
+        self.optim.step()
+        return pred
+    
+    def forward_test(self, x):
+        self.basemodel.eval()
+        self.eval()
+        with torch.no_grad():
+            y = self.basemodel.forward_test(x)
+            y = y.reshape(y.shape[0], -1)
+        pred = self.linear(self.drop(y))
+        return pred
+
+
+# class Hebbian_Classifier(nn.Module):
+#     def __init__(self, inputdim, outputdim, lr, lamb, device, b=1, triangle=False, output_learning=LearningRule.SoftHebb, inhibition=Inhibition.RePU):
+#         super(Hebbian_Classifier, self).__init__()
+#         self.inputdim = inputdim
+#         self.outputdim = outputdim
+#         self.lr = lr 
+#         self.lamb = lamb
+#         self.device = device
+#         self.output_learning = output_learning
+#         self.triangle = triangle
+#         self.inhib = inhibition
+#         self.feedforward = nn.Linear(self.inputdim, self.outputdim, bias=False)
+#         self.is_output_layer = True
+#         for param in self.feedforward.parameters():
+#             param=torch.nn.init.uniform_(param, a=0.0, b=b)
+#             param.requires_grad_(False)
+    
+#     def inhibition(self, x):
+#         if self.triangle:
+#             m = torch.mean(x)
+#             x = x - m
+#         if self.inhib == Inhibition.RePU:
+#             x=torch.relu(x)
+#             max_ele=torch.max(x).item()
+#             x/=(max_ele + 1e-9)
+#             x=torch.pow(x, self.lamb)
+#         elif self.inhib == Inhibition.Softmax:
+#             x = nn.Softmax()(x)
+#         return x
+    
+#     def classifier_update_contrastive(self, input, output, true_output):
+#         with torch.no_grad():
+#             output = output.squeeze()
+#             input = input.squeeze()
+#             true_output = true_output.squeeze()
+#             outer = torch.outer(true_output - output, input)
+#             self.feedforward.weight=nn.Parameter(torch.relu(self.lr * outer + self.feedforward.weight),
+#                                                  requires_grad=False)
+
+#     def classifier_update_supervised(self, input, output):
+#         output = output.squeeze()
+#         input = input.squeeze()
+#         outer = torch.outer(output, input)
+#         self.feedforward.weight=nn.Parameter(self.lr * outer + self.feedforward.weight,
+#                                              requires_grad=False)
+        
+#     def update_weights_softhebb(self, input, preactivation, output):
+#         with torch.no_grad():
+#             y = output.squeeze()
+#             initial_weight = self.feedforward.weight
+#             delta_w = L.update_weight_softhebb(input, preactivation, output, initial_weight)
+#             new_weights = initial_weight + self.lr *  delta_w
+#             self.feedforward.weight = nn.Parameter(new_weights, requires_grad=False)
+
+#     def update_weights(self, x, u, y, true_output):
+#         if self.output_learning == LearningRule.SoftHebb:
+#             self.update_weights_softhebb(x, u, true_output)
+#         elif self.output_learning == LearningRule.OutputContrastiveSupervised:
+#             self.classifier_update_contrastive(x, y, true_output)
+#         elif self.output_learning == LearningRule.Supervised:
+#             self.classifier_update_supervised(x, true_output)
+
+#     def forward(self, x, clamped=None, update_weights=True):
+#         x = x.reshape(x.shape[0], -1)
+#         u = self.feedforward(x)
+#         y = self.inhibition(u)
+#         if update_weights:
+#             self.update_weights(x, u, y, true_output=clamped)
+#         return u, y 
+
+#     def TD_forward(self, x, h):
+#         x = x.reshape(x.shape[0], -1)
+#         u = self.feedforward(x)
+#         y = self.inhibition(u)
+#         return u, y
 
         
 
@@ -364,7 +508,7 @@ class Hebbian_Classifier(nn.Module):
 
 class ConvolutionHebbianLayer(nn.Module):
     def __init__(self, input_shape, kernel, stride, in_ch, out_ch, lambd, lr, rho, device,
-                 eta=1, padding=0,
+                 eta=1, padding=0, paddingmode="zeros",
                  weightlearning=LearningRule.SoftHebb, weightscaling=WeightScale.WeightNormalization, triangle=False,
                  is_output_layer=False, whiten_input=False, b=1, inhibition = Inhibition.RePU):
         super(ConvolutionHebbianLayer, self).__init__()
@@ -372,6 +516,7 @@ class ConvolutionHebbianLayer(nn.Module):
         self.kernel = kernel
         self.stride = stride
         self.padding = padding
+        self.paddingmode = paddingmode
         self.in_channel = in_ch
         self.out_channel = out_ch
         self.lamb = lambd
@@ -391,9 +536,9 @@ class ConvolutionHebbianLayer(nn.Module):
         self.output_shape = None
         self.nb_tiles = None
 
-        self.convolution = nn.Conv2d(stride=self.stride, kernel_size=self.kernel, padding=self.padding,
+        self.convolution = nn.Conv2d(stride=self.stride, kernel_size=self.kernel, padding=self.padding, padding_mode=self.paddingmode,
                                      in_channels=self.in_channel, out_channels=self.out_channel, bias=False)
-        self.batchnorm = nn.BatchNorm2d(self.in_channel, affine=False)
+        self.batchnorm = None
         self.pool = None
         # Top down weights
         self.convolutionTD = None # if layer above is conv
@@ -430,7 +575,7 @@ class ConvolutionHebbianLayer(nn.Module):
         self.nb_tiles = self.output_shape[0] * self.output_shape[1]
 
     def Set_TD(self, inc, outc, kernel, stride):
-        self.convolutionTD = nn.ConvTranspose2d(inc, outc, kernel, stride, padding=self.padding)
+        self.convolutionTD = nn.ConvTranspose2d(inc, outc, kernel, stride, padding=self.padding, padding_mode=self.paddingmode)
 
     def set_TD_factor(self, factor):
         self.top_down_factor = factor
@@ -634,7 +779,8 @@ class ConvolutionHebbianLayer(nn.Module):
         if self.whiten_input:
             x = self.whiten_image(x)
         
-        x = self.batchnorm(x)
+        if self.batchnorm: 
+            x = self.batchnorm(x)
         # output is [batch=1, output_channel, new_height, new_width]
         u = self.convolution(x)
 
@@ -705,8 +851,10 @@ def CNN_Model_from_config(inputshape, config, learningrule, weightscaling, outpu
     for layer_idx in range(len(config['Convolutions'])):
         layerconfig = config['Convolutions'][l_keys[layer_idx]]
         convlayer = ConvolutionHebbianLayer(input_shape=inputsize, kernel=layerconfig['kernel'], stride=layerconfig['stride'], in_ch=input_channel, out_ch=layerconfig['out_channel'], 
-                                            lambd=lamb, lr=lr, rho=rho, device=device, eta=eta, padding=layerconfig['padding'], weightlearning=learningrule, weightscaling=weightscaling, triangle=layerconfig['triangle'], 
+                                            lambd=lamb, lr=lr, rho=rho, device=device, eta=eta, padding=layerconfig['padding'], paddingmode = layerconfig['paddingmode'], weightlearning=learningrule, weightscaling=weightscaling, triangle=layerconfig['triangle'], 
                                             whiten_input=layerconfig['whiten'], b=beta, inhibition=inhibition)
+        if layerconfig['batchnorm']:
+            convlayer.batchnorm = nn.BatchNorm2d(input_channel, affine=False)
         if is_pool:
             poolconfig = config["PoolingBlock"][l_keys[layer_idx]]
             convlayer.set_pooling(kernel=poolconfig['kernel'], stride=poolconfig['stride'], padding=poolconfig['padding'], type=poolconfig['Type'])
@@ -724,63 +872,63 @@ def CNN_Model_from_config(inputshape, config, learningrule, weightscaling, outpu
     print("Fully connected layer input dim : " + str(fc_inputdim))
 
     if config['Classifier']['Hebbian'] == True:
-        heblayer = Hebbian_Classifier(fc_inputdim, outputdim=nbclasses, lr=lr, lamb=lamb, device=device, b=beta, triangle=config['Classifier']['triangle'], output_learning=outputlearning, inhibition=inhibition)
+        mymodel = Hebbian_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.005)
 
-        mycnn.add_layer("HebLayer", heblayer)
-
-    if is_topdown:
-        mycnn.initialize_TD_factors()
+        if is_topdown:
+            mycnn.initialize_TD_factors()
+    else:
+        mymodel = Gradient_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.001)
     
-    mycnn = mycnn.to(device)
+    mymodel = mymodel.to(device)
 
-    return mycnn
-
-
-def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None, lambd=1, lr=0.005,
-                      gamma=0.99, epsilon=0.01, rho=1e-3, eta=1e-3, b=1e-4,
-                      nbclasses=10, topdown=True, device=None,
-                      learningrule=LearningRule.Orthogonal,
-                      weightscaling=WeightScale.WeightNormalization, outputlayerrule=LearningRule.OutputContrastiveSupervised,
-                      triangle=False, whiten_input=False, inhibition=Inhibition.RePU):
-    if padding is None:
-        padding = [0] * len(kernels)
-    if strides is None:
-        strides = [1] * len(kernels)
-
-    mycnn = ConvolutionalNeuralNet(device)
-    input_channels = inputshape[0]
-    input_size = inputshape[1:]
-
-    layer_id = 1
-    for kernel, out_chan, stride, pad in zip(kernels, channels, strides, padding):
-        convlayer = ConvolutionHebbianLayer(input_size, kernel, stride, input_channels, out_chan, lambd, lr, gamma,
-                                            epsilon, rho, eta=eta, device=device, padding=pad, weightlearning=learningrule,
-                                            weightscaling=weightscaling, triangle=triangle, whiten_input=whiten_input, b=b, inhibition=inhibition)
-        if topdown and layer_id < len(kernels):
-            convlayer.Set_TD(inc=channels[layer_id], outc=out_chan, kernel=kernels[layer_id], stride=strides[layer_id])
-        convlayer.normalize_weights()
-        mycnn.add_layer(f"CNNLayer{layer_id}", convlayer)
-        layer_id += 1
-        input_channels = out_chan
-        input_size = convlayer.output_shape
-        print(f"New Image Dimensions after Convolution : {((out_chan,) + input_size)}")
+    return mymodel
 
 
-    fc_inputdim = convlayer.nb_tiles * out_chan
-    print("Fully connected layer input dim : " + str(fc_inputdim))
+# def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None, lambd=1, lr=0.005,
+#                       gamma=0.99, epsilon=0.01, rho=1e-3, eta=1e-3, b=1e-4,
+#                       nbclasses=10, topdown=True, device=None,
+#                       learningrule=LearningRule.Orthogonal,
+#                       weightscaling=WeightScale.WeightNormalization, outputlayerrule=LearningRule.OutputContrastiveSupervised,
+#                       triangle=False, whiten_input=False, inhibition=Inhibition.RePU):
+#     if padding is None:
+#         padding = [0] * len(kernels)
+#     if strides is None:
+#         strides = [1] * len(kernels)
+
+#     mycnn = ConvolutionalNeuralNet(device)
+#     input_channels = inputshape[0]
+#     input_size = inputshape[1:]
+
+#     layer_id = 1
+#     for kernel, out_chan, stride, pad in zip(kernels, channels, strides, padding):
+#         convlayer = ConvolutionHebbianLayer(input_size, kernel, stride, input_channels, out_chan, lambd, lr, gamma,
+#                                             epsilon, rho, eta=eta, device=device, padding=pad, weightlearning=learningrule,
+#                                             weightscaling=weightscaling, triangle=triangle, whiten_input=whiten_input, b=b, inhibition=inhibition)
+#         if topdown and layer_id < len(kernels):
+#             convlayer.Set_TD(inc=channels[layer_id], outc=out_chan, kernel=kernels[layer_id], stride=strides[layer_id])
+#         convlayer.normalize_weights()
+#         mycnn.add_layer(f"CNNLayer{layer_id}", convlayer)
+#         layer_id += 1
+#         input_channels = out_chan
+#         input_size = convlayer.output_shape
+#         print(f"New Image Dimensions after Convolution : {((out_chan,) + input_size)}")
+
+
+#     fc_inputdim = convlayer.nb_tiles * out_chan
+#     print("Fully connected layer input dim : " + str(fc_inputdim))
     
-    heblayer = Hebbian_Layer(inputdim=fc_inputdim, outputdim=nbclasses, lr=lr, lamb=lambd, rho=rho, eta=eta,
-                             gamma=gamma, eps=epsilon, device=device, is_output_layer=True,
-                             output_learning=outputlayerrule, weightscaling=weightscaling, triangle=triangle, b=b, inhibition=inhibition)
+#     heblayer = Hebbian_Layer(inputdim=fc_inputdim, outputdim=nbclasses, lr=lr, lamb=lambd, rho=rho, eta=eta,
+#                              gamma=gamma, eps=epsilon, device=device, is_output_layer=True,
+#                              output_learning=outputlayerrule, weightscaling=weightscaling, triangle=triangle, b=b, inhibition=inhibition)
 
-    mycnn.add_layer("HebLayer", heblayer)
+#     mycnn.add_layer("HebLayer", heblayer)
 
-    if topdown:
-        mycnn.initialize_TD_factors()
+#     if topdown:
+#         mycnn.initialize_TD_factors()
     
-    mycnn = mycnn.to(device)
+#     mycnn = mycnn.to(device)
 
-    return mycnn
+#     return mycnn
 
 
 
@@ -805,7 +953,7 @@ def Save_Model(mymodel, dataset, rank, topdown, v_input, device, acc):
 
 
 
-def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, imgtype, device, traintopdown=False, testtopdown=False):
+def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, imgtype, device, traintopdown=False, testtopdown=False, greedytrain=False):
 
     mymodel.train()
     samples = 0
@@ -821,6 +969,9 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
             labels = labels.to(device)
             if imgtype == ImageType.Gray:
                 inputs = inputs.reshape(1,1,28,28)
+            if greedytrain:
+                mymodel.train_conv(inputs, oneHotEncode(labels, nclasses, mymodel.device))
+                continue
             if traintopdown:
                 mymodel.TD_forward(inputs, clamped=oneHotEncode(labels, nclasses, mymodel.device))
             else:
@@ -828,7 +979,20 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
             samples += 1
             #if cn == 10:
             #    return mymodel
-    
+
+    if greedytrain:
+        for _ in range(50):
+            for data in tqdm(dataloader):
+                inputs, labels=data
+                # inputs = inputs.to('mps')
+                # labels = labels.to('mps')
+                #print(inputs)
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+                if imgtype == ImageType.Gray:
+                    inputs = inputs.reshape(1,1,28,28)
+                mymodel.train_classifier(inputs, oneHotEncode(labels, nclasses, mymodel.device))
+
     # timestr = time.strftime("%Y%m%d-%H%M%S")
 
     # if traintopdown:
@@ -842,7 +1006,7 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
 
     #view_filters(mymodel, foldername)
     #view_ff_weights(mymodel, foldername, dataloader)
-    return mymodel
+    return mymodel.basemodel, mymodel
 
 
 
