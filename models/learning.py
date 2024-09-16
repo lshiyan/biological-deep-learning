@@ -60,6 +60,6 @@ def update_weight_softhebb(input, preactivation, output, weight, inhibition=Inhi
     elif inhibition == Inhibition.Softmax:
         u = preactivation
     #deltas = multiplicative_factor * output * (input - torch.matmul(torch.relu(u), W).reshape(b, indim))
-    deltas = (multiplicative_factor * output).unsqueeze(2) * (input - torch.matmul(torch.relu(u), W)).reshape(b, 1, indim)
+    deltas = (multiplicative_factor * output).reshape(b, outdim, 1) * (input - torch.matmul(torch.relu(u), W)).reshape(b, 1, indim)
     delta = torch.mean(deltas, dim=0)
     return delta
