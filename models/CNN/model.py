@@ -220,7 +220,8 @@ class Gradient_Classifier(nn.Module):
 
     
     def train_conv(self, x, label):
-        return self.basemodel(x, label)
+        with torch.no_grad():
+            self.basemodel(x, label)
 
     def train_classifier(self, x, label):
         self.basemodel.eval()
@@ -775,23 +776,22 @@ class ConvolutionHebbianLayer(nn.Module):
 
     # x is torch.Size([batch_size=1, channel, height, width])
     def forward(self, x, clamped=None, update_weights=True):
+        with torch.no_grad():
+            if self.whiten_input:
+                x = self.whiten_image(x)
+            
+            if self.batchnorm: 
+                x = self.batchnorm(x)
+            # output is [batch=1, output_channel, new_height, new_width]
+            u = self.convolution(x)
 
-        if self.whiten_input:
-            x = self.whiten_image(x)
-        
-        if self.batchnorm: 
-            x = self.batchnorm(x)
-        # output is [batch=1, output_channel, new_height, new_width]
-        u = self.convolution(x)
+            output = self.inhibition(u)
 
-        output = self.inhibition(u)
-
-        if update_weights:
-            self.update_weights(x, u, output,  true_output=clamped)
-        
-        if self.pool:
-            output = self.pool(output)
-        
+            if update_weights:
+                self.update_weights(x, u, output,  true_output=clamped)
+            
+            if self.pool:
+                output = self.pool(output)
         return u, output
     
     

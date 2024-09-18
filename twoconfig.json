@@ -22,16 +22,6 @@
             "triangle" : true,
             "whiten" : false,
             "batchnorm" : true
-        }, 
-        "Conv3" : {
-            "out_channel" : 1024,
-            "kernel" : 3,
-            "stride" : 1,
-            "padding" : 1,
-            "paddingmode" : "reflect",
-            "triangle" : true,
-            "whiten" : false,
-            "batchnorm" : true
         }
     }, 
     "PoolingBlock" : {
@@ -43,12 +33,6 @@
             "padding" : 1 
         }, 
         "Conv2" : {
-            "Type" : "Max",
-            "kernel" : 4,
-            "stride" : 2, 
-            "padding" : 1 
-        },
-        "Conv3" : {
             "Type" : "Avg",
             "kernel" : 2,
             "stride" : 2, 
