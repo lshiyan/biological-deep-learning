@@ -7,7 +7,8 @@ from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
 import time
 import models.learning as L
-from models.hyperparams import LearningRule, WeightScale, oneHotEncode
+import models.helper_modules as M
+from models.hyperparams import LearningRule, WeightScale, oneHotEncode, InputProcessing, Inhibition
 
 
 
@@ -120,6 +121,84 @@ class NeuralNet(nn.Module):
         torch.save(self.state_dict(), path)
 
 
+class SoftHebbLayer(nn.Module):
+    def __init__(self, inputdim: int, outputdim: int, w_lr: float = 0.003, b_lr: float = 0.003, l_lr: float = 0.003,
+                 device=None, is_output_layer=False, initial_weight_norm: float = 0.01,
+                 triangle:bool = False, initial_lambda: float = 4.0,
+                 inhibition: Inhibition = Inhibition.RePU,
+                 learningrule: LearningRule = LearningRule.SoftHebb,
+                 preprocessing: InputProcessing = InputProcessing.No):
+        super(SoftHebbLayer, self).__init__()
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
+        self.input_dim: int = inputdim
+        self.output_dim: int = outputdim
+        self.triangle: bool = triangle
+        self.w_lr: float = w_lr
+        self.l_lr: float = l_lr
+        self.b_lr: float = b_lr
+        self.lamb: float = initial_lambda
+        self.is_output_layer: bool = is_output_layer
+        self.learningrule: LearningRule = learningrule
+        self.inhibition: Inhibition = inhibition
+        self.preprocessing: InputProcessing = preprocessing
+        if preprocessing == InputProcessing.Whiten:
+            self.bn = M.BatchNorm(inputdim, device=device)
+
+        self.weight = nn.Parameter(torch.randn((outputdim, inputdim), device=device), requires_grad=False)
+        self.logprior = nn.Parameter(torch.zeros(outputdim, device=device), requires_grad=False)
+
+        self.initial_weight_norm = initial_weight_norm
+        self.set_weight_norms_to(initial_weight_norm)
+
+    def set_weight_norms_to(self, norm: float):
+        weights = self.weight
+        weights_norm = self.get_weight_norms(weights)
+        new_weights = weights / (weights_norm + 1e-10)
+        self.weight = nn.Parameter(new_weights, requires_grad=False)
+
+    def get_weight_norms(self, weights):
+        return torch.norm(weights, p=2, dim=1, keepdim=True)
+
+    def a(self, x):
+        # batch_size, dim = x.shape
+        x_norms = torch.norm(x, dim=1, keepdim=True)
+        weight_norms = self.get_weight_norms(self.weight)
+        x_n = x / (x_norms + 1e-9)
+        W = self.weight / (weight_norms + 1e-9)
+        cos_sims = torch.matmul(x_n, W.T)
+        return cos_sims
+
+    def u(self, a):
+        # batch_size, dim = a.shape
+        if self.inhibition == Inhibition.RePU:
+            if self.triangle:
+                setpoint = a.mean()
+            else:
+                setpoint = 0
+            u = torch.relu(a - setpoint)
+        elif self.inhibition == Inhibition.Softmax:
+            u = torch.exp(a)
+        else:
+            raise NotImplementedError(f"{self.inhibition} is not an implemented inhibition method.")
+        return u
+
+    def y(self, a):
+        if self.inhibition == Inhibition.Softmax:
+            y = torch.softmax(self.lamb * a)
+        elif self.inhibition == Inhibition.RePU:
+            u = self.u(a)
+            un = u / (torch.max(u) + 1e-9)   # normalize for numerical stability
+            ulamb = un ** self.lamb
+            y = ulamb / (torch.sum(ulamb, dim=1, keepdim=True) + 1e-9)
+        else:
+            raise NotImplementedError(f"{self.inhibition} is not an implemented inhibition method.")
+        return y
+
+
+
+    #def inference(self, x):
 
 class Hebbian_Layer(nn.Module):
     def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device, is_output_layer=False, output_learning=LearningRule.Supervised, update=LearningRule.FullyOrthogonal, weight=WeightScale.WeightDecay):
