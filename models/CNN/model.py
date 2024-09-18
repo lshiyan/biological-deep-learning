@@ -256,6 +256,10 @@ class Gradient_Classifier(nn.Module):
         pred = self.linear(self.drop(y))
         return pred
 
+    # def greedy_conv_train(self, x, label):
+        
+    #     with torch.no_grad():
+        
 
 # class Hebbian_Classifier(nn.Module):
 #     def __init__(self, inputdim, outputdim, lr, lamb, device, b=1, triangle=False, output_learning=LearningRule.SoftHebb, inhibition=Inhibition.RePU):
@@ -591,18 +595,16 @@ class ConvolutionHebbianLayer(nn.Module):
     def inhibition(self, output):
         
         # output : [batch=1, outchannel, newheight, newwidth]
-        if self.triangle:
-            m = torch.mean(output, dim=1, keepdim=True)
-            output = output - m
-
-        output = torch.relu(output)
-
-        max_ele, _ = torch.max(output, dim=1, keepdim=True)
-
-        output /= (max_ele + 1e-9)
+        # if self.triangle:
+        #     m = torch.mean(output, dim=1, keepdim=True)
+        #     output = output - m
 
         if self.inhib == Inhibition.RePU:
+            output = torch.relu(output)
+            max_ele, _ = torch.max(output, dim=1, keepdim=True)
+            output /= (max_ele + 1e-9)
             output=torch.pow(output, self.lamb)
+            output = output / output.sum()
         elif self.inhib == Inhibition.Softmax:
             output = nn.Softmax()(output)
 
