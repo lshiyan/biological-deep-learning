@@ -604,7 +604,7 @@ class ConvolutionHebbianLayer(nn.Module):
             max_ele, _ = torch.max(output, dim=1, keepdim=True)
             output /= (max_ele + 1e-9)
             output=torch.pow(output, self.lamb)
-            output = output / output.sum(dim=[2, 3], keepdim=True)
+            output = output / (output.sum(dim=1, keepdim=True) + 1e-9)
         elif self.inhib == Inhibition.Softmax:
             output = nn.Softmax()(output)
 
