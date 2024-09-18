@@ -1,6 +1,9 @@
 # Large dataset folders
 data
 
+#Mac files
+.DS_Store
+
 # IDE files
 .idea/
 
