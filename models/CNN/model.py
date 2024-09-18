@@ -604,7 +604,7 @@ class ConvolutionHebbianLayer(nn.Module):
             max_ele, _ = torch.max(output, dim=1, keepdim=True)
             output /= (max_ele + 1e-9)
             output=torch.pow(output, self.lamb)
-            output = output / output.sum()
+            output = output / output.sum(dim=[2, 3], keepdim=True)
         elif self.inhib == Inhibition.Softmax:
             output = nn.Softmax()(output)
 
@@ -983,7 +983,7 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
             #    return mymodel
 
     if greedytrain:
-        for _ in range(50):
+        for _ in range(1):
             for data in tqdm(dataloader):
                 inputs, labels=data
                 # inputs = inputs.to('mps')

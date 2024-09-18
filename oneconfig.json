@@ -10,7 +10,7 @@
             "padding" : 2,
             "paddingmode" : "reflect",
             "triangle" : true, 
-            "whiten" : false, 
+            "whiten" : true, 
             "batchnorm" : true
         }
     }, 
