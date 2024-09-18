@@ -12,6 +12,7 @@ class LearningRule(Enum):
     Orthogonal = 3
     FullyOrthogonal = 4
     SoftHebb = 5
+    SoftHebbOutputContrastive = 6
 
 
 class WeightScale(Enum):
@@ -24,6 +25,9 @@ class Inhibition(Enum):
     Softmax = 1
     RePU = 2
 
+class InputProcessing(Enum):
+    No = None
+    Whiten = 1
 
 def oneHotEncode(labels, num_classes, device):
     one_hot_encoded = torch.zeros(len(labels), num_classes).to(device)

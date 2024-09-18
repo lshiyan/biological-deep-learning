@@ -46,7 +46,8 @@ weight : tensor([out_dim, in_dim])
 
 In CNN, batch will be the number of kernel*kernel grids
 """
-def update_weight_softhebb(input, preactivation, output, weight, inhibition=Inhibition.RePU):
+def update_weight_softhebb(input, preactivation, output, weight, target=None,
+                           inhibition=Inhibition.RePU):
     # input_shape = batch, in_dim
     # output_shape = batch, out_dim = preactivation_shape
     # weight_shape = out_dim, in_dim
