@@ -556,7 +556,7 @@ class ConvolutionHebbianLayer(nn.Module):
 
         self.fold = nn.Fold(output_size=input_shape, kernel_size=self.kernel, padding=self.padding, stride=self.stride)
 
-        self.fold_unfold_divisor = self.fold(self.unfold(torch.ones(1, in_ch, input_shape[0], input_shape[1])))
+        self.fold_unfold_divisor = (self.fold(self.unfold(torch.ones(1, in_ch, input_shape[0], input_shape[1])))).to(device)
         for param in self.convolution.parameters():
             param=torch.nn.init.uniform_(param, a=0, b=self.b)
             param.requires_grad_(False)
