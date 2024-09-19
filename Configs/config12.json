@@ -2,7 +2,7 @@
     "Lambda": 1,
     "Lr": 0.0001,
     "beta": 1,
-    "greedytrain": false,
+    "greedytrain": true,
     "Convolutions": {
         "Conv1": {
             "out_channel": 32,
@@ -11,7 +11,7 @@
             "padding": 2,
             "paddingmode": "reflect",
             "triangle": true,
-            "whiten": true,
+            "whiten": false,
             "batchnorm": true,
             "inhibition": "REPU"
         },
@@ -22,7 +22,7 @@
             "padding": 1,
             "paddingmode": "reflect",
             "triangle": true,
-            "whiten": true,
+            "whiten": false,
             "batchnorm": true,
             "inhibition": "REPU"
         }

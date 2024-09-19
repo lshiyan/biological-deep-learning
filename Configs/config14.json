@@ -11,7 +11,7 @@
             "padding": 2,
             "paddingmode": "reflect",
             "triangle": true,
-            "whiten": true,
+            "whiten": false,
             "batchnorm": true,
             "inhibition": "REPU"
         },
@@ -22,7 +22,7 @@
             "padding": 1,
             "paddingmode": "reflect",
             "triangle": true,
-            "whiten": true,
+            "whiten": false,
             "batchnorm": true,
             "inhibition": "REPU"
         }

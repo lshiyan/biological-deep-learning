@@ -1,34 +1,38 @@
 import json
 import os
 
-def generate_cnn_config_files(base_config, output_dir="Configs", num_layers=[3, 2, 1], whiten_values=[True, False], greedytrain_values=[True, False]):
+def generate_cnn_config_files(base_config, output_dir="Configs", num_layers=[3, 2, 1], whiten_values=[True, False], 
+    greedytrain_values=[True, False], inhibition_values=['REPU', 'SOFTMAX']
+):
     os.makedirs(output_dir, exist_ok=True)
     config_number = 0
 
     for layers in num_layers:
         for whiten in whiten_values:
             for greedytrain in greedytrain_values:
+                for inhibition in inhibition_values:
 
-                config = json.loads(json.dumps(base_config))
-                config['greedytrain'] = greedytrain
-                
-                # Update whiten
-                for i in range(1, layers + 1):
-                    conv_key = f"Conv{i}"
-                    config['Convolutions'][conv_key]['whiten'] = whiten
+                    config = json.loads(json.dumps(base_config))
+                    config['greedytrain'] = greedytrain
+                    
+                    # Update whiten
+                    for i in range(1, layers + 1):
+                        conv_key = f"Conv{i}"
+                        config['Convolutions'][conv_key]['whiten'] = whiten
+                        config['Convolutions'][conv_key]['inhibition'] = inhibition
 
-                # Remove convolution layers beyond the specified number
-                for i in range(layers + 1, 4):
-                    config['Convolutions'].pop(f"Conv{i}", None)
-                
-                filename = f"config{config_number}.json"
-                filepath = os.path.join(output_dir, filename)
-                
-                with open(filepath, 'w') as json_file:
-                    json.dump(config, json_file, indent=4)
-                
-                print(f"Generated: {filename}")
-                config_number += 1
+                    # Remove convolution layers beyond the specified number
+                    for i in range(layers + 1, 4):
+                        config['Convolutions'].pop(f"Conv{i}", None)
+                    
+                    filename = f"config{config_number}.json"
+                    filepath = os.path.join(output_dir, filename)
+                    
+                    with open(filepath, 'w') as json_file:
+                        json.dump(config, json_file, indent=4)
+                    
+                    print(f"Generated: {filename}")
+                    config_number += 1
 
 # Base configuration template
 base_config = {

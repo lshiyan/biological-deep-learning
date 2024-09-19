@@ -2,7 +2,7 @@
     "Lambda": 1,
     "Lr": 0.0001,
     "beta": 1,
-    "greedytrain": false,
+    "greedytrain": true,
     "Convolutions": {
         "Conv1": {
             "out_channel": 32,
@@ -13,7 +13,7 @@
             "triangle": true,
             "whiten": true,
             "batchnorm": true,
-            "inhibition": "REPU"
+            "inhibition": "SOFTMAX"
         },
         "Conv2": {
             "out_channel": 128,
@@ -24,7 +24,7 @@
             "triangle": true,
             "whiten": true,
             "batchnorm": true,
-            "inhibition": "REPU"
+            "inhibition": "SOFTMAX"
         },
         "Conv3": {
             "out_channel": 512,
@@ -35,7 +35,7 @@
             "triangle": true,
             "whiten": true,
             "batchnorm": true,
-            "inhibition": "REPU"
+            "inhibition": "SOFTMAX"
         }
     },
     "PoolingBlock": {

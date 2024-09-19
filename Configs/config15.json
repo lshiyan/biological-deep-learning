@@ -11,9 +11,9 @@
             "padding": 2,
             "paddingmode": "reflect",
             "triangle": true,
-            "whiten": true,
+            "whiten": false,
             "batchnorm": true,
-            "inhibition": "REPU"
+            "inhibition": "SOFTMAX"
         },
         "Conv2": {
             "out_channel": 128,
@@ -22,9 +22,9 @@
             "padding": 1,
             "paddingmode": "reflect",
             "triangle": true,
-            "whiten": true,
+            "whiten": false,
             "batchnorm": true,
-            "inhibition": "REPU"
+            "inhibition": "SOFTMAX"
         }
     },
     "PoolingBlock": {
