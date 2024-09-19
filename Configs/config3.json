@@ -2,6 +2,7 @@
     "Lambda" : 1, 
     "Lr" : 1e-4,
     "beta" : 1,
+    "greedytrain" : true,
     "Convolutions" : {
         "Conv1":{
             "out_channel" : 64,
@@ -11,28 +12,13 @@
             "paddingmode" : "reflect",
             "triangle" : true, 
             "whiten" : false, 
-            "batchnorm" : true
-        }, 
-        "Conv2" : {
-            "out_channel" : 256,
-            "kernel" : 3,
-            "stride" : 1,
-            "padding" : 1,
-            "paddingmode" : "reflect",
-            "triangle" : true,
-            "whiten" : false,
-            "batchnorm" : true
+            "batchnorm" : true,
+            "inhibition" : "SOFTMAX"
         }
     }, 
     "PoolingBlock" : {
         "Pooling" : true, 
         "Conv1" : {
-            "Type" : "Max",
-            "kernel" : 4,
-            "stride" : 2, 
-            "padding" : 1 
-        }, 
-        "Conv2" : {
             "Type" : "Avg",
             "kernel" : 2,
             "stride" : 2, 
@@ -41,9 +27,5 @@
     }, 
     "Topdown" : false,
     "Rho" : 1e-3, 
-    "Eta" : 0.1, 
-    "Classifier" : {
-        "Hebbian" : false, 
-        "triangle" : false
-    }
+    "Eta" : 0.1
 }

@@ -2,6 +2,7 @@
     "Lambda" : 1, 
     "Lr" : 1e-4,
     "beta" : 1,
+    "greedytrain" : false,
     "Convolutions" : {
         "Conv1":{
             "out_channel" : 64,
@@ -11,7 +12,8 @@
             "paddingmode" : "reflect",
             "triangle" : true, 
             "whiten" : true, 
-            "batchnorm" : true
+            "batchnorm" : true,
+            "inhibition" : "SOFTMAX"
         }
     }, 
     "PoolingBlock" : {
@@ -25,9 +27,5 @@
     }, 
     "Topdown" : false,
     "Rho" : 1e-3, 
-    "Eta" : 0.1, 
-    "Classifier" : {
-        "Hebbian" : false, 
-        "triangle" : false
-    }
+    "Eta" : 0.1
 }
