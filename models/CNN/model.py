@@ -255,10 +255,6 @@ class Gradient_Classifier(nn.Module):
             y = y.reshape(y.shape[0], -1)
         pred = self.linear(self.drop(y))
         return pred
-
-    # def greedy_conv_train(self, x, label):
-        
-    #     with torch.no_grad():
         
 
 # class Hebbian_Classifier(nn.Module):
@@ -513,8 +509,7 @@ class Gradient_Classifier(nn.Module):
 
 class ConvolutionHebbianLayer(nn.Module):
     def __init__(self, input_shape, kernel, stride, in_ch, out_ch, lambd, lr, rho, device,
-                 eta=1, padding=0, paddingmode="zeros",
-                 weightlearning=LearningRule.SoftHebb, weightscaling=WeightScale.WeightNormalization, triangle=False,
+                 eta=1, padding=0, paddingmode="zeros", triangle=False,
                  is_output_layer=False, whiten_input=False, b=1, inhibition = Inhibition.RePU):
         super(ConvolutionHebbianLayer, self).__init__()
         self.input_shape = input_shape  # (height, width)
@@ -533,8 +528,8 @@ class ConvolutionHebbianLayer(nn.Module):
         self.triangle = triangle
         self.whiten_input = whiten_input
         self.is_output_layer = False
-        self.w_learning = weightlearning
-        self.w_scaling = weightscaling
+        self.w_learning = LearningRule.SoftHebb
+        self.w_scaling = WeightScale.No
         self.inhib = inhibition
 
     
@@ -837,7 +832,7 @@ class ConvolutionHebbianLayer(nn.Module):
         self.visualize_filters(self.convolution.weight)
 
 
-def CNN_Model_from_config(inputshape, config, learningrule, weightscaling, outputlearning, inhibition, device, nbclasses):
+def CNN_Model_from_config(inputshape, config, device, nbclasses):
     mycnn = ConvolutionalNeuralNet(device)
     lamb = config['Lambda']
     lr = config['Lr']
@@ -852,8 +847,9 @@ def CNN_Model_from_config(inputshape, config, learningrule, weightscaling, outpu
     is_pool = config['PoolingBlock']['Pooling']
     for layer_idx in range(len(config['Convolutions'])):
         layerconfig = config['Convolutions'][l_keys[layer_idx]]
+        inhibition = Inhibition.RePU if layerconfig['inhibition'] == "REPU" else Inhibition.Softmax
         convlayer = ConvolutionHebbianLayer(input_shape=inputsize, kernel=layerconfig['kernel'], stride=layerconfig['stride'], in_ch=input_channel, out_ch=layerconfig['out_channel'], 
-                                            lambd=lamb, lr=lr, rho=rho, device=device, eta=eta, padding=layerconfig['padding'], paddingmode = layerconfig['paddingmode'], weightlearning=learningrule, weightscaling=weightscaling, triangle=layerconfig['triangle'], 
+                                            lambd=lamb, lr=lr, rho=rho, device=device, eta=eta, padding=layerconfig['padding'], paddingmode = layerconfig['paddingmode'], triangle=layerconfig['triangle'], 
                                             whiten_input=layerconfig['whiten'], b=beta, inhibition=inhibition)
         if layerconfig['batchnorm']:
             convlayer.batchnorm = nn.BatchNorm2d(input_channel, affine=False)
@@ -873,13 +869,7 @@ def CNN_Model_from_config(inputshape, config, learningrule, weightscaling, outpu
     fc_inputdim = convlayer.nb_tiles * config['Convolutions'][l_keys[-1]]['out_channel']
     print("Fully connected layer input dim : " + str(fc_inputdim))
 
-    if config['Classifier']['Hebbian'] == True:
-        mymodel = Hebbian_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.005)
-
-        if is_topdown:
-            mycnn.initialize_TD_factors()
-    else:
-        mymodel = Gradient_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.001)
+    mymodel = Gradient_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.001)
     
     mymodel = mymodel.to(device)
 
@@ -957,34 +947,29 @@ def Save_Model(mymodel, dataset, rank, topdown, v_input, device, acc):
 
 def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, imgtype, device, traintopdown=False, testtopdown=False, greedytrain=False):
 
-    mymodel.train()
-    samples = 0
-    for _ in range(epoch):
-        for data in tqdm(dataloader):
-            # if samples in [0, 10, 100, 1000, 10000, 20000, 30000]:
-            #     print(CNN_Baseline_test(mymodel, testloader, imgtype, testtopdown))
-            inputs, labels=data
-            # inputs = inputs.to('mps')
-            # labels = labels.to('mps')
-            #print(inputs)
-            inputs = inputs.to(device)
-            labels = labels.to(device)
-            if imgtype == ImageType.Gray:
-                inputs = inputs.reshape(1,1,28,28)
-            if greedytrain:
-                mymodel.train_conv(inputs, oneHotEncode(labels, nclasses, mymodel.device))
-                continue
-            if traintopdown:
-                mymodel.TD_forward(inputs, clamped=oneHotEncode(labels, nclasses, mymodel.device))
-            else:
-                mymodel.forward(inputs, oneHotEncode(labels, nclasses, mymodel.device))
-            samples += 1
-            #if cn == 10:
-            #    return mymodel
+    layers = list(mymodel.basemodel.layers.values())
 
     if greedytrain:
-        for _ in range(1):
+        for idx in range(len(mymodel.basemodel.layers)):
+            idx += 1
+            for _ in range(epoch):
+                for data in tqdm(dataloader):
+                    inputs, labels = data
+                    labels = labels.to(device)
+                    if imgtype == ImageType.Gray:
+                        inputs = inputs.reshape(1,1,28,28)
+                    x = inputs.to(device)
+                    for r_l in range(idx):
+                        if (r_l + 1) == idx:
+                            _, x = layers[r_l].forward(x, oneHotEncode(labels, nclasses, mymodel.device))
+                        else :
+                            _, x = layers[r_l].forward(x, update_weights=False)
+    else :
+        mymodel.eval()
+        for _ in range(epoch):
             for data in tqdm(dataloader):
+                # if samples in [0, 10, 100, 1000, 10000, 20000, 30000]:
+                #     print(CNN_Baseline_test(mymodel, testloader, imgtype, testtopdown))
                 inputs, labels=data
                 # inputs = inputs.to('mps')
                 # labels = labels.to('mps')
@@ -993,7 +978,21 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
                 labels = labels.to(device)
                 if imgtype == ImageType.Gray:
                     inputs = inputs.reshape(1,1,28,28)
-                mymodel.train_classifier(inputs, oneHotEncode(labels, nclasses, mymodel.device))
+                mymodel.train_conv(inputs, oneHotEncode(labels, nclasses, mymodel.device))
+            #if cn == 10:
+            #    return mymodel
+
+    for _ in range(1):
+        for data in tqdm(dataloader):
+            inputs, labels=data
+            # inputs = inputs.to('mps')
+            # labels = labels.to('mps')
+            #print(inputs)
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            if imgtype == ImageType.Gray:
+                inputs = inputs.reshape(1,1,28,28)
+            mymodel.train_classifier(inputs, oneHotEncode(labels, nclasses, mymodel.device))
 
     # timestr = time.strftime("%Y%m%d-%H%M%S")
 

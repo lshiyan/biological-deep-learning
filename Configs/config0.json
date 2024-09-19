@@ -1,0 +1,31 @@
+{
+    "Lambda" : 1, 
+    "Lr" : 1e-4,
+    "beta" : 1,
+    "greedytrain" : true,
+    "Convolutions" : {
+        "Conv1":{
+            "out_channel" : 64,
+            "kernel" : 5,
+            "stride" : 1,
+            "padding" : 2,
+            "paddingmode" : "reflect",
+            "triangle" : true, 
+            "whiten" : true, 
+            "batchnorm" : true,
+            "inhibition" : "REPU"
+        }
+    }, 
+    "PoolingBlock" : {
+        "Pooling" : true, 
+        "Conv1" : {
+            "Type" : "Avg",
+            "kernel" : 2,
+            "stride" : 2, 
+            "padding" : 0 
+        }
+    }, 
+    "Topdown" : false,
+    "Rho" : 1e-3, 
+    "Eta" : 0.1
+}
