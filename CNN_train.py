@@ -17,6 +17,7 @@ import argparse
 import os
 from operator import itemgetter
 from pathlib import Path
+import json
 
 import torch
 import torch.distributed as dist
@@ -152,20 +153,6 @@ def get_args_parser(add_help=True):
     # ---------------------------------------
     parser.add_argument("--dataset", type=str, default="EMNIST")
     parser.add_argument("--epochs", type=int, default=1)
-    # The number of times to loop over the whole dataset
-    # ---------------------------------------
-    parser.add_argument("--test-epochs", type=int, default=1)
-    # Testing model performance on a test every "test-epochs" epochs
-    # ---------------------------------------
-    parser.add_argument("--topdown", type=bool, default=False)
-    parser.add_argument("--lr", type=float, default=0.005)
-    parser.add_argument("--hsize", type=int, default=64)
-    # ---------------------------------------
-    parser.add_argument("--lambd", type=float, default=15)
-    parser.add_argument("--batch_size", type=int, default=1)
-    parser.add_argument("--gamma", type=float, default=0.99)
-    parser.add_argument("--epsilon", type=float, default=0.01)
-    parser.add_argument("--rho", type=int, default=10)
     # For distributed training it is important to distinguish between the per-GPU or "local" batch size (which this
     # hyper-parameter sets) and the "effective" batch size which is the product of the local batch size and the number
     # of GPUs in the cluster. With a local batch size of 16, and 10 nodes with 6 GPUs per node, the effective batch size
@@ -193,7 +180,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
     epoch = 0
     train_batches_per_epoch = len(train_dataloader)
     # Set the model to training mode - important for layers with different training / inference behaviour
-    model.train()
+    model.eval()
 
     for inputs, targets in train_dataloader:
 
@@ -212,11 +199,12 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
         elif args.dataset == "FashionMNIST" :
             labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
             inputs = inputs.reshape(1,1,28,28)
+        elif args.dataset == "CIFAR10":
+            labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
+        elif args.dataset == "CIFAR100":
+            labels = models.hyperparams.oneHotEncode(targets, 100, args.device_id)
 
-        if args.topdown:
-            model.TD_forward(inputs, labels)
-        else:
-            model(inputs, labels)
+        model(inputs, labels)
 
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
     
@@ -311,7 +299,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args):
 timer.report("Defined helper function/s, loops, and model")
 
 
-def main(args, timer, hyperps):
+def main(args, timer):
     ##############################################
     # Distributed Training Configuration
     # -----------------
@@ -377,6 +365,21 @@ def main(args, timer, hyperps):
         #timer.report("Prepared model for distributed training")
         v_input = test_dataset[0]
 
+    elif dataset == "CIFAR10":
+        transform = transforms.Compose(
+            [transforms.ToTensor()])
+
+        train_dataset = datasets.CIFAR10(root='./data', train=True,
+                                                download=False, transform=transform)
+        test_dataset = datasets.CIFAR10(root='./data', train=False,
+                                            download=False, transform=transform)
+        
+        with open("Configs/config" + str(rank) + ".json", "r") as file:
+            config = json.load(file)
+
+        model = CNN.CNN_Model_from_config((3,32,32), config, models.hyperparams.LearningRule.SoftHebb, models.hyperparams.WeightScale.No, models.hyperparams.LearningRule.SoftHebb, models.hyperparams.Inhibition.RePU, args.device_id, 10)
+
+
     timer.report("Initialized datasets")
 
     ##############################################
@@ -427,12 +430,12 @@ def main(args, timer, hyperps):
         model, train_dataloader, test_dataloader, metrics, args
     )
 
-    test_loop(
-        model, train_dataloader, test_dataloader, metrics, args
-    )
+    # test_loop(
+    #     model, train_dataloader, test_dataloader, metrics, args
+    # )
 
-    CNN.Save_Model(model, args.dataset, rank, args.topdown, v_input, args.device_id, (model.correct/model.tot)*100)
-
+    #CNN.Save_Model(model, args.dataset, rank, args.topdown, v_input, args.device_id, (model.correct/model.tot)*100)
+    torch.save(model, 'SavedModels/model' + str(rank) + ".pth")
     print("Done!")
 
 if __name__ == "__main__":
@@ -448,17 +451,17 @@ if __name__ == "__main__":
     # 7 : weight_learning
     # 8 : weight_modifier
 
-    lambds = [3]
-    lr = [5e-5]
-    rho = np.logspace(-7, 0, num=72)
-    classifier_learnings = [models.hyperparams.LearningRule.OutputContrastiveSupervised]
-    weight_learnings = [models.hyperparams.LearningRule.OrthogonalExclusive]
-    weight_mods = [models.hyperparams.WeightScale.WeightNormalization]
+    # lambds = [3]
+    # lr = [5e-5]
+    # rho = np.logspace(-7, 0, num=72)
+    # classifier_learnings = [models.hyperparams.LearningRule.OutputContrastiveSupervised]
+    # weight_learnings = [models.hyperparams.LearningRule.OrthogonalExclusive]
+    # weight_mods = [models.hyperparams.WeightScale.WeightNormalization]
 
-    combinations = list(itertools.product(lambds, lr, rho, classifier_learnings, weight_learnings, weight_mods))
-    hyperps = [list(comb) for comb in combinations]
+    # combinations = list(itertools.product(lambds, lr, rho, classifier_learnings, weight_learnings, weight_mods))
+    # hyperps = [list(comb) for comb in combinations]
 
-    main(args, timer, hyperps)
+    main(args, timer)
 
 #################################################################
 # Further Reading
