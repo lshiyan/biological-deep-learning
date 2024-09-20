@@ -127,7 +127,7 @@ class HebbianNetwork(Network):
         self.add_module(input_layer.name.name, input_layer)
         self.add_module(hebbian_layer.name.name, hebbian_layer)
         self.add_module(classification_layer.name.name, classification_layer)
-
+        self.use_one_hot = True
 
     def forward(self, 
                 input: torch.Tensor, 

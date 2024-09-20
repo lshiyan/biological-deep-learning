@@ -61,6 +61,7 @@ class SGDNetwork(nn.Module):
         self.add_module('HIDDEN', self.hidden_layer)
         self.add_module('OUTPUT', self.output_layer)
         self.init_weights_with_beta()
+        self.use_one_hot = False
         self.fake_exp = True
 
     def _norm_distribution_(self):

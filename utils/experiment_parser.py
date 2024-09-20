@@ -64,15 +64,15 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     parser.add_argument('--heb_inhib', type=str, default='Relu')
     parser.add_argument('--heb_growth', type=str, default='Linear')
     parser.add_argument('--heb_bias', type=str, default='No_Bias')
-    parser.add_argument('--heb_focus', type=str, default='Synapse')
+    parser.add_argument('--heb_focus', type=str, default='Neuron')
     parser.add_argument('--heb_act', type=str, default='Normalized')
 
     # Classification layer hyperparameters
-    parser.add_argument('--class_learn', type=str, default='Controlled')
+    parser.add_argument('--class_learn', type=str, default='OUTPUT_CONTRASTIVE')
     parser.add_argument('--class_growth', type=str, default='Linear')
     parser.add_argument('--class_bias', type=str, default='No_Bias')
-    parser.add_argument('--class_focus', type=str, default='Synapse')
-    parser.add_argument('--class_act', type=str, default='Basic')
+    parser.add_argument('--class_focus', type=str, default='Neuron')
+    parser.add_argument('--class_act', type=str, default='Normalized')
     
     # Shared hyperparameters
     parser.add_argument("--lr", type=float, default=0.005)

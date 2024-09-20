@@ -109,7 +109,7 @@ class HebbianLayer(HiddenLayer):
             w = self.fc.weight.data
             self.fc.weight = nn.Parameter(self.beta * w / neuron_norm(w, self.sigmoid_k))
 
-
+        self.init_weights_with_beta()
     #################################################################################################
     # Activations and weight/bias updates that will be called for train/eval forward
     #################################################################################################
@@ -204,7 +204,26 @@ class HebbianLayer(HiddenLayer):
         self.normalized_weights = self.normalize(updated_weight).to(self.device)
 
         if (self.weight_growth == WeightGrowth.EXPONENTIAL) and (self.focus == Focus.NEURON):
-            self.fc.weight = nn.Parameter(self.normalized_weights, requires_grad=False)   
+            self.fc.weight = nn.Parameter(self.normalized_weights, requires_grad=False)
+
+
+    def init_weights_with_beta(self):
+
+        for name, param in self.named_parameters():
+            if self.focus == Focus.NEURON:
+                if param.data.ndim == 1:
+                    param.data = self.beta * param.data
+                elif param.data.ndim == 2:
+                    out_dim = param.shape[0]
+                    multiplier = torch.pow(10, - 2 * torch.rand(out_dim, 1) + 2)
+                    param.data = multiplier * self.beta * param.data / neuron_norm(param.data, self.sigmoid_k)
+                else:
+                    raise NotImplementedError("Weight inits only implemented for rank 1 and 2 tensors.")
+
+            elif self.focus == Focus.SYNAPSE:
+                param.data = self.beta * param.data
+            else:
+                raise ValueError("Illegal focus.")
 
     def update_bias(self, output: torch.Tensor) -> None:
         """
@@ -463,15 +482,15 @@ class HebbianLayer(HiddenLayer):
         weights: torch.Tensor = self.fc.weight.clone().detach().to(self.device)
         
         # Debugging: Print the shape of weights
-        print(f"weights shape: {weights.shape}")
-        print(f"weight values: {weights}")
+        # print(f"weights shape: {weights.shape}")
+        # print(f"weight values: {weights}")
         
         # Compute the norms of the weights along the input dimension
         W_norms = torch.norm(weights, dim=1, keepdim=False)
 
         # Debugging: Print the shape of weight_norms and its values
-        print(f"weight_norms shape: {W_norms.shape}")
-        print(f"weight_norms: {W_norms}")
+        # print(f"weight_norms shape: {W_norms.shape}")
+        # print(f"weight_norms: {W_norms}")
 
         
         # Compute scaling terms

@@ -71,7 +71,25 @@ class ClassificationLayer(OutputLayer):
         if Focus.NEURON == self.focus and WeightGrowth.SIGMOID == self.weight_growth:
             w = self.fc.weight.data
             self.fc.weight = nn.Parameter(self.beta * w / neuron_norm(w, self.sigmoid_k))
+        self.init_weights_with_beta()
 
+    def init_weights_with_beta(self):
+
+        for name, param in self.named_parameters():
+            if self.focus == Focus.NEURON:
+                if param.data.ndim == 1:
+                    param.data = self.beta * param.data
+                elif param.data.ndim == 2:
+                    out_dim = param.shape[0]
+                    multiplier = torch.pow(10, - 2 * torch.rand(out_dim, 1) + 2)
+                    param.data = multiplier * self.beta * param.data / neuron_norm(param.data, self.sigmoid_k)
+                else:
+                    raise NotImplementedError("Weight inits only implemented for rank 1 and 2 tensors.")
+
+            elif self.focus == Focus.SYNAPSE:
+                param.data = self.beta * param.data
+            else:
+                raise ValueError("Illegal focus.")
 
     #################################################################################################
     # Activations and weight/bias updates that will be called for train/eval forward

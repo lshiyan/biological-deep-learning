@@ -87,6 +87,6 @@ def parallel_training(params: argparse.Namespace, total: int) -> Tuple[List[List
 
 # When to run code
 if __name__ == "__main__":
-    main()
-    # train_and_eval((ARGS, 1))
+    # main()
+    train_and_eval((ARGS, 1))
     print("Process Completed.")

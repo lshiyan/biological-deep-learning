@@ -13,6 +13,7 @@ from torch.nn import Module
 from torch.nn.functional import one_hot
 from torch.utils.data import DataLoader, TensorDataset
 
+from colored_mnist import label
 # Custom defined model imports
 from interfaces.experiment import Experiment
 from interfaces.layer import NetworkLayer
@@ -251,7 +252,8 @@ class ForgetExperiment(Experiment):
             # Move input and targets to device
             inputs = inputs.to(self.device).float()  # Ensure inputs are floats
             labels = labels.to(self.device)  # Keep labels as raw class indices
-
+            if self.model.use_one_hot:
+                labels = torch.nn.functional.one_hot(labels, num_classes=self.classes)
             # Forward pass
             self.model.train()
             self.model(inputs, clamped_output=labels)  # Pass the raw indices, not one-hot encoded
@@ -314,7 +316,7 @@ class ForgetExperiment(Experiment):
                 # Move inputs and labels to device
                 inputs = inputs.to(self.device)  # Ensure inputs are on the correct device
                 labels = labels.to(self.device)  # Keep labels as raw class indices
-                
+
                 # Inference
                 predictions: torch.Tensor = self.model(inputs)
                 
