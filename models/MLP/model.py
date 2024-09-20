@@ -185,11 +185,11 @@ class SoftHebbLayer(nn.Module):
 
     def y(self, a):
         if self.inhibition == Inhibition.Softmax:
-            y = torch.softmax(self.lamb * a)
+            y = torch.softmax(self.lamb * a + self.logprior)
         elif self.inhibition == Inhibition.RePU:
             u = self.u(a)
             un = u / (torch.max(u) + 1e-9)   # normalize for numerical stability
-            ulamb = un ** self.lamb
+            ulamb = un ** self.lamb * torch.exp(self.logprior)
             y = ulamb / (torch.sum(ulamb, dim=1, keepdim=True) + 1e-9)
         else:
             raise NotImplementedError(f"{self.inhibition} is not an implemented inhibition method.")
@@ -222,7 +222,9 @@ class SoftHebbLayer(nn.Module):
         self.weight.data = new_weight
 
         new_bias = self.logprior + self.b_lr * delta_b
-        self.logprior.data = new_bias
+        #normalize bias to be proper prior, i.e. sum exp Prior = 1
+        norm_cste = torch.log(torch.exp(new_bias).sum())
+        self.logprior.data = new_bias - norm_cste
 
         new_lambda = self.lamb + self.l_lr * delta_l
         self.lamb.data = new_lambda
