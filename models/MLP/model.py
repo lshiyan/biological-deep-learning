@@ -9,7 +9,7 @@ import time
 import models.learning as L
 import models.helper_modules as M
 from models.hyperparams import LearningRule, WeightScale, oneHotEncode, InputProcessing, Inhibition
-
+from dotwiz import DotWiz
 
 
 
@@ -163,11 +163,10 @@ class SoftHebbLayer(nn.Module):
 
     def a(self, x):
         # batch_size, dim = x.shape
-        x_norms = torch.norm(x, dim=1, keepdim=True)
+        # it is expected that x has L2 norm of 1.
         weight_norms = self.get_weight_norms(self.weight)
-        x_n = x / (x_norms + 1e-9)
         W = self.weight / (weight_norms + 1e-9)
-        cos_sims = torch.matmul(x_n, W.T)
+        cos_sims = torch.matmul(x, W.T)
         return cos_sims
 
     def u(self, a):
@@ -198,7 +197,20 @@ class SoftHebbLayer(nn.Module):
 
 
 
-    #def inference(self, x):
+    def inference(self, x):
+        #Preprocessing of input:
+        if self.preprocessing == InputProcessing.Whiten:
+            x = self.bn(x)
+        # normalizing inputs:
+        x_norms = torch.norm(x, dim=1, keepdim=True)
+        x_n = x / (x_norms + 1e-9)
+        a = self.a(x_n)
+        u = self.u(a)
+        y = self.y(a)
+        return DotWiz(xn=x_n, a=a, u=u, y=y)
+
+    def learn_weights(self, inference_output, target=None):
+
 
 class Hebbian_Layer(nn.Module):
     def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device, is_output_layer=False, output_learning=LearningRule.Supervised, update=LearningRule.FullyOrthogonal, weight=WeightScale.WeightDecay):

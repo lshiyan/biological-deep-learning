@@ -64,3 +64,37 @@ def update_weight_softhebb(input, preactivation, output, weight, target=None,
     deltas = (multiplicative_factor * output).reshape(b, outdim, 1) * (input - torch.matmul(torch.relu(u), W)).reshape(b, 1, indim)
     delta = torch.mean(deltas, dim=0)
     return delta
+
+def softhebb_input_difference(x, a, normalized_weights):
+    # Here x is assumed to have an L2 norm of 1
+    # same for normalized_weights[i].
+    # output has shape: batch, out_dim, in_dim
+    batch_dim, in_dim = x.shape
+    batch_dim, out_dim = a.shape
+    in_space_diff = x.reshape(batch_dim, 1, in_dim) - a.reshape(batch_dim, out_dim, 1) * normalized_weights.reshape(
+        1, out_dim, in_dim)
+    return in_space_diff
+
+def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u = None, target=None, supervised=False):
+    weight_norms = torch.norm(weights, dim=1, keepdim=True)
+    normed_weights = weights / (weight_norms + 1e-9)
+    batch_dim, out_dim = y.shape
+    factor = 1 / (weight_norms.unsqueeze(0) + 1e-9)
+    if inhibition == Inhibition.RePU:
+        indicator = (u > 0).float()
+        factor = factor * indicator.reshape(batch_dim, out_dim, 1) / (u.reshape(batch_dim, out_dim, 1) + 1e-9)
+    if supervised:
+        y_part = (target - y).reshape(batch_dim, out_dim, 1)
+    else:
+        y_part = y.reshape(batch_dim, out_dim, 1)
+
+    delta_w = factor * y_part * softhebb_input_difference(normed_x, a, normed_weights)
+    return delta_w
+
+def update_softhebb_b():
+    pass
+
+def udate_softhebb_lamb():
+    pass
+
+
