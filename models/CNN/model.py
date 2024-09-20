@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 import time
 import torch.nn.functional as F
 import models.learning as L
-from models.hyperparams import ImageType, LearningRule, WeightScale, Inhibition, oneHotEncode
-
+from models.hyperparams import (ImageType, LearningRule, WeightScale, Inhibition, oneHotEncode,
+                                InputProcessing, cnn_output_formula_2D)
+from models.MLP.model import SoftHebbLayer
 
 
 
@@ -505,6 +506,46 @@ class Gradient_Classifier(nn.Module):
 #         y = self.inhibition(u)
 #         return u, y
     
+class ConvSoftHebbLayer(nn.Module):
+    def __init__(self, input_shape, kernel, in_ch, out_ch, stride=1, padding=0, w_lr: float = 0.003, b_lr: float = 0.003, l_lr: float = 0.003,
+                 device=None, is_output_layer=False, initial_weight_norm: float = 0.01,
+                 triangle:bool = False, initial_lambda: float = 4.0,
+                 inhibition: Inhibition = Inhibition.RePU,
+                 learningrule: LearningRule = LearningRule.SoftHebb,
+                 preprocessing: InputProcessing = InputProcessing.No):
+        super(ConvSoftHebbLayer, self).__init__()
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
+        self.input_shape = input_shape  # (height, width)
+        self.kernel = kernel
+        self.stride = stride
+        self.padding = padding
+        self.in_channel = in_ch
+        self.out_channel = out_ch
+        self.unfold = nn.Unfold(self.kernel, dilation=1, padding=self.padding, stride=self.stride)
+        self.fold = nn.Fold(output_size=input_shape, kernel_size=self.kernel, padding=self.padding, stride=self.stride)
+        self.fold_unfold_divisor = (self.fold(self.unfold(torch.ones(1, in_ch, input_shape[0], input_shape[1])))).to(device)
+        self.base_soft_hebb_layer = SoftHebbLayer(inputdim = in_ch * kernel ** 2 , outputdim = out_ch, w_lr= w_lr,
+                                                  b_lr = b_lr, l_lr = l_lr,
+                 device=device, is_output_layer=is_output_layer, initial_weight_norm = initial_weight_norm,
+                 triangle= triangle, initial_lambda = initial_lambda,
+                 inhibition = inhibition,
+                 learningrule = learningrule,
+                 preprocessing= preprocessing)
+        self.output_shape = cnn_output_formula_2D(input_shape, kernel, padding, 1, stride)
+        self.output_tiles = self.output_shape[0] * self.output_shape[1]
+
+    def forward(self, x, target=None):
+        unfolded_x = self.unfold(x)
+        batch_dim, in_dim, nb_tiles = unfolded_x.shape
+        unfolded_x = unfolded_x.permute(0, 2, 1)
+        mlp_x = unfolded_x.reshape(batch_dim * nb_tiles, in_dim)
+        mlp_y = self.base_soft_hebb_layer(mlp_x)
+        y = mlp_y.reshape(batch_dim, self.output_shape[0], self.output_shape[1], self.out_channel)
+        y = y.permute(0, 3, 1, 2)
+        return y
+
 
 
 class ConvolutionHebbianLayer(nn.Module):

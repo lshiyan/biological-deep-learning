@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from models.hyperparams import Inhibition
+import scipy
 """
 Learning rules for MLP and CNN models
 """
@@ -89,12 +90,38 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u = None,
         y_part = y.reshape(batch_dim, out_dim, 1)
 
     delta_w = factor * y_part * softhebb_input_difference(normed_x, a, normed_weights)
+    delta_w = torch.mean(delta_w, dim=0) # average the delta weights over the batch dim
     return delta_w
 
-def update_softhebb_b():
-    pass
+def update_softhebb_b(y, logprior, target=None, supervised=False):
+    if supervised:
+        delta_b = target - y
+    else:
+        delta_b = torch.exp(-logprior).unsqueeze(0) * (y - torch.exp(logprior).unsqueeze(0))
+    delta_b = torch.mean(delta_b, dim=0) # mean over batch dim
 
-def udate_softhebb_lamb():
-    pass
+    return delta_b
+
+def update_softhebb_lamb(y, a, inhibition: Inhibition, lamb=None, in_dim=None, target=None, supervised=False):
+    if inhibition == Inhibition.Softmax:
+        v = a
+    elif inhibition == Inhibition.RePU:
+        u = torch.relu(a)
+        v = (u > 0).float() * torch.log(u + 1e-7)
+    else:
+        raise NotImplementedError(f"{inhibition} not implemented type of inhibition in update λ.")
+
+    if supervised:
+        delta_l = torch.sum((target - y) * v, dim=1)
+    else:
+        if inhibition == Inhibition.Softmax:
+            k = scipy.special.iv(in_dim/2, lamb)/scipy.special.iv(in_dim/2 -1, lamb)
+        elif inhibition == Inhibition.RePU:
+            k = 0.5 * (scipy.special.psi(0.5 * (lamb + 1)) - scipy.special.psi(0.5 * (lamb + in_dim)))
+        else:
+            raise NotImplementedError(f"{inhibition} not implemented type of inhibition in update λ.")
+        delta_l = torch.sum(y * v, dim=1) - k
+    delta_l = torch.mean(delta_l)  # mean over batch dim
+    return delta_l
 
 

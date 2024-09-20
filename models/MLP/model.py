@@ -138,7 +138,7 @@ class SoftHebbLayer(nn.Module):
         self.w_lr: float = w_lr
         self.l_lr: float = l_lr
         self.b_lr: float = b_lr
-        self.lamb: float = initial_lambda
+        self.lamb = nn.Parameter(torch.tensor(initial_lambda, device=device), requires_grad=False)
         self.is_output_layer: bool = is_output_layer
         self.learningrule: LearningRule = learningrule
         self.inhibition: Inhibition = inhibition
@@ -185,11 +185,11 @@ class SoftHebbLayer(nn.Module):
 
     def y(self, a):
         if self.inhibition == Inhibition.Softmax:
-            y = torch.softmax(self.lamb * a)
+            y = torch.softmax(self.lamb * a + self.logprior)
         elif self.inhibition == Inhibition.RePU:
             u = self.u(a)
             un = u / (torch.max(u) + 1e-9)   # normalize for numerical stability
-            ulamb = un ** self.lamb
+            ulamb = un ** self.lamb * torch.exp(self.logprior)
             y = ulamb / (torch.sum(ulamb, dim=1, keepdim=True) + 1e-9)
         else:
             raise NotImplementedError(f"{self.inhibition} is not an implemented inhibition method.")
@@ -210,6 +210,30 @@ class SoftHebbLayer(nn.Module):
         return DotWiz(xn=x_n, a=a, u=u, y=y)
 
     def learn_weights(self, inference_output, target=None):
+        supervised = self.learningrule == LearningRule.SoftHebbOutputContrastive
+        delta_w = L.update_softhebb_w(inference_output.y, inference_output.xn, inference_output.a,
+                                      self.weight, self.inhibition, inference_output.u, target=target,
+                                      supervised=supervised)
+        delta_b = L.update_softhebb_b(inference_output.y, self.logprior, target=target, supervised=supervised)
+        delta_l = L.update_softhebb_lamb(inference_output.y, inference_output.a, inhibition=self.inhibition,
+                                         lamb=self.lamb.item(), in_dim=self.input_dim, target=target,
+                                         supervised=supervised)
+        new_weight = self.weight + self.w_lr * delta_w
+        self.weight.data = new_weight
+
+        new_bias = self.logprior + self.b_lr * delta_b
+        #normalize bias to be proper prior, i.e. sum exp Prior = 1
+        norm_cste = torch.log(torch.exp(new_bias).sum())
+        self.logprior.data = new_bias - norm_cste
+
+        new_lambda = self.lamb + self.l_lr * delta_l
+        self.lamb.data = new_lambda
+
+    def forward(self, x, target=None):
+        inference_output = self.inference(x)
+        if self.training:
+            self.learn_weights(inference_output, target=None)
+        return inference_output.y
 
 
 class Hebbian_Layer(nn.Module):
