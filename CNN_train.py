@@ -1,4 +1,3 @@
-import models.MLP.model as MLP
 import models.CNN.model as CNN
 
 #####################################
