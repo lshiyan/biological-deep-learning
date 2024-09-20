@@ -19,6 +19,7 @@ from operator import itemgetter
 from pathlib import Path
 import json
 
+
 import torch
 import torch.distributed as dist
 from torch import nn
@@ -26,6 +27,7 @@ from torch.utils.data import DataLoader, Sampler, ConcatDataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment
+from torch.utils.data import Subset
 
 from cycling_utils import (
     MetricsTracker,
@@ -255,6 +257,7 @@ def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args):
     layers = list(model.basemodel.layers.values())
 
     for idx in range(len(layers)):
+        train_dataloader.sampler.reset_progress()
         idx += 1
 
         for inputs, targets in train_dataloader:
@@ -314,62 +317,6 @@ def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args):
                     args.checkpoint_path,
                 )
                 timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
-    
-    model.train()
-    for _ in range(args.finetuneepochs):
-        for inputs, targets in train_dataloader:
-
-            # Determine the current batch
-            batch = train_dataloader.sampler.progress // train_dataloader.batch_size
-            is_last_batch = (batch + 1) == train_batches_per_epoch
-
-            inputs = inputs.to(args.device_id)
-            targets = targets.to(args.device_id)
-
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : data to device")
-
-            if args.dataset == "EMNIST":
-                labels = models.hyperparams.oneHotEncode(targets, 47, args.device_id)
-                inputs = inputs.reshape(1,1,28,28)
-            elif args.dataset == "FashionMNIST" :
-                labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
-                inputs = inputs.reshape(1,1,28,28)
-            elif args.dataset == "CIFAR10":
-                labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
-            elif args.dataset == "CIFAR100":
-                labels = models.hyperparams.oneHotEncode(targets, 100, args.device_id)
-
-            model.train_classifier(inputs, labels)
-
-
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : forward pass")
-        
-            metrics["train"].update({"examples_seen": len(inputs)})
-            metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
-
-            # Advance sampler - essential for interruptibility
-            train_dataloader.sampler.advance(len(inputs))
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : advance sampler")
-
-            metrics["train"].reset_local()
-
-            if is_last_batch:
-                metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
-
-            # Saving and reporting
-            if args.is_master:
-                # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
-                # Save checkpoint
-                atomic_torch_save(
-                    {
-                        "model": model.state_dict(),
-                        "train_sampler": train_dataloader.sampler.state_dict(),
-                        "test_sampler": test_dataloader.sampler.state_dict(),
-                        "metrics": metrics,
-                    },
-                    args.checkpoint_path,
-                )
-                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : save checkpoint")
 
 def train_loop(model, train_dataloader, test_dataloader, metrics, args):
     epoch = 0
@@ -377,7 +324,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
     # Set the model to training mode - important for layers with different training / inference behaviour
     model.eval()
 
-
+    train_dataloader.sampler.reset_progress()
     for inputs, targets in train_dataloader:
 
         # Determine the current batch
@@ -431,61 +378,69 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
             )
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
     
+
+
+
+
+def finetune(model, train_dataloader, test_dataloader, metrics, args):
+    epoch = 0
+    train_batches_per_epoch = len(train_dataloader)
+
+    train_dataloader.sampler.reset_progress()
     model.train()
-    for _ in range(args.finetuneepochs):
-        for inputs, targets in train_dataloader:
+    for inputs, targets in train_dataloader:
 
-            # Determine the current batch
-            batch = train_dataloader.sampler.progress // train_dataloader.batch_size
-            is_last_batch = (batch + 1) == train_batches_per_epoch
+        # Determine the current batch
+        batch = train_dataloader.sampler.progress // train_dataloader.batch_size
+        is_last_batch = (batch + 1) == train_batches_per_epoch
 
-            inputs = inputs.to(args.device_id)
-            targets = targets.to(args.device_id)
+        inputs = inputs.to(args.device_id)
+        targets = targets.to(args.device_id)
 
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : data to device")
+        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : data to device")
 
-            if args.dataset == "EMNIST":
-                labels = models.hyperparams.oneHotEncode(targets, 47, args.device_id)
-                inputs = inputs.reshape(1,1,28,28)
-            elif args.dataset == "FashionMNIST" :
-                labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
-                inputs = inputs.reshape(1,1,28,28)
-            elif args.dataset == "CIFAR10":
-                labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
-            elif args.dataset == "CIFAR100":
-                labels = models.hyperparams.oneHotEncode(targets, 100, args.device_id)
+        if args.dataset == "EMNIST":
+            labels = models.hyperparams.oneHotEncode(targets, 47, args.device_id)
+            inputs = inputs.reshape(1,1,28,28)
+        elif args.dataset == "FashionMNIST" :
+            labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
+            inputs = inputs.reshape(1,1,28,28)
+        elif args.dataset == "CIFAR10":
+            labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
+        elif args.dataset == "CIFAR100":
+            labels = models.hyperparams.oneHotEncode(targets, 100, args.device_id)
 
-            model.train_classifier(inputs, labels)
+        model.train_classifier(inputs, labels)
 
 
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : forward pass")
-        
-            metrics["train"].update({"examples_seen": len(inputs)})
-            metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
+        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : forward pass")
+    
+        metrics["train"].update({"examples_seen": len(inputs)})
+        metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
 
-            # Advance sampler - essential for interruptibility
-            train_dataloader.sampler.advance(len(inputs))
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : advance sampler")
+        # Advance sampler - essential for interruptibility
+        train_dataloader.sampler.advance(len(inputs))
+        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : advance sampler")
 
-            metrics["train"].reset_local()
+        metrics["train"].reset_local()
 
-            if is_last_batch:
-                metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
+        if is_last_batch:
+            metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
 
-            # Saving and reporting
-            if args.is_master:
-                # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
-                # Save checkpoint
-                atomic_torch_save(
-                    {
-                        "model": model.state_dict(),
-                        "train_sampler": train_dataloader.sampler.state_dict(),
-                        "test_sampler": test_dataloader.sampler.state_dict(),
-                        "metrics": metrics,
-                    },
-                    args.checkpoint_path,
-                )
-                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : save checkpoint")
+        # Saving and reporting
+        if args.is_master:
+            # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
+            # Save checkpoint
+            atomic_torch_save(
+                {
+                    "model": model.state_dict(),
+                    "train_sampler": train_dataloader.sampler.state_dict(),
+                    "test_sampler": test_dataloader.sampler.state_dict(),
+                    "metrics": metrics,
+                },
+                args.checkpoint_path,
+            )
+            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : save checkpoint")
 
 # def test_loop(model, train_dataloader, test_dataloader, metrics, args):
 
@@ -628,6 +583,8 @@ def main(args, timer):
                                                 download=False, transform=transform)
         test_dataset = datasets.CIFAR10(root='./data', train=False,
                                             download=False, transform=transform)
+        
+        # train_dataset = Subset(train_dataset, list(range(10)))
 
         model = CNN.CNN_Model_from_config((3,32,32), config, args.device_id, 10)
 
@@ -682,8 +639,14 @@ def main(args, timer):
         greedytrain_loop(
             model, train_dataloader, test_dataloader, metrics, args
         )
+        finetune(
+            model, train_dataloader, test_dataloader, metrics, args
+        )
     else:
         train_loop(
+            model, train_dataloader, test_dataloader, metrics, args
+        )
+        finetune(
             model, train_dataloader, test_dataloader, metrics, args
         )
 
