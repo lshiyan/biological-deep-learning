@@ -93,8 +93,14 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u = None,
     delta_w = torch.mean(delta_w, dim=0) # average the delta weights over the batch dim
     return delta_w
 
-def update_softhebb_b():
-    pass
+def update_softhebb_b(y, logprior, target=None, supervised=False):
+    if supervised:
+        delta_b = target - y
+    else:
+        delta_b = torch.exp(-logprior).unsqueeze(0) * (y - torch.exp(logprior).unsqueeze(0))
+    delta_b = torch.mean(delta_b, dim=0) # mean over batch dim
+
+    return delta_b
 
 def update_softhebb_lamb(y, a, inhibition: Inhibition, lamb=None, in_dim=None, target=None, supervised=False):
     if inhibition == Inhibition.Softmax:
