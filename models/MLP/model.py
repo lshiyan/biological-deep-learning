@@ -239,7 +239,7 @@ class SoftHebbLayer(nn.Module):
     def set_weight_norms_to(self, norm: float):
         weights = self.weight
         weights_norm = self.get_weight_norms(weights)
-        new_weights = weights / (weights_norm + 1e-10)
+        new_weights = norm * weights / (weights_norm + 1e-10)
         self.weight = nn.Parameter(new_weights, requires_grad=False)
 
     def get_weight_norms(self, weights):
