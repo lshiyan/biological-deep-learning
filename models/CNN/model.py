@@ -507,7 +507,8 @@ class Gradient_Classifier(nn.Module):
 #         return u, y
     
 class ConvSoftHebbLayer(nn.Module):
-    def __init__(self, input_shape, kernel, in_ch, out_ch, stride=1, padding=0, w_lr: float = 0.003, b_lr: float = 0.003, l_lr: float = 0.003,
+    def __init__(self, input_shape, kernel, in_ch, out_ch, stride=1, padding=0, w_lr: float = 0.003, b_lr: float = 0.003, 
+                 l_lr: float = 0.003,
                  device=None, is_output_layer=False, initial_weight_norm: float = 0.01,
                  triangle:bool = False, initial_lambda: float = 4.0,
                  inhibition: Inhibition = Inhibition.RePU,
@@ -892,6 +893,55 @@ def CNN_Model_from_config(inputshape, config, device, nbclasses):
         convlayer = ConvolutionHebbianLayer(input_shape=inputsize, kernel=layerconfig['kernel'], stride=layerconfig['stride'], in_ch=input_channel, out_ch=layerconfig['out_channel'], 
                                             lambd=lamb, lr=lr, rho=rho, device=device, eta=eta, padding=layerconfig['padding'], paddingmode = layerconfig['paddingmode'], triangle=layerconfig['triangle'], 
                                             whiten_input=layerconfig['whiten'], b=beta, inhibition=inhibition)
+        if layerconfig['batchnorm']:
+            convlayer.batchnorm = nn.BatchNorm2d(input_channel, affine=False)
+        if is_pool:
+            poolconfig = config["PoolingBlock"][l_keys[layer_idx]]
+            convlayer.set_pooling(kernel=poolconfig['kernel'], stride=poolconfig['stride'], padding=poolconfig['padding'], type=poolconfig['Type'])
+        convlayer.compute_output_shape()
+        if is_topdown and layer_idx < (nb_conv-1):
+            convlayer.Set_TD(inc=config['Convolutions'][l_keys[layer_idx+1]]['out_channel'], outc=layerconfig['out_channel'], 
+                             kernel=config['Convolutions'][l_keys[layer_idx+1]]['kernel'], stride=config['Convolutions'][l_keys[layer_idx+1]]['stride'])
+        convlayer.normalize_weights()
+        mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
+        input_channel = layerconfig['out_channel']
+        inputsize = convlayer.output_shape
+        print(f"New Image Dimensions after Convolution : {((layerconfig['out_channel'],) + inputsize)}")
+
+    fc_inputdim = convlayer.nb_tiles * config['Convolutions'][l_keys[-1]]['out_channel']
+    print("Fully connected layer input dim : " + str(fc_inputdim))
+
+    mymodel = Gradient_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.001)
+    
+    mymodel = mymodel.to(device)
+
+    return mymodel
+
+
+
+def CNN_Model_SoftHeb_from_config(inputshape, config, device, nbclasses):
+    mycnn = ConvolutionalNeuralNet(device)
+    lamb = config['Lambda']
+    lr = config['Lr']
+    #beta = config['beta']
+    #rho = config['Rho']
+    #eta = config['Eta']
+    is_topdown = config['Topdown']
+    input_channel = inputshape[0]
+    nb_conv = len(config['Convolutions'])
+    l_keys = list(config['Convolutions'].keys())
+    inputsize = inputshape[1:]
+    is_pool = config['PoolingBlock']['Pooling']
+
+    for layer_idx in range(len(config['Convolutions'])):
+        layerconfig = config['Convolutions'][l_keys[layer_idx]]
+        inhibition = Inhibition.RePU if layerconfig['inhibition'] == "REPU" else Inhibition.Softmax
+        # paddingmode = layerconfig['paddingmode'] not used
+        # w_lr, b_lr, l_lr not specified in config file
+        # whiten_input=layerconfig['whiten'],
+        convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], stride=layerconfig['stride'], 
+                                            padding=layerconfig['padding'], w_lr=lr, b_lr=lr, l_lr=lr, device=device, is_output_layer=False , triangle=layerconfig['triangle'], 
+                                            initial_lambda=lamb, inhibition=inhibition)
         if layerconfig['batchnorm']:
             convlayer.batchnorm = nn.BatchNorm2d(input_channel, affine=False)
         if is_pool:
