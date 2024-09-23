@@ -121,6 +121,90 @@ class NeuralNet(nn.Module):
         torch.save(self.state_dict(), path)
 
 
+class SoftNeuralNet(nn.Module):
+    def __init__(self):
+        super(SoftNeuralNet, self).__init__()
+        self.layers = nn.ModuleDict()
+        self.iteration = 3
+    
+    def add_layer(self, name, layer):
+        self.layers[name] = layer
+
+    def visualize_weights(self):
+        for layer_name, module in self.layers.items():
+            module.visualize_weights()
+
+    """
+    Used in Feedforward models
+    """
+    def forward(self, x, clamped):
+        for layer in self.layers.values():
+            #print(x)
+            #x = layer(x, clamped)
+            x = layer.forward(x)
+        return x
+    
+    def forward_test(self, x):
+        for layer in self.layers.values():
+            x = layer.forward_test(x)
+        return x
+    
+    def set_iteration(self, i):
+        self.iteration = i
+    
+    """
+    Used in Topdown models
+    def forward_clamped(self, x, clamped):
+        input = x.detach().clone()
+        layers = list(self.layers.values())
+        nb_layers = len(layers)
+        hlist = [None]*nb_layers
+        ulist = [None]*nb_layers
+        for iter in range(self.iteration):
+            hlist[-1] = clamped
+            x = input
+            for idx in range(nb_layers-1):
+                w_topdown = layers[idx + 1].weight.detach().clone()
+                h_topdown = hlist[idx+1]
+                u, x = layers[idx].TD_forward(x, w_topdown, h_topdown)
+                hlist[idx] = x
+                ulist[idx] = u
+        x_L = layers[-1].forward_test(hlist[-2])
+        return hlist, ulist, x_L
+
+    def TD_forward_test(self, x):
+        input = x.detach().clone()
+        layers = list(self.layers.values())
+        nb_layers = len(layers)
+        hlist = [None]*nb_layers
+        for _ in range(self.iteration):
+            x = input
+            for idx in range(nb_layers-1):
+                w = layers[idx + 1].weight.detach().clone()
+                h_l = hlist[idx+1]
+                u, x = layers[idx].TD_forward(x, w, h_l)
+                hlist[idx] = x
+            x_L = layers[-1].forward_test(hlist[-2])
+            hlist[-1] = x_L
+        return x_L
+    
+    def update_weights(self, input, label_clamped_hlist, ulist, pred):
+        layers = list(self.layers.values())
+        nb_layers = len(layers)
+        for idx in range(nb_layers):
+            if idx == 0:
+                layers[idx].learn_weights(layers[idx].inference(input), target=label_clamped_hlist[idx] if idx == nb_layers - 1 else None)
+
+    def TD_forward(self, x, labels):
+        input = x.detach().clone()
+        all_hlist_label, preact_hlist, pred = self.forward_clamped(x, labels)
+        self.update_weights(input, all_hlist_label, preact_hlist, pred)
+    """
+
+    def save_model(self, path):
+        torch.save(self.state_dict(), path)
+
+
 class SoftHebbLayer(nn.Module):
     def __init__(self, inputdim: int, outputdim: int, w_lr: float = 0.003, b_lr: float = 0.003, l_lr: float = 0.003,
                  device=None, is_output_layer=False, initial_weight_norm: float = 0.01,
@@ -386,6 +470,16 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws
     return mymodel
 
 
+def NewMLPBaseline_Model(hsize, lr, nclasses):
+    mymodel = SoftNeuralNet()
+    heb_layer = SoftHebbLayer(784, hsize, lr)
+    heb_layer2 = SoftHebbLayer(hsize, nclasses, lr)
+
+    mymodel.add_layer('SoftHebbian1', heb_layer)
+    mymodel.add_layer('SoftHebbian2', heb_layer2)
+
+    return mymodel
+
 
 def Save_Model(mymodel, dataset, device, topdown, acc):
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -453,25 +547,29 @@ def view_weights(model, folder):
         visualize_weights(l, folder + '/' + name + '.png')
 
 def visualize_weights(self, file):
-    nb = int(math.ceil(math.sqrt(self.output_dim)))
-    if not self.is_output_layer:
-        fig, axes = plt.subplots(nb, nb, figsize=(32,32))
-        nb_ele = self.output_dim
-    else :
-        nb_ele = self.feedforward.weight.size(0)
-        fig, axes = plt.subplots(nb, nb, figsize=(32,32))
-        
-    weight = self.feedforward.weight.detach().to('cpu')
-    weight = self.feedforward.weight.detach().to('cpu')
-    for ele in range(nb_ele):
-        random_feature_selector = weight[ele]
-        heatmap = random_feature_selector.view(int(math.sqrt(weight.size(1))),
-                                                int(math.sqrt(weight.size(1))))
-        ax = axes[ele // nb, ele % nb]
-        im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
-        fig.colorbar(im, ax=ax)
-        ax.set_title(f'Weight {ele}')
+    if hasattr(self, 'weight'):
+        pass
 
-    plt.tight_layout()
-    if not os.path.exists(file):
-        plt.savefig(file)
+    else:
+        nb = int(math.ceil(math.sqrt(self.output_dim)))
+        if not self.is_output_layer:
+            fig, axes = plt.subplots(nb, nb, figsize=(32,32))
+            nb_ele = self.output_dim
+        else :
+            nb_ele = self.feedforward.weight.size(0)
+            fig, axes = plt.subplots(nb, nb, figsize=(32,32))
+            
+        weight = self.feedforward.weight.detach().to('cpu')
+        weight = self.feedforward.weight.detach().to('cpu')
+        for ele in range(nb_ele):
+            random_feature_selector = weight[ele]
+            heatmap = random_feature_selector.view(int(math.sqrt(weight.size(1))),
+                                                    int(math.sqrt(weight.size(1))))
+            ax = axes[ele // nb, ele % nb]
+            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+            fig.colorbar(im, ax=ax)
+            ax.set_title(f'Weight {ele}')
+
+        plt.tight_layout()
+        if not os.path.exists(file):
+            plt.savefig(file)
