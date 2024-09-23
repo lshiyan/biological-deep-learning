@@ -14,6 +14,11 @@ class LearningRule(Enum):
     SoftHebb = 5
     SoftHebbOutputContrastive = 6
 
+class WeightGrowth(Enum):
+    Default = 1
+    Linear = 2
+    Sigmoidal = 3
+    Exponential = 4
 
 class WeightScale(Enum):
     WeightDecay = 1
