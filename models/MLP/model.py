@@ -228,6 +228,7 @@ class SoftHebbLayer(nn.Module):
         self.lamb = nn.Parameter(torch.tensor(initial_lambda, device=device), requires_grad=False)
         self.is_output_layer: bool = is_output_layer
         self.learningrule: LearningRule = learningrule
+        assert learningrule in [LearningRule.SoftHebb, LearningRule.SoftHebbOutputContrastive]
         self.inhibition: Inhibition = inhibition
         self.weight_growth: WeightGrowth = weight_growth
         self.preprocessing: InputProcessing = preprocessing
@@ -239,6 +240,7 @@ class SoftHebbLayer(nn.Module):
 
         self.initial_weight_norm = initial_weight_norm
         self.set_weight_norms_to(initial_weight_norm)
+
 
     def set_weight_norms_to(self, norm: float):
         weights = self.weight
