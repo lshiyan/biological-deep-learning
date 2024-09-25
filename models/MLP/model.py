@@ -140,18 +140,17 @@ class SoftNeuralNet(nn.Module):
     """
     def forward(self, x, clamped):
         for layer in self.layers.values():
-            #print(x)
-            #x = layer(x, clamped)
-            x = layer.forward(x)
+            x = layer.forward(x, target=clamped)
         return x
     
     def forward_test(self, x):
         for layer in self.layers.values():
-            x = layer.forward_test(x)
+            x = layer.inference(x).y
         return x
     
     def set_iteration(self, i):
         self.iteration = i
+        
     
     """
     Used in Topdown models
