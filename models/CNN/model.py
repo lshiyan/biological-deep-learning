@@ -936,14 +936,14 @@ def CNN_Model_SoftHeb_from_config(inputshape, config, device, nbclasses):
     for layer_idx in range(len(config['Convolutions'])):
         layerconfig = config['Convolutions'][l_keys[layer_idx]]
         inhibition = Inhibition.RePU if layerconfig['inhibition'] == "REPU" else Inhibition.Softmax
-        # paddingmode = layerconfig['paddingmode'] not used
+        preprocessing = InputProcessing.Whiten if layerconfig['whiten'] == "true" else InputProcessing.No
+
         # w_lr, b_lr, l_lr not specified in config file
-        # whiten_input=layerconfig['whiten'],
+
         convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], stride=layerconfig['stride'], 
-                                            padding=layerconfig['padding'], w_lr=lr, b_lr=lr, l_lr=lr, device=device, is_output_layer=False , triangle=layerconfig['triangle'], 
-                                            initial_lambda=lamb, inhibition=inhibition)
-        if layerconfig['batchnorm']:
-            convlayer.batchnorm = nn.BatchNorm2d(input_channel, affine=False)
+                                            padding=layerconfig['padding'], device=device, is_output_layer=False , triangle=layerconfig['triangle'], 
+                                            initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing)
+     
         if is_pool:
             poolconfig = config["PoolingBlock"][l_keys[layer_idx]]
             convlayer.set_pooling(kernel=poolconfig['kernel'], stride=poolconfig['stride'], padding=poolconfig['padding'], type=poolconfig['Type'])

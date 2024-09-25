@@ -213,8 +213,7 @@ class SoftHebbLayer(nn.Module):
                  inhibition: Inhibition = Inhibition.RePU,
                  learningrule: LearningRule = LearningRule.SoftHebb,
                  preprocessing: InputProcessing = InputProcessing.No,
-                 weight_growth: WeightGrowth = WeightGrowth.Default
-                 ):
+                 weight_growth: WeightGrowth = WeightGrowth.Default):
         super(SoftHebbLayer, self).__init__()
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
