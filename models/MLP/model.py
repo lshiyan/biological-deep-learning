@@ -321,7 +321,8 @@ class SoftHebbLayer(nn.Module):
 
 
 class Hebbian_Layer(nn.Module):
-    def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device, is_output_layer=False, output_learning=LearningRule.Supervised, update=LearningRule.FullyOrthogonal, weight=WeightScale.WeightDecay):
+    def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device, is_output_layer=False, 
+                 output_learning=LearningRule.Supervised, update=LearningRule.FullyOrthogonal, weight=WeightScale.WeightDecay):
         super(Hebbian_Layer, self).__init__()
         self.input_dim = inputdim
         self.output_dim = outputdim
@@ -470,11 +471,13 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws
     return mymodel
 
 
-def NewMLPBaseline_Model(hsize, lr, nclasses, device):
+def NewMLPBaseline_Model(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device):
     mymodel = SoftNeuralNet()
-    #TODO : Add the other parameters
-    heb_layer = SoftHebbLayer(784, hsize, lr, device=device)
-    heb_layer2 = SoftHebbLayer(hsize, nclasses, lr, learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True)
+    heb_layer = SoftHebbLayer(inputdim=784, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
+                              device=device, initial_lambda=lamb)
+    
+    heb_layer2 = SoftHebbLayer(hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
+                               learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True)
     mymodel.add_layer('SoftHebbian1', heb_layer)
     mymodel.add_layer('SoftHebbian2', heb_layer2)
 
@@ -548,7 +551,28 @@ def view_weights(model, folder):
 
 def visualize_weights(self, file):
     if hasattr(self, 'weight'):
-        pass
+        nb = int(math.ceil(math.sqrt(self.output_dim)))
+        if not self.is_output_layer:
+            fig, axes = plt.subplots(nb, nb, figsize=(32,32))
+            nb_ele = self.output_dim
+        else :
+            nb_ele = self.weight.size(0)
+            fig, axes = plt.subplots(nb, nb, figsize=(32,32))
+            
+        weight = self.weight.detach().to('cpu')
+        weight = self.weight.detach().to('cpu')
+        for ele in range(nb_ele):
+            random_feature_selector = weight[ele]
+            heatmap = random_feature_selector.view(int(math.sqrt(weight.size(1))),
+                                                    int(math.sqrt(weight.size(1))))
+            ax = axes[ele // nb, ele % nb]
+            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+            fig.colorbar(im, ax=ax)
+            ax.set_title(f'Weight {ele}')
+
+        plt.tight_layout()
+        if not os.path.exists(file):
+            plt.savefig(file)
 
     else:
         nb = int(math.ceil(math.sqrt(self.output_dim)))
