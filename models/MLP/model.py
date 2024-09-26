@@ -138,14 +138,14 @@ class SoftNeuralNet(nn.Module):
     """
     Used in Feedforward models
     """
-    def forward(self, x, clamped):
+    def forward(self, x, clamped=None):
         for layer in self.layers.values():
             x = layer.forward(x, target=clamped)
         return x
     
     def forward_test(self, x):
         for layer in self.layers.values():
-            x = layer.inference(x).y
+            x = layer.forward(x)
         return x
     
     def set_iteration(self, i):
@@ -286,10 +286,6 @@ class SoftHebbLayer(nn.Module):
 
 
     def inference(self, x):
-        #Preprocessing of input:
-        if self.preprocessing == InputProcessing.Whiten:
-            x = self.bn(x)
-        # normalizing inputs:
         x_norms = torch.norm(x, dim=1, keepdim=True)
         x_n = x / (x_norms + 1e-9)
         a = self.a(x_n)
@@ -320,7 +316,7 @@ class SoftHebbLayer(nn.Module):
     def forward(self, x, target=None):
         inference_output = self.inference(x)
         if self.training:
-            self.learn_weights(inference_output, target=None)
+            self.learn_weights(inference_output, target=target)
         return inference_output.y
 
 
@@ -474,11 +470,11 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws
     return mymodel
 
 
-def NewMLPBaseline_Model(hsize, lr, nclasses):
+def NewMLPBaseline_Model(hsize, lr, nclasses, device):
     mymodel = SoftNeuralNet()
-    heb_layer = SoftHebbLayer(784, hsize, lr)
-    heb_layer2 = SoftHebbLayer(hsize, nclasses, lr)
-
+    #TODO : Add the other parameters
+    heb_layer = SoftHebbLayer(784, hsize, lr, device=device)
+    heb_layer2 = SoftHebbLayer(hsize, nclasses, lr, learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True)
     mymodel.add_layer('SoftHebbian1', heb_layer)
     mymodel.add_layer('SoftHebbian2', heb_layer2)
 
