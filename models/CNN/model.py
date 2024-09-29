@@ -514,6 +514,7 @@ class ConvSoftHebbLayer(nn.Module):
                  inhibition: Inhibition = Inhibition.RePU,
                  learningrule: LearningRule = LearningRule.SoftHebb,
                  preprocessing: InputProcessing = InputProcessing.No):
+
         super(ConvSoftHebbLayer, self).__init__()
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -537,6 +538,7 @@ class ConvSoftHebbLayer(nn.Module):
         self.output_shape = cnn_output_formula_2D(input_shape, kernel, padding, 1, stride)
         self.output_tiles = self.output_shape[0] * self.output_shape[1]
 
+    
     def forward(self, x, target=None):
         unfolded_x = self.unfold(x)
         batch_dim, in_dim, nb_tiles = unfolded_x.shape
@@ -547,6 +549,23 @@ class ConvSoftHebbLayer(nn.Module):
         y = y.permute(0, 3, 1, 2)
         return y
 
+
+
+class PoolingLayer(nn.Module):
+    def __init__(self, kernel, stride, padding, pool_type):
+        super(PoolingLayer, self).__init__()
+        self.kernel = kernel
+        self.stride = stride
+        self.padding = padding
+        self.pool_type = pool_type
+    
+        if pool_type == "Max":
+            self.pool = nn.MaxPool2d(kernel_size=kernel, stride=stride, padding=padding)
+        else :
+            self.pool = nn.AvgPool2d(kernel_size=kernel, stride=stride, padding=padding)
+
+    def forward(self, x):
+        return self.pool(x)
 
 
 class ConvolutionHebbianLayer(nn.Module):
@@ -930,7 +949,7 @@ def CNN_Model_SoftHeb_from_config(inputshape, config, device, nbclasses):
     input_channel = inputshape[0]
     nb_conv = len(config['Convolutions'])
     l_keys = list(config['Convolutions'].keys())
-    inputsize = inputshape[1:]
+    inputsize = inputshape[1:] # (height, width)
     is_pool = config['PoolingBlock']['Pooling']
 
     for layer_idx in range(len(config['Convolutions'])):
@@ -944,24 +963,35 @@ def CNN_Model_SoftHeb_from_config(inputshape, config, device, nbclasses):
                                             padding=layerconfig['padding'], device=device, is_output_layer=False , triangle=layerconfig['triangle'], 
                                             initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing)
      
+        mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
+
+        input_channel = layerconfig['out_channel']
+        inputsize = convlayer.output_shape # update inputsize for next layer
+        
         if is_pool:
+            ## add a pooling layer
             poolconfig = config["PoolingBlock"][l_keys[layer_idx]]
-            convlayer.set_pooling(kernel=poolconfig['kernel'], stride=poolconfig['stride'], padding=poolconfig['padding'], type=poolconfig['Type'])
-        convlayer.compute_output_shape()
+            poollayer = PoolingLayer(kernel=poolconfig['kernel'], stride=poolconfig['stride'], padding=poolconfig['padding'], pool_type=poolconfig['Type'])
+            
+            mycnn.add_layer(f"PoolLayer{layer_idx+1}", poollayer)
+            
+            inputsize = cnn_output_formula_2D(inputsize, poolconfig['kernel'], poolconfig['padding'], 1, poolconfig['stride'])
+            # update inputsize for next layer
+            
+        #output shape and number of tiles
+        output_shape = inputsize
+        n_tiles = output_shape[0] * output_shape[1]
+
         if is_topdown and layer_idx < (nb_conv-1):
             convlayer.Set_TD(inc=config['Convolutions'][l_keys[layer_idx+1]]['out_channel'], outc=layerconfig['out_channel'], 
                              kernel=config['Convolutions'][l_keys[layer_idx+1]]['kernel'], stride=config['Convolutions'][l_keys[layer_idx+1]]['stride'])
-        convlayer.normalize_weights()
-        mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
-        input_channel = layerconfig['out_channel']
-        inputsize = convlayer.output_shape
-        print(f"New Image Dimensions after Convolution : {((layerconfig['out_channel'],) + inputsize)}")
+        #convlayer.normalize_weights() #---> already done in soft hebb layer
+        
 
-    fc_inputdim = convlayer.nb_tiles * config['Convolutions'][l_keys[-1]]['out_channel']
+    fc_inputdim = n_tiles * config['Convolutions'][l_keys[-1]]['out_channel']
     print("Fully connected layer input dim : " + str(fc_inputdim))
 
     mymodel = Gradient_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.001)
-    
     mymodel = mymodel.to(device)
 
     return mymodel
