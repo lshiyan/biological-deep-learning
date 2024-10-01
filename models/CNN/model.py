@@ -539,12 +539,16 @@ class ConvSoftHebbLayer(nn.Module):
         self.output_tiles = self.output_shape[0] * self.output_shape[1]
 
     
-    def forward(self, x, target=None):
+    def forward(self, x, target=None, update_weights=True):
+        if update_weights == True:
+            self.training = True
+        else:
+            self.training = False
         unfolded_x = self.unfold(x)
         batch_dim, in_dim, nb_tiles = unfolded_x.shape
         unfolded_x = unfolded_x.permute(0, 2, 1)
         mlp_x = unfolded_x.reshape(batch_dim * nb_tiles, in_dim)
-        mlp_y = self.base_soft_hebb_layer(mlp_x)
+        mlp_y = self.base_soft_hebb_layer(mlp_x, target)
         y = mlp_y.reshape(batch_dim, self.output_shape[0], self.output_shape[1], self.out_channel)
         y = y.permute(0, 3, 1, 2)
         return y
@@ -566,6 +570,7 @@ class PoolingLayer(nn.Module):
 
     def forward(self, x):
         return self.pool(x)
+
 
 
 class ConvolutionHebbianLayer(nn.Module):
@@ -938,7 +943,7 @@ def CNN_Model_from_config(inputshape, config, device, nbclasses):
 
 
 
-def CNN_Model_SoftHeb_from_config(inputshape, config, device, nbclasses):
+def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     mycnn = ConvolutionalNeuralNet(device)
     lamb = config['Lambda']
     lr = config['Lr']
@@ -1128,6 +1133,56 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
 
     #view_filters(mymodel, foldername)
     #view_ff_weights(mymodel, foldername, dataloader)
+    return mymodel.basemodel, mymodel
+
+
+def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, greedytrain=False):
+    # top-down training/testing not implemented
+
+    layers = list(mymodel.basemodel.layers.values())
+
+    if greedytrain:
+        for idx in range(len(mymodel.basemodel.layers)):
+            idx += 1
+            for _ in range(epoch):
+                for data in tqdm(dataloader):
+                    inputs, labels = data
+                    labels = labels.to(device)
+                    if imgtype == ImageType.Gray:
+                        inputs = inputs.reshape(1,1,28,28)
+                    x = inputs.to(device)
+                    for r_l in range(idx): 
+                        if isinstance(layers[r_l], ConvSoftHebbLayer):
+                            # if you've reached layer idx, perform forward pass and update weights
+                            if (r_l + 1) == idx:
+                                x = layers[r_l].forward(x, target=oneHotEncode(labels, nclasses, mymodel.device), update_weights = True)
+                            else : 
+                                # for all layers befor idx, perform forward pass without updating weights
+                                x = layers[r_l].forward(x, target=None, update_weights=False)
+                        elif isinstance(layers[r_l], PoolingLayer):
+                            x = layers[r_l].forward(x)
+    else :
+        mymodel.eval()
+
+        for _ in range(epoch):
+            for data in tqdm(dataloader):
+                inputs, labels=data
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+                if imgtype == ImageType.Gray:
+                    inputs = inputs.reshape(1,1,28,28)
+                mymodel.train_conv(inputs, oneHotEncode(labels, nclasses, mymodel.device))
+
+    for _ in range(1):
+
+        for data in tqdm(dataloader):
+            inputs, labels=data
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            if imgtype == ImageType.Gray:
+                inputs = inputs.reshape(1,1,28,28)
+            mymodel.train_classifier(inputs, oneHotEncode(labels, nclasses, mymodel.device))
+
     return mymodel.basemodel, mymodel
 
 
