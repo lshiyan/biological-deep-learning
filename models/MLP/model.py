@@ -138,14 +138,14 @@ class SoftNeuralNet(nn.Module):
     """
     Used in Feedforward models
     """
-    def forward(self, x, clamped):
+    def forward(self, x, clamped=None):
         for layer in self.layers.values():
             x = layer.forward(x, target=clamped)
         return x
     
     def forward_test(self, x):
         for layer in self.layers.values():
-            x = layer.inference(x).y
+            x = layer.forward(x)
         return x
     
     def set_iteration(self, i):
@@ -286,10 +286,6 @@ class SoftHebbLayer(nn.Module):
 
 
     def inference(self, x):
-        #Preprocessing of input:
-        if self.preprocessing == InputProcessing.Whiten:
-            x = self.bn(x)
-        # normalizing inputs:
         x_norms = torch.norm(x, dim=1, keepdim=True)
         x_n = x / (x_norms + 1e-9)
         a = self.a(x_n)
@@ -320,12 +316,13 @@ class SoftHebbLayer(nn.Module):
     def forward(self, x, target=None):
         inference_output = self.inference(x)
         if self.training:
-            self.learn_weights(inference_output, target=None)
+            self.learn_weights(inference_output, target=target)
         return inference_output.y
 
 
 class Hebbian_Layer(nn.Module):
-    def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device, is_output_layer=False, output_learning=LearningRule.Supervised, update=LearningRule.FullyOrthogonal, weight=WeightScale.WeightDecay):
+    def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device, is_output_layer=False, 
+                 output_learning=LearningRule.Supervised, update=LearningRule.FullyOrthogonal, weight=WeightScale.WeightDecay):
         super(Hebbian_Layer, self).__init__()
         self.input_dim = inputdim
         self.output_dim = outputdim
@@ -474,11 +471,13 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws
     return mymodel
 
 
-def NewMLPBaseline_Model(hsize, lr, nclasses):
+def NewMLPBaseline_Model(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device):
     mymodel = SoftNeuralNet()
-    heb_layer = SoftHebbLayer(784, hsize, lr)
-    heb_layer2 = SoftHebbLayer(hsize, nclasses, lr)
-
+    heb_layer = SoftHebbLayer(inputdim=784, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
+                              device=device, initial_lambda=lamb)
+    
+    heb_layer2 = SoftHebbLayer(hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
+                               learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True)
     mymodel.add_layer('SoftHebbian1', heb_layer)
     mymodel.add_layer('SoftHebbian2', heb_layer2)
 
@@ -552,7 +551,28 @@ def view_weights(model, folder):
 
 def visualize_weights(self, file):
     if hasattr(self, 'weight'):
-        pass
+        nb = int(math.ceil(math.sqrt(self.output_dim)))
+        if not self.is_output_layer:
+            fig, axes = plt.subplots(nb, nb, figsize=(32,32))
+            nb_ele = self.output_dim
+        else :
+            nb_ele = self.weight.size(0)
+            fig, axes = plt.subplots(nb, nb, figsize=(32,32))
+            
+        weight = self.weight.detach().to('cpu')
+        weight = self.weight.detach().to('cpu')
+        for ele in range(nb_ele):
+            random_feature_selector = weight[ele]
+            heatmap = random_feature_selector.view(int(math.sqrt(weight.size(1))),
+                                                    int(math.sqrt(weight.size(1))))
+            ax = axes[ele // nb, ele % nb]
+            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+            fig.colorbar(im, ax=ax)
+            ax.set_title(f'Weight {ele}')
+
+        plt.tight_layout()
+        if not os.path.exists(file):
+            plt.savefig(file)
 
     else:
         nb = int(math.ceil(math.sqrt(self.output_dim)))

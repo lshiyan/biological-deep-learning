@@ -992,7 +992,6 @@ def CNN_Model_SoftHeb_from_config(inputshape, config, device, nbclasses):
     print("Fully connected layer input dim : " + str(fc_inputdim))
 
     mymodel = Gradient_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.001)
-    
     mymodel = mymodel.to(device)
 
     return mymodel
