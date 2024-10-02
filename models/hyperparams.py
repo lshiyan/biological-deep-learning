@@ -14,6 +14,11 @@ class LearningRule(Enum):
     SoftHebb = 5
     SoftHebbOutputContrastive = 6
 
+class WeightGrowth(Enum):
+    Default = 1
+    Linear = 2
+    Sigmoidal = 3
+    Exponential = 4
 
 class WeightScale(Enum):
     WeightDecay = 1
@@ -40,5 +45,5 @@ def cnn_output_formula_1D(size, kernel, padding, dilation, stride):
 
 def cnn_output_formula_2D(shape, kernel, padding, dilation, stride):
     h = cnn_output_formula_1D(shape[0],  kernel, padding, dilation, stride)
-    w = cnn_output_formula_2D(shape[0],  kernel, padding, dilation, stride)
+    w = cnn_output_formula_1D(shape[1],  kernel, padding, dilation, stride)
     return h, w
