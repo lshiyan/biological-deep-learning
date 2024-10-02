@@ -151,11 +151,13 @@ class HebbianLayer(HiddenLayer):
             return self._gaussian_inhibition(input)
         elif self.inhibition_rule == LateralInhibitions.NORM_INHIBITION:
             return self._norm_inhibition(input)
+        elif self.inhibition_rule == LateralInhibitions.SOFTMAX_INHIBITION:
+            return self._soft_max_inhibition(input)
         else:
             raise NameError("Unknown inhibition rule.")
     
     
-    def update_weights(self, input: torch.Tensor, post_inhibition_activations: torch.Tensor) -> None:
+    def update_weights(self, input: torch.Tensor, pre_inhibition_activation: torch.Tensor, post_inhibition_activations: torch.Tensor) -> None:
         """
         METHOD
         Update weights using defined rule.
@@ -179,6 +181,8 @@ class HebbianLayer(HiddenLayer):
             calculated_rule = self._sanger_rule(input, post_inhibition_activations).to(self.device)
         elif self.learning_rule == LearningRules.FULLY_ORTHOGONAL_LEARNING_RULE:
             calculated_rule = self._fully_orthogonal_rule(input, post_inhibition_activations).to(self.device)
+        elif self.learning_rule == LearningRules.SOFT_HEBB_LEARNING_RULE:
+            calculated_rule = self._softhebb_rule(input, pre_inhibition_activation, post_inhibition_activations).to(self.device)
         else:
             raise NameError("Unknown learning rule.")
         
@@ -242,7 +246,7 @@ class HebbianLayer(HiddenLayer):
         # Calculate activation -> Calculate inhibition -> Update weights -> Update bias -> Rreturn output
         activations: torch.Tensor = self.activation(input)
         post_inhibition_activations: torch.Tensor = self.inhibition(activations)
-        self.update_weights(input, post_inhibition_activations)
+        self.update_weights(input, pre_inhibition_activation, post_inhibition_activations)
         self.update_bias(post_inhibition_activations)
         
         # Check if there are any NaN weights
@@ -409,6 +413,10 @@ class HebbianLayer(HiddenLayer):
         output: torch.Tensor =  (activation / sum).to(self.device)
         
         return output
+
+    def _soft_max_inhibition(self, input: torch.Tensor) -> torch.Tensor:
+
+        return input
     
     
     #################################################################################################
@@ -557,6 +565,24 @@ class HebbianLayer(HiddenLayer):
                                             (1 - self.gamma) * y)
         
         return computed_rule.to(self.device)
+
+
+    def _softhebb_rule (self, input: torch.Tensor, pre_inhibition_activation: torch.tensor, post_inhibition_activations: torch.tensor) -> torch.Tensor:
+
+
+        multiplicative_factor = 1
+
+        preactivation = pre_inhibition_activation
+
+        W = self.weight
+
+        u = post_inhibition_activations
+
+        deltas = (multiplicative_factor * output).reshape(b, outdim, 1) * (input - torch.matmul(torch.relu(u), W)).reshape(b, 1, indim)
+        
+        delta = torch.mean(deltas, dim=0)
+       
+        return delta
 
 
     #################################################################################################

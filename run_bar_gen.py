@@ -31,7 +31,7 @@ arguments = [
     '--heb_act=normalized',   
     
     # Classification layer hyperparameters
-    '--class_learn=OUTPUT_CONTRASTIVE',  
+    '--class_learn=SUPERVISED_HEBBIAN',  
     '--class_growth=exponential',        
     '--class_bias=no_bias',              
     '--class_focus=neuron',             
@@ -50,7 +50,7 @@ arguments = [
     # Experiment parameters
     '--batch_size=1',  
     '--epochs=10',      
-    '--device=cpu',  
+    '--device=cuda:6',  
     '--local_machine=True',  
     '--experiment_type=bar_generalization'  
 ]

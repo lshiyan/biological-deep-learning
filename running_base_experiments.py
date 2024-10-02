@@ -36,6 +36,18 @@ parameter_pairs = [
     (64, 0.1)
 ]
 
+# Exp Exp Neuron
+parameter_pairs = [
+    (0.5, 1), 
+    (1, 1),
+    (2, 1),
+    (4, 1),
+    (8, 1),
+    (16, 1),
+    (32, 0.3),
+    (64, 0.1)
+]
+
 
 # Sigmoid Linear Neuron
 parameter_pairs = [
@@ -84,28 +96,35 @@ parameter_pairs = [
     (32, 1),
     (64, 0.3)
 ]
+    (4, 0.1),
+    (8, 0.1),
+    (16, 0.3),
+    (32, 0.7),
+    (64, 0.7)
+
+parameter_pairs = [
+    (4, 0.1),
+    (8, 0.1),
+    (16, 0.1),
+    (32, 0.1),
+    (64, 0.1)
+]
 """
 
 
-# Sigmoid Sigmoid Neuron
+# LAMBDA - LR
 parameter_pairs = [
-    (0.5, 0.3), 
-    (1, 0.3),
-    (2, 0.3),
-    (4, 0.1),
-    (8, 0.1),
-    (16, 0.003),
-    (32, 0.01),
-    (64, 0.003)
+    (32, 0.1),
+    (64, 0.1)
 ]
 
 # Define the learning rates to test
 # 0.1, 0.3, 0.01, 0.03, 0.001
-learning_rates = [0.001]
+lr_value = [0.7, 0.1, 0.3, 0.01, 0.03]
 
 # Define other parameters to vary
 other_parameters = [
-    ('sanger', 'sigmoid', 'linear', 'neuron', 'RELU', 'neuron'),
+    ('sanger', 'sigmoid', 'sigmoid', 'synapse', 'RELU', 'synapse'),
 ]
 
 # Set the number of concurrent processes
@@ -115,7 +134,7 @@ max_concurrent_processes = 10
 python_executable = sys.executable
 
 # Specify the GPU ID (e.g., GPU 0)
-gpu_id = 0
+gpu_id = 1
 
 # Process the combinations in batches
 for i in range(0, len(parameter_pairs), max_concurrent_processes):
@@ -123,22 +142,22 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
     batch = parameter_pairs[i:i + max_concurrent_processes]
     
     for lmbda, rho in batch:
-        for lr in learning_rates:  # Loop over each learning rate
+        for lr in lr_value:  # Loop over each learning rate
             for heb_learn, heb_growth, clas_growth, heb_focus, heb_inhib, class_focus in other_parameters:
 
                 # Construct the complete set of arguments including the varying parameter
                 arguments = [
-                    '--data_name=MNIST',
-                    '--experiment_name=_BASE_NEURON_SIGMOID_LINEAR_',
-                    '--train_data=data/mnist/train-images.idx3-ubyte',
-                    '--train_label=data/mnist/train-labels.idx1-ubyte',
-                    '--test_data=data/mnist/test-images.idx3-ubyte',
-                    '--test_label=data/mnist/test-labels.idx1-ubyte',
+                    '--data_name=FASHION_MNIST',
+                    '--experiment_name=_FMNIST_SIG_SIG_SYNAPSE_',
+                    '--train_data=data/fashion_mnist/train-images-idx3-ubyte', 
+                    '--train_label=data/fashion_mnist/train-labels-idx1-ubyte', 
+                    '--test_data=data/fashion_mnist/t10k-images-idx3-ubyte', 
+                    '--test_label=data/fashion_mnist/t10k-labels-idx1-ubyte', 
                     '--train_size=60000',
                     '--test_size=10000',
                     '--classes=10',
-                    '--train_fname=data/mnist/mnist_train.csv',
-                    '--test_fname=data/mnist/mnist_test.csv',
+                    '--train_fname=data/fashion_mnist/fashion-mnist_train.csv',
+                    '--test_fname=data/fashion_mnist/fashion-mnist_test.csv',
                     '--input_dim=784',
                     '--heb_dim=64',
                     '--output_dim=10',
@@ -164,7 +183,7 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
                     '--mu=0',
                     '--init=uniform',
                     '--batch_size=1',
-                    '--epochs=10',
+                    '--epochs=3',
                     f'--device=cuda:{gpu_id}',  # Use the specified GPU or CPU
                     '--local_machine=True',
                     '--experiment_type=base'

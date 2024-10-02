@@ -202,7 +202,9 @@ class ForgetExperiment(Experiment):
         
         sub_experiment_name = self.curr_folder_path.split('/')[-1]  # Assumes '/' as the path separator.
         
-        if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}", False)
+        # Visualize weights every 5 epochs
+        if visualize and epoch % 2 == 0:
+            self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}", False)
 
         # Start timer
         train_start: float = time.time()
@@ -298,7 +300,7 @@ class ForgetExperiment(Experiment):
 
             final_accuracy = correct_test_count/total_test_count
             
-            if (final_accuracy >= 0.95) and (purpose == Purposes.TRAIN_ACCURACY):
+            if (final_accuracy >= 0.80) and (purpose == Purposes.TRAIN_ACCURACY):
                 self.keep_training = False
 
         test_end = time.time()

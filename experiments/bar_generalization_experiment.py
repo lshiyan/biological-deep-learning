@@ -193,7 +193,7 @@ class BarGeneralizationExperiment(Experiment):
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
                 predictions: torch.Tensor = self.model(inputs)
-                self.DEBUG_LOG.info(f"Batch {batch_idx}: Predictions Shape: {predictions.shape}, Predictions: {predictions}")
+                #self.DEBUG_LOG.info(f"Batch {batch_idx}: Predictions Shape: {predictions.shape}, Predictions: {predictions}")
 
                 top_k_preds = torch.zeros_like(predictions)
                 
@@ -223,8 +223,8 @@ class BarGeneralizationExperiment(Experiment):
         else:
             self.TEST_LOG.info(f'Samples Seen: {self.SAMPLES} || Dataset: {dname.upper()} || {purpose} Accuracy: {final_accuracy}')
 
-        if visualize:
-            self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.lower(), False)
+        #if visualize:
+        #    self.model.visualize_weights(self.RESULT_PATH, self.SAMPLES, purpose.lower(), False)
 
         return final_accuracy
 

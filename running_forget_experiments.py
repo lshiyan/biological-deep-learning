@@ -14,92 +14,107 @@ script_name = 'train_forget.py'
 """
 # Linear Linear
 parameter_pairs = [
-    (0.5, 0.03, 0.003), 
-    (1, 0.1, 0.003),
-    (2, 0.1, 0.003),
-    (4, 0.03, 0.003),
-    (8, 0.01, 0.003),
-    (16, 0.01, 0.003),
-    (32, 0.01, 0.003)
+    (0.5, 0.03, 0.01), 
+    (1, 0.1, 0.01),
+    (2, 0.1, 0.001),
+    (4, 0.03, 0.001),
+    (8, 0.01, 0.01),
+    (16, 0.01, 0.03),
+    (32, 0.01, 0.01),
+    (64, 0.01, 0.01)
 ]
 
 # Exp Linear Neuron
 parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 1, 0.003),
-    (2, 1, 0.003),
-    (4, 1, 0.003),
-    (8, 1, 0.003),
-    (16, 1, 0.003),
-    (32, 0.3, 0.003),
-    (64, 0.1, 0.003)
+    (0.5, 1, 0.001), 
+    (1, 1, 0.01),
+    (2, 1, 0.001),
+    (4, 1, 0.001),
+    (8, 1, 0.001),
+    (16, 1, 0.01),
+    (32, 0.3, 0.1),
+    (64, 0.1, 0.1)
 ]
 
 
 # Sigmoid Linear Neuron
 parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 0.3, 0.003),
-    (2, 0.1, 0.003),
-    (4, 0.1, 0.003),
-    (8, 0.1, 0.003),
-    (16, 0.003, 0.003),
-    (32, 0.01, 0.003),
-    (64, 0.001, 0.003)
+    (0.5, 1, 0.01), 
+    (1, 0.3, 0.01),
+    (2, 0.1, 0.01),
+    (4, 0.3, 0.001),
+    (8, 0.3, 0.001),
+    (16, 0.3, 0.001),
+    (32, 0.7, 0.1),
+    (64, 0.7, 0.3)
 ]
 
 # Sigmoid Sigmoid Neuron
 parameter_pairs = [
-    (0.5, 0.3, 0.003), 
-    (1, 0.3, 0.003),
-    (2, 0.3, 0.003),
-    (4, 0.1, 0.003),
-    (8, 0.1, 0.003),
-    (16, 0.003, 0.003),
-    (32, 0.01, 0.003),
-    (64, 0.003, 0.003)
+    (0.5, 0.3, 0.1), 
+    (1, 0.3, 0.03),
+    (2, 0.3, 0.001),
+    (4, 0.3, 0.001),
+    (8, 0.3, 0.001),
+    (16, 0.7, 0.001),
+    (32, 0.7, 0.3),
+    (64, 0.01, 0.1)
 ]
+
+# Exp Exp Neuron
+parameter_pairs = [
+    (0.5, 1, 0.001), 
+    (1, 1 ,0.001),
+    (2, 1, 0.03),
+    (4, 1, 0.001),
+    (8, 1, 0.001),
+    (16, 1, 0.01),
+    (32, 0.3, 0.03),
+    (64, 0.1, 0.03)
+]
+
 
 # Sigmoid Linear Synapse
 parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 1, 0.003),
-    (2, 1, 0.003),
-    (4, 1, 0.003),
-    (8, 0.1, 0.003),
-    (16, 1, 0.003),
-    (32, 0.1, 0.003),
-    (64, 0.03, 0.003)
+    (0.5, 1, 0.001),
+    (1, 1, 0.001),
+    (2, 1, 0.01),
+    (4, 0.7, 0.001),
+    (8, 0.1, 0.03),
+    (16, 0.3, 0.1),
+    (32, 0.7, 0.1),
+    (64, 0.3, 0.3)
 ]
 
 # Sigmoid Sigmoid Synapse
 parameter_pairs = [
-    (0.5, 0.1, 0.003), 
-    (1, 1, 0.003),
-    (2, 0.3, 0.003),
-    (4, 0.1, 0.003),
-    (8, 0.1, 0.003),
-    (16, 1, 0.003),
-    (32, 1, 0.003),
-    (64, 0.3, 0.003)
+    (0.5, 0.1, 0.001), 
+    (1, 1, 0.001),
+    (2, 0.3, 0.03),
+    (4, 0.3, 0.001),
+    (8, 0.3, 0.03),
+    (16, 0.7, 0.01),
+    (32, 0.7, 0.1),
+    (64, 0.01, 0.001)
 ]
 """
 
-# Exp Linear Neuron
+# Linear Linear
 parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 1, 0.003),
-    (2, 1, 0.003),
-    (4, 1, 0.003),
-    (8, 1, 0.003),
-    (16, 1, 0.003),
-    (32, 0.3, 0.003),
-    (64, 0.1, 0.003)
+    (0.5, 0.03, 0.01), 
+    (1, 0.1, 0.01),
+    (2, 0.1, 0.001),
+    (4, 0.03, 0.001),
+    (8, 0.01, 0.01),
+    (16, 0.01, 0.03),
+    (32, 0.01, 0.01),
+    (64, 0.01, 0.01)
 ]
+
 
 # Define other parameters to vary
 other_parameters = [
-    ('sanger', 'exponential', 'linear', 'neuron', 'RELU', 'neuron'),
+    ('sanger', 'linear', 'linear', 'neuron', 'RELU', 'neuron'),
 ]
 
 # Set the number of concurrent processes
@@ -109,7 +124,7 @@ max_concurrent_processes = 10
 python_executable = sys.executable
 
 # Specify the GPU ID (e.g., GPU 0)
-gpu_id = 6
+gpu_id = 3
 
 # Process the combinations in batches
 for i in range(0, len(parameter_pairs), max_concurrent_processes):
@@ -121,8 +136,9 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
 
             # Construct the complete set of arguments including the varying parameter
             arguments = [
+
                 '--data_name=MNIST',
-                '--experiment_name=_FORGET_NEURON_EXP_LINEAR_',
+                '--experiment_name=_64_LIN_FORGET_',
                 '--train_data=data/mnist/train-images.idx3-ubyte',
                 '--train_label=data/mnist/train-labels.idx1-ubyte',
                 '--test_data=data/mnist/test-images.idx3-ubyte',
@@ -132,6 +148,7 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
                 '--classes=10',
                 '--train_fname=data/mnist/mnist_train.csv',
                 '--test_fname=data/mnist/mnist_test.csv',
+
                 '--input_dim=784',
                 '--heb_dim=64',
                 '--output_dim=10',
@@ -145,7 +162,7 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
                 f'--heb_lamb={lmbda}',
                 f'--heb_rho={rho}',
                 '--heb_act=normalized',
-                '--class_learn=OUTPUT_CONTRASTIVE',
+                '--class_learn=SUPERVISED_HEBBIAN',
                 f'--class_growth={clas_growth}',
                 '--class_bias=no_bias',
                 f'--class_focus={class_focus}',
@@ -187,3 +204,29 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
             logging.error(f"Failed to complete process with PID: {process.pid}. Error: {str(e)}")
 
 logging.info("All subprocesses have completed.")
+
+
+                #'--data_name=MNIST',
+                #'--experiment_name=_FORGET_NEURON_SIG_SIG_',
+                #'--train_data=data/mnist/train-images.idx3-ubyte',
+                #'--train_label=data/mnist/train-labels.idx1-ubyte',
+                #'--test_data=data/mnist/test-images.idx3-ubyte',
+                #'--test_label=data/mnist/test-labels.idx1-ubyte',
+                #'--train_size=60000',
+                #'--test_size=10000',
+                #'--classes=10',
+                #'--train_fname=data/mnist/mnist_train.csv',
+                #'--test_fname=data/mnist/mnist_test.csv',
+
+
+                #'--data_name=FASHION_MNIST',
+                #'--experiment_name=_FORGET_NEURON_SIGMOID_LINEAR_FNIST_',
+                #'--train_data=data/fashion_mnist/train-images-idx3-ubyte', 
+                #'--train_label=data/fashion_mnist/train-labels-idx1-ubyte', 
+                #'--test_data=data/fashion_mnist/t10k-images-idx3-ubyte', 
+                #'--test_label=data/fashion_mnist/t10k-labels-idx1-ubyte', 
+                #'--train_size=60000',
+                #'--test_size=10000',
+                #'--classes=10',
+                #'--train_fname=data/fashion_mnist/fashion-mnist_train.csv',
+                #'--test_fname=data/fashion_mnist/fashion-mnist_test.csv',

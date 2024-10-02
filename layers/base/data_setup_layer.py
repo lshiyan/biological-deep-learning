@@ -102,6 +102,32 @@ class DataSetupLayer(InputLayer):
         
         return TensorDataset(colored_data_tensor, colored_labels_tensor)
     
+    #@staticmethod
+    #def setup_data(data: str, label: str, filename: str, size: int, dataset: DataSets) -> TensorDataset:
+    #    """
+    #    STATIC METHOD
+    #    Function to setup requested dataset
+    #    @param
+    #        data: data filename
+    #        label: label filename
+    #        filename: data (img + label) filename
+    #        size: number of data
+    #    @return
+    #        tensor dataset containing (data, label)
+    #    """
+    #    # Converting to .csv file if needed
+    #    if not os.path.exists(filename):
+    #        DataSetupLayer.convert(data, label, filename, size, 28)
+    #     
+    #    # Setup dataset   
+    #    data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
+    #    labels: torch.Tensor = torch.tensor(data_frame[0].values) if dataset != DataSets.E_MNIST else torch.tensor(data_frame[0].values) - 1
+    #    data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+    #    if dataset == DataSets.E_MNIST: data_tensor.T
+    #    data_tensor /= 255
+    #    
+    #    return TensorDataset(data_tensor, labels)
+    
     @staticmethod
     def setup_data(data: str, label: str, filename: str, size: int, dataset: DataSets) -> TensorDataset:
         """
@@ -118,16 +144,28 @@ class DataSetupLayer(InputLayer):
         # Converting to .csv file if needed
         if not os.path.exists(filename):
             DataSetupLayer.convert(data, label, filename, size, 28)
-         
-        # Setup dataset   
-        data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
-        labels: torch.Tensor = torch.tensor(data_frame[0].values) if dataset != DataSets.E_MNIST else torch.tensor(data_frame[0].values) - 1
-        data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
-        if dataset == DataSets.E_MNIST: data_tensor.T
-        data_tensor /= 255
         
+        # Read CSV, ensure no headers and proper data types
+        data_frame = pd.read_csv(filename, header=None, on_bad_lines='skip', dtype=str)  # Read as string to check for non-numeric data
+        data_frame = data_frame.apply(pd.to_numeric, errors='coerce')  # Convert to numeric, setting errors as NaN
+        
+        # Drop rows with any NaN values
+        if data_frame.isnull().values.any():
+            print("Warning: Non-numeric data found and removed.")
+            data_frame = data_frame.dropna()
+        
+        # Convert labels to a tensor
+        labels = torch.tensor(data_frame[0].values, dtype=torch.long) if dataset != DataSets.E_MNIST else torch.tensor(data_frame[0].values, dtype=torch.long) - 1
+        
+        # Convert data to a tensor
+        data_tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float32)
+        
+        # Transpose data tensor if required and normalize
+        if dataset == DataSets.E_MNIST:
+            data_tensor = data_tensor.T
+        data_tensor /= 255.0
+
         return TensorDataset(data_tensor, labels)
-    
     
     @staticmethod
     def filter_data_loader(data_loader: DataLoader, filter: dict[int, int]):
@@ -262,33 +300,43 @@ class DataSetupLayer(InputLayer):
         col_labels = np.zeros(n, dtype=np.int32)
         row_labels = np.zeros(n, dtype=np.int32)
 
-        # Set the selected columns and rows to white (1)
-        for i in vertical_indices:
-            matrix[:, i] = 1
-            col_labels[i] = 1
-        for i in horizontal_indices:
-            matrix[i, :] = 1
-            row_labels[i] = 1
+        # Set the selected columns and rows to white (1) in a vectorized way
+        matrix[:, vertical_indices] = 1
+        col_labels[vertical_indices] = 1
+
+        matrix[horizontal_indices, :] = 1
+        row_labels[horizontal_indices] = 1
 
         return matrix, col_labels, row_labels
-
 
     @staticmethod
     def generate_training_set(n: int, 
                               k: int, 
-                              forbidden_combinations: List[Tuple[int, int]]
+                              forbidden_combinations: List[Tuple[int, int]], 
+                              base_path: str = 'data/bar_matrix'
                               ) -> TensorDataset:
         """
-        Generate the training set with the specified rules.
+        Generate the training set with the specified rules or load it if it exists.
         
         Args:
             n (int): The size of the matrix.
             k (int): The exponent to determine the number of training examples (8^k).
             forbidden_combinations (List[Tuple[int, int]]): List of forbidden (horizontal, vertical) bar index pairs.
+            base_path (str): Base path to save or load the dataset.
             
         Returns:
-            TensorDataset: The generated training dataset.
+            TensorDataset: The generated or loaded training dataset.
         """
+        # Dynamically construct the save path based on matrix size and quantity
+        save_path = os.path.join(base_path, f'matrix_size_{n}/k_{k}/training_set.pt')
+
+        # Check if the dataset already exists
+        if os.path.exists(save_path):
+            print(f"Loading existing training dataset from {save_path}")
+            return torch.load(save_path)
+        
+        print(f"Training dataset not found. Generating a new dataset and saving it to {save_path}")
+        
         num_samples = 8 ** k
         matrices = []
         col_labels = []
@@ -318,35 +366,46 @@ class DataSetupLayer(InputLayer):
             col_labels.append(col_label)
             row_labels.append(row_label)
 
-        # Assuming `matrices` and `col_labels` are lists of numpy arrays
-        matrices_np = np.array(matrices)  # Convert the list of numpy arrays to a single numpy array
-        matrices_tensor = torch.tensor(matrices_np).unsqueeze(1)  # Then convert to a PyTorch tensor
+        matrices_tensor = torch.tensor(np.array(matrices)).unsqueeze(1)
+        col_labels_tensor = torch.tensor(np.array(col_labels))
+        row_labels_tensor = torch.tensor(np.array(row_labels))
 
-        col_labels_np = np.array(col_labels)  # Convert the list of numpy arrays to a single numpy array
-        col_labels_tensor = torch.tensor(col_labels_np)  # Then convert to a PyTorch tensor
+        dataset = TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
+        
+        # Save the generated dataset
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        torch.save(dataset, save_path)
+        print(f"Training dataset saved to {save_path}")
 
-        row_labels_np = np.array(row_labels)  # Assuming you also have `row_labels` that need conversion
-        row_labels_tensor = torch.tensor(row_labels_np)  # Convert to a PyTorch tensor
-
-        return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
-
-
+        return dataset
 
     @staticmethod
     def generate_test_set_one(
         n: int, 
-        k: int
+        k: int,
+        base_path: str = 'data/bar_matrix'
         ) -> TensorDataset:
         """
-        Generate the first test set (single bars only).
+        Generate the first test set (single bars only) or load it if it exists.
         
         Args:
             n (int): The size of the matrix.
             k (int): Determines the number of samples to generate.
+            base_path (str): Base path to save or load the dataset.
             
         Returns:
-            TensorDataset: The generated test dataset.
+            TensorDataset: The generated or loaded test dataset.
         """
+        # Dynamically construct the save path based on matrix size and quantity
+        save_path = os.path.join(base_path, f'matrix_size_{n}/k_{k}/test_set_one.pt')
+
+        # Check if the dataset already exists
+        if os.path.exists(save_path):
+            print(f"Loading existing test set one from {save_path}")
+            return torch.load(save_path)
+        
+        print(f"Test set one not found. Generating a new dataset and saving it to {save_path}")
+
         num_samples = 8 ** k
         matrices = []
         col_labels = []
@@ -370,38 +429,48 @@ class DataSetupLayer(InputLayer):
                 col_labels.append(col_label)
                 row_labels.append(row_label)
 
-        # Assuming `matrices` and `col_labels` are lists of numpy arrays
-        matrices_np = np.array(matrices)  # Convert the list of numpy arrays to a single numpy array
-        matrices_tensor = torch.tensor(matrices_np).unsqueeze(1)  # Then convert to a PyTorch tensor
+        matrices_tensor = torch.tensor(np.array(matrices)).unsqueeze(1)
+        col_labels_tensor = torch.tensor(np.array(col_labels))
+        row_labels_tensor = torch.tensor(np.array(row_labels))
 
-        col_labels_np = np.array(col_labels)  # Convert the list of numpy arrays to a single numpy array
-        col_labels_tensor = torch.tensor(col_labels_np)  # Then convert to a PyTorch tensor
+        dataset = TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
+        
+        # Save the generated dataset
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        torch.save(dataset, save_path)
+        print(f"Test set one saved to {save_path}")
 
-        row_labels_np = np.array(row_labels)  # Assuming you also have `row_labels` that need conversion
-        row_labels_tensor = torch.tensor(row_labels_np)  # Convert to a PyTorch tensor
-
-
-        return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
-
-
+        return dataset
 
     @staticmethod
     def generate_test_set_two(
         n: int, 
         k: int,
-        forbidden_combinations: List[Tuple[int, int]]
+        forbidden_combinations: List[Tuple[int, int]],
+        base_path: str = 'data/bar_matrix'
         ) -> TensorDataset:
         """
-        Generate the second test set (forbidden combinations).
+        Generate the second test set (forbidden combinations) or load it if it exists.
         
         Args:
             n (int): The size of the matrix.
-            forbidden_combinations (List[Tuple[int, int]]): List of forbidden (horizontal, vertical) bar index pairs.
             k (int): Determines the number of samples to generate.
+            forbidden_combinations (List[Tuple[int, int]]): List of forbidden (horizontal, vertical) bar index pairs.
+            base_path (str): Base path to save or load the dataset.
             
         Returns:
-            TensorDataset: The generated test dataset.
+            TensorDataset: The generated or loaded test dataset.
         """
+        # Dynamically construct the save path based on matrix size and quantity
+        save_path = os.path.join(base_path, f'matrix_size_{n}/k_{k}/test_set_two.pt')
+
+        # Check if the dataset already exists
+        if os.path.exists(save_path):
+            print(f"Loading existing test set two from {save_path}")
+            return torch.load(save_path)
+        
+        print(f"Test set two not found. Generating a new dataset and saving it to {save_path}")
+
         num_samples = 8 ** k
         matrices = []
         col_labels = []
@@ -416,37 +485,48 @@ class DataSetupLayer(InputLayer):
                 col_labels.append(col_label)
                 row_labels.append(row_label)
 
-        # Assuming `matrices` and `col_labels` are lists of numpy arrays
-        matrices_np = np.array(matrices)  # Convert the list of numpy arrays to a single numpy array
-        matrices_tensor = torch.tensor(matrices_np).unsqueeze(1)  # Then convert to a PyTorch tensor
+        matrices_tensor = torch.tensor(np.array(matrices)).unsqueeze(1)
+        col_labels_tensor = torch.tensor(np.array(col_labels))
+        row_labels_tensor = torch.tensor(np.array(row_labels))
 
-        col_labels_np = np.array(col_labels)  # Convert the list of numpy arrays to a single numpy array
-        col_labels_tensor = torch.tensor(col_labels_np)  # Then convert to a PyTorch tensor
+        dataset = TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
+        
+        # Save the generated dataset
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        torch.save(dataset, save_path)
+        print(f"Test set two saved to {save_path}")
 
-        row_labels_np = np.array(row_labels)  # Assuming you also have `row_labels` that need conversion
-        row_labels_tensor = torch.tensor(row_labels_np)  # Convert to a PyTorch tensor
-
-        return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
-
-
+        return dataset
     
     @staticmethod
     def generate_test_set_three(
         n: int, 
         k: int, 
-        max_bars: int
+        max_bars: int,
+        base_path: str = 'data/bar_matrix'
         ) -> TensorDataset:
         """
-        Generate the third test set with up to the maximum specified number of bars.
+        Generate the third test set with up to the maximum specified number of bars or load it if it exists.
         
         Args:
             n (int): The size of the matrix.
             k (int): Determines the number of samples to generate.
             max_bars (int): The maximum number of bars in either direction.
+            base_path (str): Base path to save or load the dataset.
             
         Returns:
-            TensorDataset: The generated test dataset.
+            TensorDataset: The generated or loaded test dataset.
         """
+        # Dynamically construct the save path based on matrix size and quantity
+        save_path = os.path.join(base_path, f'matrix_size_{n}/k_{k}/test_set_three.pt')
+
+        # Check if the dataset already exists
+        if os.path.exists(save_path):
+            print(f"Loading existing test set three from {save_path}")
+            return torch.load(save_path)
+        
+        print(f"Test set three not found. Generating a new dataset and saving it to {save_path}")
+
         num_samples = 8 ** k
         matrices = []
         col_labels = []
@@ -476,19 +556,16 @@ class DataSetupLayer(InputLayer):
             matrices.append(matrix)
             col_labels.append(col_label)
             row_labels.append(row_label)
-            
-
-        # Assuming `matrices` and `col_labels` are lists of numpy arrays
-        matrices_np = np.array(matrices)  # Convert the list of numpy arrays to a single numpy array
-        matrices_tensor = torch.tensor(matrices_np).unsqueeze(1)  # Then convert to a PyTorch tensor
-
-        col_labels_np = np.array(col_labels)  # Convert the list of numpy arrays to a single numpy array
-        col_labels_tensor = torch.tensor(col_labels_np)  # Then convert to a PyTorch tensor
-
-        row_labels_np = np.array(row_labels)  # Assuming you also have `row_labels` that need conversion
-        row_labels_tensor = torch.tensor(row_labels_np)  # Convert to a PyTorch tensor
         
-        return TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
+        matrices_tensor = torch.tensor(np.array(matrices)).unsqueeze(1)
+        col_labels_tensor = torch.tensor(np.array(col_labels))
+        row_labels_tensor = torch.tensor(np.array(row_labels))
 
+        dataset = TensorDataset(matrices_tensor, col_labels_tensor, row_labels_tensor)
+        
+        # Save the generated dataset
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        torch.save(dataset, save_path)
+        print(f"Test set three saved to {save_path}")
 
-
+        return dataset

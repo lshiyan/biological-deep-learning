@@ -1,128 +1,237 @@
-import subprocess
-import itertools
-import logging
-import sys
+import torch
+from torch.utils.data import DataLoader, TensorDataset
+import os
+import pandas as pd
+from layers.input_layer import InputLayer
+from typing import IO, List
+import numpy as np
+from typing import Tuple
+import random
 
-# Set up logging
-logging.basicConfig(filename='experiment_forget_results.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
-# Define the base script name
-script_name = 'train_forget.py'
 
-# 0.5, 1, 2, 4, 8, 16, 32, 64, 128
+from utils.experiment_constants import DataSets
 
-# Define the values for the parameters you want to vary
-lambda_values = [0.5]
-heb_learn_values = ['sanger']
-heb_growth_values = [ 'linear']
-clas_growth_values = ['linear']
-heb_focus_values = ['neuron']
-heb_inhib_values = ['RELU']
-class_focus_values = ['neuron']
-learning_rate_values = [0.01]
-rho_values = [0.03]
+class DataSetupLayer(InputLayer):
+    """
+    CLASS
+    Defines how the input dataset will be processed before feeding it to the base network
+    @instance attr.
+        NetworkLayer ATTR.
+            * Not used for this layer *
+            name (LayerNames): name of layer
+        InputLayer ATTR.
+        OWN ATTR.
+    """
+    def __init__(self) -> None:
+        """
+        CONSTRUCTOR METHOD
+        @param
+            None
+        @return
+            None
+        """
+        super().__init__()
 
-# Generate all possible combinations of parameters
-parameter_combinations = list(itertools.product(
-    lambda_values,
-    heb_learn_values,
-    heb_growth_values,
-    clas_growth_values,
-    heb_focus_values,
-    heb_inhib_values,
-    class_focus_values,
-    learning_rate_values,
-    rho_values
-))
+    # Function to apply color to MNIST digit
+    @staticmethod
+    def apply_color(image, color):
+        """
+        STATIC METHOD
+        Function applies color to MNIST
+        @param
+            image: the 28x28 MNIST image
+            color: dictionary containing RGB values
+        @return
+            np.ndarray: Colored image as a 3-channel numpy array
+        """
+        brightness = image.numpy().squeeze()  # Get brightness from MNIST grayscale image
+        colored_image = np.zeros((28, 28, 3))  # Create an empty 3-channel image (RGB)
+        
+        # Loop through three color channels (RGB)
+        for i in range(3):  
+            colored_image[:, :, i] = brightness * color['rgb'][i] / 255.0   
+            # 1: Retrieve RGB value corresponding to current channel
+            # 2: Color each pixel of the grayscale image according to its brightness and the chosen RGB color values
 
-# Set the number of concurrent processes to 8
-max_concurrent_processes = 10
+        return colored_image
 
-# Get the current Python interpreter from the virtual environment
-python_executable = sys.executable
+    @staticmethod
+    def setup_colored_mnist(data: str, label: str, filename: str, size: int, dataset: DataSets, color_map: dict, test_color_map: dict = None) -> TensorDataset:
+        """
+        STATIC METHOD
+        Function to setup colored MNIST dataset with specified colors for each digit.
+        @param
+            data: data filename
+            label: label filename
+            filename: data (img + label) filename
+            size: number of data
+            dataset: dataset type (e.g., DataSets.MNIST)
+            color_map: dictionary mapping each digit to a list of colors for training
+            test_color_map: dictionary mapping each digit to a list of colors for testing (optional)
+        @return
+            TensorDataset containing (colored data, label)
+        """
+        # Ensure the MNIST dataset is ready
+        if not os.path.exists(filename):
+            DataSetupLayer.convert(data, label, filename, size, 28)
+        
+        # Load the MNIST dataset
+        data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
+        labels: torch.Tensor = torch.tensor(data_frame[0].values)
+        data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float).reshape(-1, 28, 28)
+        data_tensor /= 255
+        
+        # Apply colorization
+        colored_data = []
+        colored_labels = []
 
-# Specify the GPU ID (e.g., GPU 0)
-gpu_id = 0
-
-# Process the combinations in batches
-for i in range(0, len(parameter_combinations), max_concurrent_processes):
-    processes = []
-    batch = parameter_combinations[i:i + max_concurrent_processes]
+        for i in range(data_tensor.shape[0]):
+            digit = labels[i].item()  # Get the digit label
+            colors = color_map[digit]  # Get the list of colors for this digit
+            
+            # Apply each color in the list to create multiple colored copies of the digit
+            for color in colors:
+                rgb_values = color['rgb']  # Get the RGB values
+                colored_image = DataSetupLayer.apply_color(data_tensor[i], {'rgb': rgb_values})
+                colored_data.append(torch.tensor(colored_image, dtype=torch.float32).permute(2, 0, 1))
+                colored_labels.append(digit)  # Append the label for each colored copy
+        
+        colored_data_tensor = torch.stack(colored_data)  # Stack all colored images into a tensor
+        colored_labels_tensor = torch.tensor(colored_labels, dtype=torch.long)  # Convert labels to tensor
+        
+        return TensorDataset(colored_data_tensor, colored_labels_tensor)
     
-    for combination in batch:
-        lmbda, heb_learn, heb_growth, clas_growth, heb_focus, heb_inhib, class_focus, lr, rho = combination
+    @staticmethod
+    def setup_data(data: str, label: str, filename: str, size: int, dataset: DataSets) -> TensorDataset:
+        """
+        STATIC METHOD
+        Function to setup requested dataset
+        @param
+            data: data filename
+            label: label filename
+            filename: data (img + label) filename
+            size: number of data
+        @return
+            tensor dataset containing (data, label)
+        """
+        # Converting to .csv file if needed
+        if not os.path.exists(filename):
+            DataSetupLayer.convert(data, label, filename, size, 28)
+         
+        # Setup dataset   
+        data_frame: pd.DataFrame = pd.read_csv(filename, header=None, on_bad_lines='skip')
+        labels: torch.Tensor = torch.tensor(data_frame[0].values) if dataset != DataSets.E_MNIST else torch.tensor(data_frame[0].values) - 1
+        data_tensor: torch.Tensor = torch.tensor(data_frame.drop(data_frame.columns[0], axis=1).values, dtype=torch.float)
+        if dataset == DataSets.E_MNIST: data_tensor.T
+        data_tensor /= 255
+        
+        return TensorDataset(data_tensor, labels)
+    
+    
+    @staticmethod
+    def filter_data_loader(data_loader: DataLoader, filter: dict[int, int]):
+        """
+        Function to filter dataset to include only the specified classes
+        @param
+            tensor_dataset: original TensorDataset containing EMNIST data and labels
+            selected_classes: list of letter classes to include
+        @return
+            filtered TensorDataset containing only data for the specified letter classes
+        """
+        data_kept: List[torch.Tensor] = []
+        labels_kept: List[float] = []
+
+        # Loop through each label in the dataset
+        for data, label in data_loader:
+            if label.item() in filter.keys():
+                labels_kept.append(filter[int(label.item())])
+                data_kept.append(data)
+
+        filtered_data = torch.stack(data_kept)
+        filtered_labels = torch.tensor(labels_kept)
+        filtered_dataset = TensorDataset(filtered_data, filtered_labels)
+        filtered_data_loader = DataLoader(filtered_dataset, batch_size=data_loader.batch_size, shuffle=True)
+        
+        return filtered_data_loader
+
+    @staticmethod
+    def save_dataset(dataset: TensorDataset, filename: str) -> None:
+        """
+        Save the generated dataset to a file.
+        
+        Args:
+            dataset (TensorDataset): The dataset to save.
+            filename (str): The file path to save the dataset.
+        """
+        torch.save(dataset, filename)
+        print(f"Dataset saved to {filename}")
+
+    @staticmethod
+    def load_dataset(filename: str) -> TensorDataset:
+        """
+        Load a previously saved dataset from a file.
+        
+        Args:
+            filename (str): Path to the saved dataset file.
+            
+        Returns:
+            TensorDataset: The loaded dataset.
+        """
+        return torch.load(filename)
 
 
-        # Construct the complete set of arguments including the varying parameter
-        arguments = [
-            '--data_name=MNIST',
-            '--experiment_name=_FORGET_NEURON_LINEAR_LINEAR_',
-            '--train_data=data/mnist/train-images.idx3-ubyte',
-            '--train_label=data/mnist/train-labels.idx1-ubyte',
-            '--test_data=data/mnist/test-images.idx3-ubyte',
-            '--test_label=data/mnist/test-labels.idx1-ubyte',
-            '--train_size=60000',
-            '--test_size=10000',
-            '--classes=10',
-            '--train_fname=data/mnist/mnist_train.csv',
-            '--test_fname=data/mnist/mnist_test.csv',
-            '--input_dim=784',
-            '--heb_dim=64',
-            '--output_dim=10',
-            '--heb_gam=0.99',
-            '--heb_eps=0.0001',
-            '--sub_experiment_scope_list=[[0,1],[2,3],[4,5],[6,7],[8,9]]',  # Specify sub-experiment scopes for forgetting
-            f'--heb_inhib={heb_inhib}',
-            f'--heb_focus={heb_focus}',
-            f'--heb_growth={heb_growth}',
-            f'--heb_learn={heb_learn}',
-            f'--heb_lamb={lmbda}',
-            f'--heb_rho={rho}',
-            '--heb_act=normalized',
-            '--class_learn=OUTPUT_CONTRASTIVE',
-            f'--class_growth={clas_growth}',
-            '--class_bias=no_bias',
-            f'--class_focus={class_focus}',
-            '--class_act=normalized',
-            f'--lr={lr}',
-            '--sigmoid_k=1',
-            '--alpha=0',
-            '--beta=0.01',
-            '--sigma=1',
-            '--mu=0',
-            '--init=uniform',
-            '--batch_size=1',
-            '--epochs=10',
-            f'--device=cuda:{gpu_id}',  # Use the specified GPU or CPU
-            '--local_machine=True',
-            '--experiment_type=forget'
-        ]
+    @staticmethod
+    def convert(img_file_path: str, 
+                label_file_path: str, 
+                out_file_path: str, 
+                data_size: int, 
+                img_size: int) -> None:
+        """
+        STATIC METHOD
+        Convert .ubyte files into a .csv file for ease of use
+        @param
+            img_file: path to image files
+            label_file: path to file with labels
+            out_file: path to .cvs file that merges data and label
+            data_size: number of data inputs
+            img_size: size of image
+        @return
+            None
+        """    
+        # Get absolute path of all the necessary files (img, label, out)
+        project_root: str = os.getcwd()
+        img_file: str = os.path.join(project_root, img_file_path)
+        label_file: str = os.path.join(project_root, label_file_path)
+        out_file: str = os.path.join(project_root, out_file_path)
 
-        # Construct the command with nice
-        command = ['nice', '-n', '1', python_executable, script_name] + arguments
+        # Open all necessary files
+        imgs: IO = open(img_file, "rb")
+        out: IO = open(out_file, "w")
+        labels: IO = open(label_file, "rb")
+        
+        # Skip header bytes
+        imgs.read(16)
+        labels.read(8)
+        
+        # Create a 2D list of images where each image is a 1D list where the first element is the label
+        img_area: int = img_size ** 2
+        images: List[List[int]] = []
 
-        try:
-            # Start the process
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            processes.append(process)
-            logging.info(f"Started process with PID: {process.pid} on GPU: {gpu_id} | Lambda: {lmbda}, LR: {lr}, Heb_Learn: {heb_learn}, Heb_Growth: {heb_growth}, Clas_Growth: {clas_growth}, Heb_Focus: {heb_focus}, Heb_Inhib: {heb_inhib}, Class_Focus: {class_focus}")
-        except Exception as e:
-            logging.error(f"Failed to start process for combination: Lambda={lmbda}, LR={lr}, Heb_Learn={heb_learn}, Heb_Growth={heb_growth}, Clas_Growth={clas_growth}, Heb_Focus={heb_focus}, Heb_Inhib={heb_inhib}, Class_Focus={class_focus}. Error: {str(e)}")
+        for _ in range(data_size):
+            image: List[int] = [int.from_bytes(labels.read(1), byteorder='big')]
+            for _ in range(img_area):
+                image.append(int.from_bytes(imgs.read(1), byteorder='big'))
+            images.append(image)
 
-    # Wait for all processes in the batch to finish before starting the next batch
-    for process in processes:
-        try:
-            stdout, stderr = process.communicate()
-            logging.info(f"Process with PID: {process.pid} completed on GPU: {gpu_id}.")
-            logging.info("Standard Output:\n" + stdout)
-            if stderr:
-                logging.error("Standard Error:\n" + stderr)
-        except Exception as e:
-            logging.error(f"Failed to complete process with PID: {process.pid}. Error: {str(e)}")
-
-logging.info("All subprocesses have completed.")
-
-
+        # Convert each image from 1D list to a comma-seperated str and write it into out file
+        for image in images:
+            out.write(",".join(str(pix) for pix in image) + "\n")
+        
+        # Close files
+        imgs.close()
+        out.close()
+        labels.close()
 
 
 

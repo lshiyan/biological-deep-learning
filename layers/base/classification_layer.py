@@ -272,8 +272,11 @@ class ClassificationLayer(OutputLayer):
         """
         # Detach and squeeze tensors to remove any dependencies and reduce dimensions if possible.
         x: torch.Tensor = input.clone().detach().squeeze().to(self.device)
+        # Ensure clamped_output is 1-D
+        y_hat: torch.Tensor = clamped_output.clone().detach().squeeze().to(self.device)
 
-        computed_rule: torch.Tensor = torch.outer(clamped_output, x).to(self.device)
+
+        computed_rule: torch.Tensor = torch.outer(y_hat, x).to(self.device)
 
 
         return computed_rule

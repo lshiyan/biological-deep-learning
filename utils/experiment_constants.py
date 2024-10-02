@@ -27,6 +27,8 @@ class LateralInhibitions(Enum):
     WTA_INHIBITION = 'WTA'
     GAUSSIAN_INHIBITION = 'GAUSSIAN'
     NORM_INHIBITION = 'NORM'
+    SOFTMAX_INHIBITION = 'SOFTMAX'
+
 
 
 class WeightGrowth(Enum):

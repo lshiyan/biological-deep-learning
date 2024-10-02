@@ -17,9 +17,10 @@ pip3 install pandas matplotlib numpy
 /mnt/graduate/pzheng3/biological-deep-learning
 
 
-source ../../../../../mnt/graduate/txu22/hebb_venv_two/bin/activate
+source ../../../../../mnt/graduate/txu22/virtual_env/bin/activate
 source ../../../../../mnt/teaching/COMP551/txu22/hebb_venv/bin/activate
 
+source ../../../../../../../mnt/graduate/virtual_env/bin/activate
 
 venv neuroai_venv
 tests
