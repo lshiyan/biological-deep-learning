@@ -247,7 +247,7 @@ def get_args_parser(add_help=True):
 #                 )
 #                 timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
-def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args):
+def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
     epoch = 0
     train_batches_per_epoch = len(train_dataloader)
     # Set the model to training mode - important for layers with different training / inference behaviour
@@ -303,21 +303,21 @@ def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args):
                 metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
 
             # Saving and reporting
-            if args.is_master:
-                # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
-                # Save checkpoint
-                atomic_torch_save(
-                    {
-                        "model": model.state_dict(),
-                        "train_sampler": train_dataloader.sampler.state_dict(),
-                        "test_sampler": test_dataloader.sampler.state_dict(),
-                        "metrics": metrics,
-                    },
-                    args.checkpoint_path,
-                )
-                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
-def train_loop(model, train_dataloader, test_dataloader, metrics, args):
+            # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
+            # Save checkpoint
+            atomic_torch_save(
+                {
+                    "model": model.state_dict(),
+                    "train_sampler": train_dataloader.sampler.state_dict(),
+                    "test_sampler": test_dataloader.sampler.state_dict(),
+                    "metrics": metrics,
+                },
+                checkpoint,
+            )
+            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
+
+def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
     epoch = 0
     train_batches_per_epoch = len(train_dataloader)
     # Set the model to training mode - important for layers with different training / inference behaviour
@@ -362,26 +362,25 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args):
         if is_last_batch:
             metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
 
-        # Saving and reporting
-        if args.is_master:
-            # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
-            # Save checkpoint
-            atomic_torch_save(
-                {
-                    "model": model.state_dict(),
-                    "train_sampler": train_dataloader.sampler.state_dict(),
-                    "test_sampler": test_dataloader.sampler.state_dict(),
-                    "metrics": metrics,
-                },
-                args.checkpoint_path,
-            )
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
+
+        # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
+        # Save checkpoint
+        atomic_torch_save(
+            {
+                "model": model.state_dict(),
+                "train_sampler": train_dataloader.sampler.state_dict(),
+                "test_sampler": test_dataloader.sampler.state_dict(),
+                "metrics": metrics,
+            },
+            checkpoint,
+        )
+        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
     
 
 
 
 
-def finetune(model, train_dataloader, test_dataloader, metrics, args):
+def finetune(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
     epoch = 0
     train_batches_per_epoch = len(train_dataloader)
 
@@ -427,19 +426,19 @@ def finetune(model, train_dataloader, test_dataloader, metrics, args):
             metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
 
         # Saving and reporting
-        if args.is_master:
-            # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
-            # Save checkpoint
-            atomic_torch_save(
-                {
-                    "model": model.state_dict(),
-                    "train_sampler": train_dataloader.sampler.state_dict(),
-                    "test_sampler": test_dataloader.sampler.state_dict(),
-                    "metrics": metrics,
-                },
-                args.checkpoint_path,
-            )
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : save checkpoint")
+
+        # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
+        # Save checkpoint
+        atomic_torch_save(
+            {
+                "model": model.state_dict(),
+                "train_sampler": train_dataloader.sampler.state_dict(),
+                "test_sampler": test_dataloader.sampler.state_dict(),
+                "metrics": metrics,
+            },
+            checkpoint,
+        )
+        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : save checkpoint")
 
 # def test_loop(model, train_dataloader, test_dataloader, metrics, args):
 
@@ -538,6 +537,7 @@ def main(args, timer):
 
     with open("Configs/config" + str(rank) + ".json", "r") as file:
         config = json.load(file)
+    
 
     if dataset == "EMNIST":
         transform_EMNIST = transforms.Compose([
@@ -620,9 +620,12 @@ def main(args, timer):
     #####################################
     # Retrieve the checkpoint if the experiment is resuming from pause
 
-    if os.path.isfile(args.checkpoint_path):
-        print(f"Loading checkpoint from {args.checkpoint_path}")
-        checkpoint = torch.load(args.checkpoint_path, map_location=f"cuda:{args.device_id}")
+    lastsavedcheckpoint = "Checkpoints/model" + str(rank) + ".pth.temp"
+    savedcheckpoint = "Checkpoints/model" + str(rank) + ".pth"
+
+    if os.path.isfile(lastsavedcheckpoint):
+        print(f"Loading checkpoint from {lastsavedcheckpoint}")
+        checkpoint = torch.load(lastsavedcheckpoint, map_location=f"cuda:{args.device_id}")
 
         model.load_state_dict(checkpoint["model"])
         train_dataloader.sampler.load_state_dict(checkpoint["train_sampler"])
@@ -636,17 +639,17 @@ def main(args, timer):
     # Each epoch the training loop is called within a context set from the training InterruptibleDistributedSampler
     if config['greedytrain']:
         greedytrain_loop(
-            model, train_dataloader, test_dataloader, metrics, args
+            model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
         )
         finetune(
-            model, train_dataloader, test_dataloader, metrics, args
+            model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
         )
     else:
         train_loop(
-            model, train_dataloader, test_dataloader, metrics, args
+            model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
         )
         finetune(
-            model, train_dataloader, test_dataloader, metrics, args
+            model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
         )
 
     # test_loop(
@@ -654,7 +657,7 @@ def main(args, timer):
     # )
 
     #CNN.Save_Model(model, args.dataset, rank, args.topdown, v_input, args.device_id, (model.correct/model.tot)*100)
-    torch.save(model, 'SavedModels/model' + str(rank) + ".pth")
+    # torch.save(model, 'SavedModels/model' + str(rank) + ".pth")
     print("Done!")
 
 if __name__ == "__main__":
