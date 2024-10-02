@@ -15,38 +15,38 @@ script_name = 'train_base.py'
 """
 # Linear Linear
 parameter_pairs = [
-    (0.5, 0.03, 0.003), 
-    (1, 0.1, 0.003),
-    (2, 0.1, 0.003),
-    (4, 0.03, 0.003),
-    (8, 0.01, 0.003),
-    (16, 0.01, 0.003),
-    (32, 0.01, 0.003)
+    (0.5, 0.03), 
+    (1, 0.1),
+    (2, 0.1),
+    (4, 0.03),
+    (8, 0.01),
+    (16, 0.01),
+    (32, 0.01)
 ]
 
 # Exp Linear Neuron
 parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 1, 0.003),
-    (2, 1, 0.003),
-    (4, 1, 0.003),
-    (8, 1, 0.003),
-    (16, 1, 0.003),
-    (32, 0.3, 0.003),
-    (64, 0.1, 0.003)
+    (0.5, 1), 
+    (1, 1),
+    (2, 1),
+    (4, 1),
+    (8, 1),
+    (16, 1),
+    (32, 0.3),
+    (64, 0.1)
 ]
 
 
 # Sigmoid Linear Neuron
 parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 0.3, 0.003),
-    (2, 0.1, 0.003),
-    (4, 0.1, 0.003),
-    (8, 0.1, 0.003),
-    (16, 0.003, 0.003),
-    (32, 0.01, 0.003),
-    (64, 0.001, 0.003)
+    (0.5, 1), 
+    (1, 0.3),
+    (2, 0.1),
+    (4, 0.1),
+    (8, 0.1),
+    (16, 0.003),
+    (32, 0.01),
+    (64, 0.001)
 ]
 
 # Sigmoid Sigmoid Neuron
@@ -101,11 +101,11 @@ parameter_pairs = [
 
 # Define the learning rates to test
 # 0.1, 0.3, 0.01, 0.03, 0.001
-learning_rates = [0.03]
+learning_rates = [0.001]
 
 # Define other parameters to vary
 other_parameters = [
-    ('sanger', 'sigmoid', 'sigmoid', 'neuron', 'RELU', 'neuron'),
+    ('sanger', 'sigmoid', 'linear', 'neuron', 'RELU', 'neuron'),
 ]
 
 # Set the number of concurrent processes
@@ -115,7 +115,7 @@ max_concurrent_processes = 10
 python_executable = sys.executable
 
 # Specify the GPU ID (e.g., GPU 0)
-gpu_id = 7
+gpu_id = 0
 
 # Process the combinations in batches
 for i in range(0, len(parameter_pairs), max_concurrent_processes):
@@ -129,7 +129,7 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
                 # Construct the complete set of arguments including the varying parameter
                 arguments = [
                     '--data_name=MNIST',
-                    '--experiment_name=_BASE_NEURON_SIGMOID_SIGMOID_',
+                    '--experiment_name=_BASE_NEURON_SIGMOID_LINEAR_',
                     '--train_data=data/mnist/train-images.idx3-ubyte',
                     '--train_label=data/mnist/train-labels.idx1-ubyte',
                     '--test_data=data/mnist/test-images.idx3-ubyte',
