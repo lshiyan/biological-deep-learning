@@ -151,58 +151,15 @@ class SoftNeuralNet(nn.Module):
     def set_iteration(self, i):
         self.iteration = i
         
-    
-    """
-    Used in Topdown models
-    def forward_clamped(self, x, clamped):
-        input = x.detach().clone()
-        layers = list(self.layers.values())
-        nb_layers = len(layers)
-        hlist = [None]*nb_layers
-        ulist = [None]*nb_layers
-        for iter in range(self.iteration):
-            hlist[-1] = clamped
-            x = input
-            for idx in range(nb_layers-1):
-                w_topdown = layers[idx + 1].weight.detach().clone()
-                h_topdown = hlist[idx+1]
-                u, x = layers[idx].TD_forward(x, w_topdown, h_topdown)
-                hlist[idx] = x
-                ulist[idx] = u
-        x_L = layers[-1].forward_test(hlist[-2])
-        return hlist, ulist, x_L
-
-    def TD_forward_test(self, x):
-        input = x.detach().clone()
-        layers = list(self.layers.values())
-        nb_layers = len(layers)
-        hlist = [None]*nb_layers
-        for _ in range(self.iteration):
-            x = input
-            for idx in range(nb_layers-1):
-                w = layers[idx + 1].weight.detach().clone()
-                h_l = hlist[idx+1]
-                u, x = layers[idx].TD_forward(x, w, h_l)
-                hlist[idx] = x
-            x_L = layers[-1].forward_test(hlist[-2])
-            hlist[-1] = x_L
-        return x_L
-    
-    def update_weights(self, input, label_clamped_hlist, ulist, pred):
-        layers = list(self.layers.values())
-        nb_layers = len(layers)
-        for idx in range(nb_layers):
-            if idx == 0:
-                layers[idx].learn_weights(layers[idx].inference(input), target=label_clamped_hlist[idx] if idx == nb_layers - 1 else None)
-
-    def TD_forward(self, x, labels):
-        input = x.detach().clone()
-        all_hlist_label, preact_hlist, pred = self.forward_clamped(x, labels)
-        self.update_weights(input, all_hlist_label, preact_hlist, pred)
-    """
-
     def save_model(self, path):
         torch.save(self.state_dict(), path)
+
+    def set_training_layers(self, layers_to_train):
+        for layer in self.layers.values():
+            if layer in layers_to_train:
+                layer.train()
+            else:
+                layer.eval()
 
 
 class SoftHebbLayer(nn.Module):
@@ -528,8 +485,8 @@ def SoftMLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, de
     
     # layer-wise training
     if greedytrain:
-        mymodel.train()
         for layer_name, layer in mymodel.layers.items():
+            mymodel.set_training_layers([layer])
             print(f"Training layer: {layer_name}")
             for _ in range(epoch):
                 for data in tqdm(dataloader):
