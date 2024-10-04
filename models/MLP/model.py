@@ -524,6 +524,8 @@ def MLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, device
 
 
 def SoftMLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, device, greedytrain):
+    lamb_values = {layer_name: [] for layer_name in mymodel.layers.keys()}
+    
     # layer-wise training
     if greedytrain:
         mymodel.train()
@@ -541,6 +543,9 @@ def SoftMLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, de
                         x = prev_layer.forward(x)
                     
                     layer.forward(x, target)
+
+                    if hasattr(layer, 'lamb'):
+                        lamb_values[layer_name].append(layer.lamb.item())
         
         timestr = time.strftime("%Y%m%d-%H%M%S")
         foldername = os.getcwd() + '/SavedModels/SoftMLP_FF_Greedy_' + dataset + '_' + timestr
@@ -552,6 +557,10 @@ def SoftMLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, de
             for data in tqdm(dataloader):
                 inputs, labels = data
                 mymodel.forward(inputs, oneHotEncode(labels, nclasses, device))
+
+                for layer_name, layer in mymodel.layers.items():
+                    if hasattr(layer, 'lamb'):
+                        lamb_values[layer_name].append(layer.lamb.item())
         
         timestr = time.strftime("%Y%m%d-%H%M%S")
         foldername = os.getcwd() + '/SavedModels/SoftMLP_FF_' + dataset + '_' + timestr
@@ -560,8 +569,21 @@ def SoftMLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, de
     torch.save(mymodel.state_dict(), foldername + '/model')
     view_weights(mymodel, foldername)
 
+    plot_lambda(lamb_values)
+
     return mymodel
 
+
+def plot_lambda(lamb_values):
+    for layer_name, lamb_list in lamb_values.items():
+        plt.figure(figsize=(10, 6))
+        plt.plot(lamb_list, label=f'Lambda values for {layer_name}')
+        plt.xlabel('Training Iterations')
+        plt.ylabel('Lambda Value')
+        plt.title(f'Tracking Lambda for {layer_name}')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
 
 def TDBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, device):
