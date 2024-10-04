@@ -522,6 +522,48 @@ def MLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, device
     view_weights(mymodel, foldername)
     return mymodel
 
+
+def SoftMLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, device, greedytrain):
+    # layer-wise training
+    if greedytrain:
+        mymodel.train()
+        for layer_name, layer in mymodel.layers.items():
+            print(f"Training layer: {layer_name}")
+            for _ in range(epoch):
+                for data in tqdm(dataloader):
+                    inputs, labels = data
+                    x = inputs.to(device)
+                    target = oneHotEncode(labels, nclasses, device)
+                    
+                    for prev_layer_name, prev_layer in mymodel.layers.items():
+                        if prev_layer_name == layer_name:
+                            break
+                        x = prev_layer.forward(x)
+                    
+                    layer.forward(x, target)
+        
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        foldername = os.getcwd() + '/SavedModels/SoftMLP_FF_Greedy_' + dataset + '_' + timestr
+
+    # Standard training
+    else:
+        mymodel.train()
+        for _ in range(epoch):
+            for data in tqdm(dataloader):
+                inputs, labels = data
+                mymodel.forward(inputs, oneHotEncode(labels, nclasses, device))
+        
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        foldername = os.getcwd() + '/SavedModels/SoftMLP_FF_' + dataset + '_' + timestr
+
+    os.mkdir(foldername)
+    torch.save(mymodel.state_dict(), foldername + '/model')
+    view_weights(mymodel, foldername)
+
+    return mymodel
+
+
+
 def TDBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, device):
 
     mymodel.train()
