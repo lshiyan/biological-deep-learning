@@ -92,6 +92,15 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     parser.add_argument("--local_machine", type=bool, default=True)
     parser.add_argument("--experiment_type", type=str, default='base')
 
+
+    # New Arugments for new model
+    parser.add_argument("--hsize", type=int, default=64)
+    parser.add_argument("--lamb", type=float, default=5.0)
+    parser.add_argument("--w_lr", type=float, default=0.005)
+    parser.add_argument("--b_lr", type=float, default=0.005)
+    parser.add_argument("--l_lr", type=float, default=0.005)
+    parser.add_argument("--nclasses", type=int, default=10)
+
     # Parse arguments into Namespace
     args: argparse.Namespace = parser.parse_args() if args_list == None else parser.parse_args(args_list)
 

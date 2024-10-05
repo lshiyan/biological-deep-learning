@@ -46,15 +46,7 @@ arguments = [
             '--heb_dim=64', 
             '--output_dim=10',
             # Hebbian layer hyperparameters  
-            '--heb_lamb=15', 
-            '--heb_gam=0.99',
-            '--heb_eps=0.0001',
-            '--heb_learn=orthogonal',
-            '--heb_inhib=relu',
-            '--heb_growth=linear',
-            '--heb_focus=neuron',
-            '--heb_act=normalized',
-            '--heb_rho=0.1',
+
             # Classification layer hyperparameters
             '--class_learn=OUTPUT_CONTRASTIVE',
             '--class_growth=exponential',
@@ -73,6 +65,13 @@ arguments = [
             '--batch_size=1',
             '--epochs=1', 
             '--device=cpu',
+            '--hsize=64',
+            '--lamb=5',
+            '--w_lr=0.005',
+            '--b_lr=0.005',
+            '--l_lr=0.005',
+            '--nclasses=10',
+            
             # '--device=cuda:5',
             '--local_machine=True',
             '--experiment_type=base'
