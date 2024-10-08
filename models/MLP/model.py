@@ -525,8 +525,8 @@ def SoftMLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, de
     os.mkdir(foldername)
     torch.save(mymodel.state_dict(), foldername + '/model')
     view_weights(mymodel, foldername)
-
     plot_lambda(lamb_values)
+
 
     return mymodel
 
