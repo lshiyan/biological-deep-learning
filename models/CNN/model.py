@@ -47,12 +47,13 @@ class ConvolutionalNeuralNet(nn.Module):
     
     def forward_test(self, x):
         for layer in self.layers.values():
-            _, x = layer.forward(x, update_weights=False)
+            x = layer.forward(x)
         return x
 
 
     """
     Used in topdown models
+    """
     """
     def TD_inference(self, input, clamped_output=None):
         with torch.no_grad():
@@ -95,7 +96,7 @@ class ConvolutionalNeuralNet(nn.Module):
                 self.update_weights(x, hlist, ulist, prediction)
             return prediction
     
-    def update_weights(self, inp, hlist, ulist, prediction):
+    def set_training_layers(self, inp, hlist, ulist, prediction):
         layers = list(self.layers.values())
         nb_layers = len(layers)
         hlist = [inp] + hlist
@@ -107,9 +108,14 @@ class ConvolutionalNeuralNet(nn.Module):
         i = hlist[-2].reshape(hlist[-2].shape[0], -1)
         layers[-1].update_weights(i, ulist[-1], prediction, hlist[-1])
         #layers[-1].weight_decay()
+
+    """
         
     def TD_forward_test(self, x):
         return self.TD_forward(x, update_weights=False)
+    
+    
+
 
 
 class Hebbian_Classifier(nn.Module):
@@ -256,6 +262,13 @@ class Gradient_Classifier(nn.Module):
             y = y.reshape(y.shape[0], -1)
         pred = self.linear(self.drop(y))
         return pred
+    
+    def set_training_layers(self, layers_to_train):
+        for layer in self.basemodel.layers.values():
+            if layer in layers_to_train:
+                layer.train()
+            else:
+                layer.eval()
         
 
 # class Hebbian_Classifier(nn.Module):
@@ -540,10 +553,11 @@ class ConvSoftHebbLayer(nn.Module):
 
     
     def forward(self, x, target=None, update_weights=True):
-        if update_weights == True:
-            self.training = True
-        else:
-            self.training = False
+        # model.train vs model.eval
+        #if update_weights == True:
+        #    self.training = True
+        #else:
+        #    self.training = False
         unfolded_x = self.unfold(x)
         batch_dim, in_dim, nb_tiles = unfolded_x.shape
         unfolded_x = unfolded_x.permute(0, 2, 1)
@@ -1002,6 +1016,8 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     return mymodel
 
 
+
+
 # def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None, lambd=1, lr=0.005,
 #                       gamma=0.99, epsilon=0.01, rho=1e-3, eta=1e-3, b=1e-4,
 #                       nbclasses=10, topdown=True, device=None,
@@ -1140,10 +1156,16 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
     # top-down training/testing not implemented
 
     layers = list(mymodel.basemodel.layers.values())
+    
+    #lamb_values = {layer_name: [] for layer_name in mymodel.basemodel.layers.keys()}
 
     if greedytrain:
         for idx in range(len(mymodel.basemodel.layers)):
-            idx += 1
+            if isinstance(layers[idx], ConvSoftHebbLayer):
+                mymodel.set_training_layers([layers[idx]])
+            else:
+                break
+                # no greedy training on pooling layers
             for _ in range(epoch):
                 for data in tqdm(dataloader):
                     inputs, labels = data
@@ -1151,16 +1173,22 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
                     if imgtype == ImageType.Gray:
                         inputs = inputs.reshape(1,1,28,28)
                     x = inputs.to(device)
-                    for r_l in range(idx): 
+                    target = oneHotEncode(labels, nclasses, mymodel.device)
+                    for r_l in range(idx+1): 
                         if isinstance(layers[r_l], ConvSoftHebbLayer):
-                            # if you've reached layer idx, perform forward pass and update weights
-                            if (r_l + 1) == idx:
-                                x = layers[r_l].forward(x, target=oneHotEncode(labels, nclasses, mymodel.device), update_weights = True)
+                            # if you've reached layer idx, perform forward pass with targets
+                            if ((r_l) == idx): 
+                                x = layers[r_l].forward(x, target)
                             else : 
-                                # for all layers befor idx, perform forward pass without updating weights
-                                x = layers[r_l].forward(x, target=None, update_weights=False)
+                                # for all layers befor idx, perform forward pass without targets
+                                x = layers[r_l].forward(x, target=None)
                         elif isinstance(layers[r_l], PoolingLayer):
                             x = layers[r_l].forward(x)
+
+                    #if hasattr(layers[idx], 'lamb'):
+                    #    lamb_values[mymodel.basemodel.layers[idx].items()[0]].append(layers[idx].lamb.item())
+
+
     else :
         mymodel.eval()
 
@@ -1173,6 +1201,11 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
                     inputs = inputs.reshape(1,1,28,28)
                 mymodel.train_conv(inputs, oneHotEncode(labels, nclasses, mymodel.device))
 
+                #for idx in range(len(mymodel.basemodel.layers)):
+                #    if hasattr(layers[idx], 'lamb'):
+                #       lamb_values[mymodel.basemodel.layers[idx].items()[0]].append(layers[idx].lamb.item())
+
+
     for _ in range(1):
 
         for data in tqdm(dataloader):
@@ -1183,8 +1216,22 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
                 inputs = inputs.reshape(1,1,28,28)
             mymodel.train_classifier(inputs, oneHotEncode(labels, nclasses, mymodel.device))
 
+    #plot_lambda(lamb_values)
+
     return mymodel.basemodel, mymodel
 
+
+
+def plot_lambda(lamb_values):
+    for layer_name, lamb_list in lamb_values.items():
+        plt.figure(figsize=(10, 6))
+        plt.plot(lamb_list, label=f'Lambda values for {layer_name}')
+        plt.xlabel('Training Iterations')
+        plt.ylabel('Lambda Value')
+        plt.title(f'Tracking Lambda for {layer_name}')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
 
 def CNN_Baseline_test(mymodel, data_loader, imgtype, topdown):
