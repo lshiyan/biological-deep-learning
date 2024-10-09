@@ -47,7 +47,7 @@ class ConvolutionalNeuralNet(nn.Module):
     
     def forward_test(self, x):
         for layer in self.layers.values():
-            x = layer.forward(x, update_weights=False)
+            x = layer.forward(x)
         return x
 
 
@@ -1156,6 +1156,8 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
     # top-down training/testing not implemented
 
     layers = list(mymodel.basemodel.layers.values())
+    
+    #lamb_values = {layer_name: [] for layer_name in mymodel.basemodel.layers.keys()}
 
     if greedytrain:
         for idx in range(len(mymodel.basemodel.layers)):
@@ -1182,6 +1184,11 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
                                 x = layers[r_l].forward(x, target=None)
                         elif isinstance(layers[r_l], PoolingLayer):
                             x = layers[r_l].forward(x)
+
+                    #if hasattr(layers[idx], 'lamb'):
+                    #    lamb_values[mymodel.basemodel.layers[idx].items()[0]].append(layers[idx].lamb.item())
+
+
     else :
         mymodel.eval()
 
@@ -1194,6 +1201,11 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
                     inputs = inputs.reshape(1,1,28,28)
                 mymodel.train_conv(inputs, oneHotEncode(labels, nclasses, mymodel.device))
 
+                #for idx in range(len(mymodel.basemodel.layers)):
+                #    if hasattr(layers[idx], 'lamb'):
+                #       lamb_values[mymodel.basemodel.layers[idx].items()[0]].append(layers[idx].lamb.item())
+
+
     for _ in range(1):
 
         for data in tqdm(dataloader):
@@ -1204,8 +1216,22 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
                 inputs = inputs.reshape(1,1,28,28)
             mymodel.train_classifier(inputs, oneHotEncode(labels, nclasses, mymodel.device))
 
+    #plot_lambda(lamb_values)
+
     return mymodel.basemodel, mymodel
 
+
+
+def plot_lambda(lamb_values):
+    for layer_name, lamb_list in lamb_values.items():
+        plt.figure(figsize=(10, 6))
+        plt.plot(lamb_list, label=f'Lambda values for {layer_name}')
+        plt.xlabel('Training Iterations')
+        plt.ylabel('Lambda Value')
+        plt.title(f'Tracking Lambda for {layer_name}')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
 
 def CNN_Baseline_test(mymodel, data_loader, imgtype, topdown):
