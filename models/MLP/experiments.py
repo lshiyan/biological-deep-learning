@@ -81,6 +81,56 @@ def SoftMLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, de
     return mymodel
 
 
+def MultiSoftMLPBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, device, greedytrain):
+    lamb_values = {layer_name: [] for layer_name in mymodel.layers.keys()}
+    
+    # layer-wise training
+    if greedytrain:
+        for layer_name, layer in mymodel.layers.items():
+            mymodel.set_training_layers([layer])
+            print(f"Training layer: {layer_name}")
+            for _ in range(epoch):
+                for data in tqdm(dataloader):
+                    inputs, labels = data
+                    x = inputs.to(device)
+                    target = oneHotEncode(labels, nclasses, device)
+                    
+                    for prev_layer_name, prev_layer in mymodel.layers.items():
+                        if prev_layer_name == layer_name:
+                            break
+                        x = prev_layer.forward(x)
+                    
+                    layer.forward(x, target)
+
+                    if hasattr(layer, 'lamb'):
+                        lamb_values[layer_name].append(layer.lamb.item())
+        
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        foldername = os.getcwd() + '/SavedModels/SoftMLP_FF_Greedy_' + dataset + '_' + timestr
+
+    # Standard training
+    else:
+        mymodel.train()
+        for _ in range(epoch):
+            for data in tqdm(dataloader):
+                inputs, labels = data
+                mymodel.forward(inputs, oneHotEncode(labels, nclasses, device))
+
+                for layer_name, layer in mymodel.layers.items():
+                    if hasattr(layer, 'lamb'):
+                        lamb_values[layer_name].append(layer.lamb.item())
+        
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        foldername = os.getcwd() + '/SavedModels/SoftMLP_FF_' + dataset + '_' + timestr
+
+    os.mkdir(foldername)
+    torch.save(mymodel.state_dict(), foldername + '/model')
+    #view_weights(mymodel, foldername)
+    #plot_lambda(lamb_values)
+
+    return mymodel
+
+
 def TDBaseline_Experiment(epoch, mymodel, dataloader, dataset, nclasses, device):
 
     mymodel.train()

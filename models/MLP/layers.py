@@ -14,7 +14,7 @@ class SoftHebbLayer(nn.Module):
                  triangle:bool = False, initial_lambda: float = 4.0,
                  inhibition: Inhibition = Inhibition.RePU,
                  learningrule: LearningRule = LearningRule.SoftHebb,
-                 preprocessing: InputProcessing = InputProcessing.No,
+                 preprocessing: InputProcessing = InputProcessing.Whiten, # whitening or no whitening
                  weight_growth: WeightGrowth = WeightGrowth.Default):
         super(SoftHebbLayer, self).__init__()
         if device is None:

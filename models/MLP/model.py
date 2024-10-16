@@ -180,6 +180,22 @@ def NewMLPBaseline_Model(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device):
 
     return mymodel
 
+def MultilayerSoftMLPModel(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device):
+    mymodel = SoftNeuralNet()
+    heb_layer = SoftHebbLayer(inputdim=784, outputdim=1568, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
+                              device=device, initial_lambda=lamb)
+    heb_layer1 = SoftHebbLayer(inputdim=1568, outputdim=512, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
+                              device=device, initial_lambda=lamb)
+    heb_layer2 = SoftHebbLayer(inputdim=512, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
+                              device=device, initial_lambda=lamb)
+    heb_layer3 = SoftHebbLayer(hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
+                               learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True)
+    mymodel.add_layer('SoftHebbian1', heb_layer)
+    mymodel.add_layer('SoftHebbian2', heb_layer1)
+    mymodel.add_layer('SoftHebbian3', heb_layer2)
+    mymodel.add_layer('SoftHebbian4', heb_layer3)
+
+    return mymodel
 
 def Save_Model(mymodel, dataset, device, topdown, acc):
     timestr = time.strftime("%Y%m%d-%H%M%S")
