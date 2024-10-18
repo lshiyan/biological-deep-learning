@@ -23,7 +23,6 @@ import json
 
 import torch
 import torch.distributed as dist
-from torch import nn
 from torch.utils.data import DataLoader, Sampler, ConcatDataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
@@ -151,9 +150,6 @@ def main(args, timer):
     # PIL image to a Pytorch Tensor. This is also an opporuntiy to apply random perturbations to the training data each
     # time it is obtained from the dataset which has the effect of augmenting the size of the dataset and reducing
     # over-fitting.
-
-    with open("ConfigsMLP/config" + str(rank) + ".json", "r") as file:
-        config = json.load(file)
     
     transform_MNIST = transforms.Compose([
             transforms.ToTensor(),
@@ -193,7 +189,7 @@ def main(args, timer):
     print(f"Accuracy on the test set: {accuracy:.2f}%")
 
     # Save the accuracy to a file in the output directory
-    accuracy_file_path = os.path.join(args.save_dir, "accuracy.txt")
+    accuracy_file_path = args.save_dir / "accuracy.txt"
     with open(accuracy_file_path, "w") as f:
         f.write(f"Accuracy on the test set: {accuracy:.2f}%\n")
 
