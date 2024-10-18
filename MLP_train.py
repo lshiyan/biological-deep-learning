@@ -277,6 +277,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 timer.report(
                     f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: TEST ACC: {pct_test_correct}"
                 )
+                print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
             # Save checkpoint
             atomic_torch_save(
