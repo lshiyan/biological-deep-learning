@@ -25,6 +25,7 @@ class ConvSoftHebbLayer(nn.Module):
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
+        self.is_output_layer = False
         self.input_shape = input_shape  # (height, width)
         self.kernel = kernel
         self.stride = stride
@@ -45,12 +46,7 @@ class ConvSoftHebbLayer(nn.Module):
         self.output_tiles = self.output_shape[0] * self.output_shape[1]
 
     
-    def forward(self, x, target=None, update_weights=True):
-        # model.train vs model.eval
-        #if update_weights == True:
-        #    self.training = True
-        #else:
-        #    self.training = False
+    def forward(self, x, target=None):
         unfolded_x = self.unfold(x)
         batch_dim, in_dim, nb_tiles = unfolded_x.shape
         unfolded_x = unfolded_x.permute(0, 2, 1)
@@ -82,8 +78,8 @@ class PoolingLayer(nn.Module):
 
 class ConvolutionHebbianLayer(nn.Module):
     def __init__(self, input_shape, kernel, stride, in_ch, out_ch, lambd, lr, rho, device,
-                 eta=1, padding=0, paddingmode="zeros", triangle=False,
-                 is_output_layer=False, whiten_input=False, b=1, inhibition = Inhibition.RePU):
+                 eta=1, padding=0, paddingmode="zeros", triangle=False, whiten_input=False, 
+                 b=1, inhibition = Inhibition.RePU):
         super(ConvolutionHebbianLayer, self).__init__()
         self.input_shape = input_shape  # (height, width)
         self.kernel = kernel
@@ -100,7 +96,7 @@ class ConvolutionHebbianLayer(nn.Module):
         self.device = device
         self.triangle = triangle
         self.whiten_input = whiten_input
-        self.is_output_layer = False
+        #self.is_output_layer = False
         self.w_learning = LearningRule.SoftHebb
         self.w_scaling = WeightScale.No
         self.inhib = inhibition

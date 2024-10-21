@@ -1,37 +1,52 @@
 import json
 import os
 
-def generate_cnn_config_files(base_config, output_dir="Configs", num_layers=[3, 2, 1], whiten_values=[True, False], 
-    greedytrain_values=[True, False], inhibition_values=['REPU', 'SOFTMAX'], pooling_values =[True, False]
+def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1, 2, 3, 4], whiten_values=[False], 
+    greedytrain_values=[True, False], inhibition_values=['REPU'], pooling_values = [True, False, 'NoPoolingStride1']
 ):
+    
+    # whiten = False for now
+    # inhibition_values = REPU for now
+
     os.makedirs(output_dir, exist_ok=True)
     config_number = 0
 
-    for layers in num_layers:
-        for whiten in whiten_values:
-            for greedytrain in greedytrain_values:
+    for greedytrain in greedytrain_values:
+        for layers in num_layers:
+            for whiten in whiten_values:
                 for inhibition in inhibition_values:
                     for pool in pooling_values: 
-                    # use stride = 1 when pooling is true, stride = 2 otherwise
-                    # same stride for conv and pooling layers?
 
                         config = json.loads(json.dumps(base_config))
                         config['greedytrain'] = greedytrain
-                        config['PoolingBlock']['Pooling'] = pool
+
+                        if pool == True:
+                            config['PoolingBlock']['Pooling'] = True
+                        else:
+                            config['PoolingBlock']['Pooling'] = False
                     
                         # Update whiten
                         for i in range(1, layers + 1):
                             conv_key = f"Conv{i}"
                             config['Convolutions'][conv_key]['whiten'] = whiten
                             config['Convolutions'][conv_key]['inhibition'] = inhibition
-                            config['Convolutions'][conv_key]['stride'] = 1 if pool == True else 2
 
-                            #config['PoolingBlock'][conv_key]['stride'] -> do pooling layers take stride?
+                            if pool == True:
+                                config['Convolutions'][conv_key]['stride'] = 1
+                            elif pool == False:
+                                config['Convolutions'][conv_key]['stride'] = 2
+                            elif pool == 'NoPoolingStride1':
+                                config['Convolutions'][conv_key]['stride'] = 1
+                                
 
                         # Remove convolution layers beyond the specified number
-                        for i in range(layers + 1, 4):
+                        for i in range(layers + 1, 5):
                             config['Convolutions'].pop(f"Conv{i}", None)
-                        
+
+                        # No need to remove extra pooling layers, just set the last one that will be used to avg pool
+                        if pool == True:
+                            config['PoolingBlock'][f"Conv{layers}"]['Type'] = "Avg"
+
                         filename = f"config{config_number}.json"
                         filepath = os.path.join(output_dir, filename)
                         
@@ -80,6 +95,17 @@ base_config = {
             "whiten" : False,
             "batchnorm" : True,
             "inhibition" : "REPU"
+        },
+        "Conv4" : {
+            "out_channel" : 2048,
+            "kernel" : 3,
+            "stride" : 1,
+            "padding" : 2,
+            "paddingmode" : "reflect",
+            "triangle" : True,
+            "whiten" : False,
+            "batchnorm" : True,
+            "inhibition" : "REPU"
         }
     }, 
     "PoolingBlock" : {
@@ -97,7 +123,13 @@ base_config = {
             "padding" : 1 
         },
         "Conv3" : {
-            "Type" : "Avg",
+            "Type" : "Max",
+            "kernel" : 2,
+            "stride" : 1, 
+            "padding" : 0 
+        },
+        "Conv4" : {
+            "Type" : "Max",
             "kernel" : 2,
             "stride" : 1, 
             "padding" : 0 
