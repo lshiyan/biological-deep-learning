@@ -17,7 +17,7 @@ import os
 from operator import itemgetter
 from pathlib import Path
 import json
-
+import csv
 
 import torch
 import torch.distributed as dist
@@ -279,10 +279,29 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                with open("/root/HebbianTopDown/MLP_hyper_search/results.txt", "a") as file:
-                    file.write(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: TEST ACC: {pct_test_correct}. Hypers: hsize:{hsize}, lamb:{lamb}, w_lr:{w_lr}, b_lr:{b_lr}, l_lr:{l_lr} \n")
+                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/results.csv"
+                file_exists = os.path.isfile(csv_file_path)
 
-            # Save checkpoint
+                with open(csv_file_path, "a", newline="") as csvfile:
+                    fieldnames = ["test_accuracy", "hsize", "lambda", "w_lr", "b_lr", "l_lr", "triangle", "white", "func"]
+                    
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+                    if not file_exists:
+                        writer.writeheader()
+
+                    writer.writerow({
+                        "test_accuracy": pct_test_correct,
+                        "hsize": hsize,
+                        "lambda": lamb,
+                        "w_lr": w_lr,
+                        "b_lr": b_lr,
+                        "l_lr": l_lr,
+                        "triangle":"true",
+                        "white":"true",
+                        "func": "softmax"
+                    })
+
             atomic_torch_save(
                 {
                     "model": model.state_dict(),

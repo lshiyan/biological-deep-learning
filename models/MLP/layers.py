@@ -11,7 +11,7 @@ from dotwiz import DotWiz
 class SoftHebbLayer(nn.Module):
     def __init__(self, inputdim: int, outputdim: int, w_lr: float = 0.003, b_lr: float = 0.003, l_lr: float = 0.003,
                  device=None, is_output_layer=False, initial_weight_norm: float = 0.01,
-                 triangle:bool = False, initial_lambda: float = 4.0,
+                 triangle:bool = True, initial_lambda: float = 4.0,
                  inhibition: Inhibition = Inhibition.RePU,
                  learningrule: LearningRule = LearningRule.SoftHebb,
                  preprocessing: InputProcessing = InputProcessing.Whiten, # whitening or no whitening
