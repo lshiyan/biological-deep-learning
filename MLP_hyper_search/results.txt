@@ -1,0 +1,10 @@
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.5131. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.6417. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.6638. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.7319. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.658. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.6088. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.7249. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.7137. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.7692. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 
+EPOCH [0] TEST BATCH [156 / 157] :: TEST ACC: 0.7139. Hypers: hsize:128, lamb:5, w_lr:0.01, b_lr:0.01, l_lr:0.01 

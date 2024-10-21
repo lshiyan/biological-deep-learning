@@ -237,7 +237,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoi
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
 
-def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
+def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, hsize, lamb, w_lr, b_lr, l_lr):
     test_batches_per_epoch = len(test_dataloader)
     epoch = 0
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
@@ -278,6 +278,9 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                     f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: TEST ACC: {pct_test_correct}"
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
+
+                with open("/root/HebbianTopDown/MLP_hyper_search/results.txt", "a") as file:
+                    file.write(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: TEST ACC: {pct_test_correct}. Hypers: hsize:{hsize}, lamb:{lamb}, w_lr:{w_lr}, b_lr:{b_lr}, l_lr:{l_lr} \n")
 
             # Save checkpoint
             atomic_torch_save(
@@ -392,7 +395,8 @@ def main(args, timer):
     )
 
     test_loop(
-        model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+        model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint,
+        hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr']
     )
 
     print("Done!")
