@@ -32,15 +32,7 @@ class ConvolutionalNeuralNet(nn.Module):
         with torch.no_grad():
             for name, layer in self.layers.items():
                 true_value = clamped if layer.is_output_layer else None
-                u, x = layer(x, clamped=true_value)
-                assert u.isnan().any() == False, f"u has NaNs in layer {name}"
-                assert (u == 0.0).all() == False, f"u has only 0s in layer {name}"
-                assert x.isnan().any() == False, f"output has NaNs in layer {name}"
-                assert (x == 0.0).all() == False, (f"output has only 0s in layer {name}\n"
-                                                   f"u min: {torch.min(u)}\n"
-                                                   f"u max: {torch.max(u)}\n"
-                                                   f"W min: {torch.min(layer.unfold_weights())}\n"
-                                                   f"W max: {torch.max(layer.unfold_weights())}")
+                x = layer(x, target=true_value) ## after pooling?
             return x
     
     def forward_test(self, x):
@@ -587,7 +579,9 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
         convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], stride=layerconfig['stride'], 
                                             padding=layerconfig['padding'], device=device, is_output_layer=False , triangle=layerconfig['triangle'], 
                                             initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing)
-     
+        #is_output_layer = True for last convolutional layer
+
+
         mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
 
         input_channel = layerconfig['out_channel']

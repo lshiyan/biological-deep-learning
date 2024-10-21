@@ -11,7 +11,7 @@
             "padding": 2,
             "paddingmode": "reflect",
             "triangle": true,
-            "whiten": true,
+            "whiten": false,
             "batchnorm": true,
             "inhibition": "REPU"
         }
@@ -19,21 +19,27 @@
     "PoolingBlock": {
         "Pooling": true,
         "Conv1": {
-            "Type": "Max",
+            "Type": "Avg",
             "kernel": 4,
-            "stride": 2,
+            "stride": 1,
             "padding": 1
         },
         "Conv2": {
             "Type": "Max",
             "kernel": 4,
-            "stride": 2,
+            "stride": 1,
             "padding": 1
         },
         "Conv3": {
-            "Type": "Avg",
+            "Type": "Max",
             "kernel": 2,
-            "stride": 2,
+            "stride": 1,
+            "padding": 0
+        },
+        "Conv4": {
+            "Type": "Max",
+            "kernel": 2,
+            "stride": 1,
             "padding": 0
         }
     },

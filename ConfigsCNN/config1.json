@@ -2,12 +2,12 @@
     "Lambda": 1,
     "Lr": 0.0001,
     "beta": 1,
-    "greedytrain": false,
+    "greedytrain": true,
     "Convolutions": {
         "Conv1": {
             "out_channel": 32,
             "kernel": 5,
-            "stride": 1,
+            "stride": 2,
             "padding": 2,
             "paddingmode": "reflect",
             "triangle": true,
@@ -17,23 +17,29 @@
         }
     },
     "PoolingBlock": {
-        "Pooling": true,
+        "Pooling": false,
         "Conv1": {
             "Type": "Max",
             "kernel": 4,
-            "stride": 2,
+            "stride": 1,
             "padding": 1
         },
         "Conv2": {
             "Type": "Max",
             "kernel": 4,
-            "stride": 2,
+            "stride": 1,
             "padding": 1
         },
         "Conv3": {
-            "Type": "Avg",
+            "Type": "Max",
             "kernel": 2,
-            "stride": 2,
+            "stride": 1,
+            "padding": 0
+        },
+        "Conv4": {
+            "Type": "Max",
+            "kernel": 2,
+            "stride": 1,
             "padding": 0
         }
     },
