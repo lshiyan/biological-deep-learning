@@ -20,7 +20,7 @@ def generate_mlp_config_files(hsizes, lambds, wlrs, blrs, llrs):
 def generate_mlp_config_files():
     for i in range(0, 10):
         config = {
-            "hsize": 512,
+            "hsize": 256,
             "lambd": 5,
             "w_lr": 0.01,
             "b_lr": 0.1,
@@ -28,15 +28,6 @@ def generate_mlp_config_files():
         }
         with open("ConfigsMLP/config" + str(i) + ".json", "w") as jfile:
             json.dump(config, jfile, indent=4)
-    for i in range(10, 20):
-        config = {
-            "hsize": 1024,
-            "lambd": 5,
-            "w_lr": 0.01,
-            "b_lr": 0.1,
-            "l_lr": 0.01
-        }
-        with open("ConfigsMLP/config" + str(i) + ".json", "w") as jfile:
-            json.dump(config, jfile, indent=4)
+
 
 generate_mlp_config_files()

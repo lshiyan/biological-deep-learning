@@ -12,7 +12,7 @@ class SoftHebbLayer(nn.Module):
     def __init__(self, inputdim: int, outputdim: int, w_lr: float = 0.003, b_lr: float = 0.003, l_lr: float = 0.003,
                  device=None, is_output_layer=False, initial_weight_norm: float = 0.01,
                  triangle:bool = True, initial_lambda: float = 4.0,
-                 inhibition: Inhibition = Inhibition.RePU,
+                 inhibition: Inhibition = Inhibition.Softmax,
                  learningrule: LearningRule = LearningRule.SoftHebb,
                  preprocessing: InputProcessing = InputProcessing.Whiten, # whitening or no whitening
                  weight_growth: WeightGrowth = WeightGrowth.Default):
@@ -76,7 +76,7 @@ class SoftHebbLayer(nn.Module):
 
     def y(self, a):
         if self.inhibition == Inhibition.Softmax:
-            y = torch.softmax(self.lamb * a + self.logprior)
+            y = torch.softmax(self.lamb * a + self.logprior, dim=1)    
         elif self.inhibition == Inhibition.RePU:
             u = self.u(a)
             un = u / (torch.max(u) + 1e-9)   # normalize for numerical stability
