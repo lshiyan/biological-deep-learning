@@ -17,7 +17,8 @@ def extract_accuracies_from_csv(file_path):
             triangle = row["triangle"]
             white = row["white"]
             func = row["func"]
-            hypers_key = (hsize, lamb, w_lr, b_lr, l_lr, triangle, white, func)
+            w_norm = row["w_norm"]
+            hypers_key = (hsize, lamb, w_lr, b_lr, l_lr, triangle, white, func, w_norm)
             
             if hypers_key not in accuracies_dict:
                 accuracies_dict[hypers_key] = []
@@ -32,7 +33,7 @@ def extract_accuracies_from_csv(file_path):
     return accuracies_dict
 
 
-file_path = "MLP_hyper_search/results.csv"
+file_path = "MLP_hyper_search/results_128.csv"
 accuracies_dict = extract_accuracies_from_csv(file_path)
 
 sorted_accuracies = sorted(accuracies_dict.items(), key=lambda item: item[1][0], reverse=True)

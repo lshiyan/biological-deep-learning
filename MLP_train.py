@@ -155,7 +155,7 @@ def get_args_parser(add_help=True):
     parser.add_argument("--epoch", type=int, default=1)
     parser.add_argument("--dataset", type=str, default="MNIST")
     parser.add_argument("--finetuneepochs", type=int, default=10)
-    parser.add_argument("--batch", type=int, default=64)
+    parser.add_argument("--batch", type=int, default=512)
     # For distributed training it is important to distinguish between the per-GPU or "local" batch size (which this
     # hyper-parameter sets) and the "effective" batch size which is the product of the local batch size and the number
     # of GPUs in the cluster. With a local batch size of 16, and 10 nodes with 6 GPUs per node, the effective batch size
@@ -237,7 +237,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoi
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
 
-def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, hsize, lamb, w_lr, b_lr, l_lr):
+def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, hsize, lamb, w_lr, b_lr, l_lr, w_norm):
     test_batches_per_epoch = len(test_dataloader)
     epoch = 0
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
@@ -283,7 +283,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
-                    fieldnames = ["test_accuracy", "hsize", "lambda", "w_lr", "b_lr", "l_lr", "triangle", "white", "func"]
+                    fieldnames = ["test_accuracy", "hsize", "lambda", "w_lr", "b_lr", "l_lr", "triangle", "white", "func", "w_norm"]
                     
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -299,7 +299,8 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                         "l_lr": l_lr,
                         "triangle":"true",
                         "white":"true",
-                        "func": "softmax"
+                        "func": "softmax",
+                        "w_norm": w_norm
                     })
 
             atomic_torch_save(
@@ -359,7 +360,7 @@ def main(args, timer):
 
         timer.report("Initialized datasets")
     
-        model = MLP.NewMLPBaseline_Model(hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], nclasses=10, device=args.device_id)
+        model = MLP.NewMLPBaseline_Model(hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], initial_weight_norm=config['w_norm'], nclasses=10, device=args.device_id)
 
 
     ##############################################
@@ -415,7 +416,7 @@ def main(args, timer):
 
     test_loop(
         model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint,
-        hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr']
+        hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], w_norm=config['w_norm']
     )
 
     print("Done!")
