@@ -28,11 +28,14 @@ class ConvolutionalNeuralNet(nn.Module):
     """
     Used in feedforward models
     """
-    def forward(self, x, clamped):
+    def forward(self, x, clamped=None):
         with torch.no_grad():
-            for name, layer in self.layers.items():
-                true_value = clamped if layer.is_output_layer else None
-                x = layer(x, target=true_value) ## after pooling?
+            for layer in self.layers.values():
+                if isinstance(layer, PoolingLayer):
+                    x = layer(x) 
+                else:
+                    true_value = clamped if layer.is_output_layer else None
+                    x = layer(x, target=true_value) 
             return x
     
     def forward_test(self, x):
@@ -545,7 +548,7 @@ def CNN_Model_from_config(inputshape, config, device, nbclasses):
         print(f"New Image Dimensions after Convolution : {((layerconfig['out_channel'],) + inputsize)}")
 
     fc_inputdim = convlayer.nb_tiles * config['Convolutions'][l_keys[-1]]['out_channel']
-    print("Fully connected layer input dim : " + str(fc_inputdim))
+    #print("Fully connected layer input dim : " + str(fc_inputdim))
 
     mymodel = Gradient_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.001)
     
@@ -576,10 +579,10 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
 
         # w_lr, b_lr, l_lr not specified in config file
 
+        
         convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], stride=layerconfig['stride'], 
-                                            padding=layerconfig['padding'], device=device, is_output_layer=False , triangle=layerconfig['triangle'], 
+                                            padding=layerconfig['padding'], device=device, is_output_layer=False, triangle=layerconfig['triangle'], 
                                             initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing)
-        #is_output_layer = True for last convolutional layer
 
 
         mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
@@ -608,7 +611,7 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
         
 
     fc_inputdim = n_tiles * config['Convolutions'][l_keys[-1]]['out_channel']
-    print("Fully connected layer input dim : " + str(fc_inputdim))
+    #print("Fully connected layer input dim : " + str(fc_inputdim))
 
     mymodel = Gradient_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.001)
     mymodel = mymodel.to(device)

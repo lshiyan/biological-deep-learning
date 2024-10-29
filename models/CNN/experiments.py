@@ -82,6 +82,7 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
     # top-down training/testing not implemented
 
     layers = list(mymodel.basemodel.layers.values())
+    mymodel.train()
     
     #lamb_values = {layer_name: [] for layer_name in mymodel.basemodel.layers.keys()}
 
@@ -116,7 +117,6 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
 
 
     else :
-        mymodel.eval()
 
         for _ in range(epoch):
             for data in tqdm(dataloader):

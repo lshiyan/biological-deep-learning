@@ -3,6 +3,7 @@
     "Lr": 0.0001,
     "beta": 1,
     "greedytrain": true,
+    "nConvLayers": 1,
     "Convolutions": {
         "Conv1": {
             "out_channel": 32,
@@ -11,7 +12,7 @@
             "padding": 2,
             "paddingmode": "reflect",
             "triangle": true,
-            "whiten": false,
+            "whiten": true,
             "batchnorm": true,
             "inhibition": "REPU"
         }

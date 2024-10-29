@@ -1,4 +1,6 @@
 import models.CNN.model as CNN
+import models.MLP.model as MLP
+from models.CNN.layers import ConvSoftHebbLayer, PoolingLayer
 
 #####################################
 # Progress Timing and Logging
@@ -17,6 +19,7 @@ import os
 from operator import itemgetter
 from pathlib import Path
 import json
+import csv
 
 
 import torch
@@ -152,8 +155,10 @@ class InterruptableSampler(Sampler):
 def get_args_parser(add_help=True):
     parser = argparse.ArgumentParser()
     # ---------------------------------------
-    parser.add_argument("--dataset", type=str, default="EMNIST")
+    parser.add_argument("--epoch", type=int, default=1)
+    parser.add_argument("--dataset", type=str, default="CIFAR10")
     parser.add_argument("--finetuneepochs", type=int, default=10)
+    parser.add_argument("--batch", type=int, default=128)
     # For distributed training it is important to distinguish between the per-GPU or "local" batch size (which this
     # hyper-parameter sets) and the "effective" batch size which is the product of the local batch size and the number
     # of GPUs in the cluster. With a local batch size of 16, and 10 nodes with 6 GPUs per node, the effective batch size
@@ -251,77 +256,89 @@ def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args, ch
     epoch = 0
     train_batches_per_epoch = len(train_dataloader)
     # Set the model to training mode - important for layers with different training / inference behaviour
-    model.eval()
+    model.train()
 
     layers = list(model.basemodel.layers.values())
+    
+    for epoch in range(args.epoch):
+        for idx in range(len(layers)):
+            train_dataloader.sampler.reset_progress()
 
-    for idx in range(len(layers)):
-        train_dataloader.sampler.reset_progress()
-        idx += 1
+            if isinstance(layers[idx], ConvSoftHebbLayer):
+                    model.set_training_layers([layers[idx]])
+            else:
+                break
+                # no greedy training on pooling layers
 
-        for inputs, targets in train_dataloader:
+            for inputs, targets in train_dataloader:
 
-            # Determine the current batch
-            batch = train_dataloader.sampler.progress // train_dataloader.batch_size
-            is_last_batch = (batch + 1) == train_batches_per_epoch
+                # Determine the current batch
+                batch = train_dataloader.sampler.progress // train_dataloader.batch_size
+                is_last_batch = (batch + 1) == train_batches_per_epoch
 
-            # Move input and targets to device
-            inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
+                # Move input and targets to device
+                inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
+                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
 
-            # Forward pass
-            if args.dataset == "EMNIST":
-                labels = models.hyperparams.oneHotEncode(targets, 47, args.device_id)
-                inputs = inputs.reshape(1,1,28,28)
-            elif args.dataset == "FashionMNIST" :
-                labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
-                inputs = inputs.reshape(1,1,28,28)
-            elif args.dataset == "CIFAR10":
-                labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
-            elif args.dataset == "CIFAR100":
-                labels = models.hyperparams.oneHotEncode(targets, 100, args.device_id)
+                # Forward pass
+                if args.dataset == "EMNIST":
+                    labels = models.hyperparams.oneHotEncode(targets, 47, args.device_id)
+                    inputs = inputs.reshape(1,1,28,28)
+                elif args.dataset == "FashionMNIST" :
+                    labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
+                    inputs = inputs.reshape(1,1,28,28)
+                elif args.dataset == "CIFAR10":
+                    labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
+                elif args.dataset == "CIFAR100":
+                    labels = models.hyperparams.oneHotEncode(targets, 100, args.device_id)
 
-            x = inputs
-            for r_l in range(idx):
-                if (r_l + 1) == idx:
-                    _, x = layers[r_l].forward(x, labels)
-                else :
-                    _, x = layers[r_l].forward(x, update_weights=False)
+                x = inputs
+                for r_l in range(idx+1):
+                    if isinstance(layers[r_l], ConvSoftHebbLayer):
+                        # if you've reached layer idx, perform forward pass with targets
+                        if ((r_l) == idx): 
+                            x = layers[r_l].forward(x, labels)
+                        else : 
+                            # for all layers befor idx, perform forward pass without targets
+                            x = layers[r_l].forward(x, target=None)
+                    elif isinstance(layers[r_l], PoolingLayer):
+                            x = layers[r_l].forward(x)
 
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
-        
-            metrics["train"].update({"examples_seen": len(inputs)})
-            metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
+                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
+            
+                metrics["train"].update({"examples_seen": len(inputs)})
+                metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
 
-            # Advance sampler - essential for interruptibility
-            train_dataloader.sampler.advance(len(inputs))
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - advance sampler")
+                # Advance sampler - essential for interruptibility
+                train_dataloader.sampler.advance(len(inputs))
+                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - advance sampler")
 
-            metrics["train"].reset_local()
+                metrics["train"].reset_local()
 
-            if is_last_batch:
-                metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
+                if is_last_batch:
+                    metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
 
-            # Saving and reporting
+                # Saving and reporting
 
-            # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
-            # Save checkpoint
-            atomic_torch_save(
-                {
-                    "model": model.state_dict(),
-                    "train_sampler": train_dataloader.sampler.state_dict(),
-                    "test_sampler": test_dataloader.sampler.state_dict(),
-                    "metrics": metrics,
-                },
-                checkpoint,
-            )
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
+                # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
+                # Save checkpoint
+                atomic_torch_save(
+                    {
+                        "model": model.state_dict(),
+                        "train_sampler": train_dataloader.sampler.state_dict(),
+                        "test_sampler": test_dataloader.sampler.state_dict(),
+                        "metrics": metrics,
+                    },
+                    checkpoint,
+                )
+                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
+
 
 def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
     epoch = 0
     train_batches_per_epoch = len(train_dataloader)
     # Set the model to training mode - important for layers with different training / inference behaviour
-    model.eval()
+    model.train()
 
     train_dataloader.sampler.reset_progress()
     for inputs, targets in train_dataloader:
@@ -441,7 +458,8 @@ def finetune(model, train_dataloader, test_dataloader, metrics, args, checkpoint
         timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : save checkpoint")
 
 
-def test_loop(model, train_dataloader, test_dataloader, metrics, args):
+def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, 
+              nlayers, whiten, triangle, greedytrain, inhibition, pooling, stride):
 
     test_batches_per_epoch = len(test_dataloader)
     epoch = 0
@@ -461,22 +479,23 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args):
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
 
             # Inference
-            if args.topdown:
-                inputs = inputs.reshape(1,1,28,28)
-                predictions = model.TD_forward_test(inputs)
-            else:
-                inputs = inputs.reshape(1,1,28,28)
-                predictions = model.forward_test(inputs)
+            #if args.topdown:
+            #    inputs = inputs.reshape(1,1,28,28)
+            #    predictions = model.TD_forward_test(inputs)
+            #else:
+            #inputs = inputs.reshape(1,1,28,28)
+            predictions = model.forward(inputs)
 
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
 
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum()
-            model.save_acc(correct.item(), len(inputs))
+
+            #model.save_acc(correct.item(), len(inputs))
 
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
-            metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
-            metrics["test"].reset_local()  # Reset local cache
+            #metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
+            #metrics["test"].reset_local()  # Reset local cache
             timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
 
             # Advance sampler
@@ -484,12 +503,35 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args):
 
             # Performance summary at the end of the epoch
             if is_last_batch:
-                correct, examples_seen = itemgetter("correct", "examples_seen")(metrics["test"].agg)
+                correct, examples_seen = itemgetter("correct", "examples_seen")(metrics["test"].local)
                 pct_test_correct = correct / examples_seen
                 metrics["test"].end_epoch()
                 timer.report(
                     f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: TEST ACC: {pct_test_correct}"
                 )
+                print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
+
+                csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/results.csv"
+                file_exists = os.path.isfile(csv_file_path)
+
+                with open(csv_file_path, "a", newline="") as csvfile:
+                    fieldnames = ["test_accuracy", "nlayers", "pool", "stride", "whiten", "triangle", "greedy", "inhib"]
+                    
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+                    if not file_exists:
+                        writer.writeheader()
+
+                    writer.writerow({
+                        "test_accuracy": pct_test_correct,
+                        "nlayers": nlayers,
+                        "pool": pooling,
+                        "stride": stride,
+                        "whiten": whiten,
+                        "triangle": triangle,
+                        "greedy": greedytrain,
+                        "inhib": inhibition,
+                    })
 
             # Save checkpoint
             atomic_torch_save(
@@ -499,7 +541,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args):
                     "test_sampler": test_dataloader.sampler.state_dict(),
                     "metrics": metrics,
                 },
-                args.checkpoint_path,
+                checkpoint,
             )
             
 # timer.report("Defined helper function/s, loops, and model")
@@ -565,10 +607,10 @@ def main(args, timer):
 
         train_dataset = ConcatDataset([train_dataset]*args.epochs)
 
-        hyperp = hyperps[rank]
+        ##hyperp = hyperps[rank]
 
-        model = CNN.CNNBaseline_Model(inputsize=(1, 28, 28), kernels=[5,3,3], channels=[16,64,256], strides=[2,2,2], padding=[0, 1, 0], lambd=hyperp[0], lr=hyperp[1], gamma=0.99, epsilon=0.01,
-            rho=hyperp[2], nbclasses=10, topdown=True, device=args.device_id, wl=hyperp[4], ws=hyperp[5], o=hyperp[3])
+        ##model = CNN.CNNBaseline_Model(inputsize=(1, 28, 28), kernels=[5,3,3], channels=[16,64,256], strides=[2,2,2], padding=[0, 1, 0], lambd=hyperp[0], lr=hyperp[1], gamma=0.99, epsilon=0.01,
+        ##    rho=hyperp[2], nbclasses=10, topdown=True, device=args.device_id, wl=hyperp[4], ws=hyperp[5], o=hyperp[3])
 
         model = model.to(args.device_id)
         #model = DDP(model, device_ids=[args.device_id])
@@ -606,8 +648,6 @@ def main(args, timer):
     train_dataloader = DataLoader(train_dataset, batch_size=1, sampler=train_sampler, num_workers=3)
     test_dataloader = DataLoader(test_dataset, batch_size=1, sampler=test_sampler, shuffle=False)
     timer.report("Initialized dataloaders")
-
-
 
 
     #####################################
@@ -653,9 +693,11 @@ def main(args, timer):
             model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
         )
 
-    # test_loop(
-    #     model, train_dataloader, test_dataloader, metrics, args
-    # )
+    test_loop(model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint,
+              nlayers=config['nConvLayers'], whiten=config['Convolutions']["Conv1"]['whiten'], 
+              triangle=config['Convolutions']["Conv1"]['triangle'], greedytrain=config['greedytrain'], 
+              inhibition=config['Convolutions']["Conv1"]['inhibition'], pooling=config['PoolingBlock']["Pooling"], 
+              stride=config['Convolutions']["Conv1"]['stride'])
 
     #CNN.Save_Model(model, args.dataset, rank, args.topdown, v_input, args.device_id, (model.correct/model.tot)*100)
     # torch.save(model, 'SavedModels/model' + str(rank) + ".pth")

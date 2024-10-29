@@ -2,7 +2,8 @@
     "Lambda": 1,
     "Lr": 0.0001,
     "beta": 1,
-    "greedytrain": false,
+    "greedytrain": true,
+    "nConvLayers": 1,
     "Convolutions": {
         "Conv1": {
             "out_channel": 32,
