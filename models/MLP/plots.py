@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-data = pd.read_csv("MLP_hyper_search/results.csv", usecols=range(9))
+data = pd.read_csv("MLP_hyper_search/results_triangle.csv", usecols=range(9))
 
 sns.set(style="whitegrid")
 
 output_folder = "plots"
 os.makedirs(output_folder, exist_ok=True)
 
-parameters = ['hsize', 'lambda', 'w_lr', 'b_lr', 'l_lr', 'triangle', 'white', 'func']
+parameters = ['triangle']
 
 for param in parameters:
     plt.figure(figsize=(10, 6))
