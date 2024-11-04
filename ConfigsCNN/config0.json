@@ -2,7 +2,7 @@
     "Lambda": 1,
     "Lr": 0.0001,
     "beta": 1,
-    "greedytrain": true,
+    "greedytrain": false,
     "nConvLayers": 1,
     "Convolutions": {
         "Conv1": {

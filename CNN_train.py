@@ -464,7 +464,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
     test_batches_per_epoch = len(test_dataloader)
     epoch = 0
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
-    test_dataloader.reset_progress()
+    test_dataloader.sampler.reset_progress()
     model.eval()
 
     # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode also serves to
@@ -476,7 +476,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
             is_last_batch = (batch + 1) == test_batches_per_epoch
             # Move input and targets to device
             inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
+            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - Testing : data to device")
 
             # Inference
             #if args.topdown:
@@ -484,9 +484,9 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
             #    predictions = model.TD_forward_test(inputs)
             #else:
             #inputs = inputs.reshape(1,1,28,28)
-            predictions = model.forward(inputs)
+            predictions = model.forward_test(inputs)
 
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
+            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - Testing : inference")
 
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum()
@@ -496,7 +496,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
             #metrics["test"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
             #metrics["test"].reset_local()  # Reset local cache
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
+            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - Testing : metrics logging")
 
             # Advance sampler
             test_dataloader.sampler.advance(len(inputs))
@@ -578,7 +578,7 @@ def main(args, timer):
 
     dataset = args.dataset
 
-    with open("Configs/config" + str(rank) + ".json", "r") as file:
+    with open("ConfigsCNN/config" + str(rank) + ".json", "r") as file:
         config = json.load(file)
     
 
@@ -628,7 +628,7 @@ def main(args, timer):
         
         # train_dataset = Subset(train_dataset, list(range(10)))
 
-        model = CNN.CNN_Model_from_config((3,32,32), config, args.device_id, 10)
+        model = CNN.new_CNN_Model_from_config((3,32,32), config, args.device_id, 10)
 
 
     timer.report("Initialized datasets")
@@ -645,8 +645,8 @@ def main(args, timer):
     test_sampler = InterruptableSampler(test_dataset)
     timer.report("Initialized samplers")
 
-    train_dataloader = DataLoader(train_dataset, batch_size=1, sampler=train_sampler, num_workers=3)
-    test_dataloader = DataLoader(test_dataset, batch_size=1, sampler=test_sampler, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch, sampler=train_sampler, num_workers=3)
+    test_dataloader = DataLoader(test_dataset, batch_size=args.batch, sampler=test_sampler, shuffle=False)
     timer.report("Initialized dataloaders")
 
 
@@ -678,20 +678,28 @@ def main(args, timer):
     # Main training loop
     # --------------------
     # Each epoch the training loop is called within a context set from the training InterruptibleDistributedSampler
-    if config['greedytrain']:
-        greedytrain_loop(
-            model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
-        )
-        finetune(
-            model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
-        )
-    else:
-        train_loop(
-            model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
-        )
-        finetune(
-            model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
-        )
+    # if config['greedytrain']:
+    #     greedytrain_loop(
+    #         model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+    #     )
+    #     finetune(
+    #         model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+    #     )
+    # else:
+    #     train_loop(
+    #         model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+    #     )
+    #     finetune(
+    #         model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+    #     )
+    
+    train_loop(
+        model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+    )
+
+    finetune(
+        model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+    )
 
     test_loop(model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint,
               nlayers=config['nConvLayers'], whiten=config['Convolutions']["Conv1"]['whiten'], 

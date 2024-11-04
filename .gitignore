@@ -9,3 +9,5 @@ data
 
 #Compiled python files
 *.pyc
+
+Checkpoints/

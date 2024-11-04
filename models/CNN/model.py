@@ -236,7 +236,7 @@ class Gradient_Classifier(nn.Module):
         return pred
     
     def forward(self, x, label):
-        self.basemodel.eval()
+        self.basemodel.train()
         with torch.no_grad():
             y = self.basemodel(x, label)
             y = y.reshape(y.shape[0], -1)
