@@ -1,9 +1,9 @@
 {
     "Lambda": 1,
-    "Lr": 0.0001,
+    "Lr": 0.1,
     "beta": 1,
-    "greedytrain": true,
-    "nConvLayers": 2,
+    "greedytrain": false,
+    "nConvLayers": 3,
     "Convolutions": {
         "Conv1": {
             "out_channel": 32,
@@ -11,8 +11,8 @@
             "stride": 1,
             "padding": 2,
             "paddingmode": "reflect",
-            "triangle": false,
-            "whiten": false,
+            "triangle": true,
+            "whiten": true,
             "batchnorm": true,
             "inhibition": "REPU"
         },
@@ -22,8 +22,19 @@
             "stride": 1,
             "padding": 2,
             "paddingmode": "reflect",
-            "triangle": false,
-            "whiten": false,
+            "triangle": true,
+            "whiten": true,
+            "batchnorm": true,
+            "inhibition": "REPU"
+        },
+        "Conv3": {
+            "out_channel": 512,
+            "kernel": 3,
+            "stride": 1,
+            "padding": 2,
+            "paddingmode": "reflect",
+            "triangle": true,
+            "whiten": true,
             "batchnorm": true,
             "inhibition": "REPU"
         }

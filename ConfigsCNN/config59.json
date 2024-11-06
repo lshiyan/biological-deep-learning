@@ -1,8 +1,8 @@
 {
     "Lambda": 1,
-    "Lr": 0.0001,
+    "Lr": 0.1,
     "beta": 1,
-    "greedytrain": true,
+    "greedytrain": false,
     "nConvLayers": 3,
     "Convolutions": {
         "Conv1": {
@@ -11,10 +11,10 @@
             "stride": 1,
             "padding": 2,
             "paddingmode": "reflect",
-            "triangle": false,
-            "whiten": true,
+            "triangle": true,
+            "whiten": false,
             "batchnorm": true,
-            "inhibition": "Softmax"
+            "inhibition": "REPU"
         },
         "Conv2": {
             "out_channel": 128,
@@ -22,10 +22,10 @@
             "stride": 1,
             "padding": 2,
             "paddingmode": "reflect",
-            "triangle": false,
-            "whiten": true,
+            "triangle": true,
+            "whiten": false,
             "batchnorm": true,
-            "inhibition": "Softmax"
+            "inhibition": "REPU"
         },
         "Conv3": {
             "out_channel": 512,
@@ -33,10 +33,10 @@
             "stride": 1,
             "padding": 2,
             "paddingmode": "reflect",
-            "triangle": false,
-            "whiten": true,
+            "triangle": true,
+            "whiten": false,
             "batchnorm": true,
-            "inhibition": "Softmax"
+            "inhibition": "REPU"
         }
     },
     "PoolingBlock": {
