@@ -129,11 +129,17 @@ class SoftNeuralNet(nn.Module):
         self.layers = nn.ModuleDict()
         self.iteration = 3
         self.output_dim = 10
-    
+        
+ 
     def add_layer(self, name, layer):
         self.layers[name] = layer
 
-    def visualize_weights(self, path: str, num: int, use: str, coloured: bool) -> None:
+    def add_module():
+        self.add_module(input_layer.name.name, input_layer)
+        self.add_module(hebbian_layer.name.name, hebbian_layer)
+        self.add_module(classification_layer.name.name, classification_layer)
+
+    def visualize_weights(self, path: str, num: int, use: str) -> None:
         """
         METHOD
         Visualizes the weights/features learned by each neuron during training
@@ -145,8 +151,7 @@ class SoftNeuralNet(nn.Module):
         @return
             None
         """
-        for layer_name, module in self.layers.items():
-            module.visualize_weights(path, num, use, layer_name.lower().capitalize())
+        visualize_weights(path, num, use)
 
     """
     Used in Feedforward models
@@ -163,7 +168,7 @@ class SoftNeuralNet(nn.Module):
     
     def set_iteration(self, i):
         self.iteration = i
-        
+
     def save_model(self, path):
         torch.save(self.state_dict(), path)
 

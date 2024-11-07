@@ -87,14 +87,7 @@ parameter_pairs = [
 
 # Exp Linear Neuron
 parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 1, 0.003),
-    (2, 1, 0.003),
-    (4, 1, 0.003),
-    (8, 1, 0.003),
-    (16, 1, 0.003),
-    (32, 0.3, 0.003),
-    (64, 0.1, 0.003)
+    (0.5, 1, 0.003),
 ]
 
 # Define other parameters to vary
@@ -109,7 +102,7 @@ max_concurrent_processes = 10
 python_executable = sys.executable
 
 # Specify the GPU ID (e.g., GPU 0)
-gpu_id = 6
+gpu_id = 0
 
 # Process the combinations in batches
 for i in range(0, len(parameter_pairs), max_concurrent_processes):
@@ -122,7 +115,7 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
             # Construct the complete set of arguments including the varying parameter
             arguments = [
                 '--data_name=MNIST',
-                '--experiment_name=_FORGET_NEURON_EXP_LINEAR_',
+                '--experiment_name=_SOFTHEBB_FORGET_NEURON_EXP_LINEAR_',
                 '--train_data=data/mnist/train-images.idx3-ubyte',
                 '--train_label=data/mnist/train-labels.idx1-ubyte',
                 '--test_data=data/mnist/test-images.idx3-ubyte',
@@ -157,9 +150,9 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
                 '--sigma=1',
                 '--mu=0',
                 '--init=uniform',
-                '--batch_size=1',
+                '--batch_size=2',
                 '--epochs=10',
-                f'--device=cuda:{gpu_id}',  # Use the specified GPU or CPU
+                f'--device=cpu',  # Use the specified GPU or CPU
                 '--local_machine=True',
                 '--experiment_type=forget'
             ]

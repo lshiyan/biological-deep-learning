@@ -1,0 +1,113 @@
+2024-10-30 20:35:21,051 - Started process with PID: 2880276 on GPU: 7 | Lambda: 0.5, Rho: 0.3, LR: 0.03, Heb_Learn: sanger, Heb_Growth: sigmoid, Clas_Growth: sigmoid, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-10-30 20:35:21,064 - Started process with PID: 2880277 on GPU: 7 | Lambda: 1, Rho: 0.3, LR: 0.03, Heb_Learn: sanger, Heb_Growth: sigmoid, Clas_Growth: sigmoid, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-10-30 20:35:21,077 - Started process with PID: 2880278 on GPU: 7 | Lambda: 2, Rho: 0.3, LR: 0.03, Heb_Learn: sanger, Heb_Growth: sigmoid, Clas_Growth: sigmoid, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-10-30 20:35:21,143 - Started process with PID: 2880279 on GPU: 7 | Lambda: 4, Rho: 0.1, LR: 0.03, Heb_Learn: sanger, Heb_Growth: sigmoid, Clas_Growth: sigmoid, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-10-30 20:35:21,159 - Started process with PID: 2880280 on GPU: 7 | Lambda: 8, Rho: 0.1, LR: 0.03, Heb_Learn: sanger, Heb_Growth: sigmoid, Clas_Growth: sigmoid, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-10-30 20:35:21,192 - Started process with PID: 2880281 on GPU: 7 | Lambda: 16, Rho: 0.003, LR: 0.03, Heb_Learn: sanger, Heb_Growth: sigmoid, Clas_Growth: sigmoid, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-10-30 20:35:21,201 - Started process with PID: 2880282 on GPU: 7 | Lambda: 32, Rho: 0.01, LR: 0.03, Heb_Learn: sanger, Heb_Growth: sigmoid, Clas_Growth: sigmoid, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-10-30 20:35:21,221 - Started process with PID: 2880283 on GPU: 7 | Lambda: 64, Rho: 0.003, LR: 0.03, Heb_Learn: sanger, Heb_Growth: sigmoid, Clas_Growth: sigmoid, Heb_Focus: neuron, Heb_Inhib: RELU, Class_Focus: neuron
+2024-10-30 20:35:21,301 - Process with PID: 2880276 completed on GPU: 7.
+2024-10-30 20:35:21,301 - Standard Output:
+
+2024-10-30 20:35:21,301 - Standard Error:
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_base.py", line 4, in <module>
+    from experiments.base_experiment import BaseExperiment
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/base_experiment.py", line 7, in <module>
+    import torch
+  File "/home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/__init__.py", line 367, in <module>
+    from torch._C import *  # noqa: F403
+ImportError: /home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclCommRegister
+
+2024-10-30 20:35:21,301 - Process with PID: 2880277 completed on GPU: 7.
+2024-10-30 20:35:21,314 - Standard Output:
+
+2024-10-30 20:35:21,314 - Standard Error:
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_base.py", line 4, in <module>
+    from experiments.base_experiment import BaseExperiment
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/base_experiment.py", line 7, in <module>
+    import torch
+  File "/home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/__init__.py", line 367, in <module>
+    from torch._C import *  # noqa: F403
+ImportError: /home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclCommRegister
+
+2024-10-30 20:35:21,314 - Process with PID: 2880278 completed on GPU: 7.
+2024-10-30 20:35:21,325 - Standard Output:
+
+2024-10-30 20:35:21,325 - Standard Error:
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_base.py", line 4, in <module>
+    from experiments.base_experiment import BaseExperiment
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/base_experiment.py", line 7, in <module>
+    import torch
+  File "/home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/__init__.py", line 367, in <module>
+    from torch._C import *  # noqa: F403
+ImportError: /home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclCommRegister
+
+2024-10-30 20:35:21,327 - Process with PID: 2880279 completed on GPU: 7.
+2024-10-30 20:35:21,338 - Standard Output:
+
+2024-10-30 20:35:21,338 - Standard Error:
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_base.py", line 4, in <module>
+    from experiments.base_experiment import BaseExperiment
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/base_experiment.py", line 7, in <module>
+    import torch
+  File "/home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/__init__.py", line 367, in <module>
+    from torch._C import *  # noqa: F403
+ImportError: /home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclCommRegister
+
+2024-10-30 20:35:21,338 - Process with PID: 2880280 completed on GPU: 7.
+2024-10-30 20:35:21,348 - Standard Output:
+
+2024-10-30 20:35:21,348 - Standard Error:
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_base.py", line 4, in <module>
+    from experiments.base_experiment import BaseExperiment
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/base_experiment.py", line 7, in <module>
+    import torch
+  File "/home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/__init__.py", line 367, in <module>
+    from torch._C import *  # noqa: F403
+ImportError: /home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclCommRegister
+
+2024-10-30 20:35:21,348 - Process with PID: 2880281 completed on GPU: 7.
+2024-10-30 20:35:21,348 - Standard Output:
+
+2024-10-30 20:35:21,348 - Standard Error:
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_base.py", line 4, in <module>
+    from experiments.base_experiment import BaseExperiment
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/base_experiment.py", line 7, in <module>
+    import torch
+  File "/home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/__init__.py", line 367, in <module>
+    from torch._C import *  # noqa: F403
+ImportError: /home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclCommRegister
+
+2024-10-30 20:35:21,364 - Process with PID: 2880282 completed on GPU: 7.
+2024-10-30 20:35:21,386 - Standard Output:
+
+2024-10-30 20:35:21,386 - Standard Error:
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_base.py", line 4, in <module>
+    from experiments.base_experiment import BaseExperiment
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/base_experiment.py", line 7, in <module>
+    import torch
+  File "/home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/__init__.py", line 367, in <module>
+    from torch._C import *  # noqa: F403
+ImportError: /home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclCommRegister
+
+2024-10-30 20:35:21,386 - Process with PID: 2880283 completed on GPU: 7.
+2024-10-30 20:35:21,386 - Standard Output:
+
+2024-10-30 20:35:21,386 - Standard Error:
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_base.py", line 4, in <module>
+    from experiments.base_experiment import BaseExperiment
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/base_experiment.py", line 7, in <module>
+    import torch
+  File "/home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/__init__.py", line 367, in <module>
+    from torch._C import *  # noqa: F403
+ImportError: /home/mcb/users/slyu3/.venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclCommRegister
+
+2024-10-30 20:35:21,398 - All subprocesses have completed.

@@ -1,4 +1,5 @@
 import torch
+import sys
 import torch.nn as nn
 from models.hyperparams import Inhibition, WeightGrowth
 import scipy
@@ -81,6 +82,8 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
                       supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
     normed_weights = weights / (weight_norms + 1e-9)
+    print("Shape of y:", y.shape)
+    sys.stdout.flush()
     batch_dim, out_dim = y.shape
     wn = weight_norms.unsqueeze(0)
     if weight_growth == WeightGrowth.Default:

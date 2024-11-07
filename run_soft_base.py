@@ -62,8 +62,8 @@ arguments = [
             '--mu=0',
             '--init=uniform',
             # Experiment parameters
-            '--batch_size=1',
-            '--epochs=1', 
+            '--batch_size=64',
+            '--epochs=10', 
             '--device=cpu',
             '--hsize=64',
             '--lamb=5',

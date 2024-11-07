@@ -1,11 +1,11 @@
 import multiprocessing
 from typing import Tuple, List
 
-from experiments.forget_experiment import ForgetExperiment
+from experiments.forget_softhebb_experiment import ForgetExperiment
 from interfaces.experiment import Experiment
 from interfaces.network import Network
 from models.hebbian_network import HebbianNetwork
-
+from models.MLP.models import NewMLPBaseline_Model
 from utils.experiment_parser import *
 from utils.experiment_logger import *
 from utils.experiment_stats import *
@@ -44,7 +44,7 @@ def train_and_eval(args: Tuple) -> List[List[float]]:
     params: argparse.Namespace
     num: int
     params, num = args
-    model: Network = HebbianNetwork('Hebbian Network', params).to(params.device)
+    model: Network = NewMLPBaseline_Model(params.hsize, params.lamb, params.w_lr, params.b_lr, params.l_lr, params.nclasses, params.device)
     experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.lr}--{params.heb_learn.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
     accuracies = list(experiment.run())
     experiment.cleanup()

@@ -24,3 +24,4 @@ source ../../../../../mnt/teaching/COMP551/txu22/hebb_venv/bin/activate
 venv neuroai_venv
 tests
 results
+source ../../.venv/bin/activate
