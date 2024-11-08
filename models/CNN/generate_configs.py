@@ -1,8 +1,8 @@
 import json
 import os
 
-def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[3], whiten_values=[True, False], triangle_values=[True],
-    greedytrain_values=[True, False], inhibition_values=['REPU'], pooling_values = ['PoolingStride1', 'NoPoolingStride2', 'NoPoolingStride1']
+def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1], whiten_values=[True, False], triangle_values=[True],
+    greedytrain_values=[True, False], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1', 'NoPoolingStride2', 'NoPoolingStride1']
 ):
     
     # whiten = False for now
@@ -17,7 +17,7 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                 for triangle in triangle_values:
                     for inhibition in inhibition_values:
                         for pool in pooling_values:
-                            for i in range(5): 
+                            for i in range(1): ## 
 
                                 config = json.loads(json.dumps(base_config))
                                 config['greedytrain'] = greedytrain
@@ -61,7 +61,7 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
 # Base configuration template
 base_config = {
     "Lambda" : 1, 
-    "Lr" : 0.1,
+    "Lr" : 0.01,
     "beta" : 1,
     "greedytrain" : True,
     "nConvLayers" : 1,
