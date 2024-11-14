@@ -119,9 +119,9 @@ base_config = {
             "padding" : 0 
         }
     }, 
-    "GradientClassifier" : {
-        
-        
+    "Classifier" : {
+        "type" : "Gradient",
+        "out_channel" : 10
     },
 
     "Topdown" : False,
