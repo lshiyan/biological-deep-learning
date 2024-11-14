@@ -17,8 +17,8 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                 for triangle in triangle_values:
                     for inhibition in inhibition_values:
                         for pool in pooling_values:
-                            for i in range(1): ## 
-
+                            
+                                ##### here add varying learning rate values and others as in mlp
                                 config = json.loads(json.dumps(base_config))
                                 config['greedytrain'] = greedytrain
                                 config['nConvLayers'] = layers
@@ -60,84 +60,70 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
 
 # Base configuration template
 base_config = {
+
     "Lambda" : 1, 
     "Lr" : 0.01,
     "beta" : 1,
     "greedytrain" : True,
     "nConvLayers" : 1,
+
     "Convolutions" : {
-        "Conv1":{
+        "stride" : 1,
+        "padding" : 2,
+        "paddingmode" : "reflect",
+        "triangle" : False,
+        "whiten" : False,
+        "batchnorm" : True,
+        "inhibition" : "REPU",
+
+        "Conv1" : {
             "out_channel" : 32,
-            "kernel" : 5,
-            "stride" : 1,
-            "padding" : 2,
-            "paddingmode" : "reflect",
-            "triangle" : False, 
-            "whiten" : False, 
-            "batchnorm" : True,
-            "inhibition" : "REPU"
+            "kernel" : 5
         }, 
         "Conv2" : {
             "out_channel" : 128,
-            "kernel" : 3,
-            "stride" : 1,
-            "padding" : 2,
-            "paddingmode" : "reflect",
-            "triangle" : False,
-            "whiten" : False,
-            "batchnorm" : True,
-            "inhibition" : "REPU"
+            "kernel" : 3
         }, 
         "Conv3" : {
             "out_channel" : 512,
-            "kernel" : 3,
-            "stride" : 1,
-            "padding" : 2,
-            "paddingmode" : "reflect",
-            "triangle" : False,
-            "whiten" : False,
-            "batchnorm" : True,
-            "inhibition" : "REPU"
+            "kernel" : 3
         },
         "Conv4" : {
             "out_channel" : 2048,
-            "kernel" : 3,
-            "stride" : 1,
-            "padding" : 2,
-            "paddingmode" : "reflect",
-            "triangle" : False,
-            "whiten" : False,
-            "batchnorm" : True,
-            "inhibition" : "REPU"
+            "kernel" : 3
         }
     }, 
+
     "PoolingBlock" : {
         "Pooling" : True, 
+        "stride" : 1,
+
         "Conv1" : {
             "Type" : "Max",
             "kernel" : 4,
-            "stride" : 1, 
             "padding" : 1 
         }, 
         "Conv2" : {
             "Type" : "Max",
             "kernel" : 4,
-            "stride" : 1, 
             "padding" : 1 
         },
         "Conv3" : {
             "Type" : "Max",
             "kernel" : 2,
-            "stride" : 1, 
             "padding" : 0 
         },
         "Conv4" : {
             "Type" : "Max",
             "kernel" : 2,
-            "stride" : 1, 
             "padding" : 0 
         }
     }, 
+    "GradientClassifier" : {
+        
+        
+    },
+
     "Topdown" : False,
     "Rho" : 1e-3, 
     "Eta" : 0.1

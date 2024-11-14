@@ -13,11 +13,13 @@ from models.CNN.layers import ConvolutionHebbianLayer, ConvSoftHebbLayer, Poolin
 
 
 class ConvolutionalNeuralNet(nn.Module):
+
     def __init__(self, device):
         super(ConvolutionalNeuralNet, self).__init__()
         self.layers = nn.ModuleDict()
         self.iteration = 3
         self.device = device
+        
 
     def add_layer(self, name, layer):
         self.layers[name] = layer
@@ -28,20 +30,66 @@ class ConvolutionalNeuralNet(nn.Module):
     """
     Used in feedforward models
     """
-    def forward(self, x, clamped=None):
+
+    def train_conv(self, x, label=None): 
+        self.train()
         with torch.no_grad():
             for layer in self.layers.values():
                 if isinstance(layer, PoolingLayer):
                     x = layer(x) 
+                elif isinstance(layer, ConvSoftHebbLayer):
+                    target = label if layer.is_output_layer else None
+                    x = layer(x, target=target)
                 else:
-                    true_value = clamped if layer.is_output_layer else None
-                    x = layer(x, target=true_value) 
+                    break
             return x
-    
-    def forward_test(self, x):
+        
+    def test_conv(self, x):
+        self.eval()
         for layer in self.layers.values():
+            if isinstance(layer, GradientClassifierLayer):
+                break
             x = layer.forward(x)
         return x
+
+
+    def train_classifier(self, x, label=None):
+        with torch.no_grad():
+            y = self.test_conv(x)
+            y = y.reshape(y.shape[0], -1)
+        for layer in self.layers.values():
+            if isinstance(layer, GradientClassifierLayer):
+                pred = layer.forward(y, label)
+        return pred
+    
+
+    def forward(self, x, label=None):
+        with torch.no_grad():
+            y = self.train_conv(x, label)
+            y = y.reshape(y.shape[0], -1)
+        for layer in self.layers.values():
+            if isinstance(layer, GradientClassifierLayer):
+                pred = layer.forward(y, label)
+        return pred
+
+    def forward_test(self, x):
+        self.eval()
+        with torch.no_grad():
+            y = self.test_conv(x)
+            y = y.reshape(y.shape[0], -1)
+        for layer in self.layers.values():
+            if isinstance(layer, GradientClassifierLayer):
+                pred = layer.forward(y)
+        return pred
+    
+    
+    def set_conv_training_layers(self, layers_to_train):
+        for layer in self.layers.values():
+            if layer in layers_to_train:
+                layer.train()
+            else:
+                layer.eval()
+
 
 
     """
@@ -114,7 +162,7 @@ class ConvolutionalNeuralNet(nn.Module):
 class Hebbian_Classifier(nn.Module):
     def __init__(self, inputdim, outputdim, device, basemodel, lr):
         super(Hebbian_Classifier, self).__init__()
-        self.inputdime = inputdim
+        self.inputdim = inputdim
         self.outputdim = outputdim
         self.device = device
         self.basemodel = basemodel
@@ -122,7 +170,7 @@ class Hebbian_Classifier(nn.Module):
         self.lr = lr
         self.lamb = 1
         self.triangle = False
-        self.inhib = Inhibition.RePU
+        self.inhib = Inhibition.Softmax ##
         self.output_learning = LearningRule.OutputContrastiveSupervised
 
     def inhibition(self, x):
@@ -208,7 +256,7 @@ class Hebbian_Classifier(nn.Module):
 class Gradient_Classifier(nn.Module):
     def __init__(self, inputdim, outputdim, device, basemodel, lr):
         super(Gradient_Classifier, self).__init__()
-        self.inputdime = inputdim
+        self.inputdim = inputdim
         self.outputdim = outputdim
         self.device = device
         self.basemodel = basemodel
@@ -562,9 +610,6 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     mycnn = ConvolutionalNeuralNet(device)
     lamb = config['Lambda']
     lr = config['Lr']
-    #beta = config['beta']
-    #rho = config['Rho']
-    #eta = config['Eta']
     is_topdown = config['Topdown']
     input_channel = inputshape[0]
     nb_conv = len(config['Convolutions'])
@@ -598,25 +643,25 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
             mycnn.add_layer(f"PoolLayer{layer_idx+1}", poollayer)
             
             inputsize = cnn_output_formula_2D(inputsize, poolconfig['kernel'], poolconfig['padding'], 1, poolconfig['stride'])
-            # update inputsize for next layer
             
-        #output shape and number of tiles
+
         output_shape = inputsize
         n_tiles = output_shape[0] * output_shape[1]
 
         if is_topdown and layer_idx < (nb_conv-1):
             convlayer.Set_TD(inc=config['Convolutions'][l_keys[layer_idx+1]]['out_channel'], outc=layerconfig['out_channel'], 
                              kernel=config['Convolutions'][l_keys[layer_idx+1]]['kernel'], stride=config['Convolutions'][l_keys[layer_idx+1]]['stride'])
-        #convlayer.normalize_weights() #---> already done in soft hebb layer
         
 
     fc_inputdim = n_tiles * config['Convolutions'][l_keys[-1]]['out_channel']
     #print("Fully connected layer input dim : " + str(fc_inputdim))
+    
+    classifier = GradientClassifierLayer(fc_inputdim, nbclasses, lr)
+    mycnn.add_layer(f"ClassifierLayer", classifier)
 
-    mymodel = Gradient_Classifier(fc_inputdim, nbclasses, device, mycnn, 0.001)
-    mymodel = mymodel.to(device)
+    mycnn = mycnn.to(device)
 
-    return mymodel
+    return mycnn
 
 
 

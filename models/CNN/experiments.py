@@ -79,20 +79,19 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
 
 
 def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, greedytrain=False):
-    # top-down training/testing not implemented
 
-    layers = list(mymodel.basemodel.layers.values())
+    layers = list(mymodel.layers.values())
     mymodel.train()
     
     #lamb_values = {layer_name: [] for layer_name in mymodel.basemodel.layers.keys()}
 
     if greedytrain:
-        for idx in range(len(mymodel.basemodel.layers)):
+        for idx in range(len(mymodel.basemodel.layers)): 
             if isinstance(layers[idx], ConvSoftHebbLayer):
-                mymodel.set_training_layers([layers[idx]])
+                mymodel.set_conv_training_layers([layers[idx]])
             else:
-                break
-                # no greedy training on pooling layers
+                continue
+                # no greedy training on pooling (or classification) layers
             for _ in range(epoch):
                 for data in tqdm(dataloader):
                     inputs, labels = data
@@ -107,7 +106,7 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
                             if ((r_l) == idx): 
                                 x = layers[r_l].forward(x, target)
                             else : 
-                                # for all layers befor idx, perform forward pass without targets
+                                # for all layers before idx, perform forward pass without targets
                                 x = layers[r_l].forward(x, target=None)
                         elif isinstance(layers[r_l], PoolingLayer):
                             x = layers[r_l].forward(x)
@@ -144,7 +143,7 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
 
     #plot_lambda(lamb_values)
 
-    return mymodel.basemodel, mymodel
+    return mymodel
 
 
 
@@ -166,27 +165,34 @@ def CNN_Baseline_test(mymodel, data_loader, imgtype, topdown):
     da = {}
     for data in tqdm(data_loader):
         inputs, labels = data
+        batch_size = labels.size(0)
+        tot += batch_size
         if imgtype == ImageType.Gray:
-            inputs = inputs.reshape(1,1,28,28)
+            inputs = inputs.reshape(batch_size,1,28,28)
         if topdown:
-            output = torch.argmax(mymodel.TD_forward_test(inputs))
+            output = torch.argmax(mymodel.TD_forward_test(inputs), dim=1)
         else:
             y = mymodel.forward_test(inputs)
-            output = torch.argmax(y)
-        #return mymodel
-        if labels.item() not in da:
-            da[labels.item()] = (0, 0, 0)
-        if output.item() not in da:
-            da[output.item()] = (0,0,0)
-        r, t, w = da[labels.item()]
-        if output.item() == labels.item():
-            yes += 1
-            da[labels.item()] = (r+1, t+1, w)
-        else :
-            r1, t1, w1 = da[output.item()]
-            da[output.item()] = (r1, t1, w1+1) 
-            da[labels.item()] = (r, t+1, w)
-        tot += 1
-    if da[1][0] == 0:
-        print(f"last y: {y}")
-    return (yes/tot), da
+            output = torch.argmax(y, dim=1) ######
+
+        for label, prediction in zip(labels, output):
+            label = label.item()
+            prediction = prediction.item()
+
+            if label not in da:
+                da[label] = (0, 0, 0)
+            if prediction not in da:
+                da[prediction] = (0, 0, 0)
+
+            r, t, w = da[label]
+            if prediction == label:
+                yes += 1
+                da[label] = (r+1, t+1, w)
+            else:
+                da[label] = (r, t+1, w)
+                r1, t1, w1 = da[prediction]
+                da[prediction] = (r1, t1, w1+1)
+
+    accuracy = yes / tot
+    return accuracy, da
+

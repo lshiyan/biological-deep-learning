@@ -13,13 +13,10 @@ from models.MLP.model import SoftHebbLayer
 
 
 class ConvSoftHebbLayer(nn.Module):
-    def __init__(self, input_shape, kernel, in_ch, out_ch, stride=1, padding=0, w_lr: float = 0.003, b_lr: float = 0.003, 
-                 l_lr: float = 0.003,
-                 device=None, is_output_layer=False, initial_weight_norm: float = 0.01,
-                 triangle:bool = False, initial_lambda: float = 4.0,
-                 inhibition: Inhibition = Inhibition.RePU,
-                 learningrule: LearningRule = LearningRule.SoftHebb,
-                 preprocessing: InputProcessing = InputProcessing.No):
+    def __init__(self, input_shape, kernel, in_ch, out_ch, stride = 1, padding = 0, w_lr: float = 0.003, b_lr: float = 0.003, 
+                 l_lr: float = 0.003, device = None, is_output_layer = False, initial_weight_norm: float = 0.01,
+                 triangle: bool = False, initial_lambda: float = 4.0, inhibition: Inhibition = Inhibition.RePU,
+                 learningrule: LearningRule = LearningRule.SoftHebb, preprocessing: InputProcessing = InputProcessing.No):
 
         super(ConvSoftHebbLayer, self).__init__()
         if device is None:
@@ -36,12 +33,10 @@ class ConvSoftHebbLayer(nn.Module):
         self.fold = nn.Fold(output_size=input_shape, kernel_size=self.kernel, padding=self.padding, stride=self.stride)
         self.fold_unfold_divisor = (self.fold(self.unfold(torch.ones(1, in_ch, input_shape[0], input_shape[1])))).to(device)
         self.base_soft_hebb_layer = SoftHebbLayer(inputdim = in_ch * kernel ** 2 , outputdim = out_ch, w_lr= w_lr,
-                                                  b_lr = b_lr, l_lr = l_lr,
-                 device=device, is_output_layer=is_output_layer, initial_weight_norm = initial_weight_norm,
-                 triangle= triangle, initial_lambda = initial_lambda,
-                 inhibition = inhibition,
-                 learningrule = learningrule,
-                 preprocessing= preprocessing)
+                                                  b_lr = b_lr, l_lr = l_lr, device=device, is_output_layer=is_output_layer, 
+                                                  initial_weight_norm = initial_weight_norm, triangle= triangle, 
+                                                  initial_lambda = initial_lambda, inhibition = inhibition,learningrule = learningrule,
+                                                  preprocessing= preprocessing)
         self.output_shape = cnn_output_formula_2D(input_shape, kernel, padding, 1, stride)
         self.output_tiles = self.output_shape[0] * self.output_shape[1]
 
@@ -73,6 +68,40 @@ class PoolingLayer(nn.Module):
 
     def forward(self, x):
         return self.pool(x)
+    
+
+
+class GradientClassifierLayer(nn.Module):
+    def __init__(self, input_shape, output_shape, lr):
+        super(GradientClassifierLayer, self).__init__()
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.lr = lr
+        self.linear = nn.Linear(input_shape, output_shape)
+        self.drop = nn.Dropout(0.5)
+        
+        self.optim = torch.optim.Adam(self.linear.parameters(), lr=self.lr)
+        self.lossfn = nn.CrossEntropyLoss()
+
+    def forward(self, x, label=None):
+        if label is not None: #train
+            self.optim.zero_grad()
+            pred = self.linear(self.drop(x))        
+            loss = self.lossfn(pred, label)
+            loss.backward()
+            self.optim.step()
+        else: #test
+            self.test
+            pred = self.linear(self.drop(x))
+        return pred
+
+
+##############################
+
+    
+
+
+    
 
 
 
