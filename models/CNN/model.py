@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import models.learning as L
 from models.hyperparams import (ImageType, LearningRule, WeightScale, Inhibition, oneHotEncode,
                                 InputProcessing, cnn_output_formula_2D)
-from models.CNN.layers import ConvolutionHebbianLayer, ConvSoftHebbLayer, PoolingLayer
+from models.CNN.layers import ConvolutionHebbianLayer, ConvSoftHebbLayer, PoolingLayer, GradientClassifierLayer
 
 
 class ConvolutionalNeuralNet(nn.Module):

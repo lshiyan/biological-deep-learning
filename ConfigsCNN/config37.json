@@ -2,8 +2,8 @@
     "Lambda": 1,
     "Lr": 0.01,
     "beta": 1,
-    "greedytrain": true,
-    "nConvLayers": 1,
+    "greedytrain": false,
+    "nConvLayers": 2,
     "Convolutions": {
         "stride": 1,
         "padding": 2,
@@ -18,14 +18,22 @@
             "whiten": true,
             "triangle": true,
             "inhibition": "RePU",
-            "stride": 1
+            "stride": 2
+        },
+        "Conv2": {
+            "out_channel": 128,
+            "kernel": 3,
+            "whiten": true,
+            "triangle": true,
+            "inhibition": "RePU",
+            "stride": 2
         }
     },
     "PoolingBlock": {
-        "Pooling": true,
+        "Pooling": false,
         "stride": 1,
         "Conv1": {
-            "Type": "Avg",
+            "Type": "Max",
             "kernel": 4,
             "padding": 1
         },

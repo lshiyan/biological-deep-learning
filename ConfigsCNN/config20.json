@@ -3,7 +3,7 @@
     "Lr": 0.01,
     "beta": 1,
     "greedytrain": true,
-    "nConvLayers": 1,
+    "nConvLayers": 2,
     "Convolutions": {
         "stride": 1,
         "padding": 2,
@@ -15,17 +15,25 @@
         "Conv1": {
             "out_channel": 32,
             "kernel": 5,
-            "whiten": true,
+            "whiten": false,
+            "triangle": true,
+            "inhibition": "RePU",
+            "stride": 1
+        },
+        "Conv2": {
+            "out_channel": 128,
+            "kernel": 3,
+            "whiten": false,
             "triangle": true,
             "inhibition": "RePU",
             "stride": 1
         }
     },
     "PoolingBlock": {
-        "Pooling": true,
+        "Pooling": false,
         "stride": 1,
         "Conv1": {
-            "Type": "Avg",
+            "Type": "Max",
             "kernel": 4,
             "padding": 1
         },
