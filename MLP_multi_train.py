@@ -106,6 +106,37 @@ class InterruptableSampler(Sampler):
     def reset_progress(self):
         self.progress = 0
 
+    # def __iter__(self):
+    #     if self.shuffle:
+    #         # deterministically shuffle based on epoch and seed
+    #         g = torch.Generator()
+    #         g.manual_seed(self.seed + self.epoch)
+    #         indices = torch.randperm(len(self.dataset), generator=g).tolist()  # type: ignore[arg-type]
+    #     else:
+    #         indices = list(range(len(self.dataset)))  # type: ignore[arg-type]
+
+    #     if not self.drop_last:
+    #         # add extra samples to make it evenly divisible
+    #         padding_size = self.total_size - len(indices)
+    #         if padding_size <= len(indices):
+    #             indices += indices[:padding_size]
+    #         else:
+    #             indices += (indices * math.ceil(padding_size / len(indices)))[
+    #                 :padding_size
+    #             ]
+    #     else:
+    #         # remove tail of data to make it evenly divisible.
+    #         indices = indices[: self.total_size]
+    #     assert len(indices) == self.total_size
+
+    #     # subsample
+    #     indices = indices[self.rank : self.total_size : self.num_replicas]
+    #     assert len(indices) == self.num_samples
+
+    #     # slice from progress to pick up where we left off
+
+    #     for idx in indices[self.progress :]:
+    #         yield idx
 
 #######################################
 # Hyperparameters
@@ -120,13 +151,22 @@ class InterruptableSampler(Sampler):
 
 def get_args_parser(add_help=True):
     parser = argparse.ArgumentParser()
+    # ---------------------------------------
     parser.add_argument("--epoch", type=int, default=1)
     parser.add_argument("--dataset", type=str, default="MNIST")
     parser.add_argument("--finetuneepochs", type=int, default=10)
     parser.add_argument("--batch", type=int, default=512)
+    # For distributed training it is important to distinguish between the per-GPU or "local" batch size (which this
+    # hyper-parameter sets) and the "effective" batch size which is the product of the local batch size and the number
+    # of GPUs in the cluster. With a local batch size of 16, and 10 nodes with 6 GPUs per node, the effective batch size
+    # is 960. Effective batch size can also be increased using gradient accumulation which is not demonstrated here.
+    # ---------------------------------------
     parser.add_argument("--save-dir", type=Path, required=True)
     parser.add_argument("--tboard-path", type=Path, required=True)
-
+    # While the "output_path" is set in the .isc file and receives reports from each node in the cluster (i.e.
+    # "rank_0.txt"), the "save-dir" will be where this script saves and retrieves checkpoints. Referring to the .isc
+    # file, you will see that in this case, the save-dir is the same as the output_path. Tensoboard event logs will be
+    # saved in the "tboard-path" directory.
     return parser
 
 #####################################
@@ -239,11 +279,11 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/multi_layer_results.csv"
+                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/results.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
-                    fieldnames = ["test_accuracy", "hsize", "lambda", "w_lr", "b_lr", "l_lr", "triangle", "white", "func"]
+                    fieldnames = ["test_accuracy", "hsize", "lambda", "w_lr", "b_lr", "l_lr", "triangle", "white", "func", "w_norm"]
                     
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -259,7 +299,8 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                         "l_lr": l_lr,
                         "triangle":"true",
                         "white":"true",
-                        "func": "softmax"
+                        "func": "softmax",
+                        "w_norm": w_norm
                     })
 
             atomic_torch_save(
@@ -319,7 +360,7 @@ def main(args, timer):
 
         timer.report("Initialized datasets")
     
-        model = MLP.MultilayerSoftMLPModel(hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], nclasses=10, device=args.device_id)
+        model = MLP.MultilayerSoftMLPModel(hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], initial_weight_norm=config['w_norm'], num_layers=config['num_layers'], nclasses=10, device=args.device_id)
 
 
     ##############################################
