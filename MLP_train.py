@@ -199,7 +199,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoi
             # Forward pass
             if args.dataset == "EMNIST":
                 labels = models.hyperparams.oneHotEncode(targets, 47, args.device_id)
-            elif args.dataset == "FashionMNIST" or args.dataset == "MNIST" :
+            elif args.dataset == "FASHION" or args.dataset == "FashionMNIST" or args.dataset == "MNIST" :
                 labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
             elif args.dataset == "CIFAR10":
                 labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
@@ -279,7 +279,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/results.csv"
+                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/fashion_mnist_results.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
@@ -359,9 +359,27 @@ def main(args, timer):
         test_dataset = datasets.MNIST(root='./data', train=False, download=True, transform=transform_MNIST)
 
         timer.report("Initialized datasets")
-    
         model = MLP.NewMLPBaseline_Model(hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], initial_weight_norm=config['w_norm'], nclasses=10, device=args.device_id)
 
+
+    elif dataset == "FASHION":
+        transform_MNIST = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Lambda(lambda x: x.view(-1))
+        ])
+        train_dataset = datasets.FashionMNIST(root='./data', train=True, download=True, transform=transform_MNIST)
+        test_dataset = datasets.FashionMNIST(root='./data', train=False, download=True, transform=transform_MNIST)
+
+        # Force data loading to ensure dataset is fully initialized
+        _ = train_dataset.data, train_dataset.targets
+        _ = test_dataset.data, test_dataset.targets
+
+        timer.report("Initialized datasets")   
+        model = MLP.NewMLPBaseline_Model(
+            hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], 
+            b_lr=config['b_lr'], l_lr=config['l_lr'], initial_weight_norm=config['w_norm'], 
+            nclasses=10, device=args.device_id
+        )
 
     ##############################################
     # Data Samplers and Loaders
