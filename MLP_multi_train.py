@@ -237,7 +237,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoi
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
 
-def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, hsize, lamb, w_lr, b_lr, l_lr, w_norm):
+def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, hsize, lamb, w_lr, b_lr, l_lr, w_norm, num_layers):
     test_batches_per_epoch = len(test_dataloader)
     epoch = 0
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
@@ -279,11 +279,11 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/results.csv"
+                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/hsize_multi_layer_results.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
-                    fieldnames = ["test_accuracy", "hsize", "lambda", "w_lr", "b_lr", "l_lr", "triangle", "white", "func", "w_norm"]
+                    fieldnames = ["test_accuracy", "hsize", "lambda", "w_lr", "b_lr", "l_lr", "triangle", "white", "func", "w_norm", "num_layers"]
                     
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -300,7 +300,8 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                         "triangle":"true",
                         "white":"true",
                         "func": "softmax",
-                        "w_norm": w_norm
+                        "w_norm": w_norm,
+                        "num_layers": num_layers
                     })
 
             atomic_torch_save(
@@ -416,7 +417,7 @@ def main(args, timer):
 
     test_loop(
         model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint,
-        hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], w_norm=config['w_norm']
+        hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], w_norm=config['w_norm'], num_layers=config['num_layers']
     )
 
     print("Done!")

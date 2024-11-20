@@ -21,8 +21,8 @@ def generate_mlp_config_files(hsizes, lambds, wlrs, blrs, llrs, w_norm):
 
 def generate_mlp_config_files():
 
-    w = [0.001, 0.0033, 0.01, 0.1, 0.3, 0.5]
-    for j in range(len(w)):
+    num = [2,3,4,5]
+    for j in range(len(num)):
         for i in range(0, 10):
             config = {
             "hsize": 2048,
@@ -31,7 +31,7 @@ def generate_mlp_config_files():
             "b_lr": 0.0033,
             "l_lr": 0.1,
             "w_norm": 0.01,
-            "num_layers": 1
+            "num_layers": num[j]
             }
             with open("ConfigsMLP/config" + str(i + j*10) + ".json", "w") as jfile:
                 json.dump(config, jfile, indent=4)

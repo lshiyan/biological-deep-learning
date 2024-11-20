@@ -190,7 +190,7 @@ def MultilayerSoftMLPModel(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device, num_
     for i in range(num_layers):
         heb_layer = SoftHebbLayer(inputdim=hsize, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
                                 device=device, initial_lambda=lamb, initial_weight_norm=initial_weight_norm)
-        mymodel.add_layer('SoftHebbian'+ 'i+2', heb_layer)
+        mymodel.add_layer(f'SoftHebbian{i+2}', heb_layer)
 
     heb_layer_final = SoftHebbLayer(hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
                                learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True, initial_weight_norm=initial_weight_norm)

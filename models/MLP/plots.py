@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-data = pd.read_csv("MLP_hyper_search/results_triangle.csv", usecols=range(9))
+data = pd.read_csv("MLP_hyper_search/multi_layer_results.csv", usecols=range(11))
 
 sns.set(style="whitegrid")
 
 output_folder = "plots"
 os.makedirs(output_folder, exist_ok=True)
 
-parameters = ['triangle']
+parameters = ['num_layers']
 
 for param in parameters:
     plt.figure(figsize=(10, 6))
