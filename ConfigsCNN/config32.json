@@ -2,11 +2,11 @@
     "Lambda": 1,
     "Lr": 0.01,
     "beta": 1,
-    "greedytrain": true,
+    "greedytrain": false,
     "nConvLayers": 1,
     "Convolutions": {
         "GlobalParams": {
-            "stride": 2,
+            "stride": 1,
             "padding": 2,
             "paddingmode": "reflect",
             "triangle": true,

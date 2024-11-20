@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import models.learning as L
 from models.hyperparams import (ImageType, LearningRule, WeightScale, Inhibition, oneHotEncode,
                                 InputProcessing, cnn_output_formula_2D)
-from models.CNN.layers import ConvolutionHebbianLayer, ConvSoftHebbLayer, PoolingLayer
+from models.CNN.layers import ConvolutionHebbianLayer, ConvSoftHebbLayer, PoolingLayer, GradientClassifierLayer
 
 
 class ConvolutionalNeuralNet(nn.Module):
@@ -612,21 +612,23 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     lr = config['Lr']
     is_topdown = config['Topdown']
     input_channel = inputshape[0]
-    nb_conv = len(config['Convolutions'])
-    l_keys = list(config['Convolutions'].keys())
+    nb_conv = len(config['Convolutions']['Layers'])
+    l_keys = list(config['Convolutions']['Layers'].keys())
     inputsize = inputshape[1:] # (height, width)
-    is_pool = config['PoolingBlock']['Pooling']
+    is_pool = config['PoolingBlock']["GlobalParams"]['Pooling']
+    conv_stride = config['Convolutions']["GlobalParams"]['stride']
+    pool_stride = config['PoolingBlock']["GlobalParams"]['stride']
+    conv_padding = config['Convolutions']["GlobalParams"]['padding']
+    padding_mode = config['Convolutions']["GlobalParams"]['paddingmode']
+    triangle = config['Convolutions']["GlobalParams"]['triangle']
+    preprocessing = InputProcessing.Whiten if config['Convolutions']["GlobalParams"]['whiten'] else InputProcessing.No 
+    inhibition = Inhibition.RePU if config['Convolutions']["GlobalParams"]['inhibition'] == "REPU" else Inhibition.Softmax
 
-    for layer_idx in range(len(config['Convolutions'])):
-        layerconfig = config['Convolutions'][l_keys[layer_idx]]
-        inhibition = Inhibition.RePU if layerconfig['inhibition'] == "REPU" else Inhibition.Softmax
-        preprocessing = InputProcessing.Whiten if layerconfig['whiten'] == "true" else InputProcessing.No
+    for layer_idx in range(nb_conv):
+        layerconfig = config['Convolutions']["Layers"][l_keys[layer_idx]]
 
-        # w_lr, b_lr, l_lr not specified in config file
-
-        
-        convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], stride=layerconfig['stride'], 
-                                            padding=layerconfig['padding'], device=device, is_output_layer=False, triangle=layerconfig['triangle'], 
+        convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], stride=conv_stride, 
+                                            padding=conv_padding, device=device, is_output_layer=False, triangle=triangle, 
                                             initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing)
 
 
@@ -636,24 +638,23 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
         inputsize = convlayer.output_shape # update inputsize for next layer
         
         if is_pool:
-            ## add a pooling layer
-            poolconfig = config["PoolingBlock"][l_keys[layer_idx]]
-            poollayer = PoolingLayer(kernel=poolconfig['kernel'], stride=poolconfig['stride'], padding=poolconfig['padding'], pool_type=poolconfig['Type'])
+            poolconfig = config["PoolingBlock"]["Layers"][l_keys[layer_idx]]
+            poollayer = PoolingLayer(kernel=poolconfig['kernel'], stride=pool_stride, padding=poolconfig['padding'], pool_type=poolconfig['Type'])
             
             mycnn.add_layer(f"PoolLayer{layer_idx+1}", poollayer)
             
-            inputsize = cnn_output_formula_2D(inputsize, poolconfig['kernel'], poolconfig['padding'], 1, poolconfig['stride'])
+            inputsize = cnn_output_formula_2D(inputsize, poolconfig['kernel'], poolconfig['padding'], 1, pool_stride)
             
 
         output_shape = inputsize
         n_tiles = output_shape[0] * output_shape[1]
 
         if is_topdown and layer_idx < (nb_conv-1):
-            convlayer.Set_TD(inc=config['Convolutions'][l_keys[layer_idx+1]]['out_channel'], outc=layerconfig['out_channel'], 
-                             kernel=config['Convolutions'][l_keys[layer_idx+1]]['kernel'], stride=config['Convolutions'][l_keys[layer_idx+1]]['stride'])
+            convlayer.Set_TD(inc=config['Convolutions']["Layers"][l_keys[layer_idx+1]]['out_channel'], outc=layerconfig['out_channel'], 
+                             kernel=config['Convolutions']["Layers"][l_keys[layer_idx+1]]['kernel'], stride=conv_stride)
         
 
-    fc_inputdim = n_tiles * config['Convolutions'][l_keys[-1]]['out_channel']
+    fc_inputdim = n_tiles * config['Convolutions']["Layers"][l_keys[-1]]['out_channel']
     #print("Fully connected layer input dim : " + str(fc_inputdim))
     
     classifier = GradientClassifierLayer(fc_inputdim, nbclasses, lr)

@@ -2,8 +2,8 @@
     "Lambda": 1,
     "Lr": 0.01,
     "beta": 1,
-    "greedytrain": true,
-    "nConvLayers": 1,
+    "greedytrain": false,
+    "nConvLayers": 2,
     "Convolutions": {
         "GlobalParams": {
             "stride": 2,
@@ -18,6 +18,10 @@
             "Conv1": {
                 "out_channel": 32,
                 "kernel": 5
+            },
+            "Conv2": {
+                "out_channel": 128,
+                "kernel": 3
             }
         }
     },

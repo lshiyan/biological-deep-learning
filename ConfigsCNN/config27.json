@@ -2,17 +2,17 @@
     "Lambda": 1,
     "Lr": 0.01,
     "beta": 1,
-    "greedytrain": true,
+    "greedytrain": false,
     "nConvLayers": 1,
     "Convolutions": {
         "GlobalParams": {
-            "stride": 2,
+            "stride": 1,
             "padding": 2,
             "paddingmode": "reflect",
             "triangle": true,
-            "whiten": false,
+            "whiten": true,
             "batchnorm": true,
-            "inhibition": "RePU"
+            "inhibition": "Softmax"
         },
         "Layers": {
             "Conv1": {
@@ -23,10 +23,16 @@
     },
     "PoolingBlock": {
         "GlobalParams": {
-            "Pooling": false,
+            "Pooling": true,
             "stride": 1
         },
-        "Layers": {}
+        "Layers": {
+            "Conv1": {
+                "Type": "Avg",
+                "kernel": 4,
+                "padding": 1
+            }
+        }
     },
     "Classifier": {
         "type": "Gradient",

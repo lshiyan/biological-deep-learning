@@ -2,12 +2,10 @@
     "Lambda": 1,
     "Lr": 0.01,
     "beta": 1,
-    "greedytrain": false,
+    "greedytrain": true,
     "nConvLayers": 1,
     "Convolutions": {
-        "Conv1": {
-            "out_channel": 32,
-            "kernel": 5,
+        "GlobalParams": {
             "stride": 1,
             "padding": 2,
             "paddingmode": "reflect",
@@ -15,34 +13,24 @@
             "whiten": false,
             "batchnorm": true,
             "inhibition": "Softmax"
+        },
+        "Layers": {
+            "Conv1": {
+                "out_channel": 32,
+                "kernel": 5
+            }
         }
     },
     "PoolingBlock": {
-        "Pooling": false,
-        "Conv1": {
-            "Type": "Max",
-            "kernel": 4,
-            "stride": 1,
-            "padding": 1
+        "GlobalParams": {
+            "Pooling": false,
+            "stride": 1
         },
-        "Conv2": {
-            "Type": "Max",
-            "kernel": 4,
-            "stride": 1,
-            "padding": 1
-        },
-        "Conv3": {
-            "Type": "Max",
-            "kernel": 2,
-            "stride": 1,
-            "padding": 0
-        },
-        "Conv4": {
-            "Type": "Max",
-            "kernel": 2,
-            "stride": 1,
-            "padding": 0
-        }
+        "Layers": {}
+    },
+    "Classifier": {
+        "type": "Gradient",
+        "out_channel": 10
     },
     "Topdown": false,
     "Rho": 0.001,
