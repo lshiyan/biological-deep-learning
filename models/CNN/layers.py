@@ -13,8 +13,8 @@ from models.MLP.model import SoftHebbLayer
 
 
 class ConvSoftHebbLayer(nn.Module):
-    def __init__(self, input_shape, kernel, in_ch, out_ch, stride = 1, padding = 0, w_lr: float = 0.003, b_lr: float = 0.003, 
-                 l_lr: float = 0.003, device = None, is_output_layer = False, initial_weight_norm: float = 0.01,
+    def __init__(self, input_shape, kernel, in_ch, out_ch, stride = 1, padding = 0, w_lr: float = 0.3, b_lr: float = 0.003, 
+                 l_lr: float = 0.1, device = None, is_output_layer = False, initial_weight_norm: float = 0.01,
                  triangle: bool = False, initial_lambda: float = 4.0, inhibition: Inhibition = Inhibition.RePU,
                  learningrule: LearningRule = LearningRule.SoftHebb, preprocessing: InputProcessing = InputProcessing.No):
 
@@ -91,7 +91,7 @@ class GradientClassifierLayer(nn.Module):
             loss.backward()
             self.optim.step()
         else: #test
-            self.test
+            self.eval
             pred = self.linear(self.drop(x))
         return pred
 

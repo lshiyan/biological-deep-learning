@@ -86,7 +86,7 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
     #lamb_values = {layer_name: [] for layer_name in mymodel.basemodel.layers.keys()}
 
     if greedytrain:
-        for idx in range(len(mymodel.basemodel.layers)): 
+        for idx in range(len(mymodel.layers)): 
             if isinstance(layers[idx], ConvSoftHebbLayer):
                 mymodel.set_conv_training_layers([layers[idx]])
             else:
@@ -116,7 +116,6 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
 
 
     else :
-
         for _ in range(epoch):
             for data in tqdm(dataloader):
                 inputs, labels=data
@@ -132,7 +131,6 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
 
 
     for _ in range(1):
-
         for data in tqdm(dataloader):
             inputs, labels=data
             inputs = inputs.to(device)
@@ -173,7 +171,7 @@ def CNN_Baseline_test(mymodel, data_loader, imgtype, topdown):
             output = torch.argmax(mymodel.TD_forward_test(inputs), dim=1)
         else:
             y = mymodel.forward_test(inputs)
-            output = torch.argmax(y, dim=1) ######
+            output = torch.argmax(y, dim=1) ####
 
         for label, prediction in zip(labels, output):
             label = label.item()

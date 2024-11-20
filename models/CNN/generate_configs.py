@@ -23,32 +23,38 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                 config['greedytrain'] = greedytrain
                                 config['nConvLayers'] = layers
 
-                                if pool == 'PoolingStride1':
-                                    config['PoolingBlock']['Pooling'] = True
-                                else:
-                                    config['PoolingBlock']['Pooling'] = False
-                            
-                                # Update whiten
-                                for i in range(0, layers):
-                                    conv_key = f"Conv{i+1}"
-                                    config['Convolutions'][conv_key]['whiten'] = whiten
-                                    config['Convolutions'][conv_key]['triangle'] = triangle
-                                    config['Convolutions'][conv_key]['inhibition'] = inhibition
+                                config['Convolutions']["GlobalParams"]['inhibition'] = inhibition
+                                config['Convolutions']["GlobalParams"]['padding'] = 2
+                                config['Convolutions']["GlobalParams"]['paddingmode'] = "reflect"
+                                config['Convolutions']["GlobalParams"]['triangle'] = triangle
+                                config['Convolutions']["GlobalParams"]['whiten'] = whiten
+                                config['Convolutions']["GlobalParams"]['batchnorm'] = True
 
-                                    if pool == 'NoPoolingStride2':
-                                        config['Convolutions'][conv_key]['stride'] = 2
-                                    else:
-                                        config['Convolutions'][conv_key]['stride'] = 1
+                                if pool == 'PoolingStride1':
+                                    config['PoolingBlock']["GlobalParams"]['Pooling'] = True
+                                else:
+                                    config['PoolingBlock']["GlobalParams"]['Pooling'] = False
+
+                                if pool == 'NoPoolingStride2':
+                                    config['Convolutions']["GlobalParams"]['stride'] = 2
+                                else:
+                                    config['Convolutions']["GlobalParams"]['stride'] = 1
                                         
 
                                 # Remove convolution layers beyond the specified number
                                 for i in range(layers + 1, 5):
-                                    config['Convolutions'].pop(f"Conv{i}", None)
+                                    config['Convolutions']['Layers'].pop(f"Conv{i}", None)
 
-                                # No need to remove extra pooling layers, just set the last one that will be used to avg pool
-                                if pool == 'PoolingStride1':
-                                    config['PoolingBlock'][f"Conv{layers}"]['Type'] = "Avg"
-
+                                
+                                if config['PoolingBlock']["GlobalParams"]['Pooling'] == True:
+                                    config['PoolingBlock']['Layers'][f"Conv{layers}"]['Type'] = "Avg"
+                                    for i in range(layers + 1, 5):
+                                        config['PoolingBlock']['Layers'].pop(f"Conv{i}", None)
+                                else:
+                                    for i in range(0, 5):
+                                        config['PoolingBlock']['Layers'].pop(f"Conv{i}", None)
+                                    
+                                
                                 filename = f"config{config_number}.json"
                                 filepath = os.path.join(output_dir, filename)
                                 
@@ -68,55 +74,61 @@ base_config = {
     "nConvLayers" : 1,
 
     "Convolutions" : {
-        "stride" : 1,
-        "padding" : 2,
-        "paddingmode" : "reflect",
-        "triangle" : False,
-        "whiten" : False,
-        "batchnorm" : True,
-        "inhibition" : "REPU",
-
-        "Conv1" : {
-            "out_channel" : 32,
-            "kernel" : 5
-        }, 
-        "Conv2" : {
-            "out_channel" : 128,
-            "kernel" : 3
-        }, 
-        "Conv3" : {
-            "out_channel" : 512,
-            "kernel" : 3
+        "GlobalParams": {
+            "stride" : 1,
+            "padding" : 2,
+            "paddingmode" : "reflect",
+            "triangle" : False,
+            "whiten" : False,
+            "batchnorm" : True,
+            "inhibition" : "REPU"
         },
-        "Conv4" : {
-            "out_channel" : 2048,
-            "kernel" : 3
+        "Layers": {
+            "Conv1" : {
+                "out_channel" : 32,
+                "kernel" : 5
+            }, 
+            "Conv2" : {
+                "out_channel" : 128,
+                "kernel" : 3
+            }, 
+            "Conv3" : {
+                "out_channel" : 512,
+                "kernel" : 3
+            },
+            "Conv4" : {
+                "out_channel" : 2048,
+                "kernel" : 3
+            }
         }
     }, 
 
     "PoolingBlock" : {
-        "Pooling" : True, 
-        "stride" : 1,
-
-        "Conv1" : {
-            "Type" : "Max",
-            "kernel" : 4,
-            "padding" : 1 
-        }, 
-        "Conv2" : {
-            "Type" : "Max",
-            "kernel" : 4,
-            "padding" : 1 
+        "GlobalParams":{
+            "Pooling" : True, 
+            "stride" : 1
         },
-        "Conv3" : {
-            "Type" : "Max",
-            "kernel" : 2,
-            "padding" : 0 
-        },
-        "Conv4" : {
-            "Type" : "Max",
-            "kernel" : 2,
-            "padding" : 0 
+        "Layers": {
+            "Conv1" : {
+                "Type" : "Max",
+                "kernel" : 4,
+                "padding" : 1 
+            }, 
+            "Conv2" : {
+                "Type" : "Max",
+                "kernel" : 4,
+                "padding" : 1 
+            },
+            "Conv3" : {
+                "Type" : "Max",
+                "kernel" : 2,
+                "padding" : 0 
+            },
+            "Conv4" : {
+                "Type" : "Max",
+                "kernel" : 2,
+                "padding" : 0 
+            }
         }
     }, 
     "Classifier" : {
