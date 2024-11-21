@@ -258,16 +258,16 @@ def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args, ch
     # Set the model to training mode - important for layers with different training / inference behaviour
     model.train()
 
-    layers = list(model.basemodel.layers.values())
+    layers = list(model.layers.values())
     
     for epoch in range(args.epoch):
         for idx in range(len(layers)):
             train_dataloader.sampler.reset_progress()
 
             if isinstance(layers[idx], ConvSoftHebbLayer):
-                    model.set_training_layers([layers[idx]])
+                    model.set_conv_training_layers([layers[idx]])
             else:
-                break
+                continue
                 # no greedy training on pooling layers
 
             for inputs, targets in train_dataloader:
@@ -511,7 +511,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/test.csv"
+                csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/2HL(64).csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
@@ -702,10 +702,10 @@ def main(args, timer):
     )
 
     test_loop(model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint,
-              nlayers=config['nConvLayers'], whiten=config['Convolutions']["Conv1"]['whiten'], 
-              triangle=config['Convolutions']["Conv1"]['triangle'], greedytrain=config['greedytrain'], 
-              inhibition=config['Convolutions']["Conv1"]['inhibition'], pooling=config['PoolingBlock']["Pooling"], 
-              stride=config['Convolutions']["Conv1"]['stride'])
+              nlayers=config['nConvLayers'], whiten=config['Convolutions']["GlobalParams"]['whiten'], 
+              triangle=config['Convolutions']["GlobalParams"]['triangle'], greedytrain=config['greedytrain'], 
+              inhibition=config['Convolutions']["GlobalParams"]['inhibition'], pooling=config['PoolingBlock']["GlobalParams"]["Pooling"], 
+              stride=config['Convolutions']["GlobalParams"]['stride'])
 
     #CNN.Save_Model(model, args.dataset, rank, args.topdown, v_input, args.device_id, (model.correct/model.tot)*100)
     # torch.save(model, 'SavedModels/model' + str(rank) + ".pth")

@@ -3,14 +3,14 @@
     "Lr": 0.01,
     "beta": 1,
     "greedytrain": true,
-    "nConvLayers": 1,
+    "nConvLayers": 3,
     "Convolutions": {
         "GlobalParams": {
             "stride": 2,
             "padding": 2,
             "paddingmode": "reflect",
-            "triangle": true,
-            "whiten": false,
+            "triangle": false,
+            "whiten": true,
             "batchnorm": true,
             "inhibition": "Softmax"
         },
@@ -18,6 +18,14 @@
             "Conv1": {
                 "out_channel": 32,
                 "kernel": 5
+            },
+            "Conv2": {
+                "out_channel": 128,
+                "kernel": 3
+            },
+            "Conv3": {
+                "out_channel": 512,
+                "kernel": 3
             }
         }
     },
