@@ -666,51 +666,51 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
 
 
 
-# def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None, lambd=1, lr=0.005,
-#                       gamma=0.99, epsilon=0.01, rho=1e-3, eta=1e-3, b=1e-4,
-#                       nbclasses=10, topdown=True, device=None,
-#                       learningrule=LearningRule.Orthogonal,
-#                       weightscaling=WeightScale.WeightNormalization, outputlayerrule=LearningRule.OutputContrastiveSupervised,
-#                       triangle=False, whiten_input=False, inhibition=Inhibition.RePU):
-#     if padding is None:
-#         padding = [0] * len(kernels)
-#     if strides is None:
-#         strides = [1] * len(kernels)
+def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None, lambd=1, lr=0.005,
+                      gamma=0.99, epsilon=0.01, rho=1e-3, eta=1e-3, b=1e-4,
+                      nbclasses=10, topdown=True, device=None,
+                      learningrule=LearningRule.Orthogonal,
+                      weightscaling=WeightScale.WeightNormalization, outputlayerrule=LearningRule.OutputContrastiveSupervised,
+                      triangle=False, whiten_input=False, inhibition=Inhibition.RePU):
+    if padding is None:
+        padding = [0] * len(kernels)
+    if strides is None:
+        strides = [1] * len(kernels)
 
-#     mycnn = ConvolutionalNeuralNet(device)
-#     input_channels = inputshape[0]
-#     input_size = inputshape[1:]
+    mycnn = ConvolutionalNeuralNet(device)
+    input_channels = inputshape[0]
+    input_size = inputshape[1:]
 
-#     layer_id = 1
-#     for kernel, out_chan, stride, pad in zip(kernels, channels, strides, padding):
-#         convlayer = ConvolutionHebbianLayer(input_size, kernel, stride, input_channels, out_chan, lambd, lr, gamma,
-#                                             epsilon, rho, eta=eta, device=device, padding=pad, weightlearning=learningrule,
-#                                             weightscaling=weightscaling, triangle=triangle, whiten_input=whiten_input, b=b, inhibition=inhibition)
-#         if topdown and layer_id < len(kernels):
-#             convlayer.Set_TD(inc=channels[layer_id], outc=out_chan, kernel=kernels[layer_id], stride=strides[layer_id])
-#         convlayer.normalize_weights()
-#         mycnn.add_layer(f"CNNLayer{layer_id}", convlayer)
-#         layer_id += 1
-#         input_channels = out_chan
-#         input_size = convlayer.output_shape
-#         print(f"New Image Dimensions after Convolution : {((out_chan,) + input_size)}")
+    layer_id = 1
+    for kernel, out_chan, stride, pad in zip(kernels, channels, strides, padding):
+        convlayer = ConvolutionHebbianLayer(input_size, kernel, stride, input_channels, out_chan, lambd, lr, gamma,
+                                            epsilon, rho, eta=eta, device=device, padding=pad, weightlearning=learningrule,
+                                            weightscaling=weightscaling, triangle=triangle, whiten_input=whiten_input, b=b, inhibition=inhibition)
+        if topdown and layer_id < len(kernels):
+            convlayer.Set_TD(inc=channels[layer_id], outc=out_chan, kernel=kernels[layer_id], stride=strides[layer_id])
+        convlayer.normalize_weights()
+        mycnn.add_layer(f"CNNLayer{layer_id}", convlayer)
+        layer_id += 1
+        input_channels = out_chan
+        input_size = convlayer.output_shape
+        print(f"New Image Dimensions after Convolution : {((out_chan,) + input_size)}")
 
 
-#     fc_inputdim = convlayer.nb_tiles * out_chan
-#     print("Fully connected layer input dim : " + str(fc_inputdim))
+    fc_inputdim = convlayer.nb_tiles * out_chan
+    print("Fully connected layer input dim : " + str(fc_inputdim))
     
-#     heblayer = Hebbian_Layer(inputdim=fc_inputdim, outputdim=nbclasses, lr=lr, lamb=lambd, rho=rho, eta=eta,
-#                              gamma=gamma, eps=epsilon, device=device, is_output_layer=True,
-#                              output_learning=outputlayerrule, weightscaling=weightscaling, triangle=triangle, b=b, inhibition=inhibition)
+    heblayer = Hebbian_Layer(inputdim=fc_inputdim, outputdim=nbclasses, lr=lr, lamb=lambd, rho=rho, eta=eta,
+                             gamma=gamma, eps=epsilon, device=device, is_output_layer=True,
+                             output_learning=outputlayerrule, weightscaling=weightscaling, triangle=triangle, b=b, inhibition=inhibition)
 
-#     mycnn.add_layer("HebLayer", heblayer)
+    mycnn.add_layer("HebLayer", heblayer)
 
-#     if topdown:
-#         mycnn.initialize_TD_factors()
+    if topdown:
+        mycnn.initialize_TD_factors()
     
-#     mycnn = mycnn.to(device)
+    mycnn = mycnn.to(device)
 
-#     return mycnn
+    return mycnn
 
 
 
