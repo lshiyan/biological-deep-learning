@@ -76,9 +76,10 @@ def softhebb_input_difference(x, a, normalized_weights):
         1, out_dim, in_dim)
     return in_space_diff
 
-
+# To solve out of memory issues for the softhebb_input_difference invocation, reduce the chunk_size
 def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
-                      supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default):
+                              supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default,
+                              chunk_size=512):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
     normed_weights = weights / (weight_norms + 1e-9)
     batch_dim, out_dim = y.shape
@@ -101,9 +102,62 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     else:
         y_part = y.reshape(batch_dim, out_dim, 1)
 
-    delta_w = factor * y_part * softhebb_input_difference(normed_x, a, normed_weights)
-    delta_w = torch.mean(delta_w, dim=0) # average the delta weights over the batch dim
+    # Initialize an accumulator for delta_w
+    delta_w_accum = torch.zeros_like(weights)
+
+    # Process in chunks to avoid large intermediate tensors
+    for i in range(0, batch_dim, chunk_size):
+        # Get chunks
+        y_chunk = y[i:i+chunk_size]
+        x_chunk = normed_x[i:i+chunk_size]
+        a_chunk = a[i:i+chunk_size]
+        y_part_chunk = y_part[i:i+chunk_size]
+
+        # Compute the softhebb_input_difference for the chunk
+        chunk_diff = softhebb_input_difference(x_chunk, a_chunk, normed_weights)
+
+        # Compute delta_w for the chunk
+        delta_w_chunk = factor * y_part_chunk * chunk_diff
+        # Sum over the chunk
+        delta_w_chunk = torch.sum(delta_w_chunk, dim=0)  
+
+        # Accumulate
+        delta_w_accum += delta_w_chunk
+
+    delta_w = torch.mean(delta_w_accum, dim=0)
     return delta_w
+
+
+# This is the old version of update_softhebb_w that does not invoke softhebb_input_difference in chunks. It was causing out of memory issues.
+
+# def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
+#                       supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default):
+#     weight_norms = torch.norm(weights, dim=1, keepdim=True)
+#     normed_weights = weights / (weight_norms + 1e-9)
+#     batch_dim, out_dim = y.shape
+#     wn = weight_norms.unsqueeze(0)
+#     if weight_growth == WeightGrowth.Default:
+#         factor = 1 / (wn + 1e-9)
+#     elif weight_growth == WeightGrowth.Linear:
+#         factor = 1
+#     elif weight_growth == WeightGrowth.Sigmoidal:
+#         factor = wn * (1 - wn)
+#     elif weight_growth == WeightGrowth.Exponential:
+#         factor = wn
+#     else:
+#         raise NotImplementedError(f"Weight growth {weight_growth}, invalid.")
+#     if inhibition == Inhibition.RePU:
+#         indicator = (u > 0).float()
+#         factor = factor * indicator.reshape(batch_dim, out_dim, 1) / (u.reshape(batch_dim, out_dim, 1) + 1e-9)
+#     if supervised:
+#         y_part = (target - y).reshape(batch_dim, out_dim, 1)
+#     else:
+#         y_part = y.reshape(batch_dim, out_dim, 1)
+
+#     delta_w = factor * y_part * softhebb_input_difference(normed_x, a, normed_weights)
+#     delta_w = torch.mean(delta_w, dim=0) # average the delta weights over the batch dim
+#     return delta_w
+
 
 
 def update_softhebb_b(y, logprior, target=None, supervised=False):
