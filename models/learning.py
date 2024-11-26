@@ -77,9 +77,58 @@ def softhebb_input_difference(x, a, normalized_weights):
     return in_space_diff
 
 # To solve out of memory issues for the softhebb_input_difference invocation, reduce the chunk_size
+# def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
+#                               supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default,
+#                               chunk_size=1024):
+#     weight_norms = torch.norm(weights, dim=1, keepdim=True)
+#     normed_weights = weights / (weight_norms + 1e-9)
+#     batch_dim, out_dim = y.shape
+#     wn = weight_norms.unsqueeze(0)
+#     if weight_growth == WeightGrowth.Default:
+#         factor = 1 / (wn + 1e-9)
+#     elif weight_growth == WeightGrowth.Linear:
+#         factor = 1
+#     elif weight_growth == WeightGrowth.Sigmoidal:
+#         factor = wn * (1 - wn)
+#     elif weight_growth == WeightGrowth.Exponential:
+#         factor = wn
+#     else:
+#         raise NotImplementedError(f"Weight growth {weight_growth}, invalid.")
+#     if inhibition == Inhibition.RePU:
+#         indicator = (u > 0).float()
+#         factor = factor * indicator.reshape(batch_dim, out_dim, 1) / (u.reshape(batch_dim, out_dim, 1) + 1e-9)
+#     if supervised:
+#         y_part = (target - y).reshape(batch_dim, out_dim, 1)
+#     else:
+#         y_part = y.reshape(batch_dim, out_dim, 1)
+
+#     # Initialize an accumulator for delta_w
+#     delta_w_accum = torch.zeros_like(weights)
+
+#     # Process in chunks to avoid large intermediate tensors
+#     for i in range(0, batch_dim, chunk_size):
+#         # Get chunks
+#         y_chunk = y[i:i+chunk_size]
+#         x_chunk = normed_x[i:i+chunk_size]
+#         a_chunk = a[i:i+chunk_size]
+#         y_part_chunk = y_part[i:i+chunk_size]
+
+#         # Compute the softhebb_input_difference for the chunk
+#         chunk_diff = softhebb_input_difference(x_chunk, a_chunk, normed_weights)
+
+#         # Compute delta_w for the chunk
+#         delta_w_chunk = factor * y_part_chunk * chunk_diff
+#         # Sum over the chunk
+#         delta_w_chunk = torch.sum(delta_w_chunk, dim=0)  
+
+#         # Accumulate
+#         delta_w_accum += delta_w_chunk
+
+#     delta_w = delta_w_accum / batch_dim
+#     return delta_w
+
 def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
-                              supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default,
-                              chunk_size=1024):
+                      supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
     normed_weights = weights / (weight_norms + 1e-9)
     batch_dim, out_dim = y.shape
@@ -96,36 +145,25 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
         raise NotImplementedError(f"Weight growth {weight_growth}, invalid.")
     if inhibition == Inhibition.RePU:
         indicator = (u > 0).float()
-        factor = factor * indicator.reshape(batch_dim, out_dim, 1) / (u.reshape(batch_dim, out_dim, 1) + 1e-9)
+        factor = factor * indicator.reshape(batch_dim, out_dim) / (u.reshape(batch_dim, out_dim) + 1e-9)
     if supervised:
-        y_part = (target - y).reshape(batch_dim, out_dim, 1)
+        y_part = (target - y).reshape(batch_dim, out_dim)
     else:
-        y_part = y.reshape(batch_dim, out_dim, 1)
+        y_part = y.reshape(batch_dim, out_dim)
+    
+    batch_dim, in_dim = normed_x.shape
+    batch_dim, out_dim = a.shape
+        
+    # Innefficient. We are trying to calculate it in a more memory efficient way.
+    # delta_w = factor * y_part * x.reshape(batch_dim, 1, in_dim) - a.reshape(batch_dim, out_dim, 1) * normalized_weights.reshape(1, out_dim, in_dim)
+    
+    ya = torch.mean(y_part * a, dim=0).reshape(out_dim, 1)
+    yx = (1/batch_dim) * torch.matmul(y_part.T, normed_x)
+    delta_w = factor * (yx - ya * normed_weights)
+    delta_w = torch.mean(delta_w, dim=0) # average the delta weights over the batch dim
 
-    # Initialize an accumulator for delta_w
-    delta_w_accum = torch.zeros_like(weights)
-
-    # Process in chunks to avoid large intermediate tensors
-    for i in range(0, batch_dim, chunk_size):
-        # Get chunks
-        y_chunk = y[i:i+chunk_size]
-        x_chunk = normed_x[i:i+chunk_size]
-        a_chunk = a[i:i+chunk_size]
-        y_part_chunk = y_part[i:i+chunk_size]
-
-        # Compute the softhebb_input_difference for the chunk
-        chunk_diff = softhebb_input_difference(x_chunk, a_chunk, normed_weights)
-
-        # Compute delta_w for the chunk
-        delta_w_chunk = factor * y_part_chunk * chunk_diff
-        # Sum over the chunk
-        delta_w_chunk = torch.sum(delta_w_chunk, dim=0)  
-
-        # Accumulate
-        delta_w_accum += delta_w_chunk
-
-    delta_w = delta_w_accum / batch_dim
     return delta_w
+
 
 
 # This is the old version of update_softhebb_w that does not invoke softhebb_input_difference in chunks. It was causing out of memory issues.
