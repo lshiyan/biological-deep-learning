@@ -79,7 +79,7 @@ def softhebb_input_difference(x, a, normalized_weights):
 # To solve out of memory issues for the softhebb_input_difference invocation, reduce the chunk_size
 def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
                               supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default,
-                              chunk_size=512):
+                              chunk_size=128):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
     normed_weights = weights / (weight_norms + 1e-9)
     batch_dim, out_dim = y.shape
@@ -124,7 +124,7 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
         # Accumulate
         delta_w_accum += delta_w_chunk
 
-    delta_w = torch.mean(delta_w_accum, dim=0)
+    delta_w = delta_w_accum / batch_dim
     return delta_w
 
 
