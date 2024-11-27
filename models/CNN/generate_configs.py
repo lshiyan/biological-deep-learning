@@ -2,8 +2,7 @@ import json
 import os
 
 def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1], whiten_values=[True], triangle_values=[True],
-    greedytrain_values=[True], inhibition_values=['RePU'], pooling_values = ['PoolingStride1', 'NoPoolingStride2', 'NoPoolingStride1'], 
-    lambs=[1, 5, 25, 125, 250, 500]):
+    greedytrain_values=[True], inhibition_values=['RePU'], pooling_values = ['PoolingStride1', 'NoPoolingStride2', 'NoPoolingStride1']):
     
     # whiten = False for now
     # inhibition_values = REPU for now
@@ -17,16 +16,16 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                 for triangle in triangle_values:
                     for inhibition in inhibition_values:
                         for pool in pooling_values:
-                            for lamb in lambs:
+
                             
                                 ##### here add varying learning rate values and others as in mlp
                                 config = json.loads(json.dumps(base_config))
-                                config["Lambda"]= lamb
-                                config["classifierLr"]= 0.01
-                                config["w_norm"]= 0.01
-                                config["w_lr"]= 0.01
+                                config["Lambda"]= 125
+                                config["classifierLr"]= 0.001
+                                config["w_norm"]= 0.0001
+                                config["w_lr"]= 0.001
                                 config["l_lr"]= 0.01
-                                config["b_lr"]= 0.01
+                                config["b_lr"]= 0.001
                                 config['greedytrain'] = greedytrain
                                 config['nConvLayers'] = layers
 
@@ -46,7 +45,6 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                     config['Convolutions']["GlobalParams"]['stride'] = 2
                                 else:
                                     config['Convolutions']["GlobalParams"]['stride'] = 1
-                                        
 
                                 # Remove convolution layers beyond the specified number
                                 for i in range(layers + 1, 5):
@@ -62,7 +60,7 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                         config['PoolingBlock']['Layers'].pop(f"Conv{i}", None)
                                     
                                 
-                                filename = f"config{config_number}.json"
+                                filename = f"config{config_number+27}.json"
                                 filepath = os.path.join(output_dir, filename)
                                 
                                 with open(filepath, 'w') as json_file:
@@ -74,7 +72,7 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
 # Base configuration template
 base_config = {
 
-    "Lambda" : 1, 
+    "Lambda" : 125, 
     "classifierLr" : 0.01,
     "beta" : 1,
     "w_norm": 0.01,
@@ -96,7 +94,7 @@ base_config = {
         },
         "Layers": {
             "Conv1" : {
-                "out_channel" : 128,
+                "out_channel" : 256,
                 "kernel" : 5
             }, 
             "Conv2" : {
