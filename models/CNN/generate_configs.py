@@ -1,9 +1,9 @@
 import json
 import os
 
-def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[2], whiten_values=[True, False], triangle_values=[True, False],
-    greedytrain_values=[True, False], inhibition_values=['RePU','Softmax'], pooling_values = ['PoolingStride1', 'NoPoolingStride2', 'NoPoolingStride1']
-):
+def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1], whiten_values=[True], triangle_values=[True],
+    greedytrain_values=[True], inhibition_values=['RePU'], pooling_values = ['PoolingStride1', 'NoPoolingStride2', 'NoPoolingStride1'], 
+    lambs=[1, 5, 25, 125, 250, 500]):
     
     # whiten = False for now
     # inhibition_values = REPU for now
@@ -17,9 +17,16 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                 for triangle in triangle_values:
                     for inhibition in inhibition_values:
                         for pool in pooling_values:
+                            for lamb in lambs:
                             
                                 ##### here add varying learning rate values and others as in mlp
                                 config = json.loads(json.dumps(base_config))
+                                config["Lambda"]= lamb
+                                config["classifierLr"]= 0.01
+                                config["w_norm"]= 0.01
+                                config["w_lr"]= 0.01
+                                config["l_lr"]= 0.01
+                                config["b_lr"]= 0.01
                                 config['greedytrain'] = greedytrain
                                 config['nConvLayers'] = layers
 
@@ -68,8 +75,12 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
 base_config = {
 
     "Lambda" : 1, 
-    "Lr" : 0.01,
+    "classifierLr" : 0.01,
     "beta" : 1,
+    "w_norm": 0.01,
+    "w_lr": 0.01,
+    "l_lr": 0.01,
+    "b_lr": 0.01,
     "greedytrain" : True,
     "nConvLayers" : 1,
 
@@ -85,7 +96,7 @@ base_config = {
         },
         "Layers": {
             "Conv1" : {
-                "out_channel" : 32,
+                "out_channel" : 128,
                 "kernel" : 5
             }, 
             "Conv2" : {

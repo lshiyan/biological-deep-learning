@@ -609,7 +609,11 @@ def CNN_Model_from_config(inputshape, config, device, nbclasses):
 def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     mycnn = ConvolutionalNeuralNet(device)
     lamb = config['Lambda']
-    lr = config['Lr']
+    lr = config['classifierLr']
+    w_lr = config['w_lr']
+    b_lr = config['b_lr']
+    l_lr = config['l_lr']
+    w_norm = config['w_norm']
     is_topdown = config['Topdown']
     input_channel = inputshape[0]
     nb_conv = len(config['Convolutions']['Layers'])
@@ -628,10 +632,9 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
         layerconfig = config['Convolutions']["Layers"][l_keys[layer_idx]]
 
         convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], stride=conv_stride, 
-                                            padding=conv_padding, device=device, is_output_layer=False, triangle=triangle, 
-                                            initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing)
-
-
+                                            padding=conv_padding, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, device=device, is_output_layer=False, initial_weight_norm=w_norm, 
+                                            triangle=triangle, initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing)
+        
         mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
 
         input_channel = layerconfig['out_channel']
