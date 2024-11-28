@@ -3,7 +3,7 @@ import os
 
 def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1], whiten_values=[True], triangle_values=[True],
     greedytrain_values=[True], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1'], 
-    classlrs = [1e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3]):
+    classlrs = [3e-4, 4e-4, 5e-4, 6e-4, 7e-4, 8e-4, 9e-4, 1e-3]):
     
     # whiten = False for now
     # inhibition_values = REPU for now
