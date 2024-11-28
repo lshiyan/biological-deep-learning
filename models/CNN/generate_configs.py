@@ -2,7 +2,7 @@ import json
 import os
 
 def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1], whiten_values=[True], triangle_values=[True],
-    greedytrain_values=[True], inhibition_values=['RePU'], pooling_values = ['PoolingStride1', 'NoPoolingStride2', 'NoPoolingStride1']):
+    greedytrain_values=[True], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1']):
     
     # whiten = False for now
     # inhibition_values = REPU for now
@@ -23,8 +23,8 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                 config["Lambda"]= 125
                                 config["classifierLr"]= 0.001
                                 config["w_norm"]= 0.0001
-                                config["w_lr"]= 0.001
-                                config["l_lr"]= 0.01
+                                config["w_lr"]= 0.1
+                                config["l_lr"]= 0.3
                                 config["b_lr"]= 0.001
                                 config['greedytrain'] = greedytrain
                                 config['nConvLayers'] = layers
@@ -60,7 +60,7 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                         config['PoolingBlock']['Layers'].pop(f"Conv{i}", None)
                                     
                                 
-                                filename = f"config{config_number+27}.json"
+                                filename = f"config{config_number}.json"
                                 filepath = os.path.join(output_dir, filename)
                                 
                                 with open(filepath, 'w') as json_file:
@@ -94,7 +94,7 @@ base_config = {
         },
         "Layers": {
             "Conv1" : {
-                "out_channel" : 256,
+                "out_channel" : 512,
                 "kernel" : 5
             }, 
             "Conv2" : {

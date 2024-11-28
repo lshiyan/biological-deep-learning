@@ -1,0 +1,6 @@
+test_accuracy,nlayers,pool,stride,whiten,triangle,greedy,inhib,lambda,classLr,wnorm,w_lr,l_lr,b_lr,hsize
+0.5664,1,True,1,True,True,True,Softmax,125,0.001,0.0001,0.1,0.3,0.001,512
+0.5611,1,True,1,True,True,True,Softmax,125,0.001,0.0001,0.1,0.3,0.001,512
+0.5681,1,True,1,True,True,True,Softmax,125,0.001,0.0001,0.1,0.3,0.001,512
+0.5685,1,True,1,True,True,True,Softmax,125,0.001,0.0001,0.1,0.3,0.001,512
+0.5684,1,True,1,True,True,True,Softmax,125,0.001,0.0001,0.1,0.3,0.001,512

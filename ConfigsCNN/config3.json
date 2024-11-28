@@ -3,8 +3,8 @@
     "classifierLr": 0.001,
     "beta": 1,
     "w_norm": 0.0001,
-    "w_lr": 0.001,
-    "l_lr": 0.01,
+    "w_lr": 0.1,
+    "l_lr": 0.3,
     "b_lr": 0.001,
     "greedytrain": true,
     "nConvLayers": 1,
@@ -16,11 +16,11 @@
             "triangle": true,
             "whiten": true,
             "batchnorm": true,
-            "inhibition": "RePU"
+            "inhibition": "Softmax"
         },
         "Layers": {
             "Conv1": {
-                "out_channel": 256,
+                "out_channel": 512,
                 "kernel": 5
             }
         }
