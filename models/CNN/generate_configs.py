@@ -2,7 +2,8 @@ import json
 import os
 
 def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1], whiten_values=[True], triangle_values=[True],
-    greedytrain_values=[True], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1']):
+    greedytrain_values=[True], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1'], 
+    classlrs = [1e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3]):
     
     # whiten = False for now
     # inhibition_values = REPU for now
@@ -16,12 +17,12 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                 for triangle in triangle_values:
                     for inhibition in inhibition_values:
                         for pool in pooling_values:
-
+                            for classlr in classlrs:
                             
                                 ##### here add varying learning rate values and others as in mlp
                                 config = json.loads(json.dumps(base_config))
                                 config["Lambda"]= 125
-                                config["classifierLr"]= 0.001
+                                config["classifierLr"]= classlr
                                 config["w_norm"]= 0.0001
                                 config["w_lr"]= 0.1
                                 config["l_lr"]= 0.3

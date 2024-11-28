@@ -1,6 +1,6 @@
 {
     "Lambda": 125,
-    "classifierLr": 0.001,
+    "classifierLr": 0.0003,
     "beta": 1,
     "w_norm": 0.0001,
     "w_lr": 0.1,
