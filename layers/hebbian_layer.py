@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore")
 
 #Hebbian learning layer that implements lateral inhibition in output. Not trained through supervision.
 class HebbianLayer (nn.Module):
-    def __init__(self, input_dimension, output_dimension, classifier, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
+    def __init__(self, args, input_dimension, output_dimension, classifier, lamb=2, heb_lr=0.001, gamma=0.99, eps=10e-5):
         super (HebbianLayer, self).__init__()
         self.input_dimension=input_dimension
         self.output_dimension=output_dimension
@@ -25,10 +25,10 @@ class HebbianLayer (nn.Module):
         self.scheduler=None
         self.eps=eps
         
-        self.exponential_average=torch.zeros(self.output_dimension)
+        self.exponential_average=torch.zeros(self.output_dimension).to(args.device_id)
         self.gamma=gamma
         
-        self.itensors=self.createITensors()
+        self.itensors=self.createITensors().to(args.device_id)
         
         for param in self.fc.parameters():
             param=torch.nn.init.uniform_(param, a=0.0, b=1.0)
@@ -58,8 +58,8 @@ class HebbianLayer (nn.Module):
     
     def updateWeightsHebbianClassifier(self, input, output, clamped_output=None, train=1):
         if train:
-            u=output.clone().detach().squeeze()
-            x=input.clone().detach().squeeze()
+            u=output.squeeze()
+            x=input.squeeze()
             y=torch.softmax(u, dim=0)
             A=None
             if clamped_output != None:
@@ -77,9 +77,9 @@ class HebbianLayer (nn.Module):
     #Calculates outer product of input and output and adds it to matrix.
     def updateWeightsHebbian(self, input, output, clamped_output=None, train=1):
         if train:
-            x=torch.tensor(input.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
-            y=torch.tensor(output.clone().detach(), requires_grad=False, dtype=torch.float).squeeze()
-            outer_prod=torch.tensor(outer(y, x))
+            x=input.squeeze()
+            y=output.squeeze()
+            outer_prod=torch.tensor(torch.outer(y, x))
             initial_weight=torch.transpose(self.fc.weight.clone().detach(), 0,1)
             A=torch.einsum('jk, lkm, m -> lj', initial_weight, self.itensors, y)
             A=A*(y.unsqueeze(1))
@@ -135,7 +135,7 @@ class HebbianLayer (nn.Module):
     
     #Creates heatmap of randomly chosen feature selectors.
     def visualizeWeights(self, classifier=0):
-        weight = self.fc.weight
+        weight = self.fc.weight.cpu()
         if classifier:
             fig, axes = plt.subplots(2, 5, figsize=(16, 8))
             for ele in range(10):  
@@ -147,6 +147,7 @@ class HebbianLayer (nn.Module):
                 fig.colorbar(im, ax=ax)
                 ax.set_title(f'Weight {ele}')
             plt.tight_layout()
+            plt.savefig('classifierlayerweights.png')
             plt.show()
         else:
             fig, axes = plt.subplots(8, 8, figsize=(16, 16))
@@ -159,4 +160,5 @@ class HebbianLayer (nn.Module):
                 fig.colorbar(im, ax=ax)
                 ax.set_title(f'Weight {ele}')
             plt.tight_layout()
+            plt.savefig('hebbianlayerweights.png')
             plt.show()

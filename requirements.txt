@@ -1,0 +1,10 @@
+torch==2.1.2  --index-url https://download.pytorch.org/whl/cu118
+torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
+tensorboard==2.16.2
+six==1.16.0
+packaging==24.0
+cycling_utils @ git+https://github.com/StrongResearch/cycling_utils.git
+pandas==2.2.2
+matplotlib==3.9.0
+tqdm==4.66.4
+typing==3.7.4.3
