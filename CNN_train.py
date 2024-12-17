@@ -460,7 +460,7 @@ def finetune(model, train_dataloader, test_dataloader, metrics, args, checkpoint
 
 def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, 
               nlayers, whiten, triangle, greedytrain, inhibition, pooling, stride, 
-              lamb, classLr, w_norm, w_lr, l_lr, b_lr, hsize):
+              lamb, classLr, w_norm, w_lr, l_lr, b_lr):
 
     test_batches_per_epoch = len(test_dataloader)
     epoch = 0
@@ -512,12 +512,12 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/classlr(64)(128).csv"
+                csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/multilayer(64).csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
                     fieldnames = ["test_accuracy", "nlayers", "pool", "stride", "whiten", "triangle", "greedy", "inhib",
-                                  "lambda", "classLr", "wnorm", "w_lr", "l_lr", "b_lr", "hsize"]
+                                  "lambda", "classLr", "wnorm", "w_lr", "l_lr", "b_lr"]
                     
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -538,8 +538,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                         "wnorm": w_norm,
                         "w_lr": w_lr,
                         "l_lr": l_lr, 
-                        "b_lr": b_lr,
-                        "hsize": hsize
+                        "b_lr": b_lr
                     })
 
             # Save checkpoint
@@ -587,7 +586,8 @@ def main(args, timer):
 
     dataset = args.dataset
 
-    with open("ConfigsCNN/config" + str(rank) + ".json", "r") as file:
+    #with open("ConfigsCNN/config" + str(rank) + ".json", "r") as file:
+    with open("ConfigsCNN/config1.json", "r") as file:
         config = json.load(file)
     
 
@@ -715,8 +715,7 @@ def main(args, timer):
               triangle=config['Convolutions']["GlobalParams"]['triangle'], greedytrain=config['greedytrain'], 
               inhibition=config['Convolutions']["GlobalParams"]['inhibition'], pooling=config['PoolingBlock']["GlobalParams"]["Pooling"], 
               stride=config['Convolutions']["GlobalParams"]['stride'],lamb=config["Lambda"], classLr=config['classifierLr'], 
-              w_norm=config['w_norm'], w_lr=config['w_lr'], l_lr=config['l_lr'], b_lr=config['b_lr'], 
-              hsize=config['Convolutions']['Layers']["Conv1"]["out_channel"])
+              w_norm=config['w_norm'], w_lr=config['w_lr'], l_lr=config['l_lr'], b_lr=config['b_lr'])
 
     #CNN.Save_Model(model, args.dataset, rank, args.topdown, v_input, args.device_id, (model.correct/model.tot)*100)
     # torch.save(model, 'SavedModels/model' + str(rank) + ".pth")
