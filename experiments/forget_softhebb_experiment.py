@@ -110,7 +110,6 @@ class ForgetExperiment(Experiment):
             label_filter_dictionary = dict(zip(curr_subexperiment_labels, curr_subexperiment_labels))
 
             curr_sub_experiment_dataloader = self.input_class.filter_data_loader(entire_dataloader, label_filter_dictionary)
-
             result.append(curr_sub_experiment_dataloader)
         
         return result
@@ -203,7 +202,7 @@ class ForgetExperiment(Experiment):
         
         sub_experiment_name = self.curr_folder_path.split('/')[-1]  # Assumes '/' as the path separator.
         
-        if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, f"learning for {sub_experiment_name}", False)
+        if visualize: self.model.visualize_weights(self.curr_folder_path, epoch, sub_experiment_name)
 
         # Start timer
         train_start: float = time.time()
@@ -296,10 +295,11 @@ class ForgetExperiment(Experiment):
                 
                 # Evaluates performance of model on testing dataset
                 correct_test_count += (predictions.argmax(-1) == labels).type(torch.float).sum()
+                total_test_count += labels.size(0)
 
             final_accuracy = correct_test_count/total_test_count
             
-            if (final_accuracy >= 0.95) and (purpose == Purposes.TRAIN_ACCURACY):
+            if (final_accuracy >= 0.85) and (purpose == Purposes.TRAIN_ACCURACY):
                 self.keep_training = False
 
         test_end = time.time()
@@ -323,7 +323,7 @@ class ForgetExperiment(Experiment):
         self.EXP_LOG.info(f"Testing ({purpose.value.lower()} acc) of sample #{self.SUB_EXP_SAMPLES} in current subexperiment took {time_to_str(testing_time)}.")
 
         #if visualize: 
-        #    self.model.visualize_weights(self.curr_folder_path, self.SUB_EXP_SAMPLES, purpose.name.lower())
+           #self.model.visualize_weights(self.curr_folder_path, self.SUB_EXP_SAMPLES, purpose.name.lower())
 
         return final_accuracy
 

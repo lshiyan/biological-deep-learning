@@ -1,121 +1,53 @@
 import subprocess
-import itertools
 import logging
 import sys
+import itertools
 
 # Set up logging
-logging.basicConfig(filename='experiment_forget_results.log', level=logging.INFO, format='%(asctime)s - %(message)s')
+logging.basicConfig(filename='experiment_softhebb_results.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # Define the base script name
 script_name = 'train_forget.py'
 
-# Define specific lambda, rho, and learning rate pairs
+# Define available GPUs
+available_gpus = [0, 1, 5, 6, 7]
+gpu_cycle = itertools.cycle(available_gpus)
 
-"""
-# Linear Linear
-parameter_pairs = [
-    (0.5, 0.03, 0.003), 
-    (1, 0.1, 0.003),
-    (2, 0.1, 0.003),
-    (4, 0.03, 0.003),
-    (8, 0.01, 0.003),
-    (16, 0.01, 0.003),
-    (32, 0.01, 0.003)
-]
+# Define batch sizes and neuron sizes to vary
+batch_sizes = [16]
+hidden_sizes = [2048]
 
-# Exp Linear Neuron
-parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 1, 0.003),
-    (2, 1, 0.003),
-    (4, 1, 0.003),
-    (8, 1, 0.003),
-    (16, 1, 0.003),
-    (32, 0.3, 0.003),
-    (64, 0.1, 0.003)
-]
+# Define parameter pairs (lambda, rho, learning rate)
+parameter_pairs = [(0.5, 1, 0.003)]
 
-
-# Sigmoid Linear Neuron
-parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 0.3, 0.003),
-    (2, 0.1, 0.003),
-    (4, 0.1, 0.003),
-    (8, 0.1, 0.003),
-    (16, 0.003, 0.003),
-    (32, 0.01, 0.003),
-    (64, 0.001, 0.003)
-]
-
-# Sigmoid Sigmoid Neuron
-parameter_pairs = [
-    (0.5, 0.3, 0.003), 
-    (1, 0.3, 0.003),
-    (2, 0.3, 0.003),
-    (4, 0.1, 0.003),
-    (8, 0.1, 0.003),
-    (16, 0.003, 0.003),
-    (32, 0.01, 0.003),
-    (64, 0.003, 0.003)
-]
-
-# Sigmoid Linear Synapse
-parameter_pairs = [
-    (0.5, 1, 0.003), 
-    (1, 1, 0.003),
-    (2, 1, 0.003),
-    (4, 1, 0.003),
-    (8, 0.1, 0.003),
-    (16, 1, 0.003),
-    (32, 0.1, 0.003),
-    (64, 0.03, 0.003)
-]
-
-# Sigmoid Sigmoid Synapse
-parameter_pairs = [
-    (0.5, 0.1, 0.003), 
-    (1, 1, 0.003),
-    (2, 0.3, 0.003),
-    (4, 0.1, 0.003),
-    (8, 0.1, 0.003),
-    (16, 1, 0.003),
-    (32, 1, 0.003),
-    (64, 0.3, 0.003)
-]
-"""
-
-# Exp Linear Neuron
-parameter_pairs = [
-    (0.5, 1, 0.003),
-]
-
-# Define other parameters to vary
+# Define other parameters
 other_parameters = [
-    ('sanger', 'exponential', 'linear', 'neuron', 'RELU', 'neuron'),
+    ('sanger', 'sigmoid', 'sigmoid', 'neuron', 'RELU', 'neuron'),
+    ('sanger', 'linear', 'linear', 'neuron', 'RELU', 'neuron')
 ]
 
 # Set the number of concurrent processes
-max_concurrent_processes = 10
+max_concurrent_processes = len(available_gpus)
 
 # Get the current Python interpreter from the virtual environment
 python_executable = sys.executable
 
-# Specify the GPU ID (e.g., GPU 0)
-gpu_id = 0
+# Process combinations
+processes = []
 
-# Process the combinations in batches
-for i in range(0, len(parameter_pairs), max_concurrent_processes):
-    processes = []
-    batch = parameter_pairs[i:i + max_concurrent_processes]
-    
-    for lmbda, rho, lr in batch:
+for batch_size, hsize in itertools.product(batch_sizes, hidden_sizes):
+    for lmbda, rho, lr in parameter_pairs:
         for heb_learn, heb_growth, clas_growth, heb_focus, heb_inhib, class_focus in other_parameters:
+            # Assign GPU in a round-robin manner
+            gpu_id = next(gpu_cycle)
+            
+            # Construct experiment name
+            exp_name = f"SOFTHEBB_BATCH{batch_size}_HSIZE{hsize}_{heb_growth.upper()}_{clas_growth.upper()}"
 
-            # Construct the complete set of arguments including the varying parameter
+            # Construct the command arguments
             arguments = [
                 '--data_name=MNIST',
-                '--experiment_name=_SOFTHEBB_FORGET_NEURON_EXP_LINEAR_',
+                f'--experiment_name={exp_name}',
                 '--train_data=data/mnist/train-images.idx3-ubyte',
                 '--train_label=data/mnist/train-labels.idx1-ubyte',
                 '--test_data=data/mnist/test-images.idx3-ubyte',
@@ -126,11 +58,11 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
                 '--train_fname=data/mnist/mnist_train.csv',
                 '--test_fname=data/mnist/mnist_test.csv',
                 '--input_dim=784',
-                '--heb_dim=64',
+                f'--heb_dim={hsize}',
                 '--output_dim=10',
                 '--heb_gam=0.99',
                 '--heb_eps=0.0001',
-                '--sub_experiment_scope_list=[[0,1],[2,3],[4,5],[6,7],[8,9]]',  # Specify sub-experiment scopes for forgetting
+                '--sub_experiment_scope_list=[[0,1],[2,3],[4,5],[6,7],[8,9]]',
                 f'--heb_inhib={heb_inhib}',
                 f'--heb_focus={heb_focus}',
                 f'--heb_growth={heb_growth}',
@@ -149,34 +81,43 @@ for i in range(0, len(parameter_pairs), max_concurrent_processes):
                 '--beta=0.01',
                 '--sigma=1',
                 '--mu=0',
+                '--w_lr=0.003',
+                '--l_lr=0.003',
+                '--b_lr=0.003',
                 '--init=uniform',
-                '--batch_size=2',
+                f'--hsize={hsize}',
+                f'--batch_size={batch_size}',
                 '--epochs=10',
-                f'--device=cpu',  # Use the specified GPU or CPU
+                f'--device=cuda:{gpu_id}',
                 '--local_machine=True',
                 '--experiment_type=forget'
             ]
 
-            # Construct the command with nice
+            # Construct the command
             command = ['nice', '-n', '1', python_executable, script_name] + arguments
 
             try:
                 # Start the process
                 process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                processes.append(process)
-                logging.info(f"Started process with PID: {process.pid} on GPU: {gpu_id} | Lambda: {lmbda}, LR: {lr}, Heb_Learn: {heb_learn}, Heb_Growth: {heb_growth}, Clas_Growth: {clas_growth}, Heb_Focus: {heb_focus}, Heb_Inhib: {heb_inhib}, Class_Focus: {class_focus}")
+                processes.append((process, gpu_id))
+                logging.info(f"Started process with PID: {process.pid} on GPU: {gpu_id} | Exp: {exp_name}")
             except Exception as e:
-                logging.error(f"Failed to start process for combination: Lambda={lmbda}, LR={lr}, Heb_Learn={heb_learn}, Heb_Growth={heb_growth}, Clas_Growth={clas_growth}, Heb_Focus={heb_focus}, Heb_Inhib={heb_inhib}, Class_Focus={class_focus}. Error: {str(e)}")
+                logging.error(f"Failed to start process for Exp: {exp_name}. Error: {str(e)}")
+            
+            # Limit concurrent processes
+            if len(processes) >= max_concurrent_processes:
+                # Wait for one process to complete
+                finished_process, finished_gpu = processes.pop(0)
+                stdout, stderr = finished_process.communicate()
+                logging.info(f"Process with PID: {finished_process.pid} on GPU: {finished_gpu} completed.")
+                if stderr:
+                    logging.error(f"Standard Error for PID {finished_process.pid}:\n{stderr}")
 
-    # Wait for all processes in the batch to finish before starting the next batch
-    for process in processes:
-        try:
-            stdout, stderr = process.communicate()
-            logging.info(f"Process with PID: {process.pid} completed on GPU: {gpu_id}.")
-            logging.info("Standard Output:\n" + stdout)
-            if stderr:
-                logging.error("Standard Error:\n" + stderr)
-        except Exception as e:
-            logging.error(f"Failed to complete process with PID: {process.pid}. Error: {str(e)}")
+# Wait for remaining processes
+for process, gpu_id in processes:
+    stdout, stderr = process.communicate()
+    logging.info(f"Process with PID: {process.pid} on GPU: {gpu_id} completed.")
+    if stderr:
+        logging.error(f"Standard Error for PID {process.pid}:\n{stderr}")
 
-logging.info("All subprocesses have completed.")
+logging.info("All experiments have completed.")

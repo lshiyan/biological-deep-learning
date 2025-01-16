@@ -12,8 +12,8 @@ from models.hyperparams import (LearningRule, WeightScale, oneHotEncode, InputPr
                                 Inhibition, WeightGrowth)
 from dotwiz import DotWiz
 from typing import Tuple
-
-
+import matplotlib.colors as mcolors
+import sys
 
 def mlp_print_weight(model):
     for l in model.layers.values():
@@ -124,12 +124,13 @@ class NeuralNet(nn.Module):
 
 
 class SoftNeuralNet(nn.Module):
-    def __init__(self):
+    def __init__(self, device, hsize):
         super(SoftNeuralNet, self).__init__()
         self.layers = nn.ModuleDict()
         self.iteration = 3
         self.output_dim = 10
-        
+        self.device = device
+        self.hsize = hsize
  
     def add_layer(self, name, layer):
         self.layers[name] = layer
@@ -139,19 +140,84 @@ class SoftNeuralNet(nn.Module):
         self.add_module(hebbian_layer.name.name, hebbian_layer)
         self.add_module(classification_layer.name.name, classification_layer)
 
-    def visualize_weights(self, path: str, num: int, use: str) -> None:
+    def visualize_weights(self, result_path: str, num: int, fname: str) -> None:
         """
         METHOD
-        Visualizes the weights/features learned by each neuron during training
+        Vizualizes the weights/features learned by neurons in this layer using a heatmap
         @param
-            path: path to print out result
-            num: which iteration is the visualization happening
-            use: after what step is the visualization happening
-            colored: whether or not it is a coloured image
+            result_path: path to folder where results will be printed
+            num: integer representing certain property (for file name creation purposes)
+            use: the use that called this method (for file name creation purposes)
+            fname: name to be used for folder/file
         @return
             None
         """
-        visualize_weights(path, num, use)
+        
+        # Name of saved plot
+        plot_name: str = f'/{fname.lower()}layerweights-{num}.png'
+        cnt = 0
+        # Get the weights and create heatmap
+        for layer_name, layer in self.layers.items():
+            weight = layer.weight
+            row: int
+            col: int
+            if cnt == 0:
+                row, col = row_col(self.hsize)
+            else:
+                row, col = row_col(self.output_dim)
+        
+            # Calculate size of figure
+            subplot_size = 4
+            fig_width = col * subplot_size
+            fig_height = row * subplot_size
+            
+            fig: matplotlib.figure.Figure
+            axes: np.ndarray
+            fig, axes = plt.subplots(row, col, figsize=(fig_width, fig_height)) # type: ignore
+            for ele in range(row * col): 
+                if ele < weight.size(0):
+                    # Move tensor to CPU, convert to NumPy array for visualization
+                    random_feature_selector: torch.Tensor = weight[ele].cpu()
+                    feature_row, feature_col = row_col(random_feature_selector.size(0))
+                    original_size: int = random_feature_selector.size(0)
+                    plot_size: int = feature_row * feature_col
+                    padding_size: int = plot_size - original_size
+                    padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size)).cpu()
+                    heatmap: np.ndarray = padded_weights.view(feature_row, feature_col).cpu().numpy()
+                    max_value: float = torch.max(random_feature_selector).item()
+                    min_value: float = torch.min(random_feature_selector).item()
+                    custom_cmap = get_cmap(min_value, max_value)
+                    ax = axes[ele // col, ele % col]
+                    im = ax.imshow(heatmap, cmap=custom_cmap, interpolation='nearest', vmin=min_value, vmax=max_value)
+                    cbar = fig.colorbar(im, ax=ax)
+                    ax.set_title(f'Weight {ele}')
+                    
+                    # Setting Color Bar
+                    ticks = np.linspace(min_value, max_value, num=5)
+                    ticks = ticks.tolist()
+                    ticks.append(0)
+                    ticks = sorted(set(ticks))
+                    cbar.set_ticks(ticks)
+                    
+                    # Move the tensor back to the GPU if needed
+                    padded_weights = padded_weights.to(self.device)
+                    random_feature_selector = random_feature_selector.to(self.device)
+                else:
+                    ax = axes[ele // col, ele % col]
+                    ax.axis('off')
+            
+            # Save file and close plot
+            if cnt == 0:
+                file_path: str = result_path + '/Hidden'+plot_name
+            else:
+                file_path: str = result_path + '/Output'+plot_name
+            print(file_path)
+            
+            plt.tight_layout()
+            plt.savefig(file_path)
+            plt.close()
+            cnt = 1
+        sys.stdout.flush()
 
     """
     Used in Feedforward models
@@ -452,7 +518,7 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws
 
 
 def NewMLPBaseline_Model(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device):
-    mymodel = SoftNeuralNet()
+    mymodel = SoftNeuralNet(device, hsize)
     heb_layer = SoftHebbLayer(inputdim=784, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
                               device=device, initial_lambda=lamb)
     
@@ -593,74 +659,8 @@ def view_weights(model, folder):
     for name, l in model.layers.items():
         visualize_weights(l, folder + '/' + name + '.png')
 
-def visualize_weights(self, result_path: str, num: int, use: str, fname: str) -> None:
-    """
-    METHOD
-    Vizualizes the weights/features learned by neurons in this layer using a heatmap
-    @param
-        result_path: path to folder where results will be printed
-        num: integer representing certain property (for file name creation purposes)
-        use: the use that called this method (for file name creation purposes)
-        fname: name to be used for folder/file
-    @return
-        None
-    """
-    # Name of saved plot
-    plot_name: str = f'/{fname}/{fname.lower()}layerweights-{num}-{use}.png'
-    
-    # Find value for row and column
-    row: int
-    col: int
-    row, col = self.row_col(self.output_dimension)
-    
-    # Calculate size of figure
-    subplot_size = 4
-    fig_width = col * subplot_size
-    fig_height = row * subplot_size
-    
-    # Get the weights and create heatmap
-    weight: torch.Tensor = self.fc.weight
-    fig: matplotlib.figure.Figure
-    axes: np.ndarray
-    fig, axes = plt.subplots(row, col, figsize=(fig_width, fig_height)) # type: ignore
-    for ele in range(row * col): 
-        if ele < self.output_dimension:
-            # Move tensor to CPU, convert to NumPy array for visualization
-            random_feature_selector: torch.Tensor = weight[ele].cpu()
-            feature_row, feature_col = self.row_col(random_feature_selector.size(0))
-            original_size: int = random_feature_selector.size(0)
-            plot_size: int = feature_row * feature_col
-            padding_size: int = plot_size - original_size
-            padded_weights: torch.Tensor = torch.nn.functional.pad(random_feature_selector, (0, padding_size)).cpu()
-            heatmap: np.ndarray = padded_weights.view(feature_row, feature_col).cpu().numpy()
-            max_value: float = torch.max(random_feature_selector).item()
-            min_value: float = torch.min(random_feature_selector).item()
-            custom_cmap = self.get_cmap(min_value, max_value)
-            ax = axes[ele // col, ele % col]
-            im = ax.imshow(heatmap, cmap=custom_cmap, interpolation='nearest', vmin=min_value, vmax=max_value)
-            cbar = fig.colorbar(im, ax=ax)
-            ax.set_title(f'Weight {ele}')
-            
-            # Setting Color Bar
-            ticks = np.linspace(min_value, max_value, num=5)
-            ticks = ticks.tolist()
-            ticks.append(0)
-            ticks = sorted(set(ticks))
-            cbar.set_ticks(ticks)
-            
-            # Move the tensor back to the GPU if needed
-            padded_weights = padded_weights.to(self.device)
-            random_feature_selector = random_feature_selector.to(self.device)
-        else:
-            ax = axes[ele // col, ele % col]
-            ax.axis('off')
-    
-    # Save file and close plot
-    file_path: str = result_path + plot_name
-    plt.tight_layout()
-    plt.savefig(file_path)
-    plt.close()
-    
+
+
 
 
 def row_col(num: int) -> Tuple[int, int]:
@@ -690,3 +690,25 @@ def row_col(num: int) -> Tuple[int, int]:
                 col = max(factor1, factor2)
     
     return row, col
+
+def get_cmap(min: float, max: float) -> mcolors.Colormap:
+    hot_cmap: mcolors.Colormap = plt.get_cmap('hot')
+    blue_cmap: mcolors.Colormap = mcolors.LinearSegmentedColormap.from_list('black_to_blue', [(0, 0, 0), (0, 0, 1)]).reversed()
+    
+    if min >= 0:
+        return hot_cmap # If all positive then 'hot' cmap
+    elif max <= 0:
+        return blue_cmap # If all negative then reversed 'twilight' cmap
+    else:
+        total_range: float = abs(min) + abs(max)
+        negative_ratio: float = abs(min) / total_range
+        positive_ratio: float = abs(max) / total_range
+        total_buckets: int = 1024
+        custom_colors = np.vstack((
+            blue_cmap(np.linspace(0, 1, int(total_buckets * negative_ratio))),
+            np.array([[0, 0, 0, 1]]),
+            hot_cmap(np.linspace(0, 1, int(total_buckets * positive_ratio)))
+        ))
+        custom_cmap: mcolors.Colormap = mcolors.LinearSegmentedColormap.from_list('custom_black_hot', custom_colors)
+        
+        return custom_cmap

@@ -9,7 +9,7 @@ from models.MLP.models import NewMLPBaseline_Model
 from utils.experiment_parser import *
 from utils.experiment_logger import *
 from utils.experiment_stats import *
-
+import torch
 # Create log
 results_log = configure_logger('Forget Result Log', './results/results_forget.log')
 
@@ -22,28 +22,32 @@ def main():
     train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
     
     # Calculate and log averages and variances for each digit pair
-    digit_pairs = [
-        (0, 1, test_acc_lists[0], train_acc_lists[0]),
-        (2, 3, test_acc_lists[1], train_acc_lists[1]),
-        (4, 5, test_acc_lists[2], train_acc_lists[2]),
-        (6, 7, test_acc_lists[3], train_acc_lists[3]),
-        (8, 9, test_acc_lists[4], train_acc_lists[4])
-    ]
+#    digit_pairs = [
+#        (0, 1, test_acc_lists[0], train_acc_lists[0]),
+#        (2, 3, test_acc_lists[1], train_acc_lists[1]),
+#        (4, 5, test_acc_lists[2], train_acc_lists[2]),
+#        (6, 7, test_acc_lists[3], train_acc_lists[3]),
+#        (8, 9, test_acc_lists[4], train_acc_lists[4])
+#    ]
 
-    for digit_pair in digit_pairs:
-        digit_1, digit_2, test_acc, train_acc = digit_pair
-        avg_test = average(test_acc)
-        var_test = variance(test_acc)
-        avg_train = average(train_acc)
-        var_train = variance(train_acc)
-        results_log.info(f"Digits {digit_1} and {digit_2} || Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Dataset: {ARGS.data_name.upper()} || Inhibition: {ARGS.heb_inhib.lower().capitalize()} || Learning Rule: {ARGS.heb_learn.lower().capitalize()} || Function Type: {ARGS.heb_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
-
+#    for digit_pair in digit_pairs:
+#        digit_1, digit_2, test_acc, train_acc = digit_pair
+#        avg_test = average(test_acc)
+#        var_test = variance(test_acc)
+#        avg_train = average(train_acc)
+#        var_train = variance(train_acc)
+#        results_log.info(f"Digits {digit_1} and {digit_2} || Epoch: {ARGS.epochs} || Lambda: {ARGS.heb_lamb} || Dataset: {ARGS.data_name.upper()} || Inhibition: {ARGS.heb_inhib.lower().capitalize()} || Learning Rule: {ARGS.heb_learn.lower().capitalize()} || Function Type: {ARGS.heb_growth.lower().capitalize()} || Experiment Type: {ARGS.experiment_type.lower().capitalize()} || Test Acc: avg = {avg_test}, var = {var_test} || Train Acc: avg = {avg_train}, var = {var_train}")
 
 # Model Training
 def train_and_eval(args: Tuple) -> List[List[float]]:
     params: argparse.Namespace
+    
     num: int
     params, num = args
+    #print(params)
+    #import sys
+    #sys.stdout.flush()
+    #return
     model: Network = NewMLPBaseline_Model(params.hsize, params.lamb, params.w_lr, params.b_lr, params.l_lr, params.nclasses, params.device)
     experiment: Experiment = ForgetExperiment(model, params, f'-{params.experiment_name}-{params.experiment_type.lower()}-{params.lr}--{params.heb_learn.lower()}-{params.heb_growth.lower()}-{params.heb_focus.lower()}-{params.heb_inhib.lower()}-{params.heb_lamb}---{params.class_learn.lower()}-{params.class_growth.lower()}-{params.class_focus.lower()}-{num}')
     accuracies = list(experiment.run())
