@@ -27,3 +27,28 @@ test_accuracy,nlayers,pool,stride,whiten,triangle,greedy,inhib,lambda,classLr,wn
 
 0.2419,2,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001 (64, 32)
 0.3426,2,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+
+
+
+
+
+(64, 256, 1024):
+
+0.1,3,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+
+(64, 128, 512):
+0.4628,3,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+0.4324,3,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+0.434,3,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+0.4235,3,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+
+
+(64, 256):
+0.4976,2,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+0.4934,2,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+0.5041,2,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+0.4991,2,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
+
+(64, 128, 256, 5012):
+
+(64, 64, 64):

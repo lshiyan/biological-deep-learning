@@ -1,7 +1,7 @@
 import json
 import os
 
-def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1,2,3,4], whiten_values=[True], triangle_values=[True],
+def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1, 1, 1, 1, 1], whiten_values=[True], triangle_values=[True],
     greedytrain_values=[True], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1']):
     
     # whiten = False for now

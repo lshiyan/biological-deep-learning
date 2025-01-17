@@ -62,15 +62,6 @@ def update_weight_softhebb(input, preactivation, output, weight, target=None,
     elif inhibition == Inhibition.Softmax:
         u = preactivation
 
-    ### Anti hebbian test: 
-    max_values, indices = torch.max(output, dim=1, keepdim=True)
-    # Create a mask where the maximum values are located
-    mask = torch.zeros_like(output, dtype=torch.bool)
-    mask.scatter_(1, indices, True)
-    # Set the non-maximum values to negative
-    anti_hebbian_output = torch.where(mask, output, -output)
-
-
     #deltas = multiplicative_factor * output * (input - torch.matmul(torch.relu(u), W).reshape(b, indim))
     deltas = (multiplicative_factor * anti_hebbian_output).reshape(b, outdim, 1) * (input - torch.matmul(torch.relu(u), W)).reshape(b, 1, indim)
     delta = torch.mean(deltas, dim=0)
@@ -112,12 +103,20 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     
     batch_dim, in_dim = normed_x.shape
     batch_dim, out_dim = a.shape
+
+    ### Anti hebbian test: 
+    max_values, indices = torch.max(y_part, dim=1, keepdim=True)
+    # Create a mask where the maximum values are located
+    mask = torch.zeros_like(y_part, dtype=torch.bool)
+    mask.scatter_(1, indices, True)
+    # Set the non-maximum values to negative
+    anti_hebbian_output = torch.where(mask, y_part, -y_part)
         
     # Innefficient. We are trying to calculate it in a more memory efficient way.
     # delta_w = factor * y_part * x.reshape(batch_dim, 1, in_dim) - a.reshape(batch_dim, out_dim, 1) * normalized_weights.reshape(1, out_dim, in_dim)
     
-    ya = torch.mean(y_part * a, dim=0).reshape(out_dim, 1)
-    yx = (1/batch_dim) * torch.matmul(y_part.T, normed_x)
+    ya = torch.mean(anti_hebbian_output * a, dim=0).reshape(out_dim, 1)
+    yx = (1/batch_dim) * torch.matmul(anti_hebbian_output.T, normed_x)
     delta_w = factor * (yx - ya * normed_weights)
     delta_w = torch.mean(delta_w, dim=0) # average the delta weights over the batch dim
 
