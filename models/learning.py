@@ -61,8 +61,18 @@ def update_weight_softhebb(input, preactivation, output, weight, target=None,
         multiplicative_factor = multiplicative_factor / (u + 1e-9)
     elif inhibition == Inhibition.Softmax:
         u = preactivation
+
+    ### Anti hebbian test: 
+    max_values, indices = torch.max(output, dim=1, keepdim=True)
+    # Create a mask where the maximum values are located
+    mask = torch.zeros_like(output, dtype=torch.bool)
+    mask.scatter_(1, indices, True)
+    # Set the non-maximum values to negative
+    anti_hebbian_output = torch.where(mask, output, -output)
+
+
     #deltas = multiplicative_factor * output * (input - torch.matmul(torch.relu(u), W).reshape(b, indim))
-    deltas = (multiplicative_factor * output).reshape(b, outdim, 1) * (input - torch.matmul(torch.relu(u), W)).reshape(b, 1, indim)
+    deltas = (multiplicative_factor * anti_hebbian_output).reshape(b, outdim, 1) * (input - torch.matmul(torch.relu(u), W)).reshape(b, 1, indim)
     delta = torch.mean(deltas, dim=0)
     return delta
 
