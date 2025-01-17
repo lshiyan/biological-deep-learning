@@ -279,7 +279,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/fashion_mnist_results.csv"
+                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/anti_hebbian_results.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
