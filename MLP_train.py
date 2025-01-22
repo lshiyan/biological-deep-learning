@@ -27,7 +27,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment
 from torch.utils.data import Subset
-
+import matplotlib.pyplot as plt
 from cycling_utils import (
     MetricsTracker,
     atomic_torch_save,
@@ -179,6 +179,51 @@ def get_args_parser(add_help=True):
 #  * Once we have our gradients, we call ``optimizer.step()`` to adjust the parameters by the gradients collected in the
 #       backward pass.
 
+def log_weights(model):
+    print("\nWeight Statistics:")
+    for name, layer in model.layers.items():
+        # Access weights within each layer
+        if hasattr(layer, 'weight'):
+            weight = layer.weight
+        elif hasattr(layer, 'feedforward'):
+            weight = layer.feedforward.weight
+        else:
+            continue  # Skip layers without weights
+
+        print(f"Layer: {name}")
+        print(f"  Mean: {weight.mean().item():.4f}")
+        print(f"  Std: {weight.std().item():.4f}")
+        print(f"  Min: {weight.min().item():.4f}")
+        print(f"  Max: {weight.max().item():.4f}")
+
+
+
+def visualize_weight_distribution(model, epoch, save_dir="/root/HebbianTopDown/weight_distributions"):
+    os.makedirs(save_dir, exist_ok=True)
+    for name, layer in model.layers.items():
+        if hasattr(layer, 'weight'):
+            weight = layer.weight.detach().cpu().numpy()
+        elif hasattr(layer, 'feedforward'):
+            weight = layer.feedforward.weight.detach().cpu().numpy()
+        else:
+            continue
+
+        plt.figure()
+        plt.hist(weight.flatten(), bins=50, alpha=0.75, color='blue', label='Weights')
+        plt.title(f'Weight Distribution - Layer: {name} (Epoch: {epoch})')
+        plt.xlabel('Weight Values')
+        plt.ylabel('Frequency')
+        plt.legend()
+        plt.grid(True)
+
+        # Save the plot
+        filename = os.path.join(save_dir, f"{name}_epoch_{epoch}.png")
+        plt.savefig(filename)
+        plt.close()
+
+
+
+
 def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
     train_batches_per_epoch = len(train_dataloader)
     # Set the model to training mode - important for layers with different training / inference behaviour
@@ -236,6 +281,10 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoi
             )
             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
+        print(f"Epoch {epoch} completed.")
+        log_weights(model)
+        visualize_weight_distribution(model, epoch)
+
 
 def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, hsize, lamb, w_lr, b_lr, l_lr, w_norm):
     test_batches_per_epoch = len(test_dataloader)
@@ -279,7 +328,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/MLP_hyper_search/anti_hebbian_results.csv"
+                csv_file_path = "/root/HebbianTopDown/AntiHebb_MLP_hyper_search/test_results.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
@@ -299,7 +348,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                         "l_lr": l_lr,
                         "triangle":"true",
                         "white":"true",
-                        "func": "softmax",
+                        "func": "repu",
                         "w_norm": w_norm
                     })
 

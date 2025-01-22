@@ -95,7 +95,9 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
         raise NotImplementedError(f"Weight growth {weight_growth}, invalid.")
     if inhibition == Inhibition.RePU:
         indicator = (u > 0).float()
-        factor = factor * indicator.reshape(batch_dim, out_dim) / (u.reshape(batch_dim, out_dim) + 1e-9)
+        
+        factor = factor.squeeze(-1).expand(batch_dim, out_dim)  * indicator.reshape(batch_dim, out_dim) / (u.reshape(batch_dim, out_dim) + 1e-9)
+        factor = factor.mean(dim=0, keepdim=True).unsqueeze(-1) 
     if supervised:
         y_part = (target - y).reshape(batch_dim, out_dim)
     else:
