@@ -20,7 +20,7 @@
         },
         "Layers": {
             "Conv1": {
-                "out_channel": 512,
+                "out_channel": 1024,
                 "kernel": 5
             }
         }

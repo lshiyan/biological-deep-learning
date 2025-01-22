@@ -1,6 +1,6 @@
 {
-    "Lambda": 125,
-    "classifierLr": 0.0006,
+    "Lambda": 500,
+    "classifierLr": 0.001,
     "beta": 1,
     "w_norm": 0.0001,
     "w_lr": 0.1,
@@ -16,11 +16,11 @@
             "triangle": true,
             "whiten": true,
             "batchnorm": true,
-            "inhibition": "Softmax"
+            "inhibition": "RePU"
         },
         "Layers": {
             "Conv1": {
-                "out_channel": 512,
+                "out_channel": 10000,
                 "kernel": 5
             }
         }
