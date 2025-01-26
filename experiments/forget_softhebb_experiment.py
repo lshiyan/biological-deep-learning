@@ -98,6 +98,30 @@ class ForgetExperiment(Experiment):
 
         self.keep_training = True
 
+    def _analyze_weights(self, weights: torch.Tensor, layer_name: str, epoch: int):
+        """
+        Analyzes and logs statistics about the weights of a specific layer.
+        """
+        mean = weights.mean().item()
+        std = weights.std().item()
+        min_val = weights.min().item()
+        max_val = weights.max().item()
+
+        self.EXP_LOG.info(f"Analysis of weights for layer '{layer_name}' at epoch {epoch}:")
+        self.EXP_LOG.info(f"Mean: {mean}, Std: {std}, Min: {min_val}, Max: {max_val}")
+
+        # Visualize histogram of weights
+        plt.hist(weights.flatten().cpu().numpy(), bins=50, alpha=0.75)
+        plt.title(f"Weight Distribution - {layer_name} (Epoch {epoch})")
+        plt.xlabel("Weight Values")
+        plt.ylabel("Frequency")
+        plt.grid(True)
+        output_path = os.path.join(self.curr_folder_path, f"{layer_name}_weights_epoch_{epoch}.png")
+        plt.savefig(output_path)
+        plt.close()
+        self.EXP_LOG.info(f"Saved weight histogram for {layer_name} at {output_path}.")
+
+
 
     def _setup_dataloaders(self, input_dataset: TensorDataset, sub_experiment_scope_list: list[ list[int] ] ) -> list[DataLoader]:
 
@@ -241,7 +265,9 @@ class ForgetExperiment(Experiment):
             # Forward pass
             self.model.train()
             self.model(inputs, clamped=labels)
-
+            for name, param in self.model.named_parameters():
+                if "weight" in name:  # Focus on weights
+                    self._analyze_weights(param, name, epoch)
             # Increment samples seen
             self.TOTAL_SAMPLES += 1
             self.SUB_EXP_SAMPLES += 1
@@ -322,8 +348,8 @@ class ForgetExperiment(Experiment):
         self.EXP_LOG.info("Completed '_testing' function.")
         self.EXP_LOG.info(f"Testing ({purpose.value.lower()} acc) of sample #{self.SUB_EXP_SAMPLES} in current subexperiment took {time_to_str(testing_time)}.")
 
-        #if visualize: 
-           #self.model.visualize_weights(self.curr_folder_path, self.SUB_EXP_SAMPLES, purpose.name.lower())
+        if visualize: 
+           self.model.visualize_weights(self.curr_folder_path, self.SUB_EXP_SAMPLES, purpose.name.lower())
 
         return final_accuracy
 

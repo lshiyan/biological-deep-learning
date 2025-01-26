@@ -10,12 +10,12 @@ logging.basicConfig(filename='experiment_softhebb_results.log', level=logging.IN
 script_name = 'train_forget.py'
 
 # Define available GPUs
-available_gpus = [0, 1, 5, 6, 7]
+available_gpus = [1,2, 5, 6, 7]
 gpu_cycle = itertools.cycle(available_gpus)
 
 # Define batch sizes and neuron sizes to vary
 batch_sizes = [16]
-hidden_sizes = [2048]
+hidden_sizes = [1024]
 
 # Define parameter pairs (lambda, rho, learning rate)
 parameter_pairs = [(0.5, 1, 0.003)]
