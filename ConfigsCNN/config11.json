@@ -3,25 +3,37 @@
     "classifierLr": 0.001,
     "beta": 1,
     "w_norm": 0.0001,
-    "w_lr": 0.1,
-    "l_lr": 0.3,
-    "b_lr": 0.001,
+    "w_lr": 0.001,
+    "l_lr": 0.001,
+    "b_lr": 0.0033,
     "greedytrain": true,
-    "nConvLayers": 1,
+    "nConvLayers": 4,
     "Convolutions": {
         "GlobalParams": {
             "stride": 1,
             "padding": 2,
             "paddingmode": "reflect",
-            "triangle": true,
+            "triangle": false,
             "whiten": true,
             "batchnorm": true,
             "inhibition": "RePU"
         },
         "Layers": {
             "Conv1": {
-                "out_channel": 512,
+                "out_channel": 64,
                 "kernel": 5
+            },
+            "Conv2": {
+                "out_channel": 256,
+                "kernel": 3
+            },
+            "Conv3": {
+                "out_channel": 1024,
+                "kernel": 3
+            },
+            "Conv4": {
+                "out_channel": 4096,
+                "kernel": 3
             }
         }
     },
@@ -32,9 +44,24 @@
         },
         "Layers": {
             "Conv1": {
-                "Type": "Avg",
+                "Type": "Max",
                 "kernel": 4,
                 "padding": 1
+            },
+            "Conv2": {
+                "Type": "Max",
+                "kernel": 4,
+                "padding": 1
+            },
+            "Conv3": {
+                "Type": "Max",
+                "kernel": 2,
+                "padding": 0
+            },
+            "Conv4": {
+                "Type": "Avg",
+                "kernel": 2,
+                "padding": 0
             }
         }
     },

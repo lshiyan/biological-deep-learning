@@ -169,7 +169,7 @@ new:
 0.5677,1,True,1,True,True,True,Softmax,125,0.0008,0.0001,0.1,0.3,0.001,512
 0.5695,1,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001,512
 
-anti-hebbian:
+anti-hebbian repu:
 
 0.4815,1,True,1,True,True,True,RePU,500,0.3,0.0001,0.1,0.3,0.001
 0.4816,1,True,1,True,True,True,RePU,500,0.5,0.0001,0.1,0.3,0.001
@@ -213,3 +213,50 @@ anti-hebbian:
 0.5189,1,True,1,True,True,True,RePU,500,0.0033,0.0001,0.1,0.3,0.001
 0.5616,1,True,1,True,True,True,RePU,500,0.001,0.0001,0.1,0.3,0.001
 0.474,1,True,1,True,True,True,RePU,500,0.03,0.0001,0.1,0.3,0.001
+
+6x
+
+anti-hebbian softmax:
+
+0.4732,1,True,1,True,True,True,Softmax,500,0.5,0.0001,0.1,0.3,0.001,512
+0.4788,1,True,1,True,True,True,Softmax,500,0.3,0.0001,0.1,0.3,0.001,512
+0.5102,1,True,1,True,True,True,Softmax,500,0.0033,0.0001,0.1,0.3,0.001,512
+0.4833,1,True,1,True,True,True,Softmax,500,0.01,0.0001,0.1,0.3,0.001,512
+0.4729,1,True,1,True,True,True,Softmax,500,0.1,0.0001,0.1,0.3,0.001,512
+0.4736,1,True,1,True,True,True,Softmax,500,0.03,0.0001,0.1,0.3,0.001,512
+0.5625,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.1,0.3,0.001,512
+0.4895,1,True,1,True,True,True,Softmax,500,0.03,0.0001,0.1,0.3,0.001,512
+0.561,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.1,0.3,0.001,512
+0.4789,1,True,1,True,True,True,Softmax,500,0.1,0.0001,0.1,0.3,0.001,512
+0.4818,1,True,1,True,True,True,Softmax,500,0.01,0.0001,0.1,0.3,0.001,512
+0.4664,1,True,1,True,True,True,Softmax,500,0.5,0.0001,0.1,0.3,0.001,512
+0.461,1,True,1,True,True,True,Softmax,500,0.3,0.0001,0.1,0.3,0.001,512
+0.5063,1,True,1,True,True,True,Softmax,500,0.0033,0.0001,0.1,0.3,0.001,512
+0.4698,1,True,1,True,True,True,Softmax,500,0.5,0.0001,0.1,0.3,0.001,512
+0.4656,1,True,1,True,True,True,Softmax,500,0.3,0.0001,0.1,0.3,0.001,512
+0.4831,1,True,1,True,True,True,Softmax,500,0.01,0.0001,0.1,0.3,0.001,512
+0.4877,1,True,1,True,True,True,Softmax,500,0.1,0.0001,0.1,0.3,0.001,512
+0.5062,1,True,1,True,True,True,Softmax,500,0.0033,0.0001,0.1,0.3,0.001,512
+0.4676,1,True,1,True,True,True,Softmax,500,0.03,0.0001,0.1,0.3,0.001,512
+0.4603,1,True,1,True,True,True,Softmax,500,0.5,0.0001,0.1,0.3,0.001,512
+0.4815,1,True,1,True,True,True,Softmax,500,0.3,0.0001,0.1,0.3,0.001,512
+0.4864,1,True,1,True,True,True,Softmax,500,0.1,0.0001,0.1,0.3,0.001,512
+0.5521,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.1,0.3,0.001,512
+0.5624,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.1,0.3,0.001,512
+0.4874,1,True,1,True,True,True,Softmax,500,0.03,0.0001,0.1,0.3,0.001,512
+0.495,1,True,1,True,True,True,Softmax,500,0.01,0.0001,0.1,0.3,0.001,512
+0.5104,1,True,1,True,True,True,Softmax,500,0.0033,0.0001,0.1,0.3,0.001,512
+0.4849,1,True,1,True,True,True,Softmax,500,0.3,0.0001,0.1,0.3,0.001,512
+0.4705,1,True,1,True,True,True,Softmax,500,0.5,0.0001,0.1,0.3,0.001,512
+0.5133,1,True,1,True,True,True,Softmax,500,0.0033,0.0001,0.1,0.3,0.001,512
+0.4647,1,True,1,True,True,True,Softmax,500,0.03,0.0001,0.1,0.3,0.001,512
+0.4775,1,True,1,True,True,True,Softmax,500,0.1,0.0001,0.1,0.3,0.001,512
+0.4783,1,True,1,True,True,True,Softmax,500,0.01,0.0001,0.1,0.3,0.001,512
+0.5042,1,True,1,True,True,True,Softmax,500,0.0033,0.0001,0.1,0.3,0.001,512
+0.5012,1,True,1,True,True,True,Softmax,500,0.01,0.0001,0.1,0.3,0.001,512
+0.4867,1,True,1,True,True,True,Softmax,500,0.1,0.0001,0.1,0.3,0.001,512
+0.4901,1,True,1,True,True,True,Softmax,500,0.03,0.0001,0.1,0.3,0.001,512
+0.4814,1,True,1,True,True,True,Softmax,500,0.5,0.0001,0.1,0.3,0.001,512
+0.5544,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.1,0.3,0.001,512
+0.5559,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.1,0.3,0.001,512
+0.4822,1,True,1,True,True,True,Softmax,500,0.3,0.0001,0.1,0.3,0.001,512

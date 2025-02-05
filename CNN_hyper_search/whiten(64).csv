@@ -59,3 +59,31 @@ test_accuracy,nlayers,pool,stride,whiten,triangle,greedy,inhib,lambda,classLr,wn
 0.5525,1,True,1,False,True,True,RePU,125,0.001,0.0001,0.001,0.01,0.001,256
 0.5358,1,False,1,False,True,True,RePU,125,0.001,0.0001,0.001,0.01,0.001,256
 0.5299,1,False,1,True,True,True,RePU,125,0.001,0.0001,0.001,0.01,0.001,256
+
+
+anti-hebb Softmax:
+
+0.5825,1,True,1,False,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5714,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5761,1,True,1,False,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5683,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5743,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5752,1,True,1,False,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5772,1,True,1,False,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5751,1,True,1,False,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5833,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5781,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+
+
+anti-hebb RePU:
+
+0.5685,1,True,1,True,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5764,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5855,1,True,1,True,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5761,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5756,1,True,1,True,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5781,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.582,1,True,1,True,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5739,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5852,1,True,1,True,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5753,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512

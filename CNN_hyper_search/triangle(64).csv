@@ -59,3 +59,20 @@ test_accuracy,nlayers,pool,stride,whiten,triangle,greedy,inhib,lambda,classLr,wn
 0.5257,1,False,1,True,False,True,RePU,125,0.001,0.0001,0.001,0.01,0.001,256
 0.555,1,True,1,True,True,True,RePU,125,0.001,0.0001,0.001,0.01,0.001,256
 0.5582,1,True,1,True,False,True,RePU,125,0.001,0.0001,0.001,0.01,0.001,256
+
+
+
+
+
+anti-hebb RePU:
+
+0.5705,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5684,1,True,1,False,True,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5766,1,True,1,False,True,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5788,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.576,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.574,1,True,1,False,True,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.579,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5727,1,True,1,False,True,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5715,1,True,1,False,False,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5811,1,True,1,False,True,True,RePU,500,0.001,0.0001,0.01,0.1,0.0033,512

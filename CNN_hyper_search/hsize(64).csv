@@ -79,7 +79,7 @@ test_accuracy,nlayers,pool,stride,whiten,triangle,greedy,inhib,lambda,classLr,wn
 0.5322,1,False,1,True,True,True,RePU,125,0.001,0.0001,0.001,0.01,0.001,2048
 
 
-anti-hebbian:
+anti-hebbian RePU:
 
 0.4954,1,True,1,True,True,True,RePU,500,0.001,0.0001,0.1,0.3,0.001,32
 0.5218,1,True,1,True,True,True,RePU,500,0.001,0.0001,0.1,0.3,0.001,64
@@ -126,3 +126,49 @@ anti-hebbian:
 0.5707,1,True,1,True,True,True,RePU,500,0.001,0.0001,0.1,0.3,0.001,4000
 0.5801,1,True,1,True,True,True,RePU,500,0.001,0.0001,0.1,0.3,0.001,7000
 0.5763,1,True,1,True,True,True,RePU,500,0.001,0.0001,0.1,0.3,0.001,10000
+
+
+anti-hebbian Softmax:
+
+0.5023,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,32
+0.5254,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,64
+0.5278,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,64
+0.5432,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,128
+0.5494,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,128
+0.4914,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,32
+0.5659,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,256
+0.5635,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,256
+0.5735,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5816,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5882,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,1024
+0.5849,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,1024
+0.5932,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,2048
+0.5985,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,2048
+0.4756,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,32
+0.5126,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,64
+0.5174,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,64
+0.5382,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,128
+0.4971,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,32
+0.5479,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,128
+0.5684,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,256
+0.5612,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,256
+0.5729,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5807,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5793,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,1024
+0.5874,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,1024
+0.5908,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,2048
+0.5962,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,2048
+0.5032,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,32
+0.5205,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,64
+0.5355,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,64
+0.4881,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,32
+0.5416,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,128
+0.5541,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,128
+0.5612,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,256
+0.5593,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,256
+0.575,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5757,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,512
+0.5858,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,1024
+0.5888,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,1024
+0.5922,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,2048
+0.5895,1,True,1,True,True,True,Softmax,500,0.001,0.0001,0.01,0.1,0.0033,2048

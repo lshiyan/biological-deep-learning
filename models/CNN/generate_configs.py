@@ -1,8 +1,8 @@
 import json
 import os
 
-def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1], whiten_values=[True], triangle_values=[True],
-    greedytrain_values=[True], inhibition_values=['RePU'], pooling_values = ['PoolingStride1'], hsize_values = [4000, 7000, 10000]):
+def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1,2,3,4], whiten_values=[True], triangle_values=[False],
+    greedytrain_values=[True], inhibition_values=['RePU'], pooling_values = ['PoolingStride1']):
     
     # whiten = False for now
     # inhibition_values = REPU for now
@@ -10,8 +10,8 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
     os.makedirs(output_dir, exist_ok=True)
     config_number = 0
 
-    for hsize in hsize_values:
-
+    
+    for _ in range(3):
         for greedytrain in greedytrain_values:
             for layers in num_layers:
                 for whiten in whiten_values:
@@ -23,9 +23,9 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                     config["Lambda"]= 500
                                     config["classifierLr"]= 0.001
                                     config["w_norm"]= 0.0001
-                                    config["w_lr"]= 0.1
-                                    config["l_lr"]= 0.3
-                                    config["b_lr"]= 0.001
+                                    config["w_lr"]= 0.001
+                                    config["l_lr"]= 0.001
+                                    config["b_lr"]= 0.0033
                                     config['greedytrain'] = greedytrain
                                     config['nConvLayers'] = layers
 
@@ -46,7 +46,6 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                     else:
                                         config['Convolutions']["GlobalParams"]['stride'] = 1
 
-                                    config['Convolutions']['Layers']['Conv1']['out_channel'] = hsize
 
                                     # Remove convolution layers beyond the specified number
                                     for i in range(layers + 1, 5):
@@ -96,19 +95,19 @@ base_config = {
         },
         "Layers": {
             "Conv1" : {
-                "out_channel" : 512,
+                "out_channel" : 64,
                 "kernel" : 5
             }, 
             "Conv2" : {
-                "out_channel" : 128,
+                "out_channel" : 256,
                 "kernel" : 3
             }, 
             "Conv3" : {
-                "out_channel" : 512,
+                "out_channel" : 1024,
                 "kernel" : 3
             },
             "Conv4" : {
-                "out_channel" : 2048,
+                "out_channel" : 4096,
                 "kernel" : 3
             }
         }
