@@ -2,7 +2,7 @@ import json
 import os
 
 def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1,2,3,4], whiten_values=[True], triangle_values=[False],
-    greedytrain_values=[True], inhibition_values=['RePU'], pooling_values = ['PoolingStride1']):
+    greedytrain_values=[False], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1']):
     
     # whiten = False for now
     # inhibition_values = REPU for now
@@ -23,8 +23,8 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                     config["Lambda"]= 500
                                     config["classifierLr"]= 0.001
                                     config["w_norm"]= 0.0001
-                                    config["w_lr"]= 0.001
-                                    config["l_lr"]= 0.001
+                                    config["w_lr"]= 0.0033
+                                    config["l_lr"]= 0.5
                                     config["b_lr"]= 0.0033
                                     config['greedytrain'] = greedytrain
                                     config['nConvLayers'] = layers

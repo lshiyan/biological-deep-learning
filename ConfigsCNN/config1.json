@@ -3,10 +3,10 @@
     "classifierLr": 0.001,
     "beta": 1,
     "w_norm": 0.0001,
-    "w_lr": 0.001,
-    "l_lr": 0.001,
+    "w_lr": 0.0033,
+    "l_lr": 0.5,
     "b_lr": 0.0033,
-    "greedytrain": true,
+    "greedytrain": false,
     "nConvLayers": 2,
     "Convolutions": {
         "GlobalParams": {
@@ -16,7 +16,7 @@
             "triangle": false,
             "whiten": true,
             "batchnorm": true,
-            "inhibition": "RePU"
+            "inhibition": "Softmax"
         },
         "Layers": {
             "Conv1": {
