@@ -100,6 +100,7 @@ def parse_arguments(args_list: Optional[List] = None) -> argparse.Namespace:
     parser.add_argument("--b_lr", type=float, default=0.005)
     parser.add_argument("--l_lr", type=float, default=0.005)
     parser.add_argument("--nclasses", type=int, default=10)
+    parser.add_argument('--K', type=float, default=0.03, help="K parameter for the model")
 
     # Parse arguments into Namespace
     args: argparse.Namespace = parser.parse_args() if args_list == None else parser.parse_args(args_list)

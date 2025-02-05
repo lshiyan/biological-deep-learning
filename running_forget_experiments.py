@@ -24,7 +24,8 @@ parameter_pairs = [(0.5, 1, 0.003)]
 other_parameters = [
     ('sanger', 'sigmoid', 'sigmoid', 'neuron', 'RELU', 'neuron')
 ]
-
+K_values = [0.03, 0.04, 0.05, 0.06]
+K = K_values[3]
 # Set the number of concurrent processes
 max_concurrent_processes = len(available_gpus)
 
@@ -41,7 +42,7 @@ for batch_size, hsize in itertools.product(batch_sizes, hidden_sizes):
             gpu_id = next(gpu_cycle)
             
             # Construct experiment name
-            exp_name = f"SOFTHEBB_BATCH{batch_size}_HSIZE{hsize}_{heb_growth.upper()}_{clas_growth.upper()}"
+            exp_name = f"K{K}_SOFTHEBB_BATCH{batch_size}_HSIZE{hsize}_{heb_growth.upper()}_{clas_growth.upper()}"
 
             # Construct the command arguments
             arguments = [
@@ -89,7 +90,8 @@ for batch_size, hsize in itertools.product(batch_sizes, hidden_sizes):
                 '--epochs=10',
                 f'--device=cuda:{gpu_id}',
                 '--local_machine=True',
-                '--experiment_type=forget'
+                '--experiment_type=forget',
+                f'--K={K}'
             ]
 
             # Construct the command

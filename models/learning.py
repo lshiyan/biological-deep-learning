@@ -78,7 +78,7 @@ def softhebb_input_difference(x, a, normalized_weights):
     return in_space_diff
 
 
-def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
+def update_softhebb_w(K, y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
                       supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
     normed_weights = weights / (weight_norms + 1e-9)
@@ -91,7 +91,7 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     elif weight_growth == WeightGrowth.Linear:
         factor = 1
     elif weight_growth == WeightGrowth.Sigmoidal:
-        factor = wn * (1 - wn)
+        factor = wn/K * (1 - wn/K)
     elif weight_growth == WeightGrowth.Exponential:
         factor = wn
     else:

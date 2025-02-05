@@ -247,7 +247,7 @@ class SoftNeuralNet(nn.Module):
 
 
 class SoftHebbLayer(nn.Module):
-    def __init__(self, inputdim: int, outputdim: int, w_lr: float = 0.003, b_lr: float = 0.003, l_lr: float = 0.003,
+    def __init__(self, K, inputdim: int, outputdim: int, w_lr: float = 0.003, b_lr: float = 0.003, l_lr: float = 0.003,
                  device=None, is_output_layer=False, initial_weight_norm: float = 0.01,
                  triangle:bool = False, initial_lambda: float = 4.0,
                  inhibition: Inhibition = Inhibition.RePU,
@@ -262,7 +262,7 @@ class SoftHebbLayer(nn.Module):
         self.output_dim: int = outputdim
 
         print(f"OUTPUT DIM is {outputdim}")
-
+        self.K = K
         self.triangle: bool = triangle
         self.w_lr: float = w_lr
         self.l_lr: float = l_lr
@@ -339,7 +339,7 @@ class SoftHebbLayer(nn.Module):
 
     def learn_weights(self, inference_output, target=None):
         supervised = self.learningrule == LearningRule.SoftHebbOutputContrastive
-        delta_w, self.wn = L.update_softhebb_w(inference_output.y, inference_output.xn, inference_output.a,
+        delta_w, self.wn = L.update_softhebb_w(self.K, inference_output.y, inference_output.xn, inference_output.a,
                                       self.weight, self.inhibition, inference_output.u, target=target,
                                       supervised=supervised, weight_growth=self.weight_growth)
         delta_b = L.update_softhebb_b(inference_output.y, self.logprior, target=target, supervised=supervised)
@@ -376,7 +376,7 @@ class SoftHebbLayer(nn.Module):
         wn_np = self.wn.cpu().numpy().flatten()
 
         # Create a folder for the plots
-        plot_folder = os.path.join(os.getcwd(), "wn_plots")
+        plot_folder = os.path.join(os.getcwd(), f"K_{self.K}_wn_plots")
         if not os.path.exists(plot_folder):
             os.makedirs(plot_folder)
 
@@ -386,7 +386,7 @@ class SoftHebbLayer(nn.Module):
 
         plt.figure()
         plt.hist(wn_np, bins=50, alpha=0.75)
-        plt.title(f"Weight Norm Distribution ({layer_type.capitalize()} Layer) - Epoch {epoch}")
+        plt.title(f"Weight Norm Distribution ({layer_type.capitalize()} Layer) - Epoch {epoch} - K = {self.K}")
         plt.xlabel("Weight Norm")
         plt.ylabel("Frequency")
         plt.grid(True)
@@ -546,12 +546,12 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws
     return mymodel
 
 
-def NewMLPBaseline_Model(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device):
+def NewMLPBaseline_Model(K, hsize, lamb, w_lr, b_lr, l_lr, nclasses, device):
     mymodel = SoftNeuralNet(device, hsize)
-    heb_layer = SoftHebbLayer(inputdim=784, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
+    heb_layer = SoftHebbLayer(K, inputdim=784, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
                               device=device, initial_lambda=lamb)
     
-    heb_layer2 = SoftHebbLayer(hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
+    heb_layer2 = SoftHebbLayer(K, hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
                                learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True)
     mymodel.add_layer('SoftHebbian1', heb_layer)
     mymodel.add_layer('SoftHebbian2', heb_layer2)

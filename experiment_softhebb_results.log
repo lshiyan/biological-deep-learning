@@ -68,3 +68,166 @@ NameError: name 'count' is not defined
 2025-02-04 23:16:14,383 - Started process with PID: 990158 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
 2025-02-04 23:18:10,902 - Process with PID: 990158 on GPU: 1 completed.
 2025-02-04 23:18:10,903 - All experiments have completed.
+2025-02-05 14:07:29,801 - Started process with PID: 1413402 on GPU: 1 | Exp: K0.03_SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-05 14:07:45,351 - Started process with PID: 1413751 on GPU: 1 | Exp: K0.03_SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-05 14:08:04,339 - Process with PID: 1413751 on GPU: 1 completed.
+2025-02-05 14:08:04,339 - Standard Error for PID 1413751:
+usage: train_forget.py [-h] [--data_name DATA_NAME]
+                       [--ext_data_name EXT_DATA_NAME]
+                       [--experiment_name EXPERIMENT_NAME]
+                       [--sub_experiment_scope_list SUB_EXPERIMENT_SCOPE_LIST]
+                       [--train_data TRAIN_DATA] [--train_label TRAIN_LABEL]
+                       [--test_data TEST_DATA] [--test_label TEST_LABEL]
+                       [--train_size TRAIN_SIZE] [--test_size TEST_SIZE]
+                       [--classes CLASSES] [--ext_train_data EXT_TRAIN_DATA]
+                       [--ext_train_label EXT_TRAIN_LABEL]
+                       [--ext_test_data EXT_TEST_DATA]
+                       [--ext_test_label EXT_TEST_LABEL]
+                       [--ext_train_size EXT_TRAIN_SIZE]
+                       [--ext_test_size EXT_TEST_SIZE]
+                       [--ext_classes EXT_CLASSES] [--train_fname TRAIN_FNAME]
+                       [--test_fname TEST_FNAME]
+                       [--ext_train_fname EXT_TRAIN_FNAME]
+                       [--ext_test_fname EXT_TEST_FNAME]
+                       [--data_matrix_size DATA_MATRIX_SIZE]
+                       [--bar_data_quantity BAR_DATA_QUANTITY]
+                       [--input_dim INPUT_DIM] [--heb_dim HEB_DIM]
+                       [--output_dim OUTPUT_DIM] [--heb_lamb HEB_LAMB]
+                       [--heb_gam HEB_GAM] [--heb_eps HEB_EPS]
+                       [--heb_rho HEB_RHO] [--heb_learn HEB_LEARN]
+                       [--heb_inhib HEB_INHIB] [--heb_growth HEB_GROWTH]
+                       [--heb_bias HEB_BIAS] [--heb_focus HEB_FOCUS]
+                       [--heb_act HEB_ACT] [--class_learn CLASS_LEARN]
+                       [--class_growth CLASS_GROWTH] [--class_bias CLASS_BIAS]
+                       [--class_focus CLASS_FOCUS] [--class_act CLASS_ACT]
+                       [--lr LR] [--sigmoid_k SIGMOID_K] [--alpha ALPHA]
+                       [--beta BETA] [--sigma SIGMA] [--mu MU] [--init INIT]
+                       [--random_seed RANDOM_SEED] [--batch_size BATCH_SIZE]
+                       [--epochs EPOCHS] [--device DEVICE]
+                       [--local_machine LOCAL_MACHINE]
+                       [--experiment_type EXPERIMENT_TYPE] [--hsize HSIZE]
+                       [--lamb LAMB] [--w_lr W_LR] [--b_lr B_LR] [--l_lr L_LR]
+                       [--nclasses NCLASSES]
+train_forget.py: error: unrecognized arguments: --K=0.03
+
+2025-02-05 14:08:04,339 - All experiments have completed.
+2025-02-05 14:11:26,933 - Started process with PID: 1416578 on GPU: 1 | Exp: K0.03_SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-05 14:13:46,570 - Started process with PID: 1418516 on GPU: 1 | Exp: K0.03_SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-05 14:15:27,870 - Process with PID: 1418516 on GPU: 1 completed.
+2025-02-05 14:15:27,871 - Standard Error for PID 1418516:
+/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/axes/_axes.py:6973: RuntimeWarning: All-NaN slice encountered
+  xmin = min(xmin, np.nanmin(xi))
+/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/axes/_axes.py:6974: RuntimeWarning: All-NaN slice encountered
+  xmax = max(xmax, np.nanmax(xi))
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 53, in train_and_eval
+    accuracies = list(experiment.run())
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/interfaces/experiment.py", line 200, in run
+    self._experiment()
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/forget_softhebb_experiment.py", line 190, in _experiment
+    self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/forget_softhebb_experiment.py", line 259, in _training
+    layer.plot_wn_distribution(epoch, self.count)
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/models/MLP/models.py", line 388, in plot_wn_distribution
+    plt.hist(wn_np, bins=50, alpha=0.75)
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/pyplot.py", line 3440, in hist
+    return gca().hist(
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/__init__.py", line 1473, in inner
+    return func(
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/axes/_axes.py", line 7001, in hist
+    m, bins = np.histogram(x[i], bins, weights=w[i], **hist_kwargs)
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/numpy/lib/_histograms_impl.py", line 790, in histogram
+    bin_edges, uniform_bins = _get_bin_edges(a, bins, range, weights)
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/numpy/lib/_histograms_impl.py", line 428, in _get_bin_edges
+    first_edge, last_edge = _get_outer_edges(a, range)
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/numpy/lib/_histograms_impl.py", line 323, in _get_outer_edges
+    raise ValueError(
+ValueError: autodetected range of [nan, nan] is not finite
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 89, in <module>
+    main()
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 22, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 72, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 774, in get
+    raise self._value
+ValueError: autodetected range of [nan, nan] is not finite
+
+2025-02-05 14:15:27,871 - All experiments have completed.
+2025-02-05 14:17:46,082 - Started process with PID: 1421415 on GPU: 1 | Exp: K0.03_SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-05 14:19:30,778 - Process with PID: 1421415 on GPU: 1 completed.
+2025-02-05 14:19:30,779 - Standard Error for PID 1421415:
+/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/axes/_axes.py:6973: RuntimeWarning: All-NaN slice encountered
+  xmin = min(xmin, np.nanmin(xi))
+/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/axes/_axes.py:6974: RuntimeWarning: All-NaN slice encountered
+  xmax = max(xmax, np.nanmax(xi))
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 53, in train_and_eval
+    accuracies = list(experiment.run())
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/interfaces/experiment.py", line 200, in run
+    self._experiment()
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/forget_softhebb_experiment.py", line 190, in _experiment
+    self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/forget_softhebb_experiment.py", line 259, in _training
+    layer.plot_wn_distribution(epoch, self.count)
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/models/MLP/models.py", line 388, in plot_wn_distribution
+    plt.hist(wn_np, bins=50, alpha=0.75)
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/pyplot.py", line 3440, in hist
+    return gca().hist(
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/__init__.py", line 1473, in inner
+    return func(
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/matplotlib/axes/_axes.py", line 7001, in hist
+    m, bins = np.histogram(x[i], bins, weights=w[i], **hist_kwargs)
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/numpy/lib/_histograms_impl.py", line 790, in histogram
+    bin_edges, uniform_bins = _get_bin_edges(a, bins, range, weights)
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/numpy/lib/_histograms_impl.py", line 428, in _get_bin_edges
+    first_edge, last_edge = _get_outer_edges(a, range)
+  File "/home/mcb/users/slyu3/hebb_venv/lib/python3.10/site-packages/numpy/lib/_histograms_impl.py", line 323, in _get_outer_edges
+    raise ValueError(
+ValueError: autodetected range of [nan, nan] is not finite
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 89, in <module>
+    main()
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 22, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 72, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 774, in get
+    raise self._value
+ValueError: autodetected range of [nan, nan] is not finite
+
+2025-02-05 14:19:30,779 - All experiments have completed.
+2025-02-05 16:01:11,168 - Started process with PID: 1483440 on GPU: 1 | Exp: K0.04_SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-05 16:02:45,455 - Process with PID: 1483440 on GPU: 1 completed.
+2025-02-05 16:02:45,456 - All experiments have completed.
+2025-02-05 16:03:29,640 - Started process with PID: 1485221 on GPU: 1 | Exp: K0.05_SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-05 16:05:26,329 - Process with PID: 1485221 on GPU: 1 completed.
+2025-02-05 16:05:26,330 - All experiments have completed.
+2025-02-05 16:10:57,529 - Started process with PID: 1489904 on GPU: 1 | Exp: K0.06_SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-05 16:12:57,682 - Process with PID: 1489904 on GPU: 1 completed.
+2025-02-05 16:12:57,684 - All experiments have completed.
