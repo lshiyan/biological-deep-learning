@@ -15,3 +15,56 @@
 2025-01-23 17:11:14,512 - Started process with PID: 1645898 on GPU: 2 | Exp: SOFTHEBB_BATCH16_HSIZE1024_LINEAR_LINEAR
 2025-01-23 19:59:40,469 - Started process with PID: 1655473 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
 2025-01-23 19:59:40,480 - Started process with PID: 1655474 on GPU: 2 | Exp: SOFTHEBB_BATCH16_HSIZE1024_LINEAR_LINEAR
+2025-02-04 22:43:24,829 - Started process with PID: 973753 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-04 22:43:24,842 - Started process with PID: 973754 on GPU: 2 | Exp: SOFTHEBB_BATCH16_HSIZE1024_LINEAR_LINEAR
+2025-02-04 22:45:06,233 - Process with PID: 973753 on GPU: 1 completed.
+2025-02-04 22:46:59,339 - Started process with PID: 975477 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-04 22:48:57,219 - Process with PID: 975477 on GPU: 1 completed.
+2025-02-04 22:48:57,222 - All experiments have completed.
+2025-02-04 22:55:42,987 - Started process with PID: 978407 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-04 22:57:29,529 - Started process with PID: 979250 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-04 22:57:45,593 - Started process with PID: 979510 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-04 23:08:02,789 - Started process with PID: 985646 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-04 23:08:15,312 - Started process with PID: 985892 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-04 23:09:03,097 - Process with PID: 985892 on GPU: 1 completed.
+2025-02-04 23:09:03,097 - Standard Error for PID 985892:
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 53, in train_and_eval
+    accuracies = list(experiment.run())
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/interfaces/experiment.py", line 200, in run
+    self._experiment()
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/forget_softhebb_experiment.py", line 190, in _experiment
+    self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/experiments/forget_softhebb_experiment.py", line 259, in _training
+    layer.plot_wn_distribution(epoch, count)
+NameError: name 'count' is not defined
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 89, in <module>
+    main()
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 22, in main
+    train_acc_lists, test_acc_lists = parallel_training(ARGS, 1)
+  File "/home/mcb/users/slyu3/Comp396/biological-deep-learning/train_forget.py", line 72, in parallel_training
+    results = pool.map(train_and_eval, param_list)
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 367, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+  File "/usr/lib/python3.10/multiprocessing/pool.py", line 774, in get
+    raise self._value
+NameError: name 'count' is not defined
+
+2025-02-04 23:09:03,097 - All experiments have completed.
+2025-02-04 23:12:11,355 - Started process with PID: 987830 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-04 23:14:40,404 - Process with PID: 987830 on GPU: 1 completed.
+2025-02-04 23:14:40,405 - All experiments have completed.
+2025-02-04 23:16:14,383 - Started process with PID: 990158 on GPU: 1 | Exp: SOFTHEBB_BATCH16_HSIZE1024_SIGMOID_SIGMOID
+2025-02-04 23:18:10,902 - Process with PID: 990158 on GPU: 1 completed.
+2025-02-04 23:18:10,903 - All experiments have completed.

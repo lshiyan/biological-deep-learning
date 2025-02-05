@@ -10,7 +10,7 @@ logging.basicConfig(filename='experiment_softhebb_results.log', level=logging.IN
 script_name = 'train_forget.py'
 
 # Define available GPUs
-available_gpus = [1,2, 5, 6, 7]
+available_gpus = [1]
 gpu_cycle = itertools.cycle(available_gpus)
 
 # Define batch sizes and neuron sizes to vary
@@ -22,8 +22,7 @@ parameter_pairs = [(0.5, 1, 0.003)]
 
 # Define other parameters
 other_parameters = [
-    ('sanger', 'sigmoid', 'sigmoid', 'neuron', 'RELU', 'neuron'),
-    ('sanger', 'linear', 'linear', 'neuron', 'RELU', 'neuron')
+    ('sanger', 'sigmoid', 'sigmoid', 'neuron', 'RELU', 'neuron')
 ]
 
 # Set the number of concurrent processes

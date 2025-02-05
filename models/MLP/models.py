@@ -263,7 +263,6 @@ class SoftHebbLayer(nn.Module):
 
         print(f"OUTPUT DIM is {outputdim}")
 
-
         self.triangle: bool = triangle
         self.w_lr: float = w_lr
         self.l_lr: float = l_lr
@@ -340,7 +339,7 @@ class SoftHebbLayer(nn.Module):
 
     def learn_weights(self, inference_output, target=None):
         supervised = self.learningrule == LearningRule.SoftHebbOutputContrastive
-        delta_w = L.update_softhebb_w(inference_output.y, inference_output.xn, inference_output.a,
+        delta_w, self.wn = L.update_softhebb_w(inference_output.y, inference_output.xn, inference_output.a,
                                       self.weight, self.inhibition, inference_output.u, target=target,
                                       supervised=supervised, weight_growth=self.weight_growth)
         delta_b = L.update_softhebb_b(inference_output.y, self.logprior, target=target, supervised=supervised)
@@ -364,6 +363,36 @@ class SoftHebbLayer(nn.Module):
             self.learn_weights(inference_output, target=target)
         return inference_output.y
 
+    def plot_wn_distribution(self, epoch, count):
+        """
+        Plot the weight norm distribution stored in self.wn.
+        Call this method at the end of an epoch.
+        """
+        if self.wn is None:
+            print("No weight norms recorded for this epoch.")
+            return
+
+        # Convert self.wn to a numpy array
+        wn_np = self.wn.cpu().numpy().flatten()
+
+        # Create a folder for the plots
+        plot_folder = os.path.join(os.getcwd(), "wn_plots")
+        if not os.path.exists(plot_folder):
+            os.makedirs(plot_folder)
+
+        # Determine layer type for the filename
+        layer_type = "output" if self.is_output_layer else "hidden"
+        plot_filename = os.path.join(plot_folder, f"Task_{count}_wn_distribution_{layer_type}_epoch_{epoch}.png")
+
+        plt.figure()
+        plt.hist(wn_np, bins=50, alpha=0.75)
+        plt.title(f"Weight Norm Distribution ({layer_type.capitalize()} Layer) - Epoch {epoch}")
+        plt.xlabel("Weight Norm")
+        plt.ylabel("Frequency")
+        plt.grid(True)
+        plt.savefig(plot_filename)
+        plt.close()
+        print(f"Saved weight norm plot: {plot_filename}")
 
 class Hebbian_Layer(nn.Module):
     def __init__(self, inputdim, outputdim, lr, lamb, w_decrease, gamma, eps, device, is_output_layer=False, 

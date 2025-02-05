@@ -62,7 +62,7 @@ class ForgetExperiment(Experiment):
         self.classes = args.classes
         self.train_fname = args.train_fname
         self.test_fname = args.test_fname
-        
+        self.count = 0 #count which test we are at 
         # Input layer class of model
 
         input_layer: Module = DataSetupLayer()
@@ -98,28 +98,6 @@ class ForgetExperiment(Experiment):
 
         self.keep_training = True
 
-    def _analyze_weights(self, weights: torch.Tensor, layer_name: str, epoch: int):
-        """
-        Analyzes and logs statistics about the weights of a specific layer.
-        """
-        mean = weights.mean().item()
-        std = weights.std().item()
-        min_val = weights.min().item()
-        max_val = weights.max().item()
-
-        self.EXP_LOG.info(f"Analysis of weights for layer '{layer_name}' at epoch {epoch}:")
-        self.EXP_LOG.info(f"Mean: {mean}, Std: {std}, Min: {min_val}, Max: {max_val}")
-
-        # Visualize histogram of weights
-        plt.hist(weights.flatten().cpu().numpy(), bins=50, alpha=0.75)
-        plt.title(f"Weight Distribution - {layer_name} (Epoch {epoch})")
-        plt.xlabel("Weight Values")
-        plt.ylabel("Frequency")
-        plt.grid(True)
-        output_path = os.path.join(self.curr_folder_path, f"{layer_name}_weights_epoch_{epoch}.png")
-        plt.savefig(output_path)
-        plt.close()
-        self.EXP_LOG.info(f"Saved weight histogram for {layer_name} at {output_path}.")
 
 
 
@@ -206,7 +184,7 @@ class ForgetExperiment(Experiment):
             #for epoch in range(self.epochs):
             epoch = 0
             max_epochs = 35
-
+            self.count += 1
             while (self.keep_training) and (epoch <= max_epochs):
 
                 self._training(curr_train_dataloader, epoch, self.data_name, ExperimentPhases.FORGET)
@@ -265,9 +243,6 @@ class ForgetExperiment(Experiment):
             # Forward pass
             self.model.train()
             self.model(inputs, clamped=labels)
-            for name, param in self.model.named_parameters():
-                if "weight" in name:  # Focus on weights
-                    self._analyze_weights(param, name, epoch)
             # Increment samples seen
             self.TOTAL_SAMPLES += 1
             self.SUB_EXP_SAMPLES += 1
@@ -278,6 +253,10 @@ class ForgetExperiment(Experiment):
 
         self.EXP_LOG.info(f"Training of epoch #{epoch} took {time_to_str(total_added_train_time)}.")
         self.EXP_LOG.info("Completed '_training' function for forget experiment")
+        for layer in self.model.modules():
+        # Check if the layer is an instance of SoftHebbLayer
+            if hasattr(layer, "plot_wn_distribution") and callable(layer.plot_wn_distribution):
+                layer.plot_wn_distribution(epoch, self.count)
 
 
 
