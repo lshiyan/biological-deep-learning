@@ -25,7 +25,7 @@ other_parameters = [
     ('sanger', 'sigmoid', 'sigmoid', 'neuron', 'RELU', 'neuron')
 ]
 K_values = [0.03, 0.04, 0.05, 0.06]
-K = K_values[3]
+K = K_values[0]
 # Set the number of concurrent processes
 max_concurrent_processes = len(available_gpus)
 

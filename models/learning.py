@@ -106,7 +106,7 @@ def update_softhebb_w(K, y, normed_x, a, weights, inhibition: Inhibition, u=None
 
     delta_w = factor * y_part * softhebb_input_difference(normed_x, a, normed_weights)
     delta_w = torch.mean(delta_w, dim=0) # average the delta weights over the batch dim
-    return delta_w, wn
+    return delta_w, wn/K
 
 
 def update_softhebb_b(y, logprior, target=None, supervised=False):
