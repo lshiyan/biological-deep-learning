@@ -33,7 +33,7 @@ def extract_accuracies_from_csv(file_path):
     return accuracies_dict
 
 
-file_path = "AntiHebb_MLP_hyper_search/softmax_hsize_results.csv"
+file_path = "AntiHebb_MLP_hyper_search_Softmax/wnorm_results.csv"
 accuracies_dict = extract_accuracies_from_csv(file_path)
 
 sorted_accuracies = sorted(accuracies_dict.items(), key=lambda item: item[1][0], reverse=True)

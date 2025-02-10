@@ -328,7 +328,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/AntiHebb_MLP_hyper_search/test_results.csv"
+                csv_file_path = "/root/HebbianTopDown/AntiHebb_MLP_hyper_search_Softmax/wnorm_results.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
@@ -348,7 +348,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                         "l_lr": l_lr,
                         "triangle":"true",
                         "white":"true",
-                        "func": "repu",
+                        "func": "softmax",
                         "w_norm": w_norm
                     })
 
