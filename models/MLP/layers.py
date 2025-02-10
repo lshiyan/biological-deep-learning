@@ -15,7 +15,7 @@ class SoftHebbLayer(nn.Module):
                  inhibition: Inhibition = Inhibition.Softmax,
                  learningrule: LearningRule = LearningRule.SoftHebb,
                  preprocessing: InputProcessing = InputProcessing.Whiten, # whitening or no whitening
-                 weight_growth: WeightGrowth = WeightGrowth.Default):
+                 weight_growth: WeightGrowth = WeightGrowth.Default, anti_hebb_factor=1):
         super(SoftHebbLayer, self).__init__()
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -33,6 +33,7 @@ class SoftHebbLayer(nn.Module):
         self.inhibition: Inhibition = inhibition
         self.weight_growth: WeightGrowth = weight_growth
         self.preprocessing: InputProcessing = preprocessing
+        self.anti_hebb_factor = anti_hebb_factor
         if preprocessing == InputProcessing.Whiten:
             self.bn = M.BatchNorm(inputdim, device=device)
 
@@ -98,7 +99,7 @@ class SoftHebbLayer(nn.Module):
         supervised = self.learningrule == LearningRule.SoftHebbOutputContrastive
         delta_w = L.update_softhebb_w(inference_output.y, inference_output.xn, inference_output.a,
                                       self.weight, self.inhibition, inference_output.u, target=target,
-                                      supervised=supervised, weight_growth=self.weight_growth)
+                                      supervised=supervised, weight_growth=self.weight_growth, anti_hebb_factor=self.anti_hebb_factor)
         delta_b = L.update_softhebb_b(inference_output.y, self.logprior, target=target, supervised=supervised)
         delta_l = L.update_softhebb_lamb(inference_output.y, inference_output.a, inhibition=self.inhibition,
                                          lamb=self.lamb.item(), in_dim=self.input_dim, target=target,
