@@ -19,7 +19,7 @@ def generate_mlp_config_files(hsizes, lambds, wlrs, blrs, llrs, w_norm):
 
 
 def generate_mlp_config_files():
-    p = [0, 0.66, 1]
+    p = [-0.33, -0.1]
     for j in range(len(p)):
         for i in range(0, 8):
             config = {

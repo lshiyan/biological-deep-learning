@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-data = pd.read_csv("MLP_hyper_search/anti_hebbian_results.csv", usecols=range(10))
+data = pd.read_csv("AntiHebb_MLP_hyper_search_Softmax/anti_hebb_results.csv", usecols=range(11))
 
 sns.set(style="whitegrid")
 
 output_folder = "plots"
 os.makedirs(output_folder, exist_ok=True)
 
-parameters = ['w_norm']
+parameters = ['anti_hebb_factor']
 
 for param in parameters:
     plt.figure(figsize=(10, 6))
