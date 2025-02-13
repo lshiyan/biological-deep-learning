@@ -1,8 +1,8 @@
 import json
 import os
 
-def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1,2,3,4], whiten_values=[True], triangle_values=[False],
-    greedytrain_values=[False], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1']):
+def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1], whiten_values=[True], triangle_values=[False],
+    greedytrain_values=[False], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1'], factors=[-0.5, -0.4, -0.33, -0.25, -0.1, 0, 0.1, 0.33, 0.66, 1]):
     
     # whiten = False for now
     # inhibition_values = REPU for now
@@ -11,7 +11,7 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
     config_number = 0
 
     
-    for _ in range(3):
+    for factor in factors:
         for greedytrain in greedytrain_values:
             for layers in num_layers:
                 for whiten in whiten_values:
@@ -21,11 +21,12 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                 
                                     config = json.loads(json.dumps(base_config))
                                     config["Lambda"]= 500
-                                    config["classifierLr"]= 0.001
-                                    config["w_norm"]= 0.0001
-                                    config["w_lr"]= 0.0033
-                                    config["l_lr"]= 0.5
-                                    config["b_lr"]= 0.0033
+                                    config["classifierLr"]= 0.0005
+                                    config["w_norm"]= 0.00004
+                                    config["w_lr"]= 0.0004
+                                    config["l_lr"]= 0.00009
+                                    config["b_lr"]= 0.0007
+                                    config["antihebbFactor"]= factor
                                     config['greedytrain'] = greedytrain
                                     config['nConvLayers'] = layers
 
@@ -80,6 +81,7 @@ base_config = {
     "w_lr": 0.01,
     "l_lr": 0.01,
     "b_lr": 0.01,
+    "antihebbFactor": 1,
     "greedytrain" : True,
     "nConvLayers" : 1,
 
@@ -95,7 +97,7 @@ base_config = {
         },
         "Layers": {
             "Conv1" : {
-                "out_channel" : 64,
+                "out_channel" : 128,
                 "kernel" : 5
             }, 
             "Conv2" : {

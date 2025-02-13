@@ -78,7 +78,7 @@ def softhebb_input_difference(x, a, normalized_weights):
     return in_space_diff
 
 def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
-                      supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default):
+                      supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default, anti_hebb_factor=1):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
     normed_weights = weights / (weight_norms + 1e-9)
     batch_dim, out_dim = y.shape
@@ -112,7 +112,7 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     mask = torch.zeros_like(y_part, dtype=torch.bool)
     mask.scatter_(1, indices, True)
     # Set the non-maximum values to negative
-    anti_hebbian_output = torch.where(mask, y_part, -y_part)
+    anti_hebbian_output = torch.where(mask, y_part, -anti_hebb_factor*y_part)
         
     # Innefficient. We are trying to calculate it in a more memory efficient way.
     # delta_w = factor * y_part * x.reshape(batch_dim, 1, in_dim) - a.reshape(batch_dim, out_dim, 1) * normalized_weights.reshape(1, out_dim, in_dim)
@@ -156,5 +156,24 @@ def update_softhebb_lamb(y, a, inhibition: Inhibition, lamb=None, in_dim=None, t
         delta_l = torch.sum(y * v, dim=1) - k
     delta_l = torch.mean(delta_l)  # mean over batch dim
     return delta_l
+
+def test_update_softhebb_w(y, x, weights, eta=0.01, beta=0.1):
+    """
+    Implements the local Hebbian and Anti-Hebbian learning rule to match SoftHebb.
+    """
+    # Ensure activations are normalized
+    u = torch.relu(y) / (torch.norm(y, dim=1, keepdim=True) + 1e-9)
+
+    # Hebbian update: strengthening correlated activations
+    hebbian_term = eta * (y.unsqueeze(2) * x.unsqueeze(1))
+
+    # Anti-Hebbian update: decorrelating neuron responses
+    anti_hebbian_term = beta * weights
+
+    # Final weight update
+    delta_w = hebbian_term - anti_hebbian_term
+
+    return delta_w.mean(dim=0)  # Averaging over batch
+
 
 

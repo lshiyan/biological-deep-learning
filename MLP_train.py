@@ -286,7 +286,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoi
         visualize_weight_distribution(model, epoch)
 
 
-def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, hsize, lamb, w_lr, b_lr, l_lr, w_norm):
+def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, hsize, lamb, w_lr, b_lr, l_lr, w_norm, anti_hebb_factor):
     test_batches_per_epoch = len(test_dataloader)
     epoch = 0
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
@@ -328,11 +328,11 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/AntiHebb_MLP_hyper_search/test_results.csv"
+                csv_file_path = "/root/HebbianTopDown/AntiHebb_MLP_hyper_search_Softmax/anti_hebb_results.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
-                    fieldnames = ["test_accuracy", "hsize", "lambda", "w_lr", "b_lr", "l_lr", "triangle", "white", "func", "w_norm"]
+                    fieldnames = ["test_accuracy", "hsize", "lambda", "w_lr", "b_lr", "l_lr", "triangle", "white", "func", "w_norm", "anti_hebb_factor"]
                     
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -348,8 +348,9 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                         "l_lr": l_lr,
                         "triangle":"true",
                         "white":"true",
-                        "func": "repu",
-                        "w_norm": w_norm
+                        "func": "softmax",
+                        "w_norm": w_norm,
+                        "anti_hebb_factor": anti_hebb_factor
                     })
 
             atomic_torch_save(
@@ -408,7 +409,7 @@ def main(args, timer):
         test_dataset = datasets.MNIST(root='./data', train=False, download=True, transform=transform_MNIST)
 
         timer.report("Initialized datasets")
-        model = MLP.NewMLPBaseline_Model(hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], initial_weight_norm=config['w_norm'], nclasses=10, device=args.device_id)
+        model = MLP.NewMLPBaseline_Model(hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], initial_weight_norm=config['w_norm'], nclasses=10, anti_hebb_factor=config['anti_hebb_factor'] , device=args.device_id)
 
 
     elif dataset == "FASHION":
@@ -483,7 +484,7 @@ def main(args, timer):
 
     test_loop(
         model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint,
-        hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], w_norm=config['w_norm']
+        hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], w_norm=config['w_norm'], anti_hebb_factor=config['anti_hebb_factor']
     )
 
     print("Done!")

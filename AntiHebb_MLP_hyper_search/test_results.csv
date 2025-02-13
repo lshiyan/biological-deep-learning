@@ -23,3 +23,9 @@ test_accuracy,hsize,lambda,w_lr,b_lr,l_lr,triangle,white,func,w_norm
 0.5671,10000,250,0.3,0.0033,0.1,true,true,repu,0.01
 0.616,10000,250,0.3,0.0033,0.1,true,true,repu,0.01
 0.5955,10000,250,0.3,0.0033,0.1,true,true,repu,0.01
+0.2908,100,250,0.3,0.0033,0.1,true,true,repu,0.01
+0.7647,100,250,0.3,0.0033,0.1,true,true,repu,0.01
+0.3161,100,250,0.3,0.0033,0.1,true,true,repu,0.01
+0.3166,100,250,0.3,0.0033,0.1,true,true,repu,0.01
+0.1135,100,250,0.3,0.0033,0.1,true,true,repu,0.5
+0.8585,2048,250,0.1,0.0033,0.1,true,true,repu,0.01
