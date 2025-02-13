@@ -627,13 +627,15 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     triangle = config['Convolutions']["GlobalParams"]['triangle']
     preprocessing = InputProcessing.Whiten if config['Convolutions']["GlobalParams"]['whiten'] else InputProcessing.No 
     inhibition = Inhibition.RePU if config['Convolutions']["GlobalParams"]['inhibition'] == "REPU" else Inhibition.Softmax
+    antihebb_factor = config['antihebbFactor']
 
     for layer_idx in range(nb_conv):
         layerconfig = config['Convolutions']["Layers"][l_keys[layer_idx]]
 
         convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], stride=conv_stride, 
                                             padding=conv_padding, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, device=device, is_output_layer=False, initial_weight_norm=w_norm, 
-                                            triangle=triangle, initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing)
+                                            triangle=triangle, initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing,
+                                            antihebb_factor=antihebb_factor)
         
         mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
 

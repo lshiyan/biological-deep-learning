@@ -1,11 +1,12 @@
 {
     "Lambda": 500,
-    "classifierLr": 0.001,
+    "classifierLr": 0.0005,
     "beta": 1,
-    "w_norm": 0.0001,
-    "w_lr": 0.0033,
-    "l_lr": 0.5,
-    "b_lr": 0.0033,
+    "w_norm": 4e-05,
+    "w_lr": 0.0004,
+    "l_lr": 9e-05,
+    "b_lr": 0.0007,
+    "antihebbFactor": -0.1,
     "greedytrain": false,
     "nConvLayers": 1,
     "Convolutions": {
@@ -20,7 +21,7 @@
         },
         "Layers": {
             "Conv1": {
-                "out_channel": 64,
+                "out_channel": 128,
                 "kernel": 5
             }
         }

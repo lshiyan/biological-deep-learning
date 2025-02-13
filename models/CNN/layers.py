@@ -16,7 +16,8 @@ class ConvSoftHebbLayer(nn.Module):
     def __init__(self, input_shape, kernel, in_ch, out_ch, stride = 1, padding = 0, w_lr: float = 0.3, b_lr: float = 0.003, 
                  l_lr: float = 0.1, device = None, is_output_layer = False, initial_weight_norm: float = 0.01,
                  triangle: bool = False, initial_lambda: float = 4.0, inhibition: Inhibition = Inhibition.RePU,
-                 learningrule: LearningRule = LearningRule.SoftHebb, preprocessing: InputProcessing = InputProcessing.No):
+                 learningrule: LearningRule = LearningRule.SoftHebb, preprocessing: InputProcessing = InputProcessing.No,
+                 antihebb_factor=1):
 
         super(ConvSoftHebbLayer, self).__init__()
         if device is None:
@@ -25,10 +26,10 @@ class ConvSoftHebbLayer(nn.Module):
         self.is_output_layer = False
         self.input_shape = input_shape  # (height, width)
         self.kernel = kernel
-        self.stride = stride
-        self.padding = padding
         self.in_channel = in_ch
         self.out_channel = out_ch
+        self.padding = padding
+        self.stride = stride
         self.unfold = nn.Unfold(self.kernel, dilation=1, padding=self.padding, stride=self.stride)
         self.fold = nn.Fold(output_size=input_shape, kernel_size=self.kernel, padding=self.padding, stride=self.stride)
         self.fold_unfold_divisor = (self.fold(self.unfold(torch.ones(1, in_ch, input_shape[0], input_shape[1])))).to(device)
@@ -36,7 +37,7 @@ class ConvSoftHebbLayer(nn.Module):
                                                   b_lr = b_lr, l_lr = l_lr, device=device, is_output_layer=is_output_layer, 
                                                   initial_weight_norm = initial_weight_norm, triangle= triangle, 
                                                   initial_lambda = initial_lambda, inhibition = inhibition,learningrule = learningrule,
-                                                  preprocessing= preprocessing)
+                                                  preprocessing= preprocessing, anti_hebb_factor=antihebb_factor)
         self.output_shape = cnn_output_formula_2D(input_shape, kernel, padding, 1, stride)
         self.output_tiles = self.output_shape[0] * self.output_shape[1]
 
