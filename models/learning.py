@@ -115,6 +115,13 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     batch_dim, out_dim = a.shape
 
     ### Anti hebbian test: 
+    # max_values, indices = torch.max(y_part, dim=1, keepdim=True)
+    ## Create a mask where the maximum values are located
+    # mask = torch.zeros_like(y_part, dtype=torch.bool)
+    # mask.scatter_(1, indices, True)
+    ## Set the non-maximum values to negative
+    # anti_hebbian_output = torch.where(mask, y_part, -y_part)
+
     max_values, indices = torch.max(y_part, dim=1, keepdim=True)  # y_max
     x_ratio = max_values / (y_part + 1e-9)  # Prevent division by zero
     mexican_hat_factor = mexican_hat(x_ratio, sigma=1.0, k=2.0, c=0.5)
