@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from models.hyperparams import Inhibition, WeightGrowth
 import scipy
+import numpy as np
 """
 Learning rules for MLP and CNN models
 """
@@ -77,6 +78,13 @@ def softhebb_input_difference(x, a, normalized_weights):
         1, out_dim, in_dim)
     return in_space_diff
 
+def mexican_hat(x, sigma=0.5):
+    # Ricker wavelet function centered at x = 1
+    # sigma: controls spread
+    coeff = 2 / (np.sqrt(3*sigma) * (np.pi**0.25))
+    val = (1 - ((x-1)/sigma)**2) * np.exp(-(x-1)**2/(2*sigma**2))
+    return coeff * val
+
 def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
                       supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default, anti_hebb_factor=1):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
@@ -107,12 +115,12 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     batch_dim, out_dim = a.shape
 
     ### Anti hebbian test: 
-    max_values, indices = torch.max(y_part, dim=1, keepdim=True)
-    # Create a mask where the maximum values are located
+    max_values, indices = torch.max(y_part, dim=1, keepdim=True)  # y_max
+    x_ratio = max_values / (y_part + 1e-9)  # Prevent division by zero
+    mexican_hat_factor = mexican_hat(x_ratio, sigma=1.0, k=2.0, c=0.5)
     mask = torch.zeros_like(y_part, dtype=torch.bool)
     mask.scatter_(1, indices, True)
-    # Set the non-maximum values to negative
-    anti_hebbian_output = torch.where(mask, y_part, -anti_hebb_factor*y_part)
+    anti_hebbian_output = torch.where(mask, y_part, -mexican_hat_factor * y_part)
         
     # Innefficient. We are trying to calculate it in a more memory efficient way.
     # delta_w = factor * y_part * x.reshape(batch_dim, 1, in_dim) - a.reshape(batch_dim, out_dim, 1) * normalized_weights.reshape(1, out_dim, in_dim)

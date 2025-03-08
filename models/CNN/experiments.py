@@ -13,7 +13,8 @@ from models.CNN.layers import ConvSoftHebbLayer, PoolingLayer
 
 
 
-def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, imgtype, device, traintopdown=False, testtopdown=False, greedytrain=False):
+def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, imgtype, device, 
+                   traintopdown=False, testtopdown=False, greedytrain=False):
 
     layers = list(mymodel.basemodel.layers.values())
 
@@ -33,7 +34,6 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
                         else :
                             _, x = layers[r_l].forward(x, update_weights=False)
     else :
-        mymodel.eval()
         for _ in range(epoch):
             for data in tqdm(dataloader):
                 # if samples in [0, 10, 100, 1000, 10000, 20000, 30000]:
@@ -47,10 +47,8 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
                 if imgtype == ImageType.Gray:
                     inputs = inputs.reshape(1,1,28,28)
                 mymodel.train_conv(inputs, oneHotEncode(labels, nclasses, mymodel.device))
-            #if cn == 10:
-            #    return mymodel
 
-    for _ in range(1):
+    for _ in range(50):
         for data in tqdm(dataloader):
             inputs, labels=data
             # inputs = inputs.to('mps')
@@ -62,19 +60,6 @@ def CNN_Experiment(epoch, mymodel, dataloader, testloader, dataset, nclasses, im
                 inputs = inputs.reshape(1,1,28,28)
             mymodel.train_classifier(inputs, oneHotEncode(labels, nclasses, mymodel.device))
 
-    # timestr = time.strftime("%Y%m%d-%H%M%S")
-
-    # if traintopdown:
-    #     foldername = os.getcwd() + '/SavedModels/CNN_TD_' + dataset + '_' + timestr
-    # else:
-    #     foldername = os.getcwd() + '/SavedModels/CNN_FF_' + dataset + '_' + timestr
-
-    # os.mkdir(foldername)
-
-    # torch.save(mymodel.state_dict(), foldername + '/model')
-
-    #view_filters(mymodel, foldername)
-    #view_ff_weights(mymodel, foldername, dataloader)
     return mymodel.basemodel, mymodel
 
 
@@ -125,11 +110,6 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
                     inputs = inputs.reshape(1,1,28,28)
                 mymodel.train_conv(inputs, oneHotEncode(labels, nclasses, mymodel.device)) ###
 
-                #for idx in range(len(mymodel.basemodel.layers)):
-                #    if hasattr(layers[idx], 'lamb'):
-                #       lamb_values[mymodel.basemodel.layers[idx].items()[0]].append(layers[idx].lamb.item())
-
-
     for _ in range(1):
         for data in tqdm(dataloader):
             inputs, labels=data
@@ -138,8 +118,6 @@ def new_CNN_Experiment(epoch, mymodel, dataloader, nclasses, imgtype, device, gr
             if imgtype == ImageType.Gray:
                 inputs = inputs.reshape(1,1,28,28)
             mymodel.train_classifier(inputs, oneHotEncode(labels, nclasses, mymodel.device))
-
-    #plot_lambda(lamb_values)
 
     return mymodel
 

@@ -87,8 +87,7 @@ base_config = {
 
     "Convolutions" : {
         "GlobalParams": {
-            "stride" : 1,
-            "padding" : 2,
+
             "paddingmode" : "reflect",
             "triangle" : False,
             "whiten" : False,
@@ -97,49 +96,64 @@ base_config = {
         },
         "Layers": {
             "Conv1" : {
-                "out_channel" : 128,
-                "kernel" : 5
+                "out_channel" : 96,
+                "kernel" : 5,
+                "triangle_power" : 0.7,
+                "stride" : 1,
+                "padding" : 2
             }, 
             "Conv2" : {
-                "out_channel" : 256,
-                "kernel" : 3
+                "out_channel" : 384,
+                "kernel" : 3,
+                "triangle_power" : 1.4,
+                "stride" : 1,
+                "padding" : 1
             }, 
             "Conv3" : {
-                "out_channel" : 1024,
-                "kernel" : 3
+                "out_channel" : 1536,
+                "kernel" : 3,
+                "triangle_power" : 1,
+                "stride" : 1,
+                "padding" : 2
             },
             "Conv4" : {
                 "out_channel" : 4096,
-                "kernel" : 3
+                "kernel" : 3,
+                "triangle_power" : 1,
+                "stride" : 1,
+                "padding" : 2
             }
         }
     }, 
 
     "PoolingBlock" : {
         "GlobalParams":{
-            "Pooling" : True, 
-            "stride" : 1
+            "Pooling" : True
         },
         "Layers": {
             "Conv1" : {
                 "Type" : "Max",
                 "kernel" : 4,
-                "padding" : 1 
+                "padding" : 1,
+                "stride": 2 
             }, 
             "Conv2" : {
                 "Type" : "Max",
                 "kernel" : 4,
-                "padding" : 1 
+                "padding" : 1,
+                "stride": 2  
             },
             "Conv3" : {
                 "Type" : "Max",
                 "kernel" : 2,
-                "padding" : 0 
+                "padding" : 0,
+                "stride": 2  
             },
             "Conv4" : {
                 "Type" : "Max",
                 "kernel" : 2,
-                "padding" : 0 
+                "padding" : 0,
+                "stride": 2  
             }
         }
     }, 
