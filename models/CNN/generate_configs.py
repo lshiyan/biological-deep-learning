@@ -98,28 +98,24 @@ base_config = {
             "Conv1" : {
                 "out_channel" : 96,
                 "kernel" : 5,
-                "triangle_power" : 0.7,
                 "stride" : 1,
                 "padding" : 2
             }, 
             "Conv2" : {
                 "out_channel" : 384,
                 "kernel" : 3,
-                "triangle_power" : 1.4,
                 "stride" : 1,
                 "padding" : 1
             }, 
             "Conv3" : {
                 "out_channel" : 1536,
                 "kernel" : 3,
-                "triangle_power" : 1,
                 "stride" : 1,
                 "padding" : 2
             },
             "Conv4" : {
                 "out_channel" : 4096,
                 "kernel" : 3,
-                "triangle_power" : 1,
                 "stride" : 1,
                 "padding" : 2
             }

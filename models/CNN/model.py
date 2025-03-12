@@ -381,7 +381,7 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
 
         convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], 
                                       stride=layerconfig['stride'], padding=layerconfig['padding'], w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, device=device, 
-                                      is_output_layer=False, initial_weight_norm=w_norm, triangle=triangle, triangle_power=layerconfig['triangle_power'], 
+                                      is_output_layer=False, initial_weight_norm=w_norm, triangle=triangle, 
                                       initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing,
                                       antihebb_factor=antihebb_factor)
         
