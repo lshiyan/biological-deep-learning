@@ -86,14 +86,12 @@ def mexican_hat(x, sigma=0.5):
     return coeff * val
 
 def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
-                      supervised=False, weight_growth: WeightGrowth = WeightGrowth.Default, anti_hebb_factor=1):
+                      supervised=False, weight_growth: WeightGrowth = WeightGrowth.Linear, anti_hebb_factor=1):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
     normed_weights = weights / (weight_norms + 1e-9)
     batch_dim, out_dim = y.shape
     wn = weight_norms.unsqueeze(0)
-    if weight_growth == WeightGrowth.Default:
-        factor = 1 / (wn + 1e-9)
-    elif weight_growth == WeightGrowth.Linear:
+    if weight_growth == WeightGrowth.Linear:
         factor = 1
     elif weight_growth == WeightGrowth.Sigmoidal:
         factor = wn * (1 - wn)
@@ -128,7 +126,8 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     mask = torch.zeros_like(y_part, dtype=torch.bool)
     mask.scatter_(1, indices, True)
     anti_hebbian_output = torch.where(mask, y_part, -mexican_hat_factor * y_part)
-        
+
+    
     # Innefficient. We are trying to calculate it in a more memory efficient way.
     # delta_w = factor * y_part * x.reshape(batch_dim, 1, in_dim) - a.reshape(batch_dim, out_dim, 1) * normalized_weights.reshape(1, out_dim, in_dim)
     
