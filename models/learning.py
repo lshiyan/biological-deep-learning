@@ -86,7 +86,8 @@ def mexican_hat(x, sigma=0.5):
     return coeff * val
 
 def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
-                      supervised=False, weight_growth: WeightGrowth = WeightGrowth.Linear, anti_hebb_factor=1):
+                      supervised=False, weight_growth: WeightGrowth = WeightGrowth.Linear, anti_hebb_factor=1,
+                      use_mexican_hat=True, mexican_hat_sigma=1.0):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
     normed_weights = weights / (weight_norms + 1e-9)
     batch_dim, out_dim = y.shape
@@ -114,14 +115,20 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
 
     max_values, indices = torch.max(y_part, dim=1, keepdim=True)  # y_max
     x_ratio = max_values / (y_part + 1e-9)  # Prevent division by zero
-    # mexican_hat_factor = mexican_hat(x_ratio, sigma=1.0)
+    
     mask = torch.zeros_like(y_part, dtype=torch.bool)
     mask.scatter_(1, indices, True)
-    anti_hebbian_output = torch.where(mask, y_part, 1 * y_part)
-
     
-    # Innefficient. We are trying to calculate it in a more memory efficient way.
-    # delta_w = factor * y_part * x.reshape(batch_dim, 1, in_dim) - a.reshape(batch_dim, out_dim, 1) * normalized_weights.reshape(1, out_dim, in_dim)
+    if use_mexican_hat:
+        # Convert numpy mexican_hat function to PyTorch
+        # Center the Mexican hat on x = 1 by using x_ratio directly (since it's already normalized around 1)
+        coeff = 2 / (torch.sqrt(torch.tensor(3*mexican_hat_sigma)) * (torch.pi**0.25))
+        val = (1 - ((x_ratio-1)/mexican_hat_sigma)**2) * torch.exp(-(x_ratio-1)**2/(2*mexican_hat_sigma**2))
+        mexican_hat_factor = coeff * val
+        # Apply Mexican hat factor to anti-Hebbian term
+        anti_hebbian_output = torch.where(mask, y_part, mexican_hat_factor * anti_hebb_factor * y_part)
+    else:
+        anti_hebbian_output = torch.where(mask, y_part, 1 * y_part)
     
     ya = torch.mean(anti_hebbian_output * a, dim=0).reshape(out_dim, 1)
     yx = (1/batch_dim) * torch.matmul(anti_hebbian_output.T, normed_x)

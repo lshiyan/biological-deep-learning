@@ -173,8 +173,8 @@ def NewMLPBaseline_Model(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device, initia
     heb_layer = SoftHebbLayer(inputdim=784, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
                               device=device, initial_lambda=lamb, initial_weight_norm=initial_weight_norm, anti_hebb_factor=anti_hebb_factor)
     
-    heb_layer2 = SoftHebbLayer(hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
-                               learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True, initial_weight_norm=initial_weight_norm, anti_hebb_factor=anti_hebb_factor)
+    heb_layer2 = SoftHebbLayer(hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True, initial_weight_norm=initial_weight_norm, anti_hebb_factor=anti_hebb_factor)
+                          
     mymodel.add_layer('SoftHebbian1', heb_layer)
     mymodel.add_layer('SoftHebbian2', heb_layer2)
 
