@@ -4,6 +4,13 @@ learning algorithm
 """
 import math
 import warnings
+import os
+import torch.distributed as dist
+from cycling_utils import MetricsTracker, TimestampedTimer
+import csv
+from operator import itemgetter
+import argparse
+from pathlib import Path
 
 import torch
 from torch import nn, optim
@@ -12,6 +19,13 @@ from torch.nn.modules.utils import _pair
 from torch.optim.lr_scheduler import StepLR
 import torchvision
 
+def get_args_parser(add_help=True):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epoch", type=int, default=1)
+    parser.add_argument("--dataset", type=str, default="CIFAR10")
+    parser.add_argument("--save-dir", type=Path, required=True)
+    parser.add_argument("--tboard-path", type=Path, required=True)
+    return parser
 
 class SoftHebbConv2d(nn.Module):
     def __init__(
@@ -250,9 +264,28 @@ class FastCIFAR10(torchvision.datasets.CIFAR10):
         return img, target
 
 
-# Main training loop CIFAR10
-if __name__ == "__main__":
-    device = torch.device('cuda:0')
+def main(args, timer):
+    ##############################################
+    # Distributed Training Configuration
+    # -----------------
+    # The following steps demonstrate configuration of the local GPU for distributed training. This includes
+    # initialising the process group, obtaining and setting the rank of the GPU within the cluster and on the local
+    # node.
+
+    dist.init_process_group("nccl")  # Expects RANK set in environment variable
+    rank = int(os.environ["RANK"])  # Rank of this GPU in cluster
+    args.device_id = int(os.environ["LOCAL_RANK"])  # Rank on local node
+    args.is_master = rank == 0  # Master node for saving / reporting
+    torch.cuda.set_device(args.device_id)  # Enables calling 'cuda'
+
+    timer.report("Setup for distributed training")
+
+    args.checkpoint_path = args.save_dir / "checkpoint.pt"
+    args.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    timer.report("Validated checkpoint path")
+
+    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+
     model = DeepSoftHebb()
     model.to(device)
 
@@ -264,7 +297,7 @@ if __name__ == "__main__":
     unsup_lr_scheduler = WeightNormDependentLR(unsup_optimizer, power_lr=0.5)
 
     sup_optimizer = optim.Adam(model.classifier.parameters(), lr=0.001)
-    sup_lr_scheduler = CustomStepLR(sup_optimizer, nb_epochs=50)
+    sup_lr_scheduler = CustomStepLR(sup_optimizer, nb_epochs=args.epoch)
     criterion = nn.CrossEntropyLoss()
 
     trainset = FastCIFAR10('./data', train=True, download=True)
@@ -303,7 +336,7 @@ if __name__ == "__main__":
     model.bn1.eval()
     model.bn2.eval()
     model.bn3.eval()
-    for epoch in range(50):
+    for epoch in range(args.epoch):
         model.classifier.train()
         model.dropout.train()
         running_loss = 0.0
@@ -325,13 +358,13 @@ if __name__ == "__main__":
 
             # compute training statistics
             running_loss += loss.item()
-            if epoch % 10 == 0 or epoch == 49:
+            if epoch % 10 == 0 or epoch == args.epoch - 1:
                 total += labels.size(0)
                 _, predicted = torch.max(outputs.data, 1)
                 correct += (predicted == labels).sum().item()
         sup_lr_scheduler.step()
         # Evaluation on test set
-        if epoch % 10 == 0 or epoch == 49:
+        if epoch % 10 == 0 or epoch == args.epoch - 1:
             print(f'Accuracy of the network on the train images: {100 * correct // total} %')
             print(f'[{epoch + 1}] loss: {running_loss / total:.3f}')
 
@@ -355,5 +388,47 @@ if __name__ == "__main__":
                     loss = criterion(outputs, labels)
                     running_loss += loss.item()
 
-            print(f'Accuracy of the network on the 10000 test images: {100 * correct / total} %')
-            print(f'test loss: {running_loss / total:.3f}')
+            test_accuracy = 100 * correct / total
+            test_loss = running_loss / total
+
+            print(f'Accuracy of the network on the 10000 test images: {test_accuracy:.2f} %')
+            print(f'test loss: {test_loss:.3f}')
+
+            # Save test results to file
+            log_file_path = "/root/HebbianTopDown/CNN_hyper_search/paper_demo_cnn_results.txt"
+            with open(log_file_path, "a") as log_file:
+                log_file.write(f'Epoch {epoch + 1}\n')
+                log_file.write(f'Accuracy of the network on the 10000 test images: {test_accuracy:.2f} %\n')
+                log_file.write(f'Test loss: {test_loss:.3f}\n\n')
+
+            # Write accuracy to CSV file
+            csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/paper_demo_cnn_results.csv"
+            file_exists = os.path.isfile(csv_file_path)
+
+            # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(csv_file_path), exist_ok=True)
+
+            with open(csv_file_path, "a", newline="") as csvfile:
+                fieldnames = ["test_accuracy", "kernel_size", "channels", "t_invert", "power", "stride", "padding"]
+                
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+                if not file_exists:
+                    writer.writeheader()
+
+                writer.writerow({
+                    "test_accuracy": test_accuracy / 100,  # Convert to decimal
+                    "kernel_size": 5,  # from conv1
+                    "channels": 96,    # from conv1
+                    "t_invert": 1.0,   # from conv1
+                    "power": 0.7,      # from activ1
+                    "stride": 1,       # default stride
+                    "padding": 2       # from conv1
+                })
+
+    print(f"Training log saved to {log_file_path}")
+
+if __name__ == "__main__":
+    args = get_args_parser().parse_args()
+    timer = TimestampedTimer("Starting training")
+    main(args, timer)

@@ -91,8 +91,8 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     normed_weights = weights / (weight_norms + 1e-9)
     batch_dim, out_dim = y.shape
     wn = weight_norms.unsqueeze(0)
-    if weight_growth == WeightGrowth.Linear:
-        factor = 1
+    if weight_growth == WeightGrowth.Linear or weight_growth == WeightGrowth.Default:
+        factor = 1 / (wn + 1e-9) 
     elif weight_growth == WeightGrowth.Sigmoidal:
         factor = wn * (1 - wn)
     elif weight_growth == WeightGrowth.Exponential:
@@ -112,20 +112,12 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     batch_dim, in_dim = normed_x.shape
     batch_dim, out_dim = a.shape
 
-    ### Anti hebbian test: 
-    # max_values, indices = torch.max(y_part, dim=1, keepdim=True)
-    ## Create a mask where the maximum values are located
-    # mask = torch.zeros_like(y_part, dtype=torch.bool)
-    # mask.scatter_(1, indices, True)
-    ## Set the non-maximum values to negative
-    # anti_hebbian_output = torch.where(mask, y_part, -y_part)
-
     max_values, indices = torch.max(y_part, dim=1, keepdim=True)  # y_max
     x_ratio = max_values / (y_part + 1e-9)  # Prevent division by zero
-    mexican_hat_factor = mexican_hat(x_ratio, sigma=1.0, k=2.0, c=0.5)
+    # mexican_hat_factor = mexican_hat(x_ratio, sigma=1.0)
     mask = torch.zeros_like(y_part, dtype=torch.bool)
     mask.scatter_(1, indices, True)
-    anti_hebbian_output = torch.where(mask, y_part, -mexican_hat_factor * y_part)
+    anti_hebbian_output = torch.where(mask, y_part, 1 * y_part)
 
     
     # Innefficient. We are trying to calculate it in a more memory efficient way.
@@ -135,7 +127,7 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     yx = (1/batch_dim) * torch.matmul(anti_hebbian_output.T, normed_x)
     delta_w = factor * (yx - ya * normed_weights)
     delta_w = torch.mean(delta_w, dim=0) # average the delta weights over the batch dim
-
+    
     return delta_w
 
 def update_softhebb_b(y, logprior, target=None, supervised=False):
