@@ -97,15 +97,6 @@ class GradientClassifierLayer(nn.Module):
         return pred
 
 
-##############################
-
-    
-
-
-    
-
-
-
 class ConvolutionHebbianLayer(nn.Module):
     def __init__(self, input_shape, kernel, stride, in_ch, out_ch, lambd, lr, rho, device,
                  eta=1, padding=0, paddingmode="zeros", triangle=False, whiten_input=False, 

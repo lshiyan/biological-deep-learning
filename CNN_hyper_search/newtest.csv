@@ -19,3 +19,9 @@ Optimal:
 0.5401,1,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
 0.547,1,True,1,True,True,True,Softmax,125,0.0006,0.0001,0.1,0.3,0.001
 
+0.5693,1,True,1,True,False,False,Softmax,500,0.0005,4e-05,0.0004,9e-05,0.0007,128,-0.5
+
+
+
+Simultaneous with SGD classifier separately *50:
+

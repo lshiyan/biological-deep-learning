@@ -1,41 +1,42 @@
 {
     "Lambda": 500,
-    "classifierLr": 0.0005,
+    "classifierLr": 0.001,
     "beta": 1,
-    "w_norm": 4e-05,
-    "w_lr": 0.0004,
-    "l_lr": 9e-05,
-    "b_lr": 0.0007,
-    "antihebbFactor": -0.25,
-    "greedytrain": false,
+    "w_norm": 0.0001,
+    "w_lr": 0.001,
+    "l_lr": 0.001,
+    "b_lr": 0.0033,
+    "greedytrain": true,
     "nConvLayers": 1,
     "Convolutions": {
         "GlobalParams": {
-            "stride": 1,
-            "padding": 2,
             "paddingmode": "reflect",
             "triangle": false,
             "whiten": true,
             "batchnorm": true,
-            "inhibition": "Softmax"
+            "inhibition": "Softmax",
+            "padding": 2,
+            "stride": 1
         },
         "Layers": {
             "Conv1": {
-                "out_channel": 128,
-                "kernel": 5
+                "out_channel": 512,
+                "kernel": 5,
+                "stride": 1,
+                "padding": 2
             }
         }
     },
     "PoolingBlock": {
         "GlobalParams": {
-            "Pooling": true,
-            "stride": 1
+            "Pooling": true
         },
         "Layers": {
             "Conv1": {
                 "Type": "Avg",
                 "kernel": 4,
-                "padding": 1
+                "padding": 1,
+                "stride": 2
             }
         }
     },
