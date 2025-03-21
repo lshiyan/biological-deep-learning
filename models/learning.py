@@ -87,7 +87,7 @@ def mexican_hat(x, sigma=0.5):
 
 def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, target=None,
                       supervised=False, weight_growth: WeightGrowth = WeightGrowth.Linear, anti_hebb_factor=1,
-                      use_mexican_hat=True, mexican_hat_sigma=1.0):
+                      use_mexican_hat=True, mexican_hat_sigma=0.5):
     weight_norms = torch.norm(weights, dim=1, keepdim=True)
     normed_weights = weights / (weight_norms + 1e-9)
     batch_dim, out_dim = y.shape
@@ -114,7 +114,7 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     batch_dim, out_dim = a.shape
 
     max_values, indices = torch.max(y_part, dim=1, keepdim=True)  # y_max
-    x_ratio = max_values / (y_part + 1e-9)  # Prevent division by zero
+    x_ratio = y_part / (max_values + 1e-9)  # Now normalized between 0 and 1, with winner at 1
     
     mask = torch.zeros_like(y_part, dtype=torch.bool)
     mask.scatter_(1, indices, True)
@@ -125,8 +125,8 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
         coeff = 2 / (torch.sqrt(torch.tensor(3*mexican_hat_sigma)) * (torch.pi**0.25))
         val = (1 - ((x_ratio-1)/mexican_hat_sigma)**2) * torch.exp(-(x_ratio-1)**2/(2*mexican_hat_sigma**2))
         mexican_hat_factor = coeff * val
-        # Apply Mexican hat factor to anti-Hebbian term
-        anti_hebbian_output = torch.where(mask, y_part, mexican_hat_factor * anti_hebb_factor * y_part)
+        # Apply Mexican hat factor directly without anti_hebb_factor
+        anti_hebbian_output = torch.where(mask, y_part, -mexican_hat_factor * y_part)
     else:
         anti_hebbian_output = torch.where(mask, y_part, 1 * y_part)
     
