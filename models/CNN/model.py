@@ -237,11 +237,11 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
         
         if is_pool:
             poolconfig = config["PoolingBlock"]["Layers"][l_keys[layer_idx]]
-            poollayer = PoolingLayer(kernel=poolconfig['kernel'], stride=poolconfig["stride"], padding=poolconfig['padding'], pool_type=poolconfig['Type'])
+            poollayer = PoolingLayer(kernel=poolconfig['kernel'], stride=config["PoolingBlock"]["GlobalParams"]["stride"], padding=poolconfig['padding'], pool_type=poolconfig['Type'])
             
             mycnn.add_layer(f"PoolLayer{layer_idx+1}", poollayer)
             
-            inputsize = cnn_output_formula_2D(inputsize, poolconfig['kernel'], poolconfig['padding'], 1, poolconfig["stride"])
+            inputsize = cnn_output_formula_2D(inputsize, poolconfig['kernel'], poolconfig['padding'], 1, config["PoolingBlock"]["GlobalParams"]["stride"])
             
 
         output_shape = inputsize
