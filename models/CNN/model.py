@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import models.learning as L
 from models.hyperparams import (ImageType, LearningRule, WeightScale, Inhibition, oneHotEncode,
                                 InputProcessing, cnn_output_formula_2D)
-from models.CNN.layers import ConvolutionHebbianLayer, ConvSoftHebbLayer, PoolingLayer, GradientClassifierLayer
+from models.CNN.layers import ConvolutionHebbianLayer, ConvSoftHebbLayer, PoolingLayer, GradientClassifierLayer, HebbianClassifierLayer
 
 
 class ConvolutionalNeuralNet(nn.Module):
@@ -47,7 +47,7 @@ class ConvolutionalNeuralNet(nn.Module):
     def test_conv(self, x):
         self.eval()
         for layer in self.layers.values():
-            if isinstance(layer, GradientClassifierLayer):
+            if isinstance(layer, GradientClassifierLayer) or isinstance(layer, HebbianClassifierLayer):
                 break
             x = layer.forward(x)
         return x
@@ -58,7 +58,7 @@ class ConvolutionalNeuralNet(nn.Module):
             y = self.test_conv(x)
             y = y.reshape(y.shape[0], -1)
         for layer in self.layers.values():
-            if isinstance(layer, GradientClassifierLayer):
+            if isinstance(layer, GradientClassifierLayer) or isinstance(layer, HebbianClassifierLayer):
                 pred = layer.forward(y, label)
         return pred
     
@@ -68,7 +68,7 @@ class ConvolutionalNeuralNet(nn.Module):
             y = self.train_conv(x, label)
             y = y.reshape(y.shape[0], -1)
         for layer in self.layers.values():
-            if isinstance(layer, GradientClassifierLayer):
+            if isinstance(layer, GradientClassifierLayer) or isinstance(layer, HebbianClassifierLayer):
                 pred = layer.forward(y, label)
         return pred
 
@@ -78,7 +78,7 @@ class ConvolutionalNeuralNet(nn.Module):
             y = self.test_conv(x)
             y = y.reshape(y.shape[0], -1)
         for layer in self.layers.values():
-            if isinstance(layer, GradientClassifierLayer):
+            if isinstance(layer, GradientClassifierLayer) or isinstance(layer, HebbianClassifierLayer):
                 pred = layer.forward(y)
         return pred
     
@@ -154,162 +154,6 @@ class ConvolutionalNeuralNet(nn.Module):
         return self.TD_forward(x, update_weights=False)
     """
     
-    
-
-
-
-class Hebbian_Classifier(nn.Module):
-    def __init__(self, inputdim, outputdim, device, basemodel, lr):
-        super(Hebbian_Classifier, self).__init__()
-        self.inputdim = inputdim
-        self.outputdim = outputdim
-        self.device = device
-        self.basemodel = basemodel
-        self.linear = nn.Linear(inputdim, outputdim, bias=False)
-        self.lr = lr
-        self.lamb = 1
-        self.triangle = False
-        self.inhib = Inhibition.Softmax ##
-        self.output_learning = LearningRule.OutputContrastiveSupervised
-
-    def inhibition(self, x):
-        if self.triangle:
-            m = torch.mean(x)
-            x = x - m
-        if self.inhib == Inhibition.RePU:
-            x=torch.relu(x)
-            max_ele=torch.max(x).item()
-            x/=(max_ele + 1e-9)
-            x=torch.pow(x, self.lamb)
-        elif self.inhib == Inhibition.Softmax:
-            x = nn.Softmax()(x)
-        return x
-    
-    def classifier_update_contrastive(self, input, output, true_output):
-        with torch.no_grad():
-            output = output.squeeze()
-            input = input.squeeze()
-            true_output = true_output.squeeze()
-            outer = torch.outer(true_output - output, input)
-            self.linear.weight=nn.Parameter(torch.relu(self.lr * outer + self.linear.weight),
-                                                 requires_grad=False)
-
-    def classifier_update_supervised(self, input, output):
-        output = output.squeeze()
-        input = input.squeeze()
-        outer = torch.outer(output, input)
-        self.linear.weight=nn.Parameter(self.lr * outer + self.linear.weight,
-                                             requires_grad=False)
-        
-    def update_weights_softhebb(self, input, preactivation, output):
-        with torch.no_grad():
-            initial_weight = self.linear.weight
-            delta_w = L.update_weight_softhebb(input, preactivation, output, initial_weight)
-            new_weights = initial_weight + self.lr *  delta_w
-            self.linear.weight = nn.Parameter(new_weights, requires_grad=False)
-
-    def update_weights(self, x, u, y, true_output):
-        if self.output_learning == LearningRule.SoftHebb:
-            self.update_weights_softhebb(x, u, true_output)
-        elif self.output_learning == LearningRule.OutputContrastiveSupervised:
-            self.classifier_update_contrastive(x, y, true_output)
-        elif self.output_learning == LearningRule.Supervised:
-            self.classifier_update_supervised(x, true_output)
-
-    def train_conv(self, x, label):
-        return self.basemodel(x, label)
-
-    def train_classifier(self, x, label):
-        self.basemodel.eval()
-        with torch.no_grad():
-            y = self.basemodel.forward_test(x)
-            y = y.reshape(y.shape[0], -1)
-        u = self.linear(y)
-        #pred = self.inhibition(u)
-        self.update_weights(y, u, u, true_output=label)
-        return u, y 
-    
-    # def forward(self, x, label):
-    #     self.basemodel.eval()
-    #     with torch.no_grad():
-    #         y = self.basemodel(x, label)
-    #         y = y.reshape(y.shape[0], -1)
-    #     self.optim.zero_grad()
-    #     pred = self.linear(self.drop(y))
-    #     loss = self.lossfn(pred, label)
-    #     loss.backward()
-    #     self.optim.step()
-    #     return pred
-    
-    def forward_test(self, x):
-        self.basemodel.eval()
-        self.eval()
-        with torch.no_grad():
-            y = self.basemodel.forward_test(x)
-            y = y.reshape(y.shape[0], -1)
-        pred = self.linear(y)
-        #pred = self.inhibition(pred)
-        return pred
-
-
-class Gradient_Classifier(nn.Module):
-    def __init__(self, inputdim, outputdim, device, basemodel, lr):
-        super(Gradient_Classifier, self).__init__()
-        self.inputdim = inputdim
-        self.outputdim = outputdim
-        self.device = device
-        self.basemodel = basemodel
-        self.linear = nn.Linear(inputdim, outputdim)
-        self.drop = nn.Dropout(0.5)
-
-        self.optim = torch.optim.Adam(self.linear.parameters(), lr=lr)
-        self.lossfn = nn.CrossEntropyLoss()
-
-    
-    def train_conv(self, x, label):
-        with torch.no_grad():
-            self.basemodel(x, label)
-
-    def train_classifier(self, x, label):
-        self.basemodel.eval()
-        with torch.no_grad():
-            y = self.basemodel.forward_test(x)
-            y = y.reshape(y.shape[0], -1)
-        self.optim.zero_grad()
-        pred = self.linear(self.drop(y))
-        loss = self.lossfn(pred, label)
-        loss.backward()
-        self.optim.step()
-        return pred
-    
-    def forward(self, x, label):
-        self.basemodel.train()
-        with torch.no_grad():
-            y = self.basemodel(x, label)
-            y = y.reshape(y.shape[0], -1)
-        self.optim.zero_grad()
-        pred = self.linear(self.drop(y))
-        loss = self.lossfn(pred, label)
-        loss.backward()
-        self.optim.step()
-        return pred
-    
-    def forward_test(self, x):
-        self.basemodel.eval()
-        self.eval()
-        with torch.no_grad():
-            y = self.basemodel.forward_test(x)
-            y = y.reshape(y.shape[0], -1)
-        pred = self.linear(self.drop(y))
-        return pred
-    
-    def set_training_layers(self, layers_to_train):
-        for layer in self.basemodel.layers.values():
-            if layer in layers_to_train:
-                layer.train()
-            else:
-                layer.eval()
-      
 
 def CNN_Model_from_config(inputshape, config, device, nbclasses):
     mycnn = ConvolutionalNeuralNet(device)
@@ -411,7 +255,7 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     fc_inputdim = n_tiles * config['Convolutions']["Layers"][l_keys[-1]]['out_channel']
     #print("Fully connected layer input dim : " + str(fc_inputdim))
     
-    classifier = GradientClassifierLayer(fc_inputdim, nbclasses, lr)
+    classifier = HebbianClassifierLayer(fc_inputdim, nbclasses, lr) ###
     mycnn.add_layer(f"ClassifierLayer", classifier)
 
     mycnn = mycnn.to(device)

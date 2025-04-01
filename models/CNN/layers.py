@@ -69,7 +69,6 @@ class PoolingLayer(nn.Module):
 
     def forward(self, x):
         return self.pool(x)
-    
 
 
 class GradientClassifierLayer(nn.Module):
@@ -91,9 +90,35 @@ class GradientClassifierLayer(nn.Module):
             loss = self.lossfn(pred, label)
             loss.backward()
             self.optim.step()
-        else: #test
-            self.eval
+        else: #test, pred.eval() should already be set before calling forward
             pred = self.linear(self.drop(x))
+        return pred
+
+class HebbianClassifierLayer(nn.Module):
+    def __init__(self, input_shape, output_shape, lr):
+        super(HebbianClassifierLayer, self).__init__()
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.lr = lr
+        self.drop = nn.Dropout(0.5)
+
+        self.weights = nn.Parameter(torch.randn(output_shape, input_shape) * 0.01, requires_grad=False)
+
+    def forward(self, x, label=None):
+        if self.training:
+            x = self.drop(x)
+        logits = F.linear(x, self.weights)  # raw scores
+        pred = F.softmax(logits, dim=1)     # normalized probabilities
+
+        if label is not None:
+            if label.dim() == 1:
+                label = F.one_hot(label, num_classes=self.output_shape).float()
+
+            error = label - pred  # [batch, output_shape]
+            delta_w = torch.bmm(error.unsqueeze(2), x.unsqueeze(1))  # [batch, output_shape, input_shape]
+            delta_w = delta_w.mean(dim=0)
+            self.weights.data += self.lr * delta_w
+
         return pred
 
 

@@ -7,7 +7,7 @@
     "l_lr": 0.001,
     "b_lr": 0.0033,
     "greedytrain": true,
-    "nConvLayers": 1,
+    "nConvLayers": 2,
     "Convolutions": {
         "GlobalParams": {
             "paddingmode": "reflect",
@@ -24,6 +24,12 @@
                 "kernel": 5,
                 "stride": 1,
                 "padding": 2
+            },
+            "Conv2": {
+                "out_channel": 384,
+                "kernel": 3,
+                "stride": 1,
+                "padding": 1
             }
         }
     },
@@ -33,6 +39,12 @@
         },
         "Layers": {
             "Conv1": {
+                "Type": "Max",
+                "kernel": 4,
+                "padding": 1,
+                "stride": 2
+            },
+            "Conv2": {
                 "Type": "Avg",
                 "kernel": 4,
                 "padding": 1,
