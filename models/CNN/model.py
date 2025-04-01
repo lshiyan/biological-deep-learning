@@ -326,15 +326,17 @@ def CNN_Model_from_config(inputshape, config, device, nbclasses):
     is_pool = config['PoolingBlock']['Pooling']
     for layer_idx in range(len(config['Convolutions'])):
         layerconfig = config['Convolutions'][l_keys[layer_idx]]
-        inhibition = Inhibition.RePU if layerconfig['inhibition'] == "REPU" else Inhibition.Softmax
-        convlayer = ConvolutionHebbianLayer(input_shape=inputsize, kernel=layerconfig['kernel'], stride=layerconfig['stride'], in_ch=input_channel, out_ch=layerconfig['out_channel'], 
-                                            lambd=lamb, lr=lr, rho=rho, device=device, eta=eta, padding=layerconfig['padding'], paddingmode = layerconfig['paddingmode'], triangle=layerconfig['triangle'], 
-                                            whiten_input=layerconfig['whiten'], b=beta, inhibition=inhibition)
+        globalparams = config['Convolutions']['GlobalParams']
+        inhibition = Inhibition.RePU if globalparams['inhibition'] == "REPU" else Inhibition.Softmax
+        convlayer = ConvolutionHebbianLayer(input_shape=inputsize, kernel=layerconfig['kernel'], stride=globalparams['stride'], in_ch=input_channel, out_ch=layerconfig['out_channel'], 
+                                            lambd=lamb, lr=lr, rho=rho, device=device, eta=eta, padding=globalparams['padding'], paddingmode = globalparams['paddingmode'], triangle=globalparams['triangle'], 
+                                            whiten_input=globalparams['whiten'], b=beta, inhibition=inhibition)
         if layerconfig['batchnorm']:
             convlayer.batchnorm = nn.BatchNorm2d(input_channel, affine=False)
         if is_pool:
             poolconfig = config["PoolingBlock"][l_keys[layer_idx]]
-            convlayer.set_pooling(kernel=poolconfig['kernel'], stride=poolconfig['stride'], padding=poolconfig['padding'], type=poolconfig['Type'])
+            poolglobalparams = config["PoolingBlock"]['GlobalParams']
+            convlayer.set_pooling(kernel=poolconfig['kernel'], stride=poolglobalparams['stride'], padding=poolconfig['padding'], type=poolconfig['Type'])
         convlayer.compute_output_shape()
         if is_topdown and layer_idx < (nb_conv-1):
             convlayer.Set_TD(inc=config['Convolutions'][l_keys[layer_idx+1]]['out_channel'], outc=layerconfig['out_channel'], 
@@ -374,17 +376,15 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     triangle = config['Convolutions']["GlobalParams"]['triangle']
     preprocessing = InputProcessing.Whiten if config['Convolutions']["GlobalParams"]['whiten'] else InputProcessing.No 
     inhibition = Inhibition.RePU if config['Convolutions']["GlobalParams"]['inhibition'] == "REPU" else Inhibition.Softmax
-    antihebb_factor = config['antihebbFactor']
 
     for layer_idx in range(nb_conv):
         layerconfig = config['Convolutions']["Layers"][l_keys[layer_idx]]
+        globallayercongif = config['Convolutions']['GlobalParams']
 
         convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], 
-                                      stride=config['Convolutions']["GlobalParams"]['stride'], padding=config['Convolutions']["GlobalParams"]['padding'], 
-                                      w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, device=device, 
+                                      stride=globallayercongif['stride'], padding=globallayercongif['padding'], w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, device=device, 
                                       is_output_layer=False, initial_weight_norm=w_norm, triangle=triangle, 
-                                      initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing,
-                                      antihebb_factor=antihebb_factor)
+                                      initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing,)
         
         mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
 

@@ -11,7 +11,7 @@ from dotwiz import DotWiz
 class SoftHebbLayer(nn.Module):
     def __init__(self, inputdim: int, outputdim: int, w_lr: float = 0.003, b_lr: float = 0.003, l_lr: float = 0.003,
                  device=None, is_output_layer=False, initial_weight_norm: float = 0.01,
-                 triangle:bool = True, triangle_power: float = 1, initial_lambda: float = 4.0,
+                 triangle:bool = True, initial_lambda: float = 4.0,
                  inhibition: Inhibition = Inhibition.Softmax,
                  learningrule: LearningRule = LearningRule.SoftHebb,
                  preprocessing: InputProcessing = InputProcessing.Whiten, # whitening or no whitening
@@ -23,7 +23,6 @@ class SoftHebbLayer(nn.Module):
         self.input_dim: int = inputdim
         self.output_dim: int = outputdim
         self.triangle: bool = triangle
-        self.power: float = triangle_power
         self.w_lr: float = w_lr
         self.l_lr: float = l_lr
         self.b_lr: float = b_lr
@@ -69,7 +68,7 @@ class SoftHebbLayer(nn.Module):
                 setpoint = a.mean()
             else:
                 setpoint = 0
-            u = torch.relu(a - setpoint) ** self.power
+            u = torch.relu(a - setpoint)
         elif self.inhibition == Inhibition.Softmax:
             u = torch.exp(a)
         else:

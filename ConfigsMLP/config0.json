@@ -5,5 +5,5 @@
     "b_lr": 0.0033,
     "l_lr": 0.1,
     "w_norm": 0.01,
-    "anti_hebb_factor": -0.33
+    "num_layers": 2
 }

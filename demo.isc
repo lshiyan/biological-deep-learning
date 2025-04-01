@@ -1,0 +1,8 @@
+isc_project_id = "92bd82f4-6c08-407d-be9d-60fe9c7fd853"
+experiment_name = "TopDown"
+gpu_type = "24GB VRAM GPU"
+gpus = 1
+output_path = "~/outputs/MLP_hyper_search"
+checkpoint_artifact_path = "~/outputs/MLP_hyper_search"
+compute_mode = "cycle"
+command = "source ~/.topdown/bin/activate && cd ~/HebbianTopDown/ && torchrun --nnodes=$NNODES --nproc-per-node=$N_PROC --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --node_rank=$RANK PaperDemo.py --dataset CIFAR10 --epoch 1 --save-dir $CHECKPOINT_ARTIFACT_PATH --tboard-path $CHECKPOINT_ARTIFACT_PATH/tb"

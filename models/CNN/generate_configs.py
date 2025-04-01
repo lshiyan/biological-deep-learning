@@ -2,7 +2,7 @@ import json
 import os
 
 def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[1], whiten_values=[True], triangle_values=[False],
-    greedytrain_values=[False], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1'], factors=[-0.5, -0.4, -0.33, -0.25, -0.1, 0, 0.1, 0.33, 0.66, 1]):
+    greedytrain_values=[True], inhibition_values=['Softmax'], pooling_values = ['PoolingStride1']):
     
     # whiten = False for now
     # inhibition_values = REPU for now
@@ -10,8 +10,7 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
     os.makedirs(output_dir, exist_ok=True)
     config_number = 0
 
-    
-    for factor in factors:
+    for _ in range(10):
         for greedytrain in greedytrain_values:
             for layers in num_layers:
                 for whiten in whiten_values:
@@ -21,12 +20,11 @@ def generate_cnn_config_files(base_config, output_dir="ConfigsCNN", num_layers=[
                                 
                                     config = json.loads(json.dumps(base_config))
                                     config["Lambda"]= 500
-                                    config["classifierLr"]= 0.0005
-                                    config["w_norm"]= 0.00004
-                                    config["w_lr"]= 0.0004
-                                    config["l_lr"]= 0.00009
-                                    config["b_lr"]= 0.0007
-                                    config["antihebbFactor"]= factor
+                                    config["classifierLr"]= 0.001
+                                    config["w_norm"]= 0.0001
+                                    config["w_lr"]= 0.001
+                                    config["l_lr"]= 0.001
+                                    config["b_lr"]= 0.0033
                                     config['greedytrain'] = greedytrain
                                     config['nConvLayers'] = layers
 
@@ -81,7 +79,6 @@ base_config = {
     "w_lr": 0.01,
     "l_lr": 0.01,
     "b_lr": 0.01,
-    "antihebbFactor": 1,
     "greedytrain" : True,
     "nConvLayers" : 1,
 
@@ -96,30 +93,26 @@ base_config = {
         },
         "Layers": {
             "Conv1" : {
-                "out_channel" : 96,
+                "out_channel" : 512,
                 "kernel" : 5,
-                "triangle_power" : 0.7,
                 "stride" : 1,
                 "padding" : 2
             }, 
             "Conv2" : {
                 "out_channel" : 384,
                 "kernel" : 3,
-                "triangle_power" : 1.4,
                 "stride" : 1,
                 "padding" : 1
             }, 
             "Conv3" : {
                 "out_channel" : 1536,
                 "kernel" : 3,
-                "triangle_power" : 1,
                 "stride" : 1,
                 "padding" : 2
             },
             "Conv4" : {
                 "out_channel" : 4096,
                 "kernel" : 3,
-                "triangle_power" : 1,
                 "stride" : 1,
                 "padding" : 2
             }
