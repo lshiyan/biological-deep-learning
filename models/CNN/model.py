@@ -220,6 +220,7 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     triangle = config['Convolutions']["GlobalParams"]['triangle']
     preprocessing = InputProcessing.Whiten if config['Convolutions']["GlobalParams"]['whiten'] else InputProcessing.No 
     inhibition = Inhibition.RePU if config['Convolutions']["GlobalParams"]['inhibition'] == "REPU" else Inhibition.Softmax
+    mexican_hat_sigma = config['sigma']
 
     for layer_idx in range(nb_conv):
         layerconfig = config['Convolutions']["Layers"][l_keys[layer_idx]]
@@ -228,7 +229,8 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
         convlayer = ConvSoftHebbLayer(input_shape=inputsize, kernel=layerconfig['kernel'], in_ch=input_channel, out_ch=layerconfig['out_channel'], 
                                       stride=globallayercongif['stride'], padding=globallayercongif['padding'], w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, device=device, 
                                       is_output_layer=False, initial_weight_norm=w_norm, triangle=triangle, 
-                                      initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing,)
+                                      initial_lambda=lamb, inhibition=inhibition, learningrule=LearningRule.SoftHebb, preprocessing=preprocessing,
+                                      mexican_hat_sigma=mexican_hat_sigma)
         
         mycnn.add_layer(f"CNNLayer{layer_idx+1}", convlayer)
 
@@ -237,11 +239,11 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
         
         if is_pool:
             poolconfig = config["PoolingBlock"]["Layers"][l_keys[layer_idx]]
-            poollayer = PoolingLayer(kernel=poolconfig['kernel'], stride=config["PoolingBlock"]["GlobalParams"]["stride"], padding=poolconfig['padding'], pool_type=poolconfig['Type'])
+            poollayer = PoolingLayer(kernel=poolconfig['kernel'], stride=poolconfig["stride"], padding=poolconfig['padding'], pool_type=poolconfig['Type'])
             
             mycnn.add_layer(f"PoolLayer{layer_idx+1}", poollayer)
             
-            inputsize = cnn_output_formula_2D(inputsize, poolconfig['kernel'], poolconfig['padding'], 1, config["PoolingBlock"]["GlobalParams"]["stride"])
+            inputsize = cnn_output_formula_2D(inputsize, poolconfig['kernel'], poolconfig['padding'], 1, poolconfig["stride"])
             
 
         output_shape = inputsize

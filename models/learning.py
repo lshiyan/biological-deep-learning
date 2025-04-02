@@ -93,8 +93,8 @@ def update_softhebb_w(y, normed_x, a, weights, inhibition: Inhibition, u=None, t
     batch_dim, out_dim = y.shape
     wn = weight_norms.unsqueeze(0)
     if weight_growth == WeightGrowth.Linear or weight_growth == WeightGrowth.Default:
-        # factor = 1 / (wn + 1e-9) 
-        factor = 1
+        factor = 1 / (wn + 1e-9) 
+        # factor = 1
     elif weight_growth == WeightGrowth.Sigmoidal:
         factor = wn * (1 - wn)
     elif weight_growth == WeightGrowth.Exponential:

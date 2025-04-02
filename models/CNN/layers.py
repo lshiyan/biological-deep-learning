@@ -17,7 +17,7 @@ class ConvSoftHebbLayer(nn.Module):
                  l_lr: float = 0.1, device = None, is_output_layer = False, initial_weight_norm: float = 0.01,
                  triangle: bool = False, initial_lambda: float = 4.0, inhibition: Inhibition = Inhibition.RePU,
                  learningrule: LearningRule = LearningRule.SoftHebb, preprocessing: InputProcessing = InputProcessing.No,
-                 antihebb_factor=1):
+                 antihebb_factor=1, mexican_hat_sigma: float = 0.5):
 
         super(ConvSoftHebbLayer, self).__init__()
         if device is None:
@@ -37,7 +37,7 @@ class ConvSoftHebbLayer(nn.Module):
                                                   b_lr = b_lr, l_lr = l_lr, device=device, is_output_layer=is_output_layer, 
                                                   initial_weight_norm = initial_weight_norm, triangle= triangle,
                                                   initial_lambda = initial_lambda, inhibition = inhibition,learningrule = learningrule,
-                                                  preprocessing= preprocessing, anti_hebb_factor=antihebb_factor)
+                                                  preprocessing= preprocessing, anti_hebb_factor=antihebb_factor, mexican_hat_sigma=mexican_hat_sigma)
         self.output_shape = cnn_output_formula_2D(input_shape, kernel, padding, 1, stride)
         self.output_tiles = self.output_shape[0] * self.output_shape[1]
 
