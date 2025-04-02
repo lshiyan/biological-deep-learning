@@ -19,9 +19,10 @@ def generate_mlp_config_files(hsizes, lambds, wlrs, blrs, llrs, w_norm):
 
 
 def generate_mlp_config_files():
-    p = [-0.33, -0.1]
-    for j in range(len(p)):
-        for i in range(0, 8):
+    p = [0.2, 0.5]
+    num_test_for_each = 8
+    for j in range(2):
+        for i in range(0, num_test_for_each):
             config = {
             "hsize": 2048,
             "lambd": 125, 
@@ -31,7 +32,7 @@ def generate_mlp_config_files():
             "w_norm": 0.01,
             "anti_hebb_factor": p[j]
             }
-            with open("ConfigsMLP/config" + str(i + j*8) + ".json", "w") as jfile:
+            with open("ConfigsMLP/config" + str(i + j*num_test_for_each) + ".json", "w") as jfile:
                 json.dump(config, jfile, indent=4)
 
 

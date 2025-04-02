@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-data = pd.read_csv("AntiHebb_MLP_hyper_search_Softmax/anti_hebb_results.csv", usecols=range(11))
+data = pd.read_csv("MLP_mexican_hat_tests/three_hidden_layer.csv", usecols=range(12))
 
 sns.set(style="whitegrid")
 
 output_folder = "plots"
 os.makedirs(output_folder, exist_ok=True)
 
-parameters = ['anti_hebb_factor']
+parameters = ['mexican_factor']
 
 for param in parameters:
     plt.figure(figsize=(10, 6))
@@ -22,11 +22,11 @@ for param in parameters:
     else:
         plt.errorbar(grouped_data[param], grouped_data['mean'], yerr=grouped_data['std'], fmt='o', capsize=5)
     
-    plt.title(f"Test Accuracy vs {param.capitalize()} (with Std Dev)")
+    plt.title(f"Test Accuracy vs mexican factor on three hidden layer")
     plt.xlabel(param.capitalize())
     plt.ylabel("Test Accuracy")
 
-    plot_filename = f"{output_folder}/Test_Accuracy_vs_{param}_with_std_dev.png"
+    plot_filename = f"{output_folder}/Test_Accuracy_vs_mexican_factor_3hidden_layers.png"
     plt.savefig(plot_filename)
     plt.close()
 
