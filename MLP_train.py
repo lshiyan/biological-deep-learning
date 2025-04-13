@@ -28,8 +28,11 @@ from torchvision import datasets
 from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment
 from torch.utils.data import Subset
 import matplotlib.pyplot as plt
+
 from cycling_utils import (
+    InterruptableDistributedSampler,
     MetricsTracker,
+    AtomicDirectory,
     atomic_torch_save,
 )
 
@@ -224,7 +227,7 @@ def visualize_weight_distribution(model, epoch, save_dir="/root/HebbianTopDown/w
 
 
 
-def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
+def train_loop(model, train_dataloader, test_dataloader, metrics, args, saver):
     train_batches_per_epoch = len(train_dataloader)
     # Set the model to training mode - important for layers with different training / inference behaviour
     model.train()
@@ -270,23 +273,28 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoi
 
             # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
             # Save checkpoint
-            atomic_torch_save(
-                {
-                    "model": model.state_dict(),
-                    "train_sampler": train_dataloader.sampler.state_dict(),
-                    "test_sampler": test_dataloader.sampler.state_dict(),
-                    "metrics": metrics,
-                },
-                checkpoint,
-            )
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
+            if args.is_master: 
+                checkpoint_directory = saver.prepare_checkpoint_directory()
+                atomic_torch_save(
+                    {
+                        "model": model.state_dict(),
+                        "train_sampler": train_dataloader.sampler.state_dict(),
+                        "test_sampler": test_dataloader.sampler.state_dict(),
+                        "metrics": metrics,
+                    },
+                    os.path.join(checkpoint_directory, "checkpoint.pt")
+                )
+                saver.symlink_latest(checkpoint_directory)
+                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
         print(f"Epoch {epoch} completed.")
         log_weights(model)
         visualize_weight_distribution(model, epoch)
 
 
-def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, hsize, lamb, w_lr, b_lr, l_lr, w_norm, anti_hebb_factor):
+def test_loop(model, train_dataloader, test_dataloader, metrics, args, saver,
+              hsize, lamb, w_lr, b_lr, l_lr, w_norm, anti_hebb_factor):
+    
     test_batches_per_epoch = len(test_dataloader)
     epoch = 0
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
@@ -328,7 +336,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/AntiHebb_MLP_hyper_search_Softmax/anti_hebb_results.csv"
+                csv_file_path = "/root/HebbianTopDown/AntiHebb_MLP_hyper_search_Softmax/wnorm_results.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
@@ -353,15 +361,18 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                         "anti_hebb_factor": anti_hebb_factor
                     })
 
-            atomic_torch_save(
-                {
-                    "model": model.state_dict(),
-                    "train_sampler": train_dataloader.sampler.state_dict(),
-                    "test_sampler": test_dataloader.sampler.state_dict(),
-                    "metrics": metrics,
-                },
-                checkpoint,
-            )
+            if args.is_master: 
+                checkpoint_directory = saver.prepare_checkpoint_directory()
+                atomic_torch_save(
+                    {
+                        "model": model.state_dict(),
+                        "train_sampler": train_dataloader.sampler.state_dict(),
+                        "test_sampler": test_dataloader.sampler.state_dict(),
+                        "metrics": metrics,
+                    },
+                    os.path.join(checkpoint_directory, "checkpoint.pt")
+                )
+                saver.symlink_latest(checkpoint_directory)
             
 # timer.report("Defined helper function/s, loops, and model")
 
@@ -381,10 +392,12 @@ def main(args, timer):
     args.is_master = rank == 0  # Master node for saving / reporting
     torch.cuda.set_device(args.device_id)  # Enables calling 'cuda'
 
+    args.save_dir = Path(os.environ["CHECKPOINT_ARTIFACT_PATH"])
+
     timer.report("Setup for distributed training")
 
-    args.checkpoint_path = args.save_dir / "checkpoint.pt"
-    args.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    # args.checkpoint_path = args.save_dir / "checkpoint.pt"
+    # args.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
     timer.report("Validated checkpoint path")
 
     ##############################################
@@ -460,18 +473,27 @@ def main(args, timer):
     #####################################
     # Retrieve the checkpoint if the experiment is resuming from pause
 
-    lastsavedcheckpoint = "Checkpoints/model" + str(rank) + ".pth.temp"
-    savedcheckpoint = "Checkpoints/model" + str(rank) + ".pth"
+    output_directory = os.environ["CHECKPOINT_ARTIFACT_PATH"]
+    saver = AtomicDirectory(output_directory=output_directory, is_master=args.is_master)
 
-    if os.path.isfile(lastsavedcheckpoint):
-        print(f"Loading checkpoint from {lastsavedcheckpoint}")
-        checkpoint = torch.load(lastsavedcheckpoint, map_location=f"cuda:{args.device_id}")
+    ## lastsavedcheckpoint = "Checkpoints/model" + str(rank) + ".pth.temp"
+    ## savedcheckpoint = "Checkpoints/model" + str(rank) + ".pth"
+
+    latest_symlink_file_path = os.path.join(output_directory, saver.symlink_name)
+    if os.path.isfile(latest_symlink_file_path):
+        latest_checkpoint_path = os.readlink(latest_symlink_file_path)
+        checkpoint_path = os.path.join(latest_checkpoint_path, "checkpoint.pt")
+
+        print(f"Loading checkpoint from {checkpoint_path}")
+        checkpoint = torch.load(checkpoint_path, map_location=f"cuda:{args.device_id}")
 
         model.load_state_dict(checkpoint["model"])
         train_dataloader.sampler.load_state_dict(checkpoint["train_sampler"])
         test_dataloader.sampler.load_state_dict(checkpoint["test_sampler"])
+        ####
         metrics = checkpoint["metrics"]
         timer.report("Retrieved savedcheckpoint")
+
 
     #####################################
     # Main training loop
@@ -479,11 +501,11 @@ def main(args, timer):
     # Each epoch the training loop is called within a context set from the training InterruptibleDistributedSampler
 
     train_loop(
-        model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+        model, train_dataloader, test_dataloader, metrics, args, saver
     )
 
     test_loop(
-        model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint,
+        model, train_dataloader, test_dataloader, metrics, args, saver,
         hsize=config['hsize'], lamb=config['lambd'], w_lr=config['w_lr'], b_lr=config['b_lr'], l_lr=config['l_lr'], w_norm=config['w_norm'], anti_hebb_factor=config['anti_hebb_factor']
     )
 

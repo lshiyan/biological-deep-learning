@@ -32,9 +32,12 @@ from torchvision.transforms import Compose, Lambda, PILToTensor, RandAugment
 from torch.utils.data import Subset
 
 from cycling_utils import (
+    InterruptableDistributedSampler,
     MetricsTracker,
+    AtomicDirectory,
     atomic_torch_save,
 )
+
 
 import torch
 import numpy as np
@@ -86,16 +89,6 @@ class InterruptableSampler(Sampler):
     def set_epoch(self, e):
         self.epoch = e
 
-    # def advance(self, n: int):
-    #     """
-    #     Record that n samples have been consumed.
-    #     """
-    #     self.progress += n
-    #     if self.progress > self.num_samples:
-    #         raise AdvancedTooFarError(
-    #             "You have advanced too far. You can only advance up to the total size of the dataset."
-    #         )
-    
     def __iter__(self):
         # Return indices in sequential order
         indices = list(range(len(self.dataset)))
@@ -108,38 +101,6 @@ class InterruptableSampler(Sampler):
     
     def reset_progress(self):
         self.progress = 0
-
-    # def __iter__(self):
-    #     if self.shuffle:
-    #         # deterministically shuffle based on epoch and seed
-    #         g = torch.Generator()
-    #         g.manual_seed(self.seed + self.epoch)
-    #         indices = torch.randperm(len(self.dataset), generator=g).tolist()  # type: ignore[arg-type]
-    #     else:
-    #         indices = list(range(len(self.dataset)))  # type: ignore[arg-type]
-
-    #     if not self.drop_last:
-    #         # add extra samples to make it evenly divisible
-    #         padding_size = self.total_size - len(indices)
-    #         if padding_size <= len(indices):
-    #             indices += indices[:padding_size]
-    #         else:
-    #             indices += (indices * math.ceil(padding_size / len(indices)))[
-    #                 :padding_size
-    #             ]
-    #     else:
-    #         # remove tail of data to make it evenly divisible.
-    #         indices = indices[: self.total_size]
-    #     assert len(indices) == self.total_size
-
-    #     # subsample
-    #     indices = indices[self.rank : self.total_size : self.num_replicas]
-    #     assert len(indices) == self.num_samples
-
-    #     # slice from progress to pick up where we left off
-
-    #     for idx in indices[self.progress :]:
-    #         yield idx
 
 #######################################
 # Hyperparameters
@@ -183,76 +144,7 @@ def get_args_parser(add_help=True):
 #       backward pass.
 
 
-# def greedytrain(model, train_dataloader, test_dataloader, metrics, args):
-#     epoch = 0
-#     train_batches_per_epoch = len(train_dataloader)
-#     # Set the model to training mode - important for layers with different training / inference behaviour
-#     model.eval()
-#     layers = list(mymodel.basemodel.layers.values())
-
-#     for idx in range(len(mymodel.basemodel.layers)):
-#         idx += 1
-#         for inputs, targets in train_dataloader:
-
-#             # Determine the current batch
-#             batch = train_dataloader.sampler.progress // train_dataloader.batch_size
-#             is_last_batch = (batch + 1) == train_batches_per_epoch
-
-#             # Move input and targets to device
-#             inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
-#             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
-
-#             # Forward pass
-#             if args.dataset == "EMNIST":
-#                 labels = models.hyperparams.oneHotEncode(targets, 47, args.device_id)
-#                 inputs = inputs.reshape(1,1,28,28)
-#             elif args.dataset == "FashionMNIST" :
-#                 labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
-#                 inputs = inputs.reshape(1,1,28,28)
-#             elif args.dataset == "CIFAR10":
-#                 labels = models.hyperparams.oneHotEncode(targets, 10, args.device_id)
-#             elif args.dataset == "CIFAR100":
-#                 labels = models.hyperparams.oneHotEncode(targets, 100, args.device_id)
-
-#             x = inputs.to(device)
-#                                 for r_l in range(idx):
-#                         if (r_l + 1) == idx:
-#                             _, x = layers[r_l].forward(x, oneHotEncode(labels, nclasses, mymodel.device))
-#                         else :
-#                             _, x = layers[r_l].forward(x, update_weights=False)
-
-#             model(inputs, labels)
-
-#             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
-        
-#             metrics["train"].update({"examples_seen": len(inputs)})
-#             metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
-
-#             # Advance sampler - essential for interruptibility
-#             train_dataloader.sampler.advance(len(inputs))
-#             timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - advance sampler")
-
-#             metrics["train"].reset_local()
-
-#             if is_last_batch:
-#                 metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
-
-#             # Saving and reporting
-#             if args.is_master:
-#                 # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
-#                 # Save checkpoint
-#                 atomic_torch_save(
-#                     {
-#                         "model": model.state_dict(),
-#                         "train_sampler": train_dataloader.sampler.state_dict(),
-#                         "test_sampler": test_dataloader.sampler.state_dict(),
-#                         "metrics": metrics,
-#                     },
-#                     args.checkpoint_path,
-#                 )
-#                 timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
-
-def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
+def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args, saver):
     epoch = 0
     train_batches_per_epoch = len(train_dataloader)
     # Set the model to training mode - important for layers with different training / inference behaviour
@@ -322,19 +214,24 @@ def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args, ch
 
                 # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
                 # Save checkpoint
-                atomic_torch_save(
-                    {
-                        "model": model.state_dict(),
-                        "train_sampler": train_dataloader.sampler.state_dict(),
-                        "test_sampler": test_dataloader.sampler.state_dict(),
-                        "metrics": metrics,
-                    },
-                    checkpoint,
-                )
-                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
+                
+                if args.is_master: 
+                    checkpoint_directory = saver.prepare_checkpoint_directory()
+                    atomic_torch_save(
+                        {
+                            "model": model.state_dict(),
+                            "train_sampler": train_dataloader.sampler.state_dict(),
+                            "test_sampler": test_dataloader.sampler.state_dict(),
+                            "metrics": metrics,
+                        },
+                        os.path.join(checkpoint_directory, "checkpoint.pt")
+                    )
+                    saver.symlink_latest(checkpoint_directory)
+                    timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
 
-def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
+
+def train_loop(model, train_dataloader, test_dataloader, metrics, args, saver):
     epoch = 0
     train_batches_per_epoch = len(train_dataloader)
     # Set the model to training mode - important for layers with different training / inference behaviour
@@ -382,22 +279,22 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoi
 
         # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
         # Save checkpoint
-        atomic_torch_save(
-            {
-                "model": model.state_dict(),
-                "train_sampler": train_dataloader.sampler.state_dict(),
-                "test_sampler": test_dataloader.sampler.state_dict(),
-                "metrics": metrics,
-            },
-            checkpoint,
-        )
-        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
-    
+        if args.is_master: 
+            checkpoint_directory = saver.prepare_checkpoint_directory()
+            atomic_torch_save(
+                {
+                    "model": model.state_dict(),
+                    "train_sampler": train_dataloader.sampler.state_dict(),
+                    "test_sampler": test_dataloader.sampler.state_dict(),
+                    "metrics": metrics,
+                },
+                os.path.join(checkpoint_directory, "checkpoint.pt")
+            )
+            saver.symlink_latest(checkpoint_directory)
+            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
 
-
-
-def finetune(model, train_dataloader, test_dataloader, metrics, args, checkpoint):
+def finetune(model, train_dataloader, test_dataloader, metrics, args, saver):
     epoch = 0
     train_batches_per_epoch = len(train_dataloader)
 
@@ -446,19 +343,23 @@ def finetune(model, train_dataloader, test_dataloader, metrics, args, checkpoint
 
         # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
         # Save checkpoint
-        atomic_torch_save(
-            {
-                "model": model.state_dict(),
-                "train_sampler": train_dataloader.sampler.state_dict(),
-                "test_sampler": test_dataloader.sampler.state_dict(),
-                "metrics": metrics,
-            },
-            checkpoint,
-        )
-        timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - Fine tuning : save checkpoint")
+        
+        if args.is_master: 
+            checkpoint_directory = saver.prepare_checkpoint_directory()
+            atomic_torch_save(
+                {
+                    "model": model.state_dict(),
+                    "train_sampler": train_dataloader.sampler.state_dict(),
+                    "test_sampler": test_dataloader.sampler.state_dict(),
+                    "metrics": metrics,
+                },
+                os.path.join(checkpoint_directory, "checkpoint.pt")
+            )
+            saver.symlink_latest(checkpoint_directory)
+            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
 
 
-def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoint, 
+def test_loop(model, train_dataloader, test_dataloader, metrics, args, saver, 
               nlayers, whiten, triangle, greedytrain, inhibition, pooling, stride, 
               lamb, classLr, w_norm, w_lr, l_lr, b_lr, hsize, sigma):
 
@@ -512,7 +413,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/lambda.csv"
+                csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/NEWcnn_trainTEST.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:
@@ -544,15 +445,19 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, checkpoin
                     })
 
             # Save checkpoint
-            atomic_torch_save(
-                {
-                    "model": model.state_dict(),
-                    "train_sampler": train_dataloader.sampler.state_dict(),
-                    "test_sampler": test_dataloader.sampler.state_dict(),
-                    "metrics": metrics,
-                },
-                checkpoint,
-            )
+            if args.is_master: 
+                checkpoint_directory = saver.prepare_checkpoint_directory()
+                atomic_torch_save(
+                    {
+                        "model": model.state_dict(),
+                        "train_sampler": train_dataloader.sampler.state_dict(),
+                        "test_sampler": test_dataloader.sampler.state_dict(),
+                        "metrics": metrics,
+                    },
+                    os.path.join(checkpoint_directory, "checkpoint.pt")
+                )
+                saver.symlink_latest(checkpoint_directory)
+
             
 # timer.report("Defined helper function/s, loops, and model")
 
@@ -572,10 +477,12 @@ def main(args, timer):
     args.is_master = rank == 0  # Master node for saving / reporting
     torch.cuda.set_device(args.device_id)  # Enables calling 'cuda'
 
+    args.save_dir = Path(os.environ["CHECKPOINT_ARTIFACT_PATH"])
+
     timer.report("Setup for distributed training")
 
-    args.checkpoint_path = args.save_dir / "checkpoint.pt"
-    args.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    # args.checkpoint_path = args.save_dir / "checkpoint.pt"
+    # args.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
     timer.report("Validated checkpoint path")
 
     ##############################################
@@ -669,19 +576,27 @@ def main(args, timer):
     metrics = {"train": MetricsTracker(), "test": MetricsTracker()}
     # writer = SummaryWriter(log_dir=args.tboard_path)
 
+    output_directory = os.environ["CHECKPOINT_ARTIFACT_PATH"]
+    saver = AtomicDirectory(output_directory=output_directory, is_master=args.is_master)
+
     #####################################
     # Retrieve the checkpoint if the experiment is resuming from pause
 
-    lastsavedcheckpoint = "Checkpoints/model" + str(rank) + ".pth.temp"
-    savedcheckpoint = "Checkpoints/model" + str(rank) + ".pth"
+    #lastsavedcheckpoint = "Checkpoints/model" + str(rank) + ".pth.temp"
+    #savedcheckpoint = "Checkpoints/model" + str(rank) + ".pth"
 
-    if os.path.isfile(lastsavedcheckpoint):
-        print(f"Loading checkpoint from {lastsavedcheckpoint}")
-        checkpoint = torch.load(lastsavedcheckpoint, map_location=f"cuda:{args.device_id}")
+    latest_symlink_file_path = os.path.join(output_directory, saver.symlink_name)
+    if os.path.isfile(latest_symlink_file_path):
+        latest_checkpoint_path = os.readlink(latest_symlink_file_path)
+        checkpoint_path = os.path.join(latest_checkpoint_path, "checkpoint.pt")
+
+        print(f"Loading checkpoint from {checkpoint_path}")
+        checkpoint = torch.load(checkpoint_path, map_location=f"cuda:{args.device_id}")
 
         model.load_state_dict(checkpoint["model"])
         train_dataloader.sampler.load_state_dict(checkpoint["train_sampler"])
         test_dataloader.sampler.load_state_dict(checkpoint["test_sampler"])
+        ####
         metrics = checkpoint["metrics"]
         timer.report("Retrieved savedcheckpoint")
 
@@ -705,14 +620,14 @@ def main(args, timer):
     #     )
     
     train_loop(
-        model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+        model, train_dataloader, test_dataloader, metrics, args, saver
     )
 
     finetune(
-        model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint
+        model, train_dataloader, test_dataloader, metrics, args, saver
     )
 
-    test_loop(model, train_dataloader, test_dataloader, metrics, args, savedcheckpoint,
+    test_loop(model, train_dataloader, test_dataloader, metrics, args, saver,
               nlayers=config['nConvLayers'], whiten=config['Convolutions']["GlobalParams"]['whiten'], 
               triangle=config['Convolutions']["GlobalParams"]['triangle'], greedytrain=config['greedytrain'], 
               inhibition=config['Convolutions']["GlobalParams"]['inhibition'], pooling=config['PoolingBlock']["GlobalParams"]["Pooling"], 

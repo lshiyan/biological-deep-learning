@@ -1,7 +1,7 @@
 isc_project_id = "92bd82f4-6c08-407d-be9d-60fe9c7fd853"
 experiment_name = "TopDown"
 gpu_type = "24GB VRAM GPU"
-gpus = 1
+gpus = 3
 output_path = "~/outputs/MLP_hyper_search"
 checkpoint_artifact_path = "~/outputs/MLP_hyper_search"
 compute_mode = "cycle"
