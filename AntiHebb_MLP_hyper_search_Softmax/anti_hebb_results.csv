@@ -46,3 +46,5 @@ test_accuracy,hsize,lambda,w_lr,b_lr,l_lr,triangle,white,func,w_norm,anti_hebb_f
 0.8292,2048,125,0.1,0.0033,0.1,true,true,softmax,0.01,-0.33
 0.8232,2048,125,0.1,0.0033,0.1,true,true,softmax,0.01,-0.33
 0.8467,2048,125,0.1,0.0033,0.1,true,true,softmax,0.01,-0.33
+0.824,2048,125,0.1,0.0033,0.1,true,true,softmax,0.01,1
+0.8336,2048,125,0.1,0.0033,0.1,true,true,softmax,0.01,1

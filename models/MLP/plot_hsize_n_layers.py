@@ -2,12 +2,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-csv_file = "MLP_hyper_search/hsize_multi_layer_results.csv"
-data = pd.read_csv(csv_file, usecols=range(11))
+csv_file = "MLP_mexican_hat_tests/three_hidden_layer.csv"
+data = pd.read_csv(csv_file, usecols=range(12))
 
-df_grouped = data.groupby(['hsize', 'num_layers'])['test_accuracy'].mean().reset_index()
+df_grouped = data.groupby(['mexican_factor', 'num_layers'])['test_accuracy'].mean().reset_index()
 
-pivot_table = df_grouped.pivot(index='num_layers', columns='hsize', values='test_accuracy')
+pivot_table = df_grouped.pivot(index='num_layers', columns='mexican_factor', values='test_accuracy')
 
 output_folder = "plots"
 os.makedirs(output_folder, exist_ok=True)
@@ -19,11 +19,11 @@ for hsize in pivot_table.columns:
 plt.title('Test Accuracy vs. Num Layers for Different Hsizes')
 plt.xlabel('Number of Layers')
 plt.ylabel('Test Accuracy')
-plt.legend(title='Hsize')
+plt.legend(title='mexican_factor')
 plt.grid(True)
 
 # Save the plot
-plot_filename = os.path.join(output_folder, "Test_Accuracy_vs_hsize_Num_Layers.png")
+plot_filename = os.path.join(output_folder, "Test_Accuracy_vs_mexican_factor_3layers.png")
 plt.savefig(plot_filename)
 plt.close()
 

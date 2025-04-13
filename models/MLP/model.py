@@ -180,20 +180,20 @@ def NewMLPBaseline_Model(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device, initia
 
     return mymodel
 
-def MultilayerSoftMLPModel(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device, num_layers, initial_weight_norm=0.01):
+def MultilayerSoftMLPModel(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device, num_layers, mexican_factor=0.33, initial_weight_norm=0.01):
     num_layers -= 2
     mymodel = SoftNeuralNet()
     heb_layer1 = SoftHebbLayer(inputdim=784, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
-                              device=device, initial_lambda=lamb, initial_weight_norm=initial_weight_norm)
+                              device=device, initial_lambda=lamb, initial_weight_norm=initial_weight_norm, anti_hebb_factor=mexican_factor)
     mymodel.add_layer('SoftHebbian1', heb_layer1)
     
     for i in range(num_layers):
         heb_layer = SoftHebbLayer(inputdim=hsize, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
-                                device=device, initial_lambda=lamb, initial_weight_norm=initial_weight_norm)
+                                device=device, initial_lambda=lamb, initial_weight_norm=initial_weight_norm, anti_hebb_factor=mexican_factor)
         mymodel.add_layer(f'SoftHebbian{i+2}', heb_layer)
 
     heb_layer_final = SoftHebbLayer(hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
-                               learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True, initial_weight_norm=initial_weight_norm)
+                               learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True, initial_weight_norm=initial_weight_norm, anti_hebb_factor=mexican_factor)
     mymodel.add_layer('SoftHebbianFinal', heb_layer_final)
 
     return mymodel

@@ -25,3 +25,4 @@ test_accuracy,hsize,lambda,w_lr,b_lr,l_lr,triangle,white,func,w_norm,num_layers
 0.098,2048,125,0.1,0.0033,0.1,true,true,softmax,0.01,3
 0.098,2048,125,0.1,0.0033,0.1,true,true,softmax,0.01,3
 0.8707,2048,125,0.1,0.0033,0.1,true,true,softmax,0.01,2
+0.098,2048,125,0.1,0.0033,0.1,true,true,softmax,0.01,3

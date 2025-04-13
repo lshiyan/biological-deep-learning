@@ -1,9 +1,10 @@
 {
-    "hsize": 2048,
+    "hsize": 5096,
     "lambd": 125,
     "w_lr": 0.1,
     "b_lr": 0.0033,
     "l_lr": 0.1,
     "w_norm": 0.01,
-    "anti_hebb_factor": -0.33
+    "num_layers": 10,
+    "mexican_factor": 5
 }
