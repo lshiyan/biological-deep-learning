@@ -235,14 +235,12 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, saver):
     for epoch in range(args.epoch):
         train_dataloader.sampler.reset_progress()
         for inputs, targets in train_dataloader:
-
             # Determine the current batch
             batch = train_dataloader.sampler.progress // train_dataloader.batch_size
             is_last_batch = (batch + 1) == train_batches_per_epoch
 
             # Move input and targets to device
             inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - data to device")
 
             # Forward pass
             if args.dataset == "EMNIST":
@@ -256,24 +254,32 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, saver):
 
             model.forward(inputs, labels)
 
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - forward pass")
-
             metrics["train"].update({"examples_seen": len(inputs)})
-            metrics["train"].reduce()  # Gather results from all nodes - sums metrics from all nodes into local aggregate
+            metrics["train"].reduce()  # Gather results from all nodes
 
             # Advance sampler - essential for interruptibility
             train_dataloader.sampler.advance(len(inputs))
-            timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - advance sampler")
 
             metrics["train"].reset_local()
 
             if is_last_batch:
-                metrics["train"].end_epoch()  # Store epoch aggregates and reset local aggregate for next epoch
-
-
-            # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
-            # Save checkpoint
-            if args.is_master: 
+                metrics["train"].end_epoch()
+                # Save checkpoint only at the end of each epoch
+                if args.is_master:
+                    checkpoint_directory = saver.prepare_checkpoint_directory()
+                    atomic_torch_save(
+                        {
+                            "model": model.state_dict(),
+                            "train_sampler": train_dataloader.sampler.state_dict(),
+                            "test_sampler": test_dataloader.sampler.state_dict(),
+                            "metrics": metrics,
+                        },
+                        os.path.join(checkpoint_directory, "checkpoint.pt")
+                    )
+                    saver.symlink_latest(checkpoint_directory)
+                    print(f"Epoch {epoch} completed.")
+            # Save checkpoint every 50 batches
+            elif batch % 50 == 0 and args.is_master:
                 checkpoint_directory = saver.prepare_checkpoint_directory()
                 atomic_torch_save(
                     {
@@ -285,21 +291,18 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, saver):
                     os.path.join(checkpoint_directory, "checkpoint.pt")
                 )
                 saver.symlink_latest(checkpoint_directory)
-                timer.report(f"EPOCH [{epoch}] TRAIN BATCH [{batch} / {train_batches_per_epoch}] - save checkpoint")
-
-        print(f"Epoch {epoch} completed.")
-        log_weights(model)
-        visualize_weight_distribution(model, epoch)
 
 
 def test_loop(model, train_dataloader, test_dataloader, metrics, args, saver,
               hsize, lamb, w_lr, b_lr, l_lr, w_norm, anti_hebb_factor):
     
     test_batches_per_epoch = len(test_dataloader)
-    epoch = 0
     # Set the model to evaluation mode - important for layers with different training / inference behaviour
     test_dataloader.sampler.reset_progress()
     model.eval()
+
+    total_correct = 0
+    total_examples = 0
 
     # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode also serves to
     # reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True
@@ -310,30 +313,24 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, saver,
             is_last_batch = (batch + 1) == test_batches_per_epoch
             # Move input and targets to device
             inputs, targets = inputs.to(args.device_id), targets.to(args.device_id)
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - data to device")
 
             # Inference
             predictions = model.forward(inputs)
 
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - inference")
-
             # Performance metrics logging
             correct = (predictions.argmax(1) == targets).type(torch.float).sum()
+            total_correct += correct.item()
+            total_examples += len(inputs)
 
             metrics["test"].update({"examples_seen": len(inputs), "correct": correct.item()})
-            timer.report(f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] - metrics logging")
 
             # Advance sampler
             test_dataloader.sampler.advance(len(inputs))
 
             # Performance summary at the end of the epoch
             if is_last_batch:
-                correct, examples_seen = itemgetter("correct", "examples_seen")(metrics["test"].local)
-                pct_test_correct = correct / examples_seen
+                pct_test_correct = total_correct / total_examples
                 metrics["test"].end_epoch()
-                timer.report(
-                    f"EPOCH [{epoch}] TEST BATCH [{batch} / {test_batches_per_epoch}] :: TEST ACC: {pct_test_correct}"
-                )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
                 csv_file_path = "/root/HebbianTopDown/AntiHebb_MLP_hyper_search_Softmax/wnorm_results.csv"
@@ -361,7 +358,8 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, saver,
                         "anti_hebb_factor": anti_hebb_factor
                     })
 
-            if args.is_master: 
+            # Save checkpoint every 50 batches or at the end
+            if (batch % 50 == 0 or is_last_batch) and args.is_master:
                 checkpoint_directory = saver.prepare_checkpoint_directory()
                 atomic_torch_save(
                     {
@@ -373,7 +371,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, saver,
                     os.path.join(checkpoint_directory, "checkpoint.pt")
                 )
                 saver.symlink_latest(checkpoint_directory)
-            
+
 # timer.report("Defined helper function/s, loops, and model")
 
 

@@ -31,7 +31,7 @@ def generate_mlp_config_files():
             "b_lr": 0.0033,
             "l_lr": 0.1,
             "w_norm": 0.01,
-            "num_layers": 10,
+            "num_layers": 3,
             'mexican_factor': num[j]
             }
             with open("ConfigsMLP/config" + str(i + j*8) + ".json", "w") as jfile:

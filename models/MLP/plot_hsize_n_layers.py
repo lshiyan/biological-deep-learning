@@ -5,9 +5,9 @@ import os
 csv_file = "MLP_mexican_hat_tests/three_hidden_layer.csv"
 data = pd.read_csv(csv_file, usecols=range(12))
 
-df_grouped = data.groupby(['mexican_factor', 'num_layers'])['test_accuracy'].mean().reset_index()
+df_grouped = data.groupby(['num_layers'])['test_accuracy'].mean().reset_index()
 
-pivot_table = df_grouped.pivot(index='num_layers', columns='mexican_factor', values='test_accuracy')
+pivot_table = df_grouped.pivot(columns='num_layers', values='test_accuracy')
 
 output_folder = "plots"
 os.makedirs(output_folder, exist_ok=True)
@@ -16,10 +16,10 @@ plt.figure(figsize=(10, 6))
 for hsize in pivot_table.columns:
     plt.plot(pivot_table.index, pivot_table[hsize], label=f'hsize={hsize}')
 
-plt.title('Test Accuracy vs. Num Layers for Different Hsizes')
+plt.title('Test Accuracy vs. Num Layers')
 plt.xlabel('Number of Layers')
 plt.ylabel('Test Accuracy')
-plt.legend(title='mexican_factor')
+plt.legend(title='num_layers')
 plt.grid(True)
 
 # Save the plot
