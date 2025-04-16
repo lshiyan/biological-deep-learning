@@ -215,7 +215,7 @@ def greedytrain_loop(model, train_dataloader, test_dataloader, metrics, args, sa
                 # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
                 # Save checkpoint
                 
-                if args.is_master: 
+                if args.is_master and (batch % 100 == 0): 
                     checkpoint_directory = saver.prepare_checkpoint_directory()
                     atomic_torch_save(
                         {
@@ -279,7 +279,7 @@ def train_loop(model, train_dataloader, test_dataloader, metrics, args, saver):
 
         # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
         # Save checkpoint
-        if args.is_master: 
+        if args.is_master and (batch % 100 == 0): 
             checkpoint_directory = saver.prepare_checkpoint_directory()
             atomic_torch_save(
                 {
@@ -344,7 +344,7 @@ def finetune(model, train_dataloader, test_dataloader, metrics, args, saver):
         # total_progress = train_dataloader.sampler.progress + epoch * train_batches_per_epoch
         # Save checkpoint
         
-        if args.is_master: 
+        if args.is_master and (batch % 100 == 0): 
             checkpoint_directory = saver.prepare_checkpoint_directory()
             atomic_torch_save(
                 {
@@ -413,7 +413,7 @@ def test_loop(model, train_dataloader, test_dataloader, metrics, args, saver,
                 )
                 print("Model " + str(int(os.environ["RANK"])) + " has testing accuracy of " + str(pct_test_correct))
 
-                csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/NEWcnn_trainTEST.csv"
+                csv_file_path = "/root/HebbianTopDown/CNN_hyper_search/classifierTests.csv"
                 file_exists = os.path.isfile(csv_file_path)
 
                 with open(csv_file_path, "a", newline="") as csvfile:

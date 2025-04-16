@@ -80,7 +80,7 @@ class GradientClassifierLayer(nn.Module):
         self.linear = nn.Linear(input_shape, output_shape)
         self.drop = nn.Dropout(0.5)
         
-        self.optim = torch.optim.Adam(self.linear.parameters(), lr=self.lr)
+        self.optim = torch.optim.RMSprop(self.linear.parameters(), lr=self.lr)
         self.lossfn = nn.CrossEntropyLoss()
 
     def forward(self, x, label=None):
@@ -105,6 +105,7 @@ class HebbianClassifierLayer(nn.Module):
         self.weights = nn.Parameter(torch.randn(output_shape, input_shape) * 0.01, requires_grad=False)
 
     def forward(self, x, label=None):
+        assert x.shape[1] == self.input_shape, f"[ERROR] Expected input of shape {self.input_shape}, but got {x.shape[1]}"
         if self.training:
             x = self.drop(x)
         logits = F.linear(x, self.weights)  # raw scores
@@ -118,6 +119,36 @@ class HebbianClassifierLayer(nn.Module):
             delta_w = torch.bmm(error.unsqueeze(2), x.unsqueeze(1))  # [batch, output_shape, input_shape]
             delta_w = delta_w.mean(dim=0)
             self.weights.data += self.lr * delta_w
+
+        return pred
+
+
+class NewHebbianClassifierLayer(nn.Module):
+    # Cross-entropy updates instead of MSE updates
+    def __init__(self, input_shape, output_shape, lr):
+        super(NewHebbianClassifierLayer, self).__init__()
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.lr = lr
+        self.drop = nn.Dropout(0.5)
+
+        self.weights = nn.Parameter(torch.randn(output_shape, input_shape) * 0.01, requires_grad=False)
+
+    def forward(self, x, label=None):
+        if self.training:
+            x = self.drop(x)
+        logits = F.linear(x, self.weights)         
+        pred = F.softmax(logits, dim=1)            
+
+        if label is not None:
+            if label.dim() == 1:
+                label = F.one_hot(label, num_classes=self.output_shape).float()
+
+            # Cross-entropy update: gradient descent on loss
+            error = pred - label  # [batch, output_shape]
+            delta_w = torch.bmm(error.unsqueeze(2), x.unsqueeze(1))  # [batch, output_shape, input_shape]
+            delta_w = delta_w.mean(dim=0)  # average over batch
+            self.weights.data -= self.lr * delta_w  # gradient descent step
 
         return pred
 

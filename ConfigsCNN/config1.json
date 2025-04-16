@@ -1,5 +1,5 @@
 {
-    "Lambda": 250,
+    "Lambda": 500,
     "classifierLr": 0.001,
     "beta": 1,
     "sigma": 0.3,

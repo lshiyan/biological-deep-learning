@@ -1,7 +1,7 @@
 isc_project_id = "92bd82f4-6c08-407d-be9d-60fe9c7fd853"
 experiment_name = "TopDown"
 gpu_type = "24GB VRAM GPU"
-gpus = 3
+gpus = 6
 output_path = "~/outputs/CNN_hyper_search"
 compute_mode = "cycle"
 command = "source ~/.topdown/bin/activate && cd ~/HebbianTopDown/ && torchrun --nnodes=$NNODES --nproc-per-node=$N_PROC --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --node_rank=$RANK CNN_train.py --dataset CIFAR10 --batch 64 --finetuneepochs 1 --save-dir $OUTPUT_PATH --tboard-path $OUTPUT_PATH/tb"

@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import models.learning as L
 from models.hyperparams import (ImageType, LearningRule, WeightScale, Inhibition, oneHotEncode,
                                 InputProcessing, cnn_output_formula_2D)
-from models.CNN.layers import ConvolutionHebbianLayer, ConvSoftHebbLayer, PoolingLayer, GradientClassifierLayer, HebbianClassifierLayer
+from models.CNN.layers import ConvolutionHebbianLayer, ConvSoftHebbLayer, PoolingLayer, GradientClassifierLayer, HebbianClassifierLayer, NewHebbianClassifierLayer
 
 
 class ConvolutionalNeuralNet(nn.Module):
@@ -257,6 +257,10 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     fc_inputdim = n_tiles * config['Convolutions']["Layers"][l_keys[-1]]['out_channel']
     #print("Fully connected layer input dim : " + str(fc_inputdim))
     
+    print(f"[DEBUG] Computed output shape: {output_shape}")
+    print(f"[DEBUG] n_tiles = {n_tiles}, out_channel = {config['Convolutions']['Layers'][l_keys[-1]]['out_channel']}")
+    print(f"[DEBUG] fc_inputdim = {fc_inputdim}")
+
     classifier = HebbianClassifierLayer(fc_inputdim, nbclasses, lr) ###
     mycnn.add_layer(f"ClassifierLayer", classifier)
 
@@ -265,7 +269,7 @@ def new_CNN_Model_from_config(inputshape, config, device, nbclasses):
     return mycnn
 
 
-
+# old
 def CNNBaseline_Model(inputshape, kernels, channels, strides=None, padding=None, lambd=1, lr=0.005,
                       gamma=0.99, epsilon=0.01, rho=1e-3, eta=1e-3, b=1e-4,
                       nbclasses=10, topdown=True, device=None,
