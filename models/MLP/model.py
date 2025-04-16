@@ -122,6 +122,10 @@ class SoftNeuralNet(nn.Module):
         super(SoftNeuralNet, self).__init__()
         self.layers = nn.ModuleDict()
         self.iteration = 3
+        self.greedytrain = False
+        self.use_classifiers = False
+        self.current_phase = 1
+        self.training_mode = "mlp"
     
     def add_layer(self, name, layer):
         self.layers[name] = layer
@@ -130,17 +134,47 @@ class SoftNeuralNet(nn.Module):
         for layer_name, module in self.layers.items():
             module.visualize_weights()
 
-    """
-    Used in Feedforward models
-    """
     def forward(self, x, clamped=None):
-        for layer in self.layers.values():
-            x = layer.forward(x, target=clamped)
+        active_layers = self.get_active_layers(self.current_phase) if self.greedytrain else self.layers.values()
+        
+        if self.training and self.training_mode == "cnn" and self.greedytrain:
+            # CNN-style: During training, only current layer is active and trained
+            assert len(active_layers) == 1, "CNN-style training should only have one active layer"
+            current_layer = active_layers[0]
+            
+            # Forward through previous layers without updating weights
+            for i in range(self.current_phase - 1):
+                layer_name = f'SoftHebbian{i+1}'
+                if layer_name in self.layers:
+                    with torch.no_grad():
+                        x = self.layers[layer_name].inference(x).y
+            
+            # Train current layer
+            x = current_layer(x, target=clamped)
+        else:
+            # MLP-style or inference: Use all active layers
+            for layer in active_layers:
+                x = layer.forward(x, target=clamped)
         return x
     
     def forward_test(self, x):
-        for layer in self.layers.values():
-            x = layer.forward(x)
+        # During testing, always use all feature layers and final classifier
+        if self.greedytrain:
+            active_layers = []
+            # Add all feature layers up to current phase
+            for i in range(self.current_phase):
+                layer_name = f'SoftHebbian{i+1}'
+                if layer_name in self.layers:
+                    active_layers.append(self.layers[layer_name])
+            # Always add final classifier
+            active_layers.append(self.layers['SoftHebbianFinal'])
+        else:
+            active_layers = self.layers.values()
+            
+        # During testing, we don't update any weights
+        with torch.no_grad():
+            for layer in active_layers:
+                x = layer.inference(x).y
         return x
     
     def set_iteration(self, i):
@@ -155,6 +189,47 @@ class SoftNeuralNet(nn.Module):
                 layer.train()
             else:
                 layer.eval()
+                
+    def set_phase(self, phase):
+        """Set the current training phase for greedy training"""
+        self.current_phase = phase
+        if self.greedytrain:
+            active_layers = self.get_active_layers(phase)
+            self.set_training_layers(active_layers)
+
+    def get_active_layers(self, phase):
+        """
+        Returns the layers that should be active for the current training phase.
+        phase: int, indicates which set of layers to train (1-based indexing)
+        """
+        if not self.greedytrain:
+            return list(self.layers.values())
+            
+        active_layers = []
+        
+        if self.training_mode == "cnn":
+            # CNN-style: Only use layers up to current phase, no classifier during training
+            if self.training:
+                # During training, only return the current layer
+                layer_name = f'SoftHebbian{phase}'
+                if layer_name in self.layers:
+                    active_layers.append(self.layers[layer_name])
+            else:
+                # During inference/testing, use all layers up to current phase + classifier
+                for i in range(phase):
+                    layer_name = f'SoftHebbian{i+1}'
+                    if layer_name in self.layers:
+                        active_layers.append(self.layers[layer_name])
+                active_layers.append(self.layers['SoftHebbianFinal'])
+        else:
+            # MLP-style: Use layers up to current phase + classifier during training
+            for i in range(phase):
+                layer_name = f'SoftHebbian{i+1}'
+                if layer_name in self.layers:
+                    active_layers.append(self.layers[layer_name])
+            active_layers.append(self.layers['SoftHebbianFinal'])
+            
+        return active_layers
 
 
 def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws):
@@ -180,21 +255,74 @@ def NewMLPBaseline_Model(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device, initia
 
     return mymodel
 
-def MultilayerSoftMLPModel(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device, num_layers, mexican_factor=0.33, initial_weight_norm=0.01):
+def MultilayerSoftMLPModel(hsize, lamb, w_lr, b_lr, l_lr, nclasses, device, num_layers, mexican_factor=0.33, initial_weight_norm=0.01, greedytrain=True, training_mode="mlp"):
+    """
+    Args:
+        training_mode (str): Either "mlp" or "cnn". 
+            - "mlp": Current approach with classifier during layer training
+            - "cnn": CNN-style approach with pure layer-wise training
+    """
     num_layers -= 2
     mymodel = SoftNeuralNet()
+    mymodel.training_mode = training_mode  # Add training mode to model
+    
+    # First layer
     heb_layer1 = SoftHebbLayer(inputdim=784, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
                               device=device, initial_lambda=lamb, initial_weight_norm=initial_weight_norm, anti_hebb_factor=mexican_factor)
     mymodel.add_layer('SoftHebbian1', heb_layer1)
     
+    # Middle layers
     for i in range(num_layers):
         heb_layer = SoftHebbLayer(inputdim=hsize, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
                                 device=device, initial_lambda=lamb, initial_weight_norm=initial_weight_norm, anti_hebb_factor=mexican_factor)
         mymodel.add_layer(f'SoftHebbian{i+2}', heb_layer)
 
+    # Final classifier layer (always present)
     heb_layer_final = SoftHebbLayer(hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
-                               learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True, initial_weight_norm=initial_weight_norm, anti_hebb_factor=mexican_factor)
+                               learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True, 
+                               initial_weight_norm=initial_weight_norm, anti_hebb_factor=mexican_factor)
     mymodel.add_layer('SoftHebbianFinal', heb_layer_final)
+
+    # Add flags to indicate training mode
+    mymodel.greedytrain = greedytrain
+    
+    # Add a method to get active layers for current training phase
+    def get_active_layers(self, phase):
+        """
+        Returns the layers that should be active for the current training phase.
+        phase: int, indicates which set of layers to train (1-based indexing)
+        """
+        if not self.greedytrain:
+            return list(self.layers.values())
+            
+        active_layers = []
+        
+        if self.training_mode == "cnn":
+            # CNN-style: Only use layers up to current phase, no classifier during training
+            if self.training:
+                # During training, only return the current layer
+                layer_name = f'SoftHebbian{phase}'
+                if layer_name in self.layers:
+                    active_layers.append(self.layers[layer_name])
+            else:
+                # During inference/testing, use all layers up to current phase + classifier
+                for i in range(phase):
+                    layer_name = f'SoftHebbian{i+1}'
+                    if layer_name in self.layers:
+                        active_layers.append(self.layers[layer_name])
+                active_layers.append(self.layers['SoftHebbianFinal'])
+        else:
+            # MLP-style: Use layers up to current phase + classifier during training
+            for i in range(phase):
+                layer_name = f'SoftHebbian{i+1}'
+                if layer_name in self.layers:
+                    active_layers.append(self.layers[layer_name])
+            active_layers.append(self.layers['SoftHebbianFinal'])
+            
+        return active_layers
+    
+    # Add the method to the model instance
+    mymodel.get_active_layers = get_active_layers.__get__(mymodel)
 
     return mymodel
 

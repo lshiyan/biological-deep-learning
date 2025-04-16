@@ -45,4 +45,9 @@ test_accuracy,hsize,lambda,w_lr,b_lr,l_lr,triangle,white,func,w_norm
 0.5171,2048,125,0.1,0.0033,0.1,true,true,softmax,0.001
 0.5721,2048,125,0.1,0.0033,0.1,true,true,softmax,0.0005
 0.5415,2048,125,0.1,0.0033,0.1,true,true,softmax,0.0005
-0.5053,2048,125,0.1,0.0033,0.1,true,true,softmax,0.0005
+0.5053,2048,125,0.1,0.0033,0.1,true,true,softmax,0.00050.1222,2048,125,0.01,0.033,0.01,true,true,softmax,0.01,0.2
+0.105,2048,125,0.01,0.033,0.01,true,true,softmax,0.01,0.2
+0.1061,2048,125,0.01,0.033,0.01,true,true,softmax,0.01,0.2
+0.149,2048,125,0.01,0.033,0.01,true,true,softmax,0.01,0.2
+0.1075,2048,125,0.01,0.033,0.01,true,true,softmax,0.01,0.2
+0.0927,2048,125,0.01,0.033,0.01,true,true,softmax,0.01,0.2

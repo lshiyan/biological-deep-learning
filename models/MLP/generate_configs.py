@@ -26,9 +26,9 @@ def generate_mlp_config_files():
             config = {
             "hsize": 2048,
             "lambd": 125, 
-            "w_lr": 0.1,
-            "b_lr": 0.0033,
-            "l_lr": 0.1,
+            "w_lr": 0.01,
+            "b_lr": 0.033,
+            "l_lr": 0.01,
             "w_norm": 0.01,
             "anti_hebb_factor": p[j]
             }
