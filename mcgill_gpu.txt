@@ -1,0 +1,27 @@
+ssh pzheng3@gpu-teach-01.cs.mcgill.ca
+ssh pzheng3@gpu-teach-02.cs.mcgill.ca
+ssh pzheng3@open-gpu-1.cs.mcgill.ca
+ssh pzheng3@open-gpu-32.cs.mcgill.ca
+ssh pzheng3@gpu-grad-01.cs.mcgill.ca
+ssh pzheng3@gpu-grad-02.cs.mcgill.ca
+
+nvidia-smi
+source neuroai_venv/bin/activate
+neuroai_venv\Scripts\activate
+deactivate
+
+powershell -ExecutionPolicy Bypass -File run_base.ps1
+powershell -ExecutionPolicy Bypass -File run_gen.ps1
+
+./run_base.sh
+./run_gen.sh
+
+pip3 install torch torchvision torchaudio
+pip3 install pandas matplotlib numpy
+
+/mnt/teaching/COMP551/pzheng3/biological-deep-learning
+/mnt/graduate/pzheng3/biological-deep-learning
+
+venv neuroai_venv
+tests
+results
