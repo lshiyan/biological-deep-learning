@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from layers.hidden_layer import HiddenLayer
 from utils.experiment_constants import ActivationMethods, BiasUpdate, Focus, LateralInhibitions, LearningRules, ParamInit, WeightDecay, WeightGrowth
-from utils.weight_growth_fcts import sigmoid_growth, exponential_growth, neuron_norm
+from utils.weight_growth_fcts import sigmoid_growth, exponential_growth, neuron_norm, linear_growth
 
 class HebbianLayer(HiddenLayer):
     """
@@ -588,8 +588,8 @@ class HebbianLayer(HiddenLayer):
         @return
             derivative: slope constant (derivative relative to linear rule always = 1)
         """
-        return 1.0
-    
+        current_weights: torch.Tensor = self.fc.weight
+        return linear_growth(current_weights)
     
     def _sigmoid_function(self) -> torch.Tensor:
         """

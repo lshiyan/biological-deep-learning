@@ -64,4 +64,4 @@ for color_name, color_values in colors.items():
     plt.imshow(colored_image)
     plt.axis('off')
     
-    plt.show()
+    #plt.show()

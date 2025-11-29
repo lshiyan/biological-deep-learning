@@ -184,7 +184,7 @@ class ForgetExperiment(Experiment):
 
             #for epoch in range(self.epochs):
             epoch = 0
-            max_epochs = 35
+            max_epochs = 12
 
             while (self.keep_training) and (epoch <= max_epochs):
 
