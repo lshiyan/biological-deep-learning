@@ -14,6 +14,8 @@ from dotwiz import DotWiz
 from typing import Tuple
 import matplotlib.colors as mcolors
 import sys
+import matplotlib
+from pathlib import Path
 
 def mlp_print_weight(model):
     for l in model.layers.values():
@@ -125,7 +127,7 @@ class NeuralNet(nn.Module):
 
 class SoftNeuralNet(nn.Module):
     def __init__(self, device, hsize):
-        super(SoftNeuralNet, self).__init__()
+        super().__init__()
         self.layers = nn.ModuleDict()
         self.iteration = 3
         self.output_dim = 10
@@ -174,6 +176,7 @@ class SoftNeuralNet(nn.Module):
             fig: matplotlib.figure.Figure
             axes: np.ndarray
             fig, axes = plt.subplots(row, col, figsize=(fig_width, fig_height)) # type: ignore
+            fig.suptitle(f'Représentations apprises après {4*num} images vues.')
             for ele in range(row * col): 
                 if ele < weight.size(0):
                     # Move tensor to CPU, convert to NumPy array for visualization
@@ -190,7 +193,7 @@ class SoftNeuralNet(nn.Module):
                     ax = axes[ele // col, ele % col]
                     im = ax.imshow(heatmap, cmap=custom_cmap, interpolation='nearest', vmin=min_value, vmax=max_value)
                     cbar = fig.colorbar(im, ax=ax)
-                    ax.set_title(f'Weight {ele}')
+                    ax.set_title(f'Neurone {ele}')
                     
                     # Setting Color Bar
                     ticks = np.linspace(min_value, max_value, num=5)
@@ -208,13 +211,14 @@ class SoftNeuralNet(nn.Module):
             
             # Save file and close plot
             if cnt == 0:
-                file_path: str = result_path + '/Hidden'+plot_name
+                file_path: str = result_path + '/Hidden'
             else:
-                file_path: str = result_path + '/Output'+plot_name
+                file_path: str = result_path + '/Output'
             print(file_path)
+            Path(file_path).mkdir(exist_ok=True)
             
             plt.tight_layout()
-            plt.savefig(file_path)
+            plt.savefig(file_path+plot_name)
             plt.close()
             cnt = 1
         sys.stdout.flush()
@@ -260,6 +264,9 @@ class SoftHebbLayer(nn.Module):
         self.device = device
         self.input_dim: int = inputdim
         self.output_dim: int = outputdim
+        self.max_a = nn.Parameter(torch.tensor(0.0, device=device), requires_grad=False)
+        self.avg_max_a = nn.Parameter(torch.tensor(0.0, device=device), requires_grad=False)
+        self.batches_seen = 0
 
         print(f"OUTPUT DIM is {outputdim}")
         self.K = K
@@ -290,8 +297,8 @@ class SoftHebbLayer(nn.Module):
         new_weights = norm * weights / (weights_norm + 1e-10)
         self.weight = nn.Parameter(new_weights, requires_grad=False)
 
-    def get_weight_norms(self, weights):
-        return torch.norm(weights, p=2, dim=1, keepdim=True)
+    def get_weight_norms(self, weights, keepdim=True):
+        return torch.norm(weights, p=2, dim=1, keepdim=keepdim)
 
     def a(self, x):
         # batch_size, dim = x.shape
@@ -301,8 +308,13 @@ class SoftHebbLayer(nn.Module):
         cos_sims = torch.matmul(x, W.T)
         return cos_sims
 
+    def __weight_curve__(self):
+        inv_trained = self.get_weight_norms(self.weight, keepdim=False) / self.K
+        s = torch.clip(1 - inv_trained ** self.lamb, 0, 1)
+        return s
+
     def u(self, a):
-        # batch_size, dim = a.shape
+
         if self.inhibition == Inhibition.RePU:
             if self.triangle:
                 setpoint = a.mean()
@@ -317,9 +329,13 @@ class SoftHebbLayer(nn.Module):
 
     def y(self, a):
         if self.inhibition == Inhibition.Softmax:
-            y = torch.softmax(self.lamb * a + self.logprior)
+            y = torch.softmax(self.lamb * a + self.logprior, dim=1)
         elif self.inhibition == Inhibition.RePU:
             u = self.u(a)
+            ##### Encourage learning of unlearned weights
+            batch_size, dim = a.shape
+            current_max_a = a.max()
+            u = u #+ (current_max_a < 0.33 * self.avg_max_a).float() * self.__weight_curve__().reshape(1, dim)
             un = u / (torch.max(u) + 1e-9)   # normalize for numerical stability
             ulamb = un ** self.lamb * torch.exp(self.logprior)
             y = ulamb / (torch.sum(ulamb, dim=1, keepdim=True) + 1e-9)
@@ -327,7 +343,11 @@ class SoftHebbLayer(nn.Module):
             raise NotImplementedError(f"{self.inhibition} is not an implemented inhibition method.")
         return y
 
-
+    def __update_max_a__(self, a):
+        current_max_a = a.max().detach()
+        self.max_a.data = torch.maximum(self.max_a, current_max_a).detach()
+        self.avg_max_a.data = current_max_a / (self.batches_seen + 1) + self.avg_max_a * (
+                self.batches_seen / (self.batches_seen + 1))
 
     def inference(self, x):
         x_norms = torch.norm(x, dim=1, keepdim=True)
@@ -343,9 +363,9 @@ class SoftHebbLayer(nn.Module):
                                       self.weight, self.inhibition, inference_output.u, target=target,
                                       supervised=supervised, weight_growth=self.weight_growth)
         delta_b = L.update_softhebb_b(inference_output.y, self.logprior, target=target, supervised=supervised)
-        delta_l = L.update_softhebb_lamb(inference_output.y, inference_output.a, inhibition=self.inhibition,
-                                         lamb=self.lamb.item(), in_dim=self.input_dim, target=target,
-                                         supervised=supervised)
+        # delta_l = L.update_softhebb_lamb(inference_output.y, inference_output.a, inhibition=self.inhibition,
+        #                                  lamb=self.lamb.item(), in_dim=self.input_dim, target=target,
+        #                                  supervised=supervised)
         new_weight = self.weight + self.w_lr * delta_w
         self.weight.data = new_weight
 
@@ -354,13 +374,15 @@ class SoftHebbLayer(nn.Module):
         norm_cste = torch.log(torch.exp(new_bias).sum())
         self.logprior.data = new_bias - norm_cste
 
-        new_lambda = self.lamb + self.l_lr * delta_l
-        self.lamb.data = new_lambda
+        # new_lambda = self.lamb + self.l_lr * delta_l
+        # self.lamb.data = new_lambda
 
     def forward(self, x, target=None):
         inference_output = self.inference(x)
         if self.training:
             self.learn_weights(inference_output, target=target)
+            self.__update_max_a__(inference_output.a)
+            self.batches_seen += 1
         return inference_output.y
 
     def plot_wn_distribution(self, epoch, count):
@@ -546,10 +568,10 @@ def MLPBaseline_Model(hsize, lamb, lr, e, wtd, gamma, nclasses, device, o, w, ws
     return mymodel
 
 
-def NewMLPBaseline_Model(K, hsize, lamb, w_lr, b_lr, l_lr, nclasses, device):
+def NewMLPBaseline_Model(K, hsize, lamb, w_lr, b_lr, l_lr, nclasses, device, weight_growth=WeightGrowth.Linear, triangle=False, inhibition=Inhibition.RePU, initial_weight_norm=1e-2):
     mymodel = SoftNeuralNet(device, hsize)
     heb_layer = SoftHebbLayer(K, inputdim=784, outputdim=hsize, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr,
-                              device=device, initial_lambda=lamb)
+                              device=device, initial_lambda=lamb, weight_growth=weight_growth, triangle=triangle, inhibition=inhibition, initial_weight_norm=initial_weight_norm)
     
     heb_layer2 = SoftHebbLayer(K, hsize, nclasses, w_lr=w_lr, b_lr=b_lr, l_lr=l_lr, initial_lambda=lamb,
                                learningrule=LearningRule.SoftHebbOutputContrastive, is_output_layer=True)

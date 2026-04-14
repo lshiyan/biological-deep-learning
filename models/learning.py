@@ -91,7 +91,7 @@ def update_softhebb_w(K, y, normed_x, a, weights, inhibition: Inhibition, u=None
     elif weight_growth == WeightGrowth.Linear:
         factor = 1
     elif weight_growth == WeightGrowth.Sigmoidal:
-        factor = wn/K * (1 - wn/K)
+        factor = torch.clip(wn * (1 - wn/K), 0, 1)
     elif weight_growth == WeightGrowth.Exponential:
         factor = wn
     else:
@@ -104,8 +104,8 @@ def update_softhebb_w(K, y, normed_x, a, weights, inhibition: Inhibition, u=None
     else:
         y_part = y.reshape(batch_dim, out_dim, 1)
 
-    delta_w = factor * y_part * softhebb_input_difference(normed_x, a, normed_weights)
-    delta_w = torch.mean(delta_w, dim=0) # average the delta weights over the batch dim
+    delta_w = factor * y_part * softhebb_input_difference(normed_x, torch.relu(a), normed_weights)
+    delta_w = torch.sum(delta_w, dim=0) # average the delta weights over the batch dim
     return delta_w, wn/K
 
 
@@ -133,7 +133,7 @@ def update_softhebb_lamb(y, a, inhibition: Inhibition, lamb=None, in_dim=None, t
         delta_l = torch.sum((target - y) * v, dim=1)
     else:
         if inhibition == Inhibition.Softmax:
-            k = scipy.special.iv(in_dim/2, lamb)/scipy.special.iv(in_dim/2 -1, lamb)
+            k = scipy.special.iv(in_dim/2, lamb)/scipy.special.iv(in_dim/2 - 1, lamb)
         elif inhibition == Inhibition.RePU:
             k = 0.5 * (scipy.special.psi(0.5 * (lamb + 1)) - scipy.special.psi(0.5 * (lamb + in_dim)))
         else:
