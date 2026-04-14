@@ -329,7 +329,7 @@ class SoftHebbLayer(nn.Module):
 
     def y(self, a):
         if self.inhibition == Inhibition.Softmax:
-            y = torch.softmax(self.lamb * a + self.logprior, dim=1)
+            y = torch.softmax(self.lamb * a, dim=1)  #  + self.logprior, dim=1)
         elif self.inhibition == Inhibition.RePU:
             u = self.u(a)
             ##### Encourage learning of unlearned weights
@@ -381,6 +381,7 @@ class SoftHebbLayer(nn.Module):
         inference_output = self.inference(x)
         if self.training:
             self.learn_weights(inference_output, target=target)
+            self.set_weight_norms_to(1)
             self.__update_max_a__(inference_output.a)
             self.batches_seen += 1
         return inference_output.y

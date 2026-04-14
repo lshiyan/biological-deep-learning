@@ -98,13 +98,13 @@ def update_softhebb_w(K, y, normed_x, a, weights, inhibition: Inhibition, u=None
         raise NotImplementedError(f"Weight growth {weight_growth}, invalid.")
     if inhibition == Inhibition.RePU:
         indicator = (u > 0).float()
-        factor = factor * indicator.reshape(batch_dim, out_dim, 1) / (u.reshape(batch_dim, out_dim, 1) + 1e-9)
+        factor = factor #* indicator.reshape(batch_dim, out_dim, 1) / (u.reshape(batch_dim, out_dim, 1) + 1e-9)
     if supervised:
         y_part = (target - y).reshape(batch_dim, out_dim, 1)
     else:
         y_part = y.reshape(batch_dim, out_dim, 1)
-
-    delta_w = factor * y_part * softhebb_input_difference(normed_x, torch.relu(a), normed_weights)
+    _ , in_dim = normed_x.shape
+    delta_w = factor * y_part *  softhebb_input_difference(normed_x, torch.relu(a), normed_weights)
     delta_w = torch.sum(delta_w, dim=0) # average the delta weights over the batch dim
     return delta_w, wn/K
 
